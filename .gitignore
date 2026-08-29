@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ray
+~/ray_results/
+/tmp/ray/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data and logs
+*.log
+*.db
+*.sqlite
+*.sqlite3
+runs/
+checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.envrc
+
+# Validation results (keep schema, not data)
+validation/results/*.json
+validation/results/*.csv
+
+# Keep directory structure
+!validation/results/.gitkeep
+!validation/tasks/.gitkeep
+!tests/unit/.gitkeep
+!tests/integration/.gitkeep
+!tests/validation/.gitkeep
+
+# Coverage and test artifacts
+htmlcov/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# LaTeX build artifacts (keep main.pdf, exclude intermediate files)
+*.aux
+*.bbl
+*.blg
+*.out
+*.toc
+*.log
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Survey localresources (PDFs are large and not needed in git)
+hpo-survey/.localresources/
+
+# Temporary spike outputs
+/tmp/
+*.db
+
+# Claude session state (local only, never commit)
+.claude/
+

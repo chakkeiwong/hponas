@@ -1,0 +1,281 @@
+\chapter{Interfaces and data contracts}
+\label{sec:contracts}
+
+Chapter~\ref{sec:architecture} argued that the whole proposal is two
+interfaces, two adapters, and a database. This chapter makes those
+five things exact enough to code against. The discipline throughout:
+every field and every method either names the verdict it carries,
+with the chapter holding the evidence, or is labeled an engineering
+judgment that the build team owns. A reader should be able to point
+from any line of the eventual code review back to a line of this
+survey, or know that no such line exists.
+
+One vocabulary note before the details. A \emph{study} is the unit a
+researcher opens: one search space, one objective declaration, one
+budget, many trials. The contracts below are organized the way a
+study meets them: first what the researcher declares, then the two
+decision-makers (searcher and scheduler), then the store that
+remembers everything, then the executors that pay the bills.
+
+\section{The study declaration}
+
+A study begins with a declaration, and the declaration is where
+several chapters' verdicts become unavoidable rather than optional.
+
+The \emph{objective declaration} names the quantity being optimized,
+its direction, and its evaluation protocol. For RL studies that means
+choosing among final evaluated return, area under the training curve,
+and return at a fixed budget, explicitly, because
+Chapter~\ref{sec:workloads} showed the three orderings genuinely
+disagree; the field is mandatory and recorded, never defaulted
+silently. Multi-objective studies declare a vector of such
+objectives, and the product treats the front as the study's output
+from that moment (Chapter~\ref{sec:moo}).
+
+The \emph{seed protocol} is part of the declaration, with defaults
+rather than blanks: a number of tuning seeds per candidate and a
+disjoint set of test seeds for the final report, the protocol of
+\citet{eimer2023hyperparameters} that Chapters~\ref{sec:problem}
+and~\ref{sec:workloads} adopted. Opting out is possible and is
+itself recorded, so a study that skipped the protocol says so in its
+own audit trail.
+
+The \emph{budget declaration} states the study's size in full-run
+equivalents and the number of concurrently available full-length
+workers. The second number exists because of
+Chapter~\ref{sec:population}'s boundary: at eight or more dedicated
+workers with a schedule-shaped question the population line becomes
+eligible, and below it the product steers to the rung methods. The
+declaration is what lets the product enforce that boundary in
+software rather than trusting each user's optimism.
+
+\section{The search-space schema}
+
+The schema is a tree of knob declarations, one per hyperparameter,
+and its fields track exactly the structure
+Chapter~\ref{sec:problem} taught.
+
+\begin{description}[style=nextline, leftmargin=1.6em, itemsep=2pt]
+\item[kind] One of continuous, ordinal, categorical. Three values,
+not the four kinds of Chapter~\ref{sec:problem}, because the fourth
+is structural rather than typed: a conditional knob is a continuous,
+ordinal, or categorical knob that also carries a predicate, so
+conditionality lives in \textbf{condition} below. Integer-valued
+knobs are ordinals, the ordinal kind being defined as an integer with
+a natural order, and there is no separate integer kind to choose. The
+distinction that remains
+is load-bearing downstream: ordinals are modeled as ordered, never as
+unordered labels, because respecting the order produced measurable
+gains in the BG-PBT ablations (Chapter~\ref{sec:bayesian},
+Section~\ref{sec:highdim}), and categorical axes route to overlap
+kernels or per-category machinery rather than being embedded and
+hoped about.
+\item[range and transform] Bounds for continuous and ordinal knobs,
+the value list for categorical ones, and an optional transform, with
+log-uniform as the expected choice for scale-type knobs; the 90
+percent of a uniform draw wasted in the top decade
+(Chapter~\ref{sec:modelfree}) is the argument, and the same flag
+drives input warping in the GP searcher.
+\item[condition] An optional parent-knob-and-value predicate. A
+conditional knob exists only when its predicate holds, which makes
+the space a tree rather than a box; TPE consumes this natively, and
+searchers that cannot must say so through their capability flags
+below rather than silently sampling meaningless coordinates
+(Chapters~\ref{sec:problem} and~\ref{sec:bayesian}).
+\item[prior] An optional distribution over the knob, the expert's
+belief about where the optimum lies. First-class from day one
+because retrofitting it is expensive and every project lead has one
+(Chapter~\ref{sec:transfer}); consumed by the $\pi$BO weight and the
+PriorBand portfolio once tier~1 lands, recorded but inert before
+that.
+\item[note] Free text for units and meaning. An engineering judgment
+with a purpose: the schema doubles as the study's documentation, and
+Chapter~\ref{sec:problem}'s knob tour is the register this field is
+meant to echo.
+\end{description}
+
+\section{The searcher interface}
+
+A searcher proposes configurations and learns from results. The
+interface is deliberately small.
+
+\begin{description}[style=nextline, leftmargin=1.6em, itemsep=2pt]
+\item[propose(n, state)] Return $n$ configurations to evaluate next.
+Batch proposals are the normal case, not the extension, because idle
+workers were Chapter~\ref{sec:bayesian}'s standing argument; a GP
+searcher implements $n > 1$ by joint batch acquisition and handles
+still-running trials by fantasies, exactly the machinery of
+Section~\ref{sec:acquisition}.
+\item[observe(record)] Ingest one trial record from the store,
+including partial-fidelity observations; a searcher that only
+understands final scores declares that limitation.
+\item[capabilities] A static declaration: which knob kinds, whether
+conditionals are supported, whether multiple objectives are, whether
+a prior is consumed, maximum sensible dimension. The product refuses
+a mismatched study loudly at declaration time. The flag exists
+because the audit of Chapter~\ref{sec:libraries} found exactly such
+mismatches shipping silently (a continuous-only PB2 is the standing
+example), and refusing early is cheaper than diagnosing a silently
+degenerate study.
+\item[snapshot and restore] Serialize internal state, so long
+studies survive restarts and population methods can fork searcher
+state along a lineage. Engineering judgment on the mechanism; the
+requirement itself follows from the population line's design
+(Chapter~\ref{sec:population}).
+\end{description}
+
+Behind this interface, tier~0 ships wrapped implementations (Optuna
+TPE, the BoTorch GP with qLogEI and dimension-scaled priors, CMA-ES,
+Sobol and log-uniform random), tier~1 adds qLogNEHVI, Chebyshev
+scalarization, the $\pi$BO weight, and EI-per-cost as decorators on
+the GP searcher, and the trust-region mixed-space searcher arrives as
+the shared core of high-dimensional single-objective search and the
+population line's explore step (Chapters~\ref{sec:bayesian}
+and~\ref{sec:population}).
+
+\section{The scheduler interface}
+
+A scheduler allocates budget across running trials. Its contract has
+one more verb than the classical statement, because the population
+line needs it.
+
+\begin{description}[style=nextline, leftmargin=1.6em, itemsep=2pt]
+\item[report(trial, fidelity, value)] Called as metrics stream in;
+returns continue, stop, or pause. ASHA and the median rule live
+entirely behind this verb, which is why they ask nothing of training
+code beyond streaming a metric (Chapter~\ref{sec:multifidelity}).
+\item[promote()] Return paused or new trials to run when a worker
+frees, with rung bookkeeping ($\eta$, initial budget $r$) internal
+to the scheduler. Asynchronous promotion against results-so-far is
+the ASHA rule; a PASHA flag stops growing the top rung once
+rankings stabilize.
+\item[gate(predicate)] Register a veto evaluated at every rung. A
+trial failing its gate is discarded regardless of its score; this is
+the sampler workload's divergence and split-$\widehat{R}$ machinery
+generalized into a hook (Chapter~\ref{sec:workloads}), and MO-ASHA's
+correctness gates use the same mechanism (Chapter~\ref{sec:moo}).
+\item[exploit(loser, winner) and explore(config)] The population
+verbs: copy weights and hyperparameters from winner to loser through
+the executor's checkpoint surgery, then perturb or re-propose via a
+searcher. Keeping these on the scheduler interface, with the
+searcher consulted for explore, is precisely the entanglement
+Chapter~\ref{sec:population} described, made explicit instead of
+implicit.
+\end{description}
+
+Every scheduler decision lands in the store with its reason, because
+the audit trail is a product feature, not a log file: the researcher
+of Chapter~\ref{sec:product}'s walk reads exactly this record.
+
+\section{The run store}
+
+The store is one database with three kinds of rows, and several
+chapters' promises are really promises about these rows.
+
+Trial rows carry the configuration, seed, rung history with
+per-rung scores and costs, the full learning curve, final objective
+values as a vector, veto outcomes, and a parent-trial pointer. The
+parent pointer is the population line's lineage: with it, a
+hyperparameter \emph{schedule} is a walk up the tree, queryable
+after the study, which is what ``schedules are a first-class
+output'' meant concretely in Chapter~\ref{sec:population}.
+
+Study rows carry the declaration in full (space, objective, seeds,
+budget, boundary inputs), the incumbent or front over time, and the
+study-level diagnostics, of which one is computed always: the rank
+correlation between rung scores and final scores.
+Chapter~\ref{sec:multifidelity} promised that the crossing-curves
+hazard would become a measured property of our workloads; this row
+is where the measurement lives, and the validation suite consumes
+it.
+
+Query surfaces are part of the contract because two verdicts depend
+on them: warm starting a new study from configurations that ranked
+well on similar past studies (Chapter~\ref{sec:transfer}) is a
+ranked query over trial rows, and hypervolume-over-budget reporting
+(Chapter~\ref{sec:roadmap}) is a scan over study rows. Storage
+technology is an engineering judgment; the schema above is not.
+
+\section{The executor adapters}
+
+Two adapters, per the architecture chapter. The Ray Tune adapter
+maps trials to Tune trials and must expose checkpoint surgery as
+first-class operations: save, copy weights and optimizer state
+across trials, resume. That is the machinery PBT exercises inside
+Tune today and the single strongest reason
+Chapter~\ref{sec:architecture} kept Tune underneath; our adapter's
+job is to keep it reachable from the scheduler's exploit verb. The
+local adapter runs minutes-scale trials in-process for the
+Hamiltonian regime, where Chapter~\ref{sec:workloads} showed the
+distributed stack's overhead is the visible cost. Both adapters
+meter per-trial cost themselves, because EI-per-cost consumes
+measured cost, not the user's folklore (Chapter~\ref{sec:transfer}).
+
+\section{The architecture factory}
+\label{sec:archfactory}
+
+One contract exists only because Chapter~\ref{sec:workloads} decided
+that architecture search means width, depth, and a few structural
+flags rather than topology. Those coordinates sit in the ordinary
+search space, so the searcher and scheduler interfaces above need no
+new verbs for them; what they do need is a way to turn a
+configuration into a model, and a way to say when two configurations'
+models can share weights. Both belong to the user's workload, not to
+the tuner, which is why they are a contract rather than an
+implementation.
+
+\begin{description}[style=nextline, leftmargin=1.6em, itemsep=2pt]
+\item[build(config)] Return an initialized model from the
+architecture coordinates of a configuration. The workload supplies
+this; the product never constructs architectures itself, because the
+space of things a user might mean by ``depth'' is not ours to
+enumerate. The factory is also what makes the excluded methods
+excluded by construction: a contract that maps coordinates to a model
+has no place to put a supernet.
+\item[measure(model)] Return the size objectives, parameter count and
+FLOPs per forward pass, for a built model. These are measured on the
+constructed model rather than predicted from the coordinates, which
+is the whole reason Chapter~\ref{sec:workloads} was willing to treat
+size as an objective and unwilling to treat proxies as a substitute
+for training. Multi-objective studies consume these through the
+ordinary objective vector (Chapter~\ref{sec:moo}).
+\item[compatible(config$_a$, config$_b$)] Declare whether weights
+from one configuration's model can be loaded into another's. Pure
+hyperparameter changes are compatible; a width or depth change is
+not. The scheduler's exploit verb consults this before checkpoint
+surgery, and an incompatible answer routes the trial to the transfer
+policy below instead of copying weights into a shape that cannot hold
+them. A workload that gets this predicate wrong produces silent
+garbage, so the conformance suite tests it directly: every declared
+compatible pair must survive a load, and every incompatible pair must
+refuse one.
+\item[transfer(parent, child)] The policy for an incompatible
+inheritance: restart the child from initialization, or warm-start it
+by distillation from the parent, which is BG-PBT's route
+(Chapter~\ref{sec:population}). The choice is declared per study, not
+inferred, and its cost is charged to the trial that caused it rather
+than hidden in the population's overhead. Distillation arrives with
+the population line in tier~2; before then the only legal policy is
+restart, and the factory says so through its capability flags.
+\end{description}
+
+The searcher's \textbf{capabilities} declaration gains one flag to
+match: whether the searcher models architecture coordinates as
+ordinals and categoricals with the rest of the space, or requires
+them held fixed. A searcher answering the latter is not eligible for
+a study whose space includes architecture axes, and the product
+refuses the combination at declaration time for the same reason it
+refuses a continuous-only searcher on a categorical space.
+
+\section{What would overturn this chapter}
+
+Contracts are falsified by construction work, and the suite is
+arranged to do it early: if the tier~0 wraps cannot be expressed
+behind these interfaces without holes, if the reference-parity tests
+of Chapter~\ref{sec:validation} need interface changes to pass, or
+if the population verbs prove insufficient for a faithful PBT run
+on the Ray adapter, the contracts change and this chapter is
+rewritten before the code doubles down. The interfaces are the
+product's most expensive thing to change later; that is why they
+get a chapter, a register mapping, and the first weeks of the
+calendar rather than an afternoon.

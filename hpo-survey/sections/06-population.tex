@@ -1,0 +1,522 @@
+\chapter{Tuning while training: the population-based family}
+\label{sec:population}
+
+Everything so far searches for one fixed configuration, and the second bend
+of Section~\ref{sec:formal} has been waiting patiently: in the running
+example, the best learning rate at step zero is not the best learning rate
+at step 100 million, because the agent's own improving policy keeps changing
+the data it trains on. Population-based training (PBT) is the family that
+takes this seriously. It searches for a \emph{schedule}, and it does so
+inside a single training run, which is why it occupies a special place in
+reinforcement learning, where the optimal learning rate, entropy bonus, or
+batch size at the start of training is rarely optimal at the end.
+
+\section{PBT: exploit, explore, inherit}
+
+PBT trains a population of $B$ agents in parallel, each with its own
+hyperparameters and its own network weights \citep{jaderberg2017pbt}. Every
+$t_{\mathrm{ready}}$ steps, two operations run
+(Figure~\ref{fig:pbt}). In the \emph{exploit} step, each agent in the
+bottom fraction of the population (by current evaluation score) abandons
+its own progress: it copies both the network weights and the
+hyperparameters of an agent sampled from the top fraction, a rule known as
+truncation selection. In the \emph{explore} step, the copied
+hyperparameters are perturbed, in the original paper by random
+multiplicative jitter or resampling from the prior. Training then
+continues from the copied weights. Because weights are inherited rather
+than restarted, the population performs a single collective training run
+whose hyperparameters adapt on the fly, and the lineage of the final best
+agent traces out a hyperparameter schedule that no pointwise tuner could
+have expressed: in Figure~\ref{fig:pbt}, the winning agent's history runs
+through two exploit events and three different learning rates, and that
+whole trajectory, not its endpoint, is the method's output.
+
+The figure repays one slow read-through, event by event, because every
+later argument about this family refers back to it. Four agents train
+in parallel, each with its own learning rate. At the first ready event,
+the population is ranked by current evaluated return; the bottom agent
+(lane two) is culled, receives a byte-for-byte copy of the top agent's
+network weights and hyperparameters, has those hyperparameters
+perturbed, and resumes training from the copied weights rather than
+from scratch.
+
+Between the first and second ready events, four
+\emph{different} hyperparameter settings are being evaluated while
+four networks make training progress; no compute is spent on rehearsal
+runs that will be thrown away, which is the family's core economy.
+
+At
+the second ready event the same surgery repeats on the new laggard.
+The winning agent's bold lineage, read left to right, is a sequence of
+(weights inherited, hyperparameters revised) segments: a learning-rate
+\emph{schedule} discovered by selection, with no schedule ever
+specified. That is the object no method in the previous chapters can
+produce, and it is also, as the next paragraphs show, the source of
+the family's characteristic failures.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=1.0, font=\small]
+% axes
+\draw[-{Latex}] (0,0) -- (10.2,0);
+\node[anchor=north east] at (10.3,-0.55) {training steps};
+\node[rotate=90, anchor=south] at (-0.4,2.1) {agents (population $B=4$)};
+% ready-event lines
+\foreach \x in {3.0,6.0,9.0} \draw[dotted] (\x,-0.1) -- (\x,4.3);
+\node[font=\footnotesize, anchor=north] at (3.0,-0.15) {$t_{\mathrm{ready}}$};
+\node[font=\footnotesize, anchor=north] at (6.0,-0.15) {$2t_{\mathrm{ready}}$};
+\node[font=\footnotesize, anchor=north] at (9.0,-0.15) {$3t_{\mathrm{ready}}$};
+% agent lanes at y = 0.7, 1.7, 2.7, 3.7
+% agent 4 (top lane): strong performer, survives; lineage bold
+\draw[line width=1.5pt, blue!60!black] (0,3.7) -- (3.0,3.7);
+\draw[line width=1.5pt, blue!60!black] (3.0,3.7) -- (6.0,3.7);
+\draw[line width=1.5pt, blue!60!black] (6.0,3.7) -- (9.0,3.7) -- (10.0,3.7);
+% agent 3
+\draw[thick] (0,2.7) -- (3.0,2.7);
+\draw[thick] (3.0,2.7) -- (6.0,2.7);
+\draw[thick] (6.0,2.7) -- (10.0,2.7);
+% agent 2: culled at t_ready, copies agent 4
+\draw[thick] (0,1.7) -- (3.0,1.7);
+\node at (3.0,1.7) {$\times$};
+\draw[-{Latex}, thick, blue!60!black] (3.0,3.6) .. controls (3.25,2.7) .. (3.05,1.8);
+\draw[line width=1.5pt, blue!60!black] (3.1,1.7) -- (6.0,1.7) -- (9.0,1.7);
+\draw[line width=1.5pt, blue!60!black] (9.0,1.7) -- (10.0,1.7);
+\node[blue!60!black, font=\footnotesize, anchor=west] at (3.45,2.18) {copy weights + hparams, then perturb};
+% agent 1: culled at 2t_ready, copies agent 2's line
+\draw[thick] (0,0.7) -- (6.0,0.7);
+\node at (6.0,0.7) {$\times$};
+\draw[-{Latex}, thick] (6.0,1.6) .. controls (6.25,1.1) .. (6.05,0.8);
+\draw[thick] (6.1,0.7) -- (10.0,0.7);
+% winner label
+\node[blue!60!black, anchor=west, align=left, font=\small] at (6.45,4.15)
+  {bold path: lineage of the final best agent};
+\node[anchor=west, font=\footnotesize] at (0.1,4.15) {$\times$ = culled by truncation selection};
+\end{tikzpicture}
+\caption{One PBT run (schematic, $B = 4$). At each ready event the bottom
+agents are culled and restart from copies of top agents' weights and
+hyperparameters, perturbed before training resumes. The bold lineage is
+the method's real product: a hyperparameter \emph{schedule} that switched
+values twice mid-run, expressed by no pointwise method in this document.}
+\label{fig:pbt}
+\end{figure}
+
+Two ablations in the original paper pin down where the value lives, and
+they are the reason we drew the lineage rather than the final point.
+Rerunning training from scratch with the final PBT-found hyperparameters
+underperformed PBT itself, so the schedule rather than the endpoint
+carries the gain; and populations of around twenty gave consistent
+improvements with diminishing returns beyond. The cost structure is
+equally distinctive: one PBT run costs $B$ training runs of wall-clock
+length one, fully parallel, rather than a long sequence of trials. When a
+project has $B$ machines and one calendar week, that shape is not a detail;
+it is the argument.
+
+Two failure modes matter as much as the mechanism. First, PBT is greedy:
+truncation selection optimizes the \emph{current} score, and
+Figure~\ref{fig:curves} already showed what current scores do to
+configurations that invest now to pay off later. A small learning rate or
+a heavy regularizer is exactly the blue curve of that figure, and
+truncation selection is the cull arrow. FIRE-PBT (faster improvement
+rate PBT) counters this by scoring
+sub-populations on their rate of improvement rather than their level, and
+the size of the greediness cost is worth quoting: on ImageNet, the
+learning-rate schedule found by greedy PBT reached 71.7 percent top-1
+accuracy where FIRE-PBT reached 76.5, essentially matching the hand-tuned
+schedule at 76.6 \citep{dalibard2021firepbt}.
+
+Second, with the modest
+populations we can afford (the experiments below use $B = 8$), copying
+weights across the population collapses diversity in weight space: after
+a few exploit events, every agent descends from the same early winner,
+and the search degenerates into local perturbation around one basin.
+\citet{wan2022bgpbt} observed both effects directly: on four of their
+seven Brax tasks, plain random search matched or beat both PBT and PB2 at
+the same compute, which they attribute to exactly this
+premature-convergence behavior.
+
+\section{PB2: replacing random perturbation with a bandit}
+
+The explore step is where PBT wastes its evidence: jitter treats the
+population's accumulated experience as worthless. PB2 repairs it with the
+machinery of Chapter~\ref{sec:bayesian} \citep{parkerholder2020pb2}. PB2
+records every observed (hyperparameters, training-progress) increment
+across the population and fits a Gaussian process whose kernel includes a
+time coordinate, so that old evidence decays: an observation from early
+training informs, but does not dictate, beliefs about what works now.
+
+When an agent needs new hyperparameters after an exploit event, PB2
+chooses them by maximizing a UCB acquisition, the rule of
+\eqref{eq:ucb} applied to this time-varying surrogate: for the increment
+model $\hat{f}_t$ with posterior mean $\mu_t$ and spread $s_t$, pick
+\begin{equation}
+\config_{\mathrm{new}}
+\in \arg\max_{\config \in \cspace}\;
+\mu_t(\config) + \beta_t^{1/2}\, s_t(\config),
+\label{eq:pb2}
+\end{equation}
+maximization now because the increment is a reward. Members of the batch
+whose outcomes are still pending are handled by updating the posterior
+variance as if their results were already in (the fantasy device of
+Section~\ref{sec:acquisition}), so the whole population can be proposed
+at once.
+
+The quantity modeled is deliberately the \emph{increment} of
+performance over one interval rather than its level, which is what makes
+the bandit framing clean: total performance is the sum of increments, so
+maximizing final performance equals minimizing cumulative regret over
+increments, and the authors prove a sublinear-regret bound for the
+resulting time-varying GP bandit. Sublinear regret has a plain reading:
+the average quality gap between the bandit's choices and the best
+choices available at each moment goes to zero as training proceeds.
+
+A follow-up, PB2-Mix, adds categorical hyperparameters through a
+hierarchical explore step: a time-varying adversarial bandit picks the
+categories, then the GP picks the continuous coordinates conditioned on
+that choice, with the regret guarantee extended to the mixed space
+\citep{parkerholder2021pb2mix}.
+
+The empirical promise is sample
+efficiency at small population sizes, but two independent observations
+temper it: the BG-PBT ablations show a plain GP surrogate limits how much
+of the space PB2 can cover \citep{wan2022bgpbt}, and in the
+budget-constrained study of \citet{eimer2023hyperparameters}, PB2's tuned
+configurations changed at most once over a run (so the schedule
+advantage, the entire point of Figure~\ref{fig:pbt}, went unused) and its
+incumbents transferred poorly to fresh seeds.
+
+\section{BG-PBT: trust-region BO plus generational architecture search}
+
+BG-PBT, the method we were specifically asked to evaluate, upgrades both
+halves of PBT and adds architecture search \citep{wan2022bgpbt}. We read
+the paper in full; what follows is its actual content rather than its
+abstract. Readers will recognize every ingredient: the search space is
+the running example's, the searcher is Section~\ref{sec:highdim}'s
+trust-region machinery, and the schedule-versus-point distinction is
+Figure~\ref{fig:pbt}'s.
+
+The search space is the full RL configuration. For their PPO-on-Brax
+experiments this means nine training hyperparameters (learning rate,
+discount, entropy coefficient, unroll length, reward scaling, batch size,
+update epochs, GAE $\lambda$, clipping $\epsilon$) plus six architecture
+parameters (width, depth, and a spectral-normalization flag for policy
+and value networks separately), the 15-dimensional mixed space of
+continuous, ordinal, and categorical coordinates that
+Section~\ref{sec:running} adopted as our running example.
+
+The explore
+step becomes a high-dimensional mixed-space BO agent built on
+Casmopolitan \citep{wan2021casmopolitan}: kernels tailored to each
+coordinate type (their extension treats ordinals as ordered rather than
+categorical, with measurable gains in their ablation), acquisition
+optimization that interleaves local search over discrete coordinates
+with gradient steps over continuous ones, and trust regions around the
+current best configuration exactly as in Figure~\ref{fig:turbo},
+expanding on successes, shrinking on failures, and triggering a restart
+with a fresh surrogate when they collapse, guided by a UCB rule on an
+auxiliary global GP. Restarts matter more here than in the static
+setting of Section~\ref{sec:highdim}: in a time-varying problem they are
+what stops the surrogate from anchoring on stale evidence.
+
+The authors
+extend the regret guarantee of PB2 to this trust-region, mixed-space,
+time-varying setting (their Theorem 3.1), with the usual caveat that
+the guarantee covers the version without architecture transfer.
+
+Architecture search enters through \emph{generations}, and the device
+that makes it affordable is distillation
+(Figure~\ref{fig:generations}). Within a generation, architectures are
+fixed per agent; truncation selection copies weights \emph{and
+architecture}, so poor architectures are squeezed out of the population,
+and the BO agent conditions its hyperparameter suggestions on the
+architecture coordinates as context. When the population's evaluated
+return stagnates past a patience threshold, a new generation begins: a
+fresh set of architectures is proposed (by random search plus successive
+halving over the architecture subspace, later informed by a BO model fit
+to the best score each architecture achieved), and the new agents are
+trained initially by on-policy distillation from the best agent of the
+outgoing generation, with a joint loss that anneals from imitation
+(value regression plus a KL term to the teacher policy) into the plain
+RL objective. Distillation is what makes changing architecture mid-run
+affordable: the new network does not start from zero, it starts from an
+imitation of the best agent so far.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=1.0, font=\small]
+\draw[-{Latex}] (0,0) -- (10.2,0);
+\node[anchor=north east] at (10.3,-0.12) {training steps};
+% generation 1 block
+\draw[rounded corners, fill=blue!8] (0.2,0.4) rectangle (4.4,2.3);
+\node[anchor=south west, font=\footnotesize] at (0.25,2.34) {gen.\ 1: architectures fixed};
+\foreach \y in {0.7,1.2,1.7,2.05} \draw[thick] (0.5,\y) -- (4.1,\y);
+% stagnation marker
+\draw[dotted] (4.4,0.15) -- (4.4,2.85);
+\draw[dotted] (4.4,0.15) -- (4.4,-0.35);
+\node[anchor=north, font=\footnotesize] at (4.4,-0.4) {return stagnates};
+% distillation arrow over the top
+\draw[-{Latex}, very thick, blue!60!black] (3.9,2.45) .. controls (4.7,3.3) and (5.4,3.3) .. (6.2,2.45);
+\node[blue!60!black, font=\footnotesize, anchor=south, align=center] at (5.05,3.32)
+  {best agent teaches the new generation:\\imitation loss annealing into the RL objective};
+% generation 2 block
+\draw[rounded corners, fill=blue!8] (5.5,0.4) rectangle (9.9,2.3);
+\node[anchor=south east, font=\footnotesize] at (9.85,2.34) {gen.\ 2: fresh architectures};
+\foreach \y in {0.7,1.2,1.7,2.05} \draw[thick] (5.8,\y) -- (9.6,\y);
+\end{tikzpicture}
+\caption{BG-PBT's generational structure (schematic). Hyperparameters
+adapt continuously inside a generation via the trust-region BO explore
+step; architectures change only at generation boundaries, where new
+networks are warm-started by distilling the outgoing best agent rather
+than training from scratch. Distillation is the piece that makes
+mid-run architecture change affordable.}
+\label{fig:generations}
+\end{figure}
+
+The reported results, on seven Brax environments with population size 8
+and 150M environment steps: BG-PBT reaches the best mean return on five
+of seven tasks against tuned PPO, random search, PBT, and PB2, with the
+remaining two split; against a sequential SMAC3 baseline given fifty
+full runs (about six times the compute), BG-PBT still wins on four of
+seven. The discovered schedules are interpretable and match folklore:
+learning rates fall over training and batch sizes grow, without any
+schedule having been specified. The paper's own limitations section
+notes that on Humanoid the ablation without architecture search did
+better, that generational transfer voids the theoretical guarantee, and
+that the distillation hyperparameters are themselves fixed by hand. That
+last item deserves a smile: the state of the art in hyperparameter
+optimization contains, at its center, a handful of hand-tuned
+hyperparameters. The regress has to stop somewhere, and knowing where it
+stops is part of understanding the method.
+
+\section{The two experiments this chapter's verdict rests on}
+\label{sec:pop-evidence}
+
+The verdict this chapter builds toward, build BG-PBT but confine the
+whole population family to studies with real parallelism, rests on two
+experiments. Section~\ref{sec:bo-evidence} argued that evidence should
+be weighed by its design, not its abstract, so both designs are laid
+out here in enough detail to be judged, and then the argument that
+reconciles them is made explicitly, because at first reading they
+appear to disagree.
+
+The first experiment is the BG-PBT paper's own
+\citep{wan2022bgpbt}. Seven Brax locomotion environments; PPO; a
+population of eight agents; 150 million environment steps per run; the
+fifteen-dimensional mixed search space of our running example, nine
+training hyperparameters plus six architecture parameters. The
+comparisons: PPO with tuned fixed hyperparameters, random search over
+the same full space, original PBT, PB2, and, importantly, a
+sequential SMAC3 baseline given fifty complete training runs, roughly
+six times the compute of one population. The scoring is mean evaluated
+return, and the headline results were quoted in the previous section:
+best on five of seven tasks against the population-budget baselines,
+still ahead on four of seven against the six-fold-compute sequential
+baseline.
+
+Three details of the design speak well of the authors.
+Random search was run over the \emph{full} joint space rather than a
+crippled subset, which is how the paper itself surfaced the
+uncomfortable fact that random search matched or beat PBT and PB2 on
+four of seven tasks. The ablations separate the contributions
+(ordinal-aware kernels help; on Humanoid the version \emph{without}
+architecture search did better). And the limitations section concedes
+the points a referee would raise: the theory does not cover
+generational transfer, and the distillation hyperparameters are set by
+hand. A paper that reports where its own method loses earns more trust
+than one that does not.
+
+The second experiment is the controlled RL tuning study of
+\citet{eimer2023hyperparameters}, from a different group with no
+shared authors. Three algorithms (PPO, SAC, DQN) across eleven
+environments, Brax tasks among them; tuners compared at matched
+budgets of ten to sixty-four \emph{full training runs}, which is the
+regime our routine studies actually inhabit; candidates evaluated on
+several tuning seeds with final results reported on disjoint test
+seeds the tuner never saw; and the tuners' own overhead measured
+(minutes for most methods, about two hours for BG-PBT at the largest
+budget, against days of trial compute).
+
+The design's discipline is
+the point: matched budgets stop a hungrier method from winning by
+eating more, and the seed split stops a tuner from being rewarded for
+overfitting luck. In this regime, DEHB was the most consistent tuner,
+random search was respectable, and the population methods trailed:
+BG-PBT sat behind DEHB and even random search at sixteen and
+sixty-four runs, and PB2's tuned configurations changed at most once
+per run, so the schedule advantage that justifies the family's
+existence went unused. The authors note, fairly, that BG-PBT would
+likely benefit from larger budgets.
+
+Now the reconciliation, because a reader holding both results needs
+it. The two experiments occupy different budget regimes. One
+population run in the Wan design consumes eight parallel full-length
+trainings, and its evolutionary machinery gets hundreds of exploit
+events over 150 million steps; the Eimer design's entire budget is
+ten to sixty-four full runs total, which starves a population method
+of exactly the parallelism and step count its mechanism needs.
+
+Where
+the regimes overlap, the studies agree: both find random search over
+the full space embarrassingly strong at modest budgets, and both find
+plain PBT and PB2 fragile with small populations. So the apparent
+contradiction is not one paper being wrong; it is one boundary seen
+from both sides, and the boundary is the finding.
+
+Below roughly eight
+concurrent full-length workers or a few dozen full-run equivalents,
+rung-based methods with a model (DEHB, or BO plus ASHA) are the
+reliable choice; above it, with a schedule-shaped question, BG-PBT is
+the strongest design published for that regime, on the evidence of
+Brax locomotion at population sizes of eight and generous step
+budgets, and its official implementation is available to build from. The package should enforce that boundary in
+software rather than trust each user's optimism, and our validation
+suite re-tests it on our own pinned tasks, since a boundary
+established on Brax deserves a check before it governs a default.
+
+\section{The family since 2022}
+
+The line has stayed active, and the newer entries share one diagnosis:
+PBT's remaining free parameter, the interval $t_{\mathrm{ready}}$
+between evolution steps, is itself consequential and badly understood.
+Evolve too often and agents are judged before their new hyperparameters
+have had any effect; too rarely and the schedule cannot track the
+drift it exists to track.
+
+Multiple-frequencies PBT runs sub-populations
+that evolve at different perturbation frequencies with an asymmetric
+migration rule between them, reporting that vanilla PBT can fall behind
+random search over long horizons, the same greediness disease FIRE-PBT
+treats \citep{doulazmi2025mfpbt}. A 2026 preprint takes the opposite
+tack for small populations, adjusting the interval through restarts
+that reuse weights and re-seed hyperparameters by time-varying BO
+\citep{chebykin2025ipbt}.
+
+On the off-policy side (algorithms that learn from a stored
+\emph{replay buffer} of past experience rather than only from the
+freshest data), SEARL shares one replay
+buffer across the whole population, so the meta-search rides on data the
+population already paid for, a design worth remembering for our
+off-policy RLlib work \citep{franke2021searl}. None of these ships in
+any framework we audited; Ray provides PBT, PBT replay, and a
+continuous-only PB2 (Chapter~\ref{sec:libraries}), which is exactly why
+this family is where an in-house implementation adds value.
+
+\section{What the product should take from this family}
+
+Three design consequences follow. First, schedules are a first-class
+output: our tuner must be able to return a hyperparameter trajectory,
+not only a point, and our run store must record the lineage that
+produced it; Figure~\ref{fig:pbt}'s bold path must be a queryable
+object, not a diagram. Second, the exploit and explore steps need
+checkpoint surgery (copy weights, swap optimizer state, resume), so the
+execution layer must treat checkpoints as cheap, frequent, and
+programmable, which is the strongest single argument for keeping Ray
+Tune underneath (its PBT scheduler already exercises this machinery,
+and RLlib checkpoints compose with it). Third, the population methods
+and the rung methods are complements, not rivals: the honest default is
+budget-dependent, and the product should encode that guidance rather
+than leaving it to each user's optimism.
+
+\section{The verdict, argued from four angles}
+\label{sec:pop-angles}
+
+The chapter's verdict, build the PB2-Mix-to-BG-PBT line as the
+flagship but confine the family behind the parallelism boundary,
+should survive scrutiny from four independent directions, and it does.
+
+From mechanism: the family's failure modes were derivable before any
+experiment. Truncation selection optimizes the current score, so it
+must cull slow starters (the crossing curves of
+Figure~\ref{fig:curves} guarantee victims exist); weight copying must
+collapse diversity in small populations, since after a few exploit
+events every agent descends from one early winner. Both pathologies
+follow from the mechanism as stated, both were then observed
+independently (FIRE-PBT's ImageNet gap for the first, the
+random-search upsets in both experiments for the second), and each
+upgrade in the chapter is a targeted repair of one of them. A verdict
+whose supporting evidence was predicted by the mechanism is worth
+more than one discovered by accident.
+
+From evidence: two experiments with no shared authors, designed under
+different incentives (one by the method's inventors, one by outside
+evaluators with a budget-matched, seed-split protocol), agree
+wherever their regimes overlap and disagree exactly where the budget
+regimes diverge. Section~\ref{sec:pop-evidence} laid out both designs
+so this claim can be checked rather than taken.
+
+From operations: the family's cost shape, $B$ machines for one
+wall-clock training run, is the shape of our actual constraint, a
+cluster with idle capacity and researchers with deadlines; and the
+one genuinely hard engineering requirement, live checkpoint surgery,
+is machinery Ray Tune and RLlib already productionize
+(Chapter~\ref{sec:architecture}). We are not building the risky part.
+
+From decision theory: building the line is an option purchase. Our RL
+work is moving toward exactly the large-parallelism,
+schedule-shaped regime where the method's advantage lives; the
+boundary rule caps the downside of misuse at small budgets, where the
+package will steer users to DEHB instead; and declining to build
+leaves schedules unreachable at any budget, which is a capability
+gap, not a savings.
+
+And the falsification criterion, stated in advance: the boundary and
+the flagship are both re-tested in our validation suite, populations
+against DEHB and BO-plus-ASHA on our pinned Brax task at matched
+compute on both sides of the eight-worker line. If the population
+line cannot beat the rung methods even in its home regime, the
+flagship is demoted and this chapter gets rewritten, not defended.
+
+\begin{decisions}
+\noindent\textbf{Decisions from this chapter.} One threshold governs
+everything here: can the study run eight or more full-length trainings
+in parallel? Read eight as a calibrated default rather than a law: it
+is our reading of where \citet{eimer2023hyperparameters}'s budgets and
+BG-PBT's population regime cross on workloads that are not ours, so
+the product should ship it as a configurable threshold that dispatches
+to the rung methods below the line, warns rather than refuses on
+override, and records the override in the study's audit trail. V08
+is what would replace the default with a measured crossover on our own
+tasks. Below the line the small-budget evidence favors DEHB and
+BO-plus-ASHA \citep{eimer2023hyperparameters}. Above it:
+\begin{itemize}[leftmargin=1.3em, itemsep=2pt]
+\item \textbf{PBT} (expose, do not build). Ray Tune already ships the
+reference distributed implementation; our package should surface it
+with the greediness warning attached (the FIRE-PBT ImageNet numbers,
+71.7 versus 76.5 percent top-1, are the one-line version of that
+warning, \citealp{dalibard2021firepbt}).
+\item \textbf{PB2 extended to mixed spaces} (build; moderate cost).
+Ray's PB2 covers continuous knobs only; the categorical extension
+(PB2-Mix's bandit over categories, or directly the mixed-space kernels
+we build for the trust-region searcher) is the first genuine gap our
+package fills in this family.
+\item \textbf{BG-PBT} (build; the flagship; months). The strongest
+published design when a real population, a schedule-shaped answer, and
+architecture search are all wanted at once: best mean return on five
+of seven Brax tasks against tuned PPO, random search, PBT, and PB2,
+and still ahead of a sequential baseline given six times the compute
+\citep{wan2022bgpbt}. The costs to state plainly: it needs the
+trust-region mixed-space searcher as a prerequisite, its theory does
+not cover the generational transfer that makes it shine, and below the
+population threshold it loses to methods a tenth its complexity.
+\item \textbf{FIRE-PBT, MF-PBT, IPBT, SEARL} (watchlist, do not build
+now). Each fixes a real PBT pathology (greediness, the evolution
+interval, off-policy data reuse), none ships in a framework we
+audited, and none has the cross-paper evidence BG-PBT has. SEARL's
+shared replay buffer is the one to revisit first when our off-policy
+work scales up.
+\end{itemize}
+\end{decisions}
+
+\section{What would overturn these verdicts}
+
+The flagship's fate is tied to V08, whose demotion rule was fixed
+before any code existed: if BG-PBT cannot beat DEHB and BO+ASHA on
+both sides of the eight-worker boundary at matched compute, it is
+demoted to an option and the chapter rewritten with the population
+line's status downgraded. The eight-worker boundary itself is
+empirical; if real studies consistently choose population methods
+below it or consistently avoid them above it, the boundary input is
+re-tuned and this section updated. PB2-Mix's dependency on the
+trust-region searcher is structural; if that searcher is cut for
+other reasons, PB2-Mix either finds a different explore engine or is
+deferred. FIRE-PBT's hold is lifted if a study on RL tasks shows it
+reliably outperforming the simpler PBT variants already included.

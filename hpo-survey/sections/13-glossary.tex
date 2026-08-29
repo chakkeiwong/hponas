@@ -1,0 +1,215 @@
+\chapter*{Glossary}
+\addcontentsline{toc}{section}{Glossary}
+
+Plain-language definitions of every term of art the document leans on,
+for reading without the original papers at hand. Terms are grouped by
+the section that introduces them.
+
+\section*{The problem (Chapter~\ref{sec:problem})}
+
+\begin{description}[leftmargin=1.5em, itemsep=1pt, font=\normalfont\bfseries]
+\item[trial] One training run with one fixed configuration and one
+recorded random seed.
+\item[incumbent] The best configuration found so far in a study.
+\item[fidelity] The resource level of a partial evaluation: epochs
+trained, environment steps consumed, chain length run. Low fidelity is
+cheap and only loosely predictive of full results.
+\item[searcher] The half of a tuner that decides which configuration to
+try next.
+\item[scheduler] The half of a tuner that decides how long trials run,
+which are stopped early, and which paused ones resume.
+\item[run store] The database recording every trial's configuration,
+seed, curves, cost, and diagnostics; the raw material for warm starts
+and transfer.
+\item[seed protocol] Evaluating candidates on several training seeds and
+reporting results on separate test seeds the tuner never saw, so that a
+study optimizes configurations rather than luck.
+\end{description}
+
+\section*{Model-free search (Chapter~\ref{sec:modelfree})}
+
+\begin{description}[leftmargin=1.5em, itemsep=1pt, font=\normalfont\bfseries]
+\item[log-uniform sampling] Drawing a scale-type knob (like a learning
+rate) uniformly in its exponent, so each factor-of-ten range gets equal
+attention.
+\item[Sobol points] A deterministic sequence that spreads samples more
+evenly than independent random draws, avoiding accidental clusters and
+gaps.
+\item[effective dimensionality] The number of knobs that actually move
+the objective; usually far smaller than the number of knobs, but which
+ones matter varies by problem.
+\item[CMA-ES] An evolutionary optimizer that keeps a Gaussian sampling
+distribution and reshapes it toward directions where recent samples
+scored well; needs hundreds of cheap evaluations to shine.
+\item[differential evolution] An evolutionary rule that proposes new
+points by adding scaled differences of existing population members;
+the engine inside DEHB.
+\end{description}
+
+\section*{Bayesian optimization (Chapter~\ref{sec:bayesian})}
+
+\begin{description}[leftmargin=1.5em, itemsep=1pt, font=\normalfont\bfseries]
+\item[surrogate] A cheap statistical model of the expensive objective,
+fit to the trials seen so far and consulted thousands of times between
+real trials.
+\item[Gaussian process (GP)] The default surrogate: a Bayesian
+regression over functions whose predictions come with calibrated
+uncertainty; the same mathematics as kriging in spatial statistics.
+\item[kernel] The GP's assumption about how similar the objective is at
+two configurations, as a function of the distance between them.
+\item[lengthscale] The distance along one axis over which the objective
+decorrelates under the kernel; a long fitted lengthscale means that
+axis barely matters.
+\item[marginal likelihood] The score maximized to fit kernel
+parameters; it trades off fitting the data against model complexity
+automatically.
+\item[input/output warping] Transforming the search axes and the
+observed losses so they look well behaved (stationary, roughly
+Gaussian) to the surrogate; where HEBO's challenge-winning gains came
+from.
+\item[acquisition function] The rule that converts the surrogate's
+beliefs into the next trial, trading off promising means against
+informative uncertainty.
+\item[expected improvement (EI)] The classic acquisition: the expected
+amount by which a candidate beats the incumbent, an option-value
+computation with the incumbent as strike.
+\item[LogEI] The numerically repaired EI family that optimizes the
+logarithm through stable formulas; identical optima, usable gradients.
+\item[UCB] Optimism under uncertainty: score each point by the best
+value its posterior plausibly allows, then pick the best score.
+\item[fantasies] Posterior samples standing in for the unknown outcomes
+of still-running trials, so new proposals can be made without waiting.
+\item[TPE] A sampler that models where good and bad trials sit in
+configuration space and proposes where the good-to-bad density ratio
+peaks; native to conditional spaces, blind to interactions.
+\item[trust region] A box around the incumbent inside which the
+surrogate is trusted; grows after successes, shrinks after failures,
+restarts on collapse.
+\item[ask-and-tell] The interface shape where the tuner is asked for a
+configuration and later told the result, with no control inversion.
+\end{description}
+
+\section*{Multi-fidelity (Chapter~\ref{sec:multifidelity})}
+
+\begin{description}[leftmargin=1.5em, itemsep=1pt, font=\normalfont\bfseries]
+\item[rung] One fidelity level in a race: all trials at a rung are
+compared at the same budget.
+\item[successive halving] Race many configurations at a small budget,
+keep the best fraction, multiply their budget, repeat.
+\item[Hyperband] A portfolio of successive-halving races from
+aggressive to conservative, hedging the choice of starting budget.
+\item[ASHA] Asynchronous successive halving: promote the moment a trial
+is in the top fraction of results seen so far, never waiting for a rung
+to fill; the standard distributed scheduler.
+\item[median stopping rule] Kill any trial running below the median of
+completed trials at the same step; the cheapest insurance.
+\item[BOHB / DEHB] Racing schedulers whose new entrants come from a
+model (TPE) or from differential evolution instead of random sampling;
+DEHB is the best-evidenced small-budget RL tuner.
+\item[freeze-thaw / learning-curve scheduling] Keeping a basket of
+paused trials and allocating the next budget slice by extrapolating
+each trial's curve with uncertainty.
+\item[ifBO] The learning-curve scheduler whose extrapolator is a
+transformer pre-trained once on synthetic curves, so no model is refit
+inside the loop.
+\end{description}
+
+\section*{Population methods (Chapter~\ref{sec:population})}
+
+\begin{description}[leftmargin=1.5em, itemsep=1pt, font=\normalfont\bfseries]
+\item[PBT] Training a population whose members periodically copy the
+weights and hyperparameters of better members (exploit) and perturb
+them (explore); the output is a schedule, not a point.
+\item[truncation selection] The exploit rule: bottom performers restart
+from copies of top performers.
+\item[lineage / schedule] The chain of copies and perturbations behind
+the final best agent; the hyperparameter trajectory it traces is the
+method's real product.
+\item[PB2] PBT with the explore step replaced by a time-varying GP
+bandit maximizing a UCB rule over performance increments.
+\item[BG-PBT] The flagship population method: trust-region mixed-space
+BO for the explore step, plus generational architecture search with
+distillation to warm-start new networks.
+\item[distillation] Training a new network to imitate a trained one
+before switching to the real objective; what makes changing
+architecture mid-run affordable.
+\end{description}
+
+\section*{Multiple objectives (Chapter~\ref{sec:moo})}
+
+\begin{description}[leftmargin=1.5em, itemsep=1pt, font=\normalfont\bfseries]
+\item[dominance / Pareto front] One configuration dominates another if
+it is at least as good everywhere and better somewhere; the front is
+the set of undominated trade-offs, exactly as in welfare economics.
+\item[hypervolume] The area (volume) of objective space dominated by
+the current front, up to a fixed reference point; the standard scalar
+progress measure for front-seeking methods.
+\item[scalarization] Collapsing several objectives into one number;
+the Chebyshev form (weighted worst gap to the ideal) can reach every
+Pareto point, the weighted sum cannot.
+\item[EHVI / qNEHVI / qLogNEHVI] Expected hypervolume improvement and
+its batched, noise-aware, numerically repaired successors; the premium
+acquisition for two to four objectives.
+\item[non-dominated sorting] Layering a population into ranks
+(undominated; undominated once rank one is removed; and so on), used
+for selection and for rung promotion.
+\item[crowding distance] A tie-breaker preferring points in sparsely
+covered stretches of the front, so selection spreads along it.
+\item[veto gate] A correctness check (divergences, $\widehat{R}$) that
+discards a trial regardless of its score; distinct from an objective.
+\end{description}
+
+\section*{Priors, transfer, and scale (Chapter~\ref{sec:transfer})}
+
+\begin{description}[leftmargin=1.5em, itemsep=1pt, font=\normalfont\bfseries]
+\item[$\pi$BO] Multiplying the acquisition by an expert's prior over
+where the optimum lies, raised to a power that decays as evidence
+arrives; steers early, forgets bad advice.
+\item[PriorBand] The same idea inside multi-fidelity racing: new
+configurations drawn from a portfolio of uniform, prior, and
+around-the-incumbent samplers, weighted by rung.
+\item[warm start] Seeding a new study with configurations that ranked
+well on similar past studies, straight from the run store.
+\item[prior-fitted network (PFN)] A transformer pre-trained on
+synthetic datasets from a chosen prior so that, shown a study's
+observations as context, it outputs posterior predictions in one
+forward pass; approximate Bayesian inference paid for once, offline.
+\item[EI-per-cost / cost cooling] Dividing the acquisition by
+predicted trial cost, with an exponent annealed toward zero so
+bargains matter early and stop mattering at the end.
+\item[$\mu$P / $\mu$Transfer] A network parametrization under which
+good hyperparameters become approximately width-invariant, so one
+tunes a small proxy and transfers to the large model.
+\item[scaling laws (for tuning)] Fitted formulas giving optimal
+learning rate, batch size, or weight decay as functions of model and
+data scale; at the largest scales they replace search outright.
+\end{description}
+
+\section*{Architecture search (Chapter~\ref{sec:workloads})}
+
+\begin{description}[leftmargin=1.5em, itemsep=1pt, font=\normalfont\bfseries]
+\item[one-shot NAS / supernet] Training one network containing every
+candidate architecture as a weight-sharing sub-network, then scoring
+candidates without retraining; economical in principle, unreliable in
+the documented evaluations.
+\item[zero-cost proxy] A score computed at initialization, without
+training, meant to predict a trained architecture's quality; best
+evidence says useful only alongside a learned predictor, with plain
+parameter count and FLOPs surprisingly competitive.
+\item[grammar-based search space] Architectures generated by
+production rules like sentences from a grammar, compactly defining
+huge hierarchical spaces; solves expressiveness, not compute.
+\end{description}
+
+\section*{Sampler diagnostics (Chapter~\ref{sec:workloads})}
+
+\begin{description}[leftmargin=1.5em, itemsep=1pt, font=\normalfont\bfseries]
+\item[ESS per gradient] Effective sample size earned per gradient
+evaluation; the efficiency currency for tuning MCMC, since gradients
+dominate cost.
+\item[$\widehat{R}$ (potential scale reduction)] A convergence
+diagnostic comparing chains; values away from one veto a
+configuration no matter how efficient it looks.
+\item[divergence (HMC)] A numerical failure of the integrator flagged
+by the sampler; counted and used as a veto.
+\end{description}

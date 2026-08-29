@@ -1,0 +1,425 @@
+\chapter{The problem we are actually trying to solve}
+\label{sec:problem}
+
+Every project in our workspace trains something: a reinforcement-learning
+(RL) agent through RLlib (Ray's RL library), a Hamiltonian
+neural network on trajectory data (a network whose architecture builds in
+energy conservation), a normalizing flow that preconditions a sampler (a
+neural map that reshapes a hard posterior into an easier one), a
+forecasting model with several competing losses. Each of these is taught
+properly where it matters (Chapter~\ref{sec:workloads} devotes a section
+to each); for now they are simply the customers. Each of these training procedures exposes ten to twenty
+knobs, and the knobs come in four kinds. The kinds are worth meeting one
+at a time, because every method in this document has to handle all four,
+and more than one otherwise-good method stumbles on exactly one of them.
+
+A \emph{continuous} knob takes any value in an interval. The learning
+rate is the canonical case: $3 \times 10^{-4}$ is a legal setting, so is
+$2.9 \times 10^{-4}$, and so is everything between them. Entropy
+coefficients and integrator step sizes are the same kind. Continuous
+knobs are the friendliest kind, because ``nearby'' means what it seems
+to mean: settings close together usually behave similarly, and every
+model-based method in this document leans on that.
+
+An \emph{ordinal} knob is an integer with a natural order. Batch size
+runs 128, 256, 512; network width and the number of integrator steps
+inside a sampler are the same kind. The order carries real information, since 256 genuinely
+sits between 128 and 512 and performance usually moves through it on
+the way from one to the other, but the grid is coarse, and treating
+the values as just another continuum papers over the coarseness. How
+much that ordering is worth respecting returns as a concrete design
+choice in Chapter~\ref{sec:bayesian}.
+
+A \emph{categorical} knob is a choice among labels with no ``between''
+at all. There is no activation function halfway from $\tanh$ to ReLU,
+and no gradual path between using spectral normalization (a training
+stabilizer we will meet again in the running example) and not using
+it. Methods built on continuity must do something special here, and
+what they do (overlap kernels, per-category bandits) occupies real
+space in Chapters~\ref{sec:bayesian} and~\ref{sec:population}.
+
+A \emph{conditional} knob exists only when another knob takes a
+particular value. Learning-rate annealing is the standing instance: if
+annealing is switched off, the final learning-rate multiplier is not
+merely irrelevant, it is undefined, and a tuner that keeps proposing
+values for it is spending budget on configurations that do not differ.
+(Off-policy algorithms supply the same structure elsewhere in our
+workloads: the temperature of a soft target update is undefined when
+hard updates are selected.)
+Conditional structure is why realistic search spaces are trees rather
+than boxes, and it decides real verdicts later; it is much of the case
+for one of Chapter~\ref{sec:bayesian}'s searchers.
+
+Choosing these values well is routinely worth more than
+the next clever idea, and choosing them badly can make a sound method look
+broken. \citet{eimer2023hyperparameters} swept eleven hyperparameters of
+PPO, the same reinforcement-learning algorithm our running example will
+tune below, across standard environments and found that almost every one of them had a
+large effect on final return in at least one environment, including knobs that
+most papers never tune, such as the clipping range. The same study found that
+the worst value of a swept hyperparameter landed within one standard deviation
+of the best value in only 7 of 126 sweeps. Tuning is not optional in our line
+of work; the only question is how much compute and attention it consumes.
+
+\section{A running example, and the loop every method lives in}
+\label{sec:running}
+
+Abstract definitions slide off the mind unless they have something to stick
+to, so we fix a concrete case now and return to it in every section. Our
+running example is the one our own cluster runs most often: tuning PPO,
+the workhorse reinforcement-learning algorithm of our RLlib stack, as it
+learns a locomotion task in Brax, a suite of fast physics-simulated
+environments.
+
+Since PPO's knobs will follow us through the whole document, one
+plain-language pass through the algorithm is worth its space; nothing
+deeper than this pass is ever assumed. The agent holds two neural
+networks. The \emph{policy} maps what the agent observes to a
+distribution over actions; the \emph{value network} predicts how much
+reward is still to come from a given situation. Training alternates two
+activities: the agent acts in the simulated environment for a while,
+collecting observations, actions, and rewards, and then the optimizer
+takes gradient steps that make the actions which worked out better than
+the value network expected (the \emph{advantage}) more probable, with a
+clip that keeps the updated policy close to the policy that collected
+the data. The name PPO, proximal policy optimization, is a description:
+optimize the policy, but stay proximal. A trained agent's score, its
+\emph{return}, is the total reward it accumulates over an episode of
+play.
+
+The full search space, taken from the experiments behind BG-PBT, the
+population-based method Chapter~\ref{sec:population} examines in
+detail, has fifteen
+dimensions: nine training hyperparameters (learning rate, discount, entropy
+coefficient, unroll length, reward scaling, batch size, update epochs,
+the generalized-advantage-estimation parameter GAE
+$\lambda$, clipping $\epsilon$) and six architecture parameters (width,
+depth, and a spectral-normalization flag, separately for the policy and
+value networks) \citep{wan2022bgpbt}.
+
+\subsection{Reading the fifteen knobs}
+
+Fifteen numbers is a lot to hold, so read them in groups, by what each
+group controls. The aim is not to memorize the list but to see that
+each entry is a lever a practitioner can explain, not a mystery
+constant.
+
+Three knobs govern the size of an update. The learning rate scales how
+far every gradient step moves the network, and it is the most
+notorious hyperparameter in deep learning for a reason: too large
+diverges, too small never arrives, and the usable range spans decades.
+PPO's clipping $\epsilon$ bounds how far one update may move the
+\emph{policy} away from the policy that collected the current data, a
+trust leash rather than a step size. Reward scaling sets the units of
+the training signal itself, and every gradient inherits those units.
+
+Two knobs decide what the future is worth. The discount $\gamma$
+weights a reward $t$ steps ahead by $\gamma^{t}$, so it is exactly a
+time-preference parameter, and the conventional $\gamma = 0.99$ gives
+an effective horizon of about $1/(1-\gamma) = 100$ steps. GAE's
+$\lambda$ (generalized advantage estimation) sets how far into the
+observed future the advantage estimate
+looks, trading the bias of short lookaheads against the variance of
+long ones.
+
+One knob buys experimentation. The entropy coefficient pays the policy
+a bonus for staying random, so that it keeps trying actions it would
+otherwise have abandoned. Too little and the agent commits early to a
+mediocre habit; too much and it never commits at all.
+
+Three knobs meter the data per update: the unroll length (how many
+environment steps are collected before an update), the batch size (how
+many of those steps each gradient estimate averages over), and the
+number of update epochs (how many passes the optimizer makes over the
+same collected data before discarding it).
+
+The remaining six are the architecture: width and depth for the policy
+network and again for the value network, capacity in four integers,
+plus a spectral-normalization flag for each, a stabilizer and our
+standing example of a categorical knob.
+
+None of these levers acts alone. The size of a stable gradient step
+depends on how much data estimated it, so batch size and learning rate
+tend to move together; a longer unroll changes what $\gamma$ and
+$\lambda$ can see; extra capacity changes how much restraining the
+entropy bonus and the clip must do. This coupling is why turning one
+knob at a time misleads, and why methods that model the joint surface
+(Chapter~\ref{sec:bayesian}) earn their complexity. Whenever a figure
+needs a space we can draw, we will slice out the two knobs everyone
+recognizes: the learning rate, searched on a log scale from $10^{-5}$
+to $10^{-2}$, and the entropy coefficient.
+
+\subsection{Expensive, noisy, and without gradients}
+
+One evaluation of one configuration means training an agent for up to
+150 million environment steps, hours of wall-clock on several
+accelerators. Everything else in this document is downstream of that
+number: a hundred-trial study is hundreds of GPU-hours, a line item
+someone has to defend, and Section~\ref{sec:costmodel} prices it out.
+
+The resulting score is noisy. Each training run reports the mean
+evaluated return over a handful of episodes, and two agents differing only in
+random seed can land far apart. When the formal statement below takes
+an expectation over seeds, this spread is what the expectation is
+pricing.
+
+And the score arrives without gradients in the knobs. Backpropagation
+supplies derivatives of the loss with respect to the network's
+weights, not with respect to the batch size that fed it or the
+discount that shaped its targets; between $\config$ and the final
+return stands an entire non-differentiable training procedure. Nothing
+like gradient descent is available in the space we are actually
+searching.
+
+Expensive, noisy, and gradient-free: those three properties are the
+whole reason this document exists.
+
+A second, smaller case will carry the multi-objective thread: a Hamiltonian
+neural network from our physics projects, where one training run is minutes
+rather than hours, and where nobody can say in advance how many units of long-rollout
+energy drift one unit of short-horizon prediction error is worth. We will
+meet it properly in Chapters~\ref{sec:moo} and~\ref{sec:workloads}.
+
+\subsection{The loop, and the words for its parts}
+
+Every method in this document, from grid search to the most elaborate
+population scheme, is an instance of one loop, and it is worth drawing once
+so that later chapters can point at its parts
+(Figure~\ref{fig:loop}). A \emph{tuner} holds two responsibilities that we
+will keep separate throughout, because the literature develops them
+separately and our own design (Chapter~\ref{sec:architecture}) implements
+them behind separate interfaces. The \emph{searcher} decides which
+configuration to try next. The \emph{scheduler} decides how long each trial
+runs, which trials to stop early, and which paused trials to resume. The
+executor trains the model and streams back intermediate scores; everything
+observed lands in a store that the tuner (and, later, other studies) can
+consult. Grid search is this loop with a trivial searcher and no scheduler;
+Bayesian optimization upgrades the searcher
+(Chapter~\ref{sec:bayesian}); successive halving upgrades the scheduler
+(Chapter~\ref{sec:multifidelity}); population-based training entangles the
+two on purpose (Chapter~\ref{sec:population}).
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners, align=center, inner sep=5pt, font=\small},
+  arr/.style={-{Latex}, thick}]
+\node[box, minimum width=46mm, minimum height=16mm] (tuner) at (0,0)
+  {\textbf{tuner}\\[1pt] searcher: which $\config$ next?\\ scheduler: how long? stop? resume?};
+\node[box, minimum width=38mm, minimum height=16mm] (exec) at (8.8,0)
+  {\textbf{executor}\\[1pt] trains $A(\config; s)$\\ at fidelity $r$};
+\draw[arr] ([yshift=3.5mm]tuner.east) -- node[above, font=\footnotesize] {trial $(\config, s, r)$} ([yshift=3.5mm]exec.west);
+\draw[arr] ([yshift=-3.5mm]exec.west) -- node[below, font=\footnotesize] {curve, score, cost} ([yshift=-3.5mm]tuner.east);
+\node[box, minimum width=118mm, minimum height=9mm] (store) at (4.4,-2.8)
+  {\textbf{run store}: configurations, seeds, learning curves, costs, diagnostics};
+\draw[arr] (exec.south) -- node[right, font=\footnotesize] {records} (exec.south |- store.north);
+\draw[arr] (store.north -| tuner.south) -- node[left, font=\footnotesize] {informs} (tuner.south);
+\node[font=\small\itshape, above=1mm of tuner.north] {proposes};
+\node[font=\small\itshape, above=1mm of exec.north] {pays the GPU bill};
+\end{tikzpicture}
+\caption{The loop every tuning method instantiates. The searcher and the
+scheduler are separate decisions: one picks configurations, the other
+allocates training budget across them. Everything observed flows into a
+store, which is what later lets a new study start smarter than its
+predecessor (Chapter~\ref{sec:transfer}).}
+\label{fig:loop}
+\end{figure}
+
+Three words from the figure recur on nearly every page, so we fix them now.
+A \emph{trial} is a single training run with a fixed configuration (and, we
+will insist later, a recorded seed). The \emph{incumbent} is the best
+configuration found so far. The \emph{fidelity} of a partial evaluation is
+its resource level: epochs trained, environment steps consumed, chain length
+run. In the running example, a full-fidelity trial is 150 million steps; a
+one-tenth-fidelity trial of the same configuration costs one tenth of the
+GPU bill and tells us something, but not everything, about the full run.
+
+To see the loop turn once, walk a young study through it. The searcher,
+knowing nothing yet, proposes a first configuration: learning rate
+$3 \times 10^{-4}$, width 256, annealing off. The scheduler grants
+it a tenth of full fidelity, 15 million steps. The executor trains,
+streaming back a learning curve, and the store records the
+configuration, the seed, the curve, and the bill. At the next decision
+point the scheduler looks at that curve and either buys the trial more
+steps or stops payment, and the searcher, now holding one completed
+record rather than none, proposes a second configuration a little less
+blindly. Every chapter that follows upgrades one arrow of
+Figure~\ref{fig:loop} and leaves the rest of the loop alone.
+
+\section{The formal problem, and where it bends}
+\label{sec:formal}
+
+The textbook formulation is simple, and we will need it on the page because
+every method chapter refines some part of it. A training algorithm $A$ maps a
+configuration $\config \in \cspace$ and a random seed $s$ to a trained model,
+and a cost function $c$ scores that model on held-out data, so we want
+\begin{equation}
+\config^{\star} \in \arg\min_{\config \in \cspace}
+\; \E_{s}\!\left[ c\!\left( A(\config; s) \right) \right],
+\label{eq:hpo}
+\end{equation}
+where the expectation runs over seeds (and, when relevant, over draws of the
+training data or of environment instances). Read the pieces against the
+running example: $\cspace$ is the fifteen-dimensional product of intervals
+(learning rate), integer ranges (width, batch size), and finite sets (the
+spectral-normalization flag), sometimes with conditional branches; $A$ is
+the machine-learning training loop as a whole, here PPO and everything
+around it; $c$ is the negative of the evaluated return; the expectation
+over $s$ is the part beginners drop and RL practitioners regret dropping.
+Each evaluation of the objective means training a model, so evaluations are
+expensive, noisy, and yield no gradients with respect to $\config$. This is
+black-box optimization under noise, and Chapter~\ref{sec:bayesian} describes
+the machinery built for exactly this setting.
+
+The expectation in \eqref{eq:hpo} deserves one concrete reading before
+it starts doing work. Suppose, schematically, that configuration A
+trains to evaluated returns of 900 and 300 on two seeds, while
+configuration B trains to 640 and 660. A leaderboard that remembers
+best single runs crowns A, whose 900 is the best number anyone has
+seen. The expectation averages instead, 600 against 650, advantage B,
+and that is the right verdict for anyone who must ship one
+configuration and then live with whatever seed the production run
+draws. Optimizing the average of a noisy objective and optimizing its
+luckiest observed value are different problems, and \eqref{eq:hpo}
+commits us, deliberately, to the first.
+
+Formulation~\eqref{eq:hpo} bends in four places for our workloads, and each
+bend picks out a branch of the literature. The four bends are worth reading
+slowly: they are the map of Chapters~\ref{sec:modelfree}
+through~\ref{sec:transfer}, and each one will reappear as the opening
+problem of its chapter.
+
+\subsection{Bend one: the seed is part of the problem}
+
+The expectation over seeds is not a nuisance term; in reinforcement
+learning it is often the dominant source of variation.
+\citet{eimer2023hyperparameters} observed single seeds crashing while sibling
+seeds of the same configuration finished well, and found that a configuration
+selected on one seed can sit far below average on others. Concretely: if we
+tune the running example on seed 1 and the winning configuration happened to
+draw a lucky initialization, we have optimized for the luck, not the
+configuration, and the ``win'' evaporates on seeds 2 through 5. Their remedy,
+which we adopt in Chapter~\ref{sec:roadmap}, is to treat the seed budget as
+part of the tuning protocol: evaluate candidates on several training seeds,
+and report final results on test seeds that the tuner never saw. The
+structure is the same train/test split that protects supervised learning
+from overfitting, applied one level up, to the tuner itself. The same
+discipline appears in the sampler world, where a single chain can look
+excellent by luck.
+
+\subsection{Bend two: the best configuration drifts during training}
+
+The best configuration is not constant in time.
+Learning-rate schedules exist because the loss surface a network sees at the
+end of training is not the one it saw at the start, and in reinforcement
+learning the data distribution itself shifts as the policy improves: the
+running example's agent collects its own training data, so better play
+produces different data, which changes what the next gradient step should
+be. \citet{eimer2023hyperparameters} formalize the distinction as algorithm
+configuration, which seeks one fixed $\config^{\star}$, versus dynamic
+algorithm configuration, which seeks a policy mapping training state to
+configuration; landscape studies that refit the response surface at
+several points during RL training find the good region genuinely drifting
+\citep{mohan2023landscapes}. Population-based training and its descendants
+(Chapter~\ref{sec:population}) live in the dynamic setting: they output a
+schedule of hyperparameters rather than a point, which is precisely why they
+appeal for RL and why they need more parallel compute than pointwise methods.
+
+\subsection{Bend three: several costs at once}
+
+We often care about several costs at once. A Hamiltonian network
+trades prediction error against violation of energy conservation; a trading
+model trades expected return against drawdown; any model on shared hardware
+trades quality against training or inference cost. When the exchange rate
+between objectives is unknown in advance, the honest target is the Pareto
+front, the set of configurations that cannot be improved in one objective
+without paying in another; fixing weights up front would answer by
+assumption the question the study exists to ask.
+Chapter~\ref{sec:moo} develops this properly,
+including the geometry of why the obvious fix (just add the objectives with
+weights) quietly discards solutions.
+
+\subsection{Bend four: cheap evidence is biased evidence}
+
+A partial evaluation is cheap and informative. A learning curve at
+epoch ten says a great deal about epoch one hundred; a short MCMC run says
+something (though, as Chapter~\ref{sec:workloads} discusses, not everything)
+about a long one. Methods that exploit partial evaluations, called
+multi-fidelity methods, are the single largest lever for cutting tuning cost,
+routinely saving an order of magnitude of compute over full-length
+evaluations (Chapter~\ref{sec:multifidelity}). The catch, previewed here
+because it shapes everything in that section: cheap evidence is biased
+evidence, and the bias has a sign. Configurations that invest early (large
+learning rates) look better at low fidelity than configurations that invest
+late (small learning rates, heavy regularization), so a scheduler that
+trusts early scores too much systematically kills the slow starters. Keeping
+that bias in view is most of the art.
+
+\section{What ``fast and cheap'' should mean}
+\label{sec:costmodel}
+
+The phrase ``low computation cost'' hides three different quantities, and a
+tuner can be good at one while being poor at another. Before comparing any
+two methods we need to know which bill we are trying to shrink.
+
+The first is the compute consumed by the trials themselves: the sum of
+GPU-hours over every training run the tuner launches, including the runs it
+kills early. This is where essentially all the money goes, and it is the
+quantity multi-fidelity methods attack. In the running example, a 100-trial
+study at full fidelity is hundreds of GPU-hours; every other cost in this
+subsection is rounding error next to it. A useful way to compare tuners is
+the total trial compute needed to reach a target quality with, say,
+probability one half, estimated over repeated tuning runs.
+
+The second is wall-clock time to a good configuration, which depends on how
+well the tuner exploits parallel workers. A method that needs its evaluations
+one after another (classical Bayesian optimization in its sequential form)
+can lose to a dumber parallel method simply by leaving GPUs idle;
+asynchronous variants exist precisely to close that gap. The
+arithmetic separating the two bills is worth one line: a
+sixty-four-trial study at full fidelity burns the same GPU-hours on
+one worker as on eight, but the calendar time differs by a factor of
+eight, and a tuner that can only propose sequentially cannot use the
+other seven workers at all.
+\citet{wan2022bgpbt} report that a sequential Bayesian optimization baseline
+needed roughly six times more resources than their population method to reach
+comparable quality on Brax tasks, and more still in wall-clock terms, because
+the population trains in parallel while sequential optimization cannot. The
+distinction matters to us operationally: cluster GPU-hours and a researcher's
+calendar week are different budgets, held by different people.
+
+The third is the tuner's own overhead: fitting whatever internal model
+the tuner carries, scoring candidates with it, moving checkpoints. This
+is usually negligible next to
+training. \citet{eimer2023hyperparameters} measured minutes of optimizer
+overhead against days of trial compute in their RL study, with only their
+most elaborate population method (BG-PBT) reaching about two hours of overhead at
+their largest budget of 64 runs. Overhead only starts to matter when trials
+themselves are short, in the regime of small Hamiltonian networks or quick
+supervised probes, where a heavyweight distributed stack can dominate the
+cost of the work. This is worth remembering when we weigh Ray against
+lighter execution backends in Chapter~\ref{sec:architecture}.
+
+\section{What this document does not cover}
+
+Three neighboring topics are out of scope, with pointers for the curious.
+Gradient-based hyperparameter optimization differentiates the validation loss
+through the training procedure itself, either exactly on small problems or by
+implicit differentiation at scale; \citet{lorraine2020millions} tune millions
+of regularization hyperparameters this way. It is powerful when the
+hyperparameters enter the training loss smoothly, but it requires
+intrusive access to the training loop and does not apply to discrete
+choices, so we treat it as a specialist tool rather than product scope.
+
+Learned optimizers and meta-gradient methods that adapt hyperparameters inside
+a single run, such as the self-tuning actor-critic of
+\citet{zahavy2020selftuning}, sit inside the training algorithm rather than
+outside it; they compete with outer-loop tuning and we note in
+Chapter~\ref{sec:workloads} where internal adaptation should simply be
+switched on and left alone.
+
+Full neural architecture search with weight
+sharing is a large field of its own; Chapter~\ref{sec:workloads} takes from
+it only the pieces that have survived independent evaluation and that fit a
+tuning product, and explains why we do not recommend building a
+differentiable-NAS capability.

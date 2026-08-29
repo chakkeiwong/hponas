@@ -1,0 +1,90 @@
+% Hyperparameter optimization survey and implementation guide.
+% Build: pdflatex main && bibtex main && pdflatex main && pdflatex main
+% Fonts: mathptmx + helvet (newtxtext/sourcesanspro are not installed on this machine).
+\documentclass[11pt]{report}
+
+\usepackage[margin=1.1in]{geometry}
+\usepackage{mathptmx}
+\usepackage[scaled=0.92]{helvet}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{enumitem}
+\usepackage[round]{natbib}
+\usepackage{xcolor}
+\usepackage{framed}
+\usepackage{caption}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc,decorations.pathreplacing}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!60!black]{hyperref}
+
+\setlength{\emergencystretch}{2em}
+\bibliographystyle{plainnat}
+
+% Decision boxes: the operational layer for readers deciding what to build.
+% A thick left rule marks them; they restate section verdicts in plain terms
+% and are skippable by readers following the teaching layer.
+\newenvironment{decisions}{%
+  \def\FrameCommand{{\color{blue!50!black}\vrule width 2.5pt}\hspace{8pt}}%
+  \MakeFramed{\advance\hsize-\width\FrameRestore}\small}%
+{\endMakeFramed}
+
+\newcommand{\config}{\bm{\lambda}}
+\newcommand{\cspace}{\Lambda}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\gp}{\mathcal{GP}}
+
+\title{Tuning the machines that tune themselves:\\
+a survey of hyperparameter optimization\\
+and a plan for building our own tuner}
+\author{Internal research note, prepared for the workspace projects\\
+(reinforcement learning, Hamiltonian networks, neural-transport samplers,\\
+multi-objective models)}
+\date{August 24, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+\clearpage
+
+\part{The problem}
+\input{sections/01-introduction}
+\input{sections/02-problem}
+
+\part{Methods that choose configurations}
+\input{sections/03-model-free}
+\input{sections/04-bayesian}
+
+\part{Methods that manage the budget}
+\input{sections/05-multifidelity}
+\input{sections/06-population}
+
+\part{Several objectives, and knowledge we already own}
+\input{sections/07-multiobjective}
+\input{sections/08-priors-transfer}
+
+\part{From methods to our system}
+\input{sections/09-workloads}
+\input{sections/10-libraries}
+
+\part{The product proposal}
+\input{sections/14-product}
+\input{sections/11-architecture}
+\input{sections/15-contracts}
+\input{sections/16-validation}
+\input{sections/12-roadmap}
+\input{sections/13-glossary}
+
+\clearpage
+\bibliography{refs}
+
+\end{document}

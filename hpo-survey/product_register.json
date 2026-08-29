@@ -1,0 +1,273 @@
+{
+ "generated": "2026-08-26",
+ "source": "decision boxes",
+ "anchors_pending": "none for matched entries; workload-template rows filled generically",
+ "entries": [
+  {
+   "chapter": "03-model-free.tex",
+   "item": "Log-scale and Sobol sampling",
+   "verdict": "include, days of work",
+   "contract": "schema.transform + sobol/log searcher",
+   "suite_test": "V04,V05"
+  },
+  {
+   "chapter": "03-model-free.tex",
+   "item": "Random search",
+   "verdict": "include, trivial",
+   "contract": "floor searcher (suite fixture)",
+   "suite_test": "V04"
+  },
+  {
+   "chapter": "03-model-free.tex",
+   "item": "Grid search",
+   "verdict": "exclude as a search method",
+   "contract": "excluded by design (debug view only)",
+   "suite_test": "excluded"
+  },
+  {
+   "chapter": "03-model-free.tex",
+   "item": "CMA-ES",
+   "verdict": "include by wrapping an existing implementation, low priority",
+   "contract": "searcher wrap",
+   "suite_test": "V01,V04"
+  },
+  {
+   "chapter": "03-model-free.tex",
+   "item": "Differential evolution",
+   "verdict": "no standalone entry",
+   "contract": "inside DEHB only",
+   "suite_test": "V07"
+  },
+  {
+   "chapter": "04-bayesian.tex",
+   "item": "GP searcher with qLogEI on BoTorch",
+   "verdict": "include; the core build, weeks",
+   "contract": "searcher impl: gp_qlogei",
+   "suite_test": "V01,V04,V06"
+  },
+  {
+   "chapter": "04-bayesian.tex",
+   "item": "TPE by wrapping Optuna",
+   "verdict": "include; days",
+   "contract": "searcher wrap: optuna_tpe (conditional-capable)",
+   "suite_test": "V01,V04"
+  },
+  {
+   "chapter": "04-bayesian.tex",
+   "item": "Raw EI, anywhere",
+   "verdict": "exclude",
+   "contract": "excluded by design (log variants only)",
+   "suite_test": "excluded"
+  },
+  {
+   "chapter": "04-bayesian.tex",
+   "item": "Entropy-search acquisitions",
+   "verdict": "exclude",
+   "contract": "excluded by design",
+   "suite_test": "excluded"
+  },
+  {
+   "chapter": "04-bayesian.tex",
+   "item": "Dimension-scaled lengthscale priors",
+   "verdict": "include; one configuration line",
+   "contract": "gp searcher default config",
+   "suite_test": "V04"
+  },
+  {
+   "chapter": "04-bayesian.tex",
+   "item": "Trust-region searcher with mixed-space kernels",
+   "verdict": "include; weeks",
+   "contract": "searcher impl: tr_mixed (shared with population explore)",
+   "suite_test": "V04,V08"
+  },
+  {
+   "chapter": "04-bayesian.tex",
+   "item": "SAASBO",
+   "verdict": "defer",
+   "contract": "pre-gated (defer)",
+   "suite_test": "pre-gated"
+  },
+  {
+   "chapter": "04-bayesian.tex",
+   "item": "SMAC",
+   "verdict": "do not adopt as a dependency",
+   "contract": "suite correctness oracle only",
+   "suite_test": "V01"
+  },
+  {
+   "chapter": "05-multifidelity.tex",
+   "item": "ASHA plus the median stopping rule",
+   "verdict": "include; days; tier 0",
+   "contract": "scheduler impl: asha + median",
+   "suite_test": "V02,V06"
+  },
+  {
+   "chapter": "05-multifidelity.tex",
+   "item": "Hyperband as a distinct feature",
+   "verdict": "exclude",
+   "contract": "excluded (conservative bracket as ASHA option)",
+   "suite_test": "excluded"
+  },
+  {
+   "chapter": "05-multifidelity.tex",
+   "item": "BOHB",
+   "verdict": "exclude",
+   "contract": "excluded by design",
+   "suite_test": "excluded"
+  },
+  {
+   "chapter": "05-multifidelity.tex",
+   "item": "DEHB, implemented against our interfaces",
+   "verdict": "include; weeks; tier 2",
+   "contract": "searcher-scheduler hybrid impl",
+   "suite_test": "V07"
+  },
+  {
+   "chapter": "05-multifidelity.tex",
+   "item": "PASHA",
+   "verdict": "include as an ASHA option flag; small",
+   "contract": "scheduler flag on asha",
+   "suite_test": "V02"
+  },
+  {
+   "chapter": "05-multifidelity.tex",
+   "item": "Learning-curve scheduling, specifically ifBO",
+   "verdict": "include; tier 2 bet; weeks, gated on pause/resume plumbing",
+   "contract": "scheduler impl: ifbo (gated)",
+   "suite_test": "V15"
+  },
+  {
+   "chapter": "06-population.tex",
+   "item": "PBT",
+   "verdict": "expose, do not build",
+   "contract": "exposed via scheduler exploit/explore + Ray adapter",
+   "suite_test": "V02"
+  },
+  {
+   "chapter": "06-population.tex",
+   "item": "PB2 extended to mixed spaces",
+   "verdict": "build; moderate cost",
+   "contract": "explore engine on tr_mixed",
+   "suite_test": "V08"
+  },
+  {
+   "chapter": "06-population.tex",
+   "item": "BG-PBT",
+   "verdict": "build; the flagship; months",
+   "contract": "flagship on population verbs",
+   "suite_test": "V08"
+  },
+  {
+   "chapter": "06-population.tex",
+   "item": "FIRE-PBT, MF-PBT, IPBT, SEARL",
+   "verdict": "watchlist, do not build now",
+   "contract": "watchlist (pre-gated)",
+   "suite_test": "pre-gated"
+  },
+  {
+   "chapter": "07-multiobjective.tex",
+   "item": "qLogNEHVI on BoTorch",
+   "verdict": "include; the premium searcher; weeks",
+   "contract": "searcher impl: qlognehvi",
+   "suite_test": "V09"
+  },
+  {
+   "chapter": "07-multiobjective.tex",
+   "item": "Chebyshev scalarization with random weights",
+   "verdict": "include; days",
+   "contract": "searcher impl: chebyshev_random",
+   "suite_test": "V09"
+  },
+  {
+   "chapter": "07-multiobjective.tex",
+   "item": "Plain weighted sums as a product default",
+   "verdict": "exclude",
+   "contract": "excluded by design (no searcher implements it as default)",
+   "suite_test": "V09 (reopens exclusion if convexity holds on our tasks)"
+  },
+  {
+   "chapter": "07-multiobjective.tex",
+   "item": "NSGA-II by wrapping Optuna",
+   "verdict": "include; free",
+   "contract": "searcher wrap: optuna_nsga2",
+   "suite_test": "V09"
+  },
+  {
+   "chapter": "07-multiobjective.tex",
+   "item": "MO-ASHA with veto gates",
+   "verdict": "build; about a week over ASHA",
+   "contract": "scheduler impl: mo_asha + gate()",
+   "suite_test": "V10,V13"
+  },
+  {
+   "chapter": "07-multiobjective.tex",
+   "item": "MORBO and the hypervolume knowledge gradient",
+   "verdict": "defer",
+   "contract": "pre-gated (defer)",
+   "suite_test": "pre-gated"
+  },
+  {
+   "chapter": "08-priors-transfer.tex",
+   "item": "BO's prior-weighted acquisition",
+   "verdict": "include; days",
+   "contract": "acquisition decorator: pibo(prior)",
+   "suite_test": "V11"
+  },
+  {
+   "chapter": "08-priors-transfer.tex",
+   "item": "PriorBand",
+   "verdict": "include; one to two weeks",
+   "contract": "rung sampling portfolio on asha",
+   "suite_test": "V11"
+  },
+  {
+   "chapter": "08-priors-transfer.tex",
+   "item": "Warm starts from the run store",
+   "verdict": "include; days",
+   "contract": "store ranked query",
+   "suite_test": "V12"
+  },
+  {
+   "chapter": "08-priors-transfer.tex",
+   "item": "RGPE-style surrogate ensembles",
+   "verdict": "second wave",
+   "contract": "pre-gated (second wave)",
+   "suite_test": "pre-gated"
+  },
+  {
+   "chapter": "08-priors-transfer.tex",
+   "item": "Pre-trained surrogates (PFN family)",
+   "verdict": "adopt one, build none",
+   "contract": "adopt ifbo surrogate; train none",
+   "suite_test": "V15"
+  },
+  {
+   "chapter": "08-priors-transfer.tex",
+   "item": "EI-per-cost with cost cooling",
+   "verdict": "include; days",
+   "contract": "acquisition decorator + executor cost metering",
+   "suite_test": "V04"
+  },
+  {
+   "chapter": "08-priors-transfer.tex",
+   "item": "CARBS-style cost frontier",
+   "verdict": "hold",
+   "contract": "pre-gated (hold)",
+   "suite_test": "pre-gated"
+  },
+  {
+   "chapter": "08-priors-transfer.tex",
+   "item": "P and the scaling-law literature",
+   "verdict": "encode, do not implement",
+   "contract": "encoded as schema priors/sanity docs",
+   "suite_test": "untestable: guidance, not a component"
+  },
+  {
+   "chapter": "09-workloads.tex",
+   "item": "RL, routine budgets",
+   "verdict": "a few dozen full runs): DEHB or BO-plus-ASHA over the full plausible space, several tuning seeds, disjoint test seeds, objective recorded explicitly. \\textbf{RL, large parallelism} (8+ workers): the population line, PB2-Mix now, BG-PBT when built. \\item \\textbf{Neural-transport samplers}: GP searcher over flow and training knobs, ASHA over chain length, ESS-per-gradient objective, divergence and split-$\\widehat{R}$ vetoes at every rung; leave the samplers' internal adapters on. \\item \\textbf{Hamiltonian networks}: two-to-three-objective study (prediction error, energy drift or rollout error, optionally cost) with qLogNEHVI or MO-ASHA, on the local execution backend. \\item \\textbf{Architecture search}: width, depth, and flags as ordinary search axes; parameter count and FLOPs reported as free objectives. \\textbf{One-shot supernets}: exclude (reliability evidence against, RL mismatch",
+   "contract": "study template: rl_routine",
+   "suite_test": "V07"
+  }
+ ]
+}
