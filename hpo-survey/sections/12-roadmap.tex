@@ -1,0 +1,278 @@
+\chapter{What to build, in what order}
+\label{sec:roadmap}
+
+The survey supports a fairly confident ordering of implementation work. The
+principle behind the ordering: ship the methods with the strongest
+evidence-per-line-of-code first, and let each tier's infrastructure carry
+the next tier. Every item below names the chapter that justifies it, so
+that when the evidence changes, and Chapter~\ref{sec:libraries} is a
+reminder of how fast this field's ground shifts, we can trace which
+decisions the change touches. Table~\ref{tab:decisions} collects every
+verdict in one place; the decision boxes at the ends of
+Chapters~\ref{sec:modelfree} through~\ref{sec:workloads} carry the
+one-paragraph rationales, and the listed chapter holds the full teaching
+and evidence for anyone who wants to challenge a line.
+
+\begin{table}[tp]
+\centering
+\small
+\caption{Every build decision in one place. ``Cost'' is engineering
+effort to a first useful version; tiers are this chapter's build order;
+the last column is the chapter that teaches the method and holds the
+evidence for the verdict. Read a row, then challenge it against its
+chapter's decision box.}
+\label{tab:decisions}
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}Xlll@{}}
+\toprule
+Capability & What it buys us & When it applies & Cost & Verdict & Ch. \\
+\midrule
+Sobol + log sampling & honest coverage of every axis & always; also the GP's opening phase & days & T0 & \ref{sec:modelfree} \\
+Random-search baseline & the bar every searcher must clear & validation suite & days & T0 & \ref{sec:modelfree} \\
+ASHA + median rule & kills bad trials early; the biggest single saving & any workload with learning curves & days & T0 & \ref{sec:multifidelity} \\
+TPE (wrap Optuna) & conditional and categorical spaces from few trials & mixed spaces, cheaper trials & days & T0 & \ref{sec:bayesian} \\
+GP + qLogEI (BoTorch) & the most information per expensive trial & costly, noisy trials & weeks & T0 & \ref{sec:bayesian} \\
+Dimension-scaled priors & reliability past ten dimensions & always on & hours & T0 & \ref{sec:bayesian} \\
+qLogNEHVI & noisy Pareto fronts, two to four objectives & Hamiltonian, finance & weeks & T1 & \ref{sec:moo} \\
+Chebyshev scalarization & fallback at any objective count; random weights approximate the front when best-seen values proxy the ideal point & five-plus objectives, or cheap engine & days & T1 & \ref{sec:moo} \\
+MO-ASHA + veto gates & early stopping for fronts; correctness gates & Hamiltonian, samplers & week & T1 & \ref{sec:moo} \\
+$\pi$BO + PriorBand & expert head start that forgets bad advice & every study & 1--2 wks & T1 & \ref{sec:transfer} \\
+Warm start from run store & recurring studies start smart & repeated model families & days & T1 & \ref{sec:transfer} \\
+EI-per-cost + cooling & budget-aware proposals & unevenly priced trials & days & T1 & \ref{sec:transfer} \\
+PB2-Mix, then BG-PBT & schedules and architecture at scale & RL with 8+ parallel workers & months & T2 & \ref{sec:population} \\
+DEHB & most consistent small-budget RL tuner & 10--64 full runs & weeks & T3 & \ref{sec:multifidelity} \\
+ifBO scheduler & curve-shape-aware budget allocation & once pause/resume is solid & weeks & T3 & \ref{sec:multifidelity} \\
+HEBO-style robustness & warping and ensembles on the GP & messy real objectives & weeks & T3 & \ref{sec:bayesian} \\
+CARBS cost frontier & tuning while a model scales & scaling-bound projects & later & hold & \ref{sec:transfer} \\
+One-shot / zero-cost / grammar NAS & see Section~\ref{sec:computebill}'s verdicts & no current project & --- & skip & \ref{sec:workloads} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Tier 0: wire up what exists (weeks)}
+
+The execution substrate plus existing searchers already covers the sturdy
+defaults from Chapters~\ref{sec:modelfree} to~\ref{sec:multifidelity}:
+Sobol and log-uniform random sampling (the two free upgrades of
+Chapter~\ref{sec:modelfree}), ASHA and the median stopping rule, TPE via
+Optuna's sampler for conditional spaces, CMA-ES for cheap continuous
+problems, and a single-objective GP searcher with qLogEI (either BoTorch
+directly or Optuna's GP sampler), with the dimension-scaled lengthscale
+priors of Section~\ref{sec:highdim} switched on from the start, since
+they cost one line. None of this is novel; all of it is table stakes,
+and the deliverable of this tier is really our own searcher and
+scheduler interfaces (Chapter~\ref{sec:architecture}) proven against
+known-good implementations, plus the run store that records every trial
+with its configuration, seed, fidelity, curve, and cost. A tier is done
+when the validation suite below says our wiring matches the reference
+implementations, not when the code merely runs.
+
+\section{Tier 1: the differentiators (the core product)}
+
+Four capabilities justify building something of our own, because no single
+existing library ships them together on our execution substrate.
+
+Multi-objective, properly. A qLogNEHVI searcher for two to four objectives,
+Chebyshev scalarization as the many-objective and cheap fallback (the
+division Figure~\ref{fig:chebyshev} argued), MO-ASHA as the
+multi-fidelity scheduler, hypervolume-over-budget reporting so that a
+study's progress is one honest curve, and Pareto fronts as first-class
+study outputs (Chapter~\ref{sec:moo}). This is the piece our Hamiltonian
+and finance workloads ask for most directly, and the piece the audit of
+Chapter~\ref{sec:libraries} found no executor shipping natively.
+
+Priors and warm starts. The $\pi$BO acquisition weight~\eqref{eq:pibo}
+and the PriorBand sampling portfolio over ASHA rungs, both consuming a
+prior declared in the search-space schema; plus quantile-based warm
+starting from the run store (Chapter~\ref{sec:transfer}). Cheap to
+build, immediately felt by every user, and the mechanism's built-in
+decay means a wrong prior costs a study its opening moves rather than
+its conclusion provided the product schema requires a lower-bounded
+mixture or explicitly nonzero support everywhere, so that wrong priors
+remain wrong rather than becoming unfalsifiable
+(Chapter~\ref{sec:transfer}'s decision box carries this guard).
+
+Cost-aware acquisition. EI-per-cost with cost cooling
+\citep{lee2020carbo} on top of the Tier 0 GP searcher. This needs a
+\emph{predictive} cost model, because acquisition prices a candidate
+before it runs and realized cost cannot do that; what the executor
+supplies is the training data for the model, not the price itself. The
+specification is deliberately modest: a second GP on
+$\log(\text{wall-clock seconds})$, fit to the executor's measured
+per-trial costs from the run store, with the same kernel family as the
+performance surrogate; log space because cost is positive and varies
+multiplicatively with width, depth, and unroll length, the three
+coordinates that dominate it. Cold start uses the user's declared cost
+hint if present and a uniform prior otherwise, with the cheap-first
+initialization of CArBO carrying the first rounds until the model has
+data. Failed and killed trials enter as censored observations at their
+elapsed time (a lower bound on cost, not the cost), because dropping
+them would teach the model that the expensive corner is cheap. The
+model refits with the performance surrogate on the same cadence, and
+its calibration is logged as a standing diagnostic beside the rung
+correlation, so a badly-fit cost model is visible rather than silently
+distorting proposals.
+
+\section{Tier 2: the population line for large-parallelism RL}
+
+Ray already ships PBT and a continuous-only PB2, so the work starts one
+rung up: extend the explore step to mixed spaces (PB2-Mix's bandit over
+categories, or directly the Casmopolitan-style kernels), then build
+BG-PBT proper: the mixed-space trust-region searcher with ordinal-aware
+kernels, generational restarts, and distillation hooks left to the
+training code (Chapter~\ref{sec:population}). The official BG-PBT code
+is available to crib from, and RLlib checkpointing supplies the surgery
+PBT needs. This is the flagship for the large-parallelism regime, and
+the product should encode the budget boundary from
+\citet{eimer2023hyperparameters}: below a few dozen full-run
+equivalents, steer users to DEHB or BO plus ASHA instead. Encoding the
+boundary is not a footnote; it is the difference between a product that
+embodies the evidence of Chapter~\ref{sec:population} and one that
+merely implements its algorithms.
+
+\section{Tier 3: the frontier, selectively}
+
+Three bets with good expected value once Tier 1 is earning. A
+learning-curve scheduler in the ifBO style, using the published
+pre-trained freeze-thaw surrogate, exploiting our pause-and-resume
+plumbing (Chapter~\ref{sec:multifidelity}); the decision problem it
+solves is Figure~\ref{fig:freezethaw}, and the pre-trained surrogate
+(Chapter~\ref{sec:transfer}) is why the bet is affordable. DEHB, which
+the RL evidence recommends and which also gives us a non-GP engine for
+awkward spaces; the upstream package is frozen
+(Chapter~\ref{sec:libraries}), so this is an implementation against our
+interfaces with the original as a reference. And HEBO-style robustness
+(input and output warping, noise-aware acquisition ensembles) folded
+into our GP searcher \citep{cowenrivers2022hebo}, which
+Section~\ref{sec:gp-practical} argued is where the challenge-winning
+gains actually came from. A CARBS-style cost-performance frontier is the
+natural fourth once a scaling-bound project appears
+(Chapter~\ref{sec:transfer}).
+
+\section{What we deliberately skip}
+
+Differentiable NAS and a bespoke zero-cost-proxy subsystem
+(Chapter~\ref{sec:workloads}); gradient-based HPO through the training
+loop; a meta-learned transformer surrogate trained by us (we adopt
+pre-trained ones where they ship); and any LLM-driven configuration
+proposer, which as of this writing has no controlled evidence of beating
+the methods above at matched cost on our kinds of workloads. Each skip
+is revisitable when the evidence changes; the skips are recorded here
+precisely so that revisiting them is a decision rather than a drift.
+
+\section{The calendar, and its dependencies}
+\label{sec:calendar}
+
+The tiers above say what and why; a build needs when and after what.
+The calendar below assumes one dedicated engineer with part-time
+research support for the campaign runs, an assumption the manager
+owns, not the survey; with a second engineer the two independent
+tracks (the multi-objective stack and the population line) run in
+parallel and the total compresses by roughly a third. Weeks are
+planning estimates in the same spirit as the cost column of
+Table~\ref{tab:decisions}.
+
+Weeks 1--2: freeze. The interfaces and store schema of
+Chapter~\ref{sec:contracts} are frozen against a written review, the
+pinned tasks of Chapter~\ref{sec:validation} are sized to their
+compute envelope, and the layer-one harness (benchmark parity and
+curve replay) is stood up first, because every later gate runs
+through it.
+
+Weeks 3--6: tier 0. The wrapped searchers and schedulers go behind
+the interfaces; the run store lands with lineage and the standing
+diagnostics; the Ray and local adapters pass checkpoint surgery
+through. Gate: V01--V05 and V14 green. V04 tests the tier-0 GP and
+TPE at this gate; tier-1 searchers face it at the tier-1 gate. The
+tier-0 gate is deliberately mostly wiring tests plus the one method
+floor check, because tier 0 makes no novelty claims, only composition
+claims.
+
+Weeks 7--12: tier 1. The multi-objective stack first (qLogNEHVI,
+Chebyshev fallback, MO-ASHA with veto gates, weeks 7--9), then
+priors, warm start, and cost-aware acquisition (weeks 10--11), then
+the tier-1 campaign week: V04, V06, V09, V10, V11, V13, with V12
+maturing later as the store fills. Dependencies bind the order:
+MO-ASHA extends the tier-0 ASHA; PriorBand consumes its rungs; warm
+start queries the store that tier 0 built; EI-per-cost decorates the
+tier-0 GP searcher.
+
+Weeks 13--20: the population line's prerequisite. The trust-region
+mixed-space searcher is built once and serves twice, as the
+high-dimensional single-objective searcher of
+Chapter~\ref{sec:bayesian} and as the explore engine of the
+population line; PB2-Mix lands on it in weeks 17--20 using Ray's
+existing PBT machinery through the exploit and explore verbs of the
+scheduler interface.
+
+Weeks 21--30: the flagship. BG-PBT proper (generational restarts,
+architecture coordinates, distillation hooks left to training code),
+closing with the V08 boundary campaign around week 30, whose
+demotion rule was fixed in Chapter~\ref{sec:population} long before
+this code exists.
+
+Weeks 31 onward: tier 3, each item behind its own gate. DEHB against
+our interfaces, raced in V07; the ifBO scheduler only after V15
+shows the bet live on public suites and only once pause-and-resume
+is proven by the population work; HEBO-style robustness folded into
+the GP searcher last, because it is an upgrade to a working thing
+rather than a missing thing.
+
+\section{The bill}
+
+Engineering: roughly six weeks to the tier-0 gate, six more to the
+tier-1 gate, eighteen for the population line through its campaign,
+and about twelve of selective tier-3 work; call it forty-two
+engineer-weeks, ten months of one engineer or six of two, before
+tier-2 electives. These are the table's per-item costs rolled up,
+not new estimates.
+
+Compute: layer one is CPU-minutes and free in practice; each
+layer-two tier gate is budgeted at the one-GPU-week class, and the
+two priced campaigns (V07, and V08 with its both-sides-of-the-
+boundary design) are of the same order each, per the sizing
+arithmetic of Chapter~\ref{sec:validation}. The planning envelope
+for the whole program is therefore a few GPU-weeks, spent in named
+campaigns with recorded manifests rather than ad hoc runs.
+
+Maintenance: the standing cost of the architecture is the one
+Chapter~\ref{sec:architecture} priced, two small interfaces kept
+current against Ray, plus pinned dependency versions reviewed on
+their release cadence.
+
+\section{Risks, and the tripwires that catch them}
+
+Ray or Tune drifts under us. Tripwire: the layer-one replay and
+parity tests run against every Ray upgrade before it is adopted;
+the adapter boundary is the insurance, and its annual premium was
+priced in Chapter~\ref{sec:architecture}.
+
+Upstream churn in the searcher libraries. The audit of
+Chapter~\ref{sec:libraries} already caught BoTorch deprecating
+acquisition names and Optuna changing default samplers at 5.0;
+mitigation is pinned versions, thin wrappers, and the store
+recording the wrapped library's version in every study row, so a
+result is never orphaned by an upgrade. Tripwire: V01 parity on any
+dependency bump.
+
+The population evidence fails to transfer to our cluster. That is
+not a risk to manage but a measurement to take: V08 exists to take
+it, and its failure path (demote the flagship, keep the rung
+methods) was committed to in writing before the build began.
+
+The seed protocol proves too expensive as a default. Layer three
+records every opt-out; a high opt-out rate on real studies is the
+tripwire, and the response is a cheaper default protocol argued in
+an update to Chapter~\ref{sec:workloads}, not a silent loosening.
+
+The pinned tasks are mis-sized. Week 1--2 sizing exists for this,
+and Chapter~\ref{sec:validation}'s own overturn clause governs the
+repair.
+
+\section{How we will know the tuner works}
+
+The full answer is now Chapter~\ref{sec:validation}: the register of
+tests, the statistical protocol, the priced campaigns, and the rule
+that a tier is done when its gate entries are green. What this
+chapter adds is only the schedule on which those gates fire, weeks
+6, 12, and 30 on the one-engineer calendar, and the standing rule
+that no tier is declared done by the feeling of momentum.

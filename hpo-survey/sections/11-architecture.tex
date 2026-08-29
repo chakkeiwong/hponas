@@ -1,0 +1,164 @@
+\chapter{Is Ray Tune the right base, and what we should build on it}
+\label{sec:architecture}
+
+The question that started this document can now be answered with the
+evidence laid out. Yes, Ray Tune is the right base, provided we are clear
+about which layer of the problem it solves. Tune should run our trials; it
+should not choose them. The search intelligence, which is where the field
+has moved fastest and where Tune has moved least, belongs in a layer we
+own. This chapter turns that sentence into a design, and the design is
+small: the whole proposal is two interfaces, two adapters, and a database.
+
+\section{The case for Tune underneath}
+
+Three facts carry the decision. First, we already operate Ray: RLlib
+training runs on the same cluster, speaks the same actor model, and
+produces the checkpoints that population-based methods need to copy and
+resume. A second execution stack would be pure overhead. Second, Tune's
+execution machinery is the strongest available in open source for our
+shape of work: multi-node trial scheduling, fault tolerance,
+checkpoint-aware schedulers, and the only mainstream native distributed
+PBT and PB2 (Chapter~\ref{sec:libraries}). The population family of
+Chapter~\ref{sec:population} is the part of our roadmap with the most
+demanding executor requirements, exploit steps are checkpoint surgery
+performed live on a running population, and Tune is the one framework
+that has already productionized them. Third, the composition we propose
+is the one the ecosystem itself converges on: Optuna and Ray document
+each other as the intended pairing, a 2025 industrial optimizer built
+its stack exactly this way, and Google's published account of its own
+tuning service benchmarks against algorithms accessed through Ray Tune
+\citep{song2024vizier}.
+
+The risks deserve equal daylight, and Chapter~\ref{sec:libraries}
+documented them with dates. Tune's own search layer has been coasting:
+across the five Ray releases from late 2025 through August 2026, every
+Tune change was a fix or a documentation edit, several of its remaining
+searcher integrations wrap upstreams that are frozen or formally
+unmaintained, and core Tune still has no native concept of a Pareto
+front, which after Chapter~\ref{sec:moo} we regard as a first-class
+requirement rather than a nicety. None of this argues against Tune as an
+executor; all of it argues against depending on Tune for algorithms.
+There is also a real overhead concern at the small end: for the cheap
+trials of our Hamiltonian-network work
+(Section~\ref{sec:costmodel}), cluster machinery can cost more than the
+training it schedules.
+
+\section{The design}
+
+The consequence is a three-layer design, drawn in
+Figure~\ref{fig:architecture}. At the top, a search layer that is the
+actual product: searchers (ask-and-tell proposers: GP with qLogEI and
+qLogNEHVI on BoTorch, TPE via Optuna, CMA-ES, the mixed-space
+trust-region searcher that BG-PBT needs) and schedulers (ASHA and the
+median rule, their multi-objective variants with veto gates, the
+population controllers), all written against two small interfaces of our
+own. The split between the two interfaces is exactly the split drawn in
+Figure~\ref{fig:loop} at the start of the document: searchers answer
+``which configuration next,'' schedulers answer ``how much budget, and
+does this trial live''; every method surveyed decomposes into the two
+roles, and keeping the roles separate is what lets ASHA schedule trials
+proposed by any searcher.
+
+In the middle, thin adapters: one maps our interfaces onto Ray Tune's
+searcher and trial-scheduler protocols and is the default; one runs
+trials in local processes for laptop-scale studies where Ray does not
+earn its overhead; the design leaves room for a queue-based backend
+later, following the backend abstraction that Syne Tune demonstrated
+\citep{salinas2022synetune}. At the bottom, alongside the executors, a
+run store that records every trial of every study: configuration, seeds,
+fidelity-indexed curves, cost, diagnostics, and lineage (which weights
+were copied from whom, for population methods). The store is what turns
+the transfer methods of Chapter~\ref{sec:transfer} from papers into
+features, warm starts are a query against it, and $\pi$BO priors and
+fitted cost models are trained from it, and it is also where a study's
+evidence lives when we later ask whether the tuner is earning its keep.
+
+To make the layering concrete, walk one trial of the running example
+through it. The GP searcher (top layer) proposes a configuration by
+maximizing qLogEI over the mixed space; the MO-ASHA scheduler assigns it
+a rung-1 budget of two million steps. The Ray adapter translates both
+decisions into a Tune trial with a checkpoint interval; RLlib trains it
+on the cluster and streams evaluation returns back. At the rung
+boundary the scheduler ranks the rung (non-dominated sorting if the
+study is multi-objective), checks the trial's veto fields, and either
+promotes it, at which point the adapter resumes it from its checkpoint,
+or stops it. Every intermediate return, the cost, the seed, and the
+promotion decision land in the run store. Nothing in the top layer knows
+Ray exists; nothing below the adapters knows what an acquisition
+function is. That ignorance is the design.
+
+Owning the two interfaces, rather than coding directly against Tune's, is
+what keeps the Tune risks bounded. If Tune stagnates further or Ray's
+APIs shift again, the adapters change and the product does not. It is
+also what lets the same searcher serve both executors, so a Hamiltonian
+study on a workstation and a PPO population on the cluster run the same
+code paths above the adapter line.
+
+Three features must be first-class in those interfaces because
+retrofitting them is painful, and each traces to a specific finding
+earlier in the document. Multiple objectives and constraint vetoes: a
+scheduler must be able to rank partial results by non-dominated sorting
+and to refuse promotion to a trial that failed a correctness diagnostic,
+whatever its score; this is the promotion machinery of
+Chapter~\ref{sec:moo} and the veto gates that
+Figure~\ref{fig:sampler-loops} showed the sampler workload demanding.
+Seeds: a trial is a configuration times a seed, aggregation across seeds
+is the tuner's job, and tuning seeds are disjoint from test seeds by
+construction, the protocol whose absence corrupted the RL results
+surveyed in Chapter~\ref{sec:workloads}
+\citep{eimer2023hyperparameters}. Schedules: the outcome of a population
+study is a trajectory with lineage, storable and replayable, the bold
+path of Figure~\ref{fig:pbt} as a first-class object (Tune's own
+PBT-replay scheduler shows the shape).
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners, align=center, inner sep=5pt, font=\small},
+  lab/.style={font=\small\itshape, anchor=west},
+  node distance=4mm and 5mm]
+\node[box, minimum width=136mm, minimum height=17mm] (search) at (0,0)
+  {searchers: Sobol, TPE (Optuna), GP + qLogEI / qLogNEHVI (BoTorch), CMA-ES, mixed-space trust region\\
+   schedulers: ASHA, median rule, MO-ASHA + veto gates, PBT / PB2 / BG-PBT controllers, PriorBand};
+\node[lab] at (-6.8,1.35) {search layer (ours)};
+\node[box, minimum width=64mm, minimum height=9mm, below=of search.south west, anchor=north west, xshift=0mm] (ray)
+  {Ray Tune adapter (cluster, RLlib, populations)};
+\node[box, minimum width=64mm, minimum height=9mm, below=of search.south east, anchor=north east] (local)
+  {local adapter (workstation-scale studies)};
+\node[box, minimum width=136mm, minimum height=9mm] (store) at ($(ray.south east)!0.5!(local.south west)$) [yshift=-9mm]
+  {run store: configurations, seeds, curves, costs, diagnostics, lineage; feeds warm starts and transfer};
+\draw[-{Latex}] (search.south -| ray) -- (ray.north);
+\draw[-{Latex}] (search.south -| local) -- (local.north);
+\draw[-{Latex}] (ray.south) -- (ray.south |- store.north);
+\draw[-{Latex}] (local.south) -- (local.south |- store.north);
+\end{tikzpicture}
+\caption{The proposed layering. Algorithms live above the adapter line
+and survive any change of executor; Ray Tune supplies distributed
+execution and checkpoint surgery; a shared run store accumulates the
+evidence that priors, warm starts, and transfer methods consume. The
+two interfaces at the adapter line are the searcher/scheduler split of
+Figure~\ref{fig:loop}, made contractual.}
+\label{fig:architecture}
+\end{figure}
+
+\section{Alternatives we considered}
+
+Adopting Syne Tune outright would buy the broadest method zoo in one
+package, and its simulator backend is a genuinely good idea we intend to
+copy; against that stand a small maintainer base, no Ray backend, and a
+method set that still lacks the BG-PBT-class population line we care
+about.
+
+Building on Optuna alone would give us the best samplers and
+nothing to run them with: its documented multi-node story is a shared
+relational database, and there is no population machinery. NePS has the
+freshest prior-and-fidelity algorithms and we will use it as a reference
+implementation and correctness oracle, but its filesystem coordination
+and small community rule it out as a substrate.
+
+Katib solves execution
+for Kubernetes shops; we are a Ray shop. Writing our own executor from
+scratch is the option nobody should pick while Tune exists and is
+maintained. The remaining risk in our choice is Ray itself drifting in a
+direction that breaks Tune; the adapter boundary is the insurance, and
+the annual cost of that insurance is two small interfaces.

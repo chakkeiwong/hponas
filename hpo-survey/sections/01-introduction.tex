@@ -1,0 +1,135 @@
+\chapter{Introduction}
+\label{sec:intro}
+
+This document answers two questions we posed ourselves while planning a
+shared tuning system for the projects in our workspace: whether Ray Tune
+is the right architecture to build on, given that RLlib already runs our
+reinforcement-learning work, and which algorithms such a system should
+implement to serve very different customers, from reinforcement-learning
+agents through Hamiltonian neural networks and neural-transport samplers to
+multi-objective models in finance. Both questions turn out to have
+reasonably confident answers once the literature is laid out, and laying
+it out carefully is most of the document: our local paper collection
+thins out around 2023, and several things a 2023 reader would recommend
+are no longer what a 2026 reader should build.
+
+The short answers, defended over the following chapters; the method
+names that follow are only names for now, each taught from zero in its
+chapter, so read this section as a map to return to rather than an
+argument to absorb. Ray Tune: yes,
+as the execution layer, and deliberately not as the source of search
+algorithms. Tune's distributed trial execution, checkpoint machinery, and
+population-based training support remain the strongest in open source and
+compose naturally with RLlib, but its own algorithm layer has been in
+maintenance for roughly two years while the method frontier moved into
+other projects (Chapters~\ref{sec:libraries}
+and~\ref{sec:architecture}).
+
+The algorithms: a spine of asynchronous successive halving plus a
+well-configured Bayesian optimizer covers the routine work at low cost;
+the differentiators worth building are noise-aware multi-objective
+acquisition with a multi-objective early-stopping scheduler, expert
+priors, cost-aware acquisition, and a population line for reinforcement
+learning. The method names that follow are only names for now, each
+taught from zero in its chapter: qLogNEHVI with MO-ASHA
+(Chapters~\ref{sec:moo}), priors in the PriorBand style
+(Chapter~\ref{sec:transfer}), and the population line as PB2 extended to
+mixed spaces and then BG-PBT, the method we were specifically asked to
+assess (Chapter~\ref{sec:population}). Freeze-thaw scheduling with a
+pre-trained learning-curve surrogate is the one frontier bet we recommend
+(Chapter~\ref{sec:multifidelity}), and Chapter~\ref{sec:roadmap} puts
+the whole list in build order with the evidence attached to each item.
+
+The document is written to teach as well as to conclude, because the
+people extending this system next year will need the reasoning, not just
+the verdicts, and a verdict whose derivation you cannot reconstruct is
+one you cannot safely modify. Three habits follow, and knowing them up
+front makes the document easier to read.
+
+First, one running example
+carries the whole text: tuning PPO on a Brax locomotion task, in the
+fifteen-dimensional search space introduced in
+Section~\ref{sec:running}, with a Hamiltonian network as the second
+thread wherever several objectives compete. When a formula arrives, its
+symbols are read against that example before anything is done with
+them.
+
+Second, every load-bearing equation is derived or unpacked in
+place rather than quoted: the Gaussian-process posterior, expected
+improvement and the floating-point failure that motivates its modern
+replacement, the tree-structured Parzen estimator's ratio rule, the
+budget arithmetic of successive halving, the geometry that breaks
+weighted-sum scalarization.
+
+Third, the figures are schematic drawings
+of mechanisms, not plots of measured data, and their captions say what
+each one is supposed to show; when a number matters, it is computed in
+the text where the reader can check it.
+
+The document also carries a decision layer, kept visually separate from
+the teaching so that neither gets in the other's way. Each method
+chapter ends in a boxed \emph{Decisions from this chapter} marked by a
+thick left rule: plain-language verdicts, include or exclude, with the
+cost to build, the evidence behind the call, and the comparison against
+the alternatives, written to be judged without opening any cited paper.
+
+The box is earned rather than asserted: each method chapter closes by
+first teaching the experiments its verdict rests on, their designs,
+arenas, and sponsors, so the evidence can be judged rather than taken
+on citation, and then arguing the verdict from several independent
+angles, ending with the criterion that would overturn it in our own
+validation suite.
+
+Table~\ref{tab:decisions} in Chapter~\ref{sec:roadmap} collects every
+verdict on one page. A glossary at the end defines every term of art in
+plain language. And because several of our readers come from economics
+and statistics rather than machine learning, the text flags the bridges
+where they exist: the Gaussian process is kriging, expected improvement
+is an option value, the Pareto front (the set of configurations
+undominated in objective space) is the welfare-theoretic one.
+
+Chapter~\ref{sec:problem} pins down the problem, fixes the running
+example, and maps the four ways our workloads bend the textbook
+formulation. Chapters~\ref{sec:modelfree} through~\ref{sec:transfer}
+build up the method families in increasing order of structure: searching
+without a model, modeling the objective, exploiting partial evaluations,
+tuning while training, handling several objectives, and importing
+knowledge from priors, past studies, and scale. Each chapter opens with
+the failure of the previous chapter's best answer, which is not a
+storytelling flourish: it is the actual dependency structure of the
+field, and it is why the chapters are in this order.
+
+Chapter~\ref{sec:workloads} turns back to our four workload families and
+says what to do for each. Chapter~\ref{sec:libraries} audits the
+open-source field library by library, with maintenance status checked
+against primary sources on August 22, 2026, and re-verified on
+August 23. The closing part turns the verdicts into a concrete product
+proposal: Chapter~\ref{sec:product} states what we ship and walks a
+first study through it, Chapter~\ref{sec:architecture} gives the
+architectural design, Chapter~\ref{sec:contracts} pins the interfaces
+and data schemas, Chapter~\ref{sec:validation} specifies the test
+suite, and Chapter~\ref{sec:roadmap} the build plan and the bill.
+
+A reader who wants
+only decisions can read Chapter~\ref{sec:problem}, the decision boxes
+at the ends of Chapters~\ref{sec:modelfree}
+through~\ref{sec:workloads}, and then Chapters~\ref{sec:libraries},
+\ref{sec:architecture}, and~\ref{sec:roadmap} with
+Table~\ref{tab:decisions}; a reader implementing a searcher should
+read the method chapters in order, since each one leans on the
+machinery of its predecessors.
+
+A note on sourcing. Claims about specific methods are tied to the papers
+that introduced or tested them, and the load-bearing ones (BG-PBT, the
+RL tuning study of Eimer, Lindauer, and Raileanu, and the current
+defaults of the major libraries) were checked against the primary texts
+and pages rather than summaries; a companion file records, for every
+source, what was inspected and at what depth. The derivations added for
+teaching (Gaussian conditioning, the expected-improvement closed form
+and its underflow arithmetic, the successive-halving budget count, the
+hypervolume and scalarization geometry) are elementary and stand on
+their own; they explain the cited results rather than extend them.
+Where a comparison rests on one paper's experiments we say so, and
+where the honest answer is that two methods are indistinguishable on
+current evidence, we say that too, in preference to manufacturing a
+ranking.

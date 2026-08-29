@@ -1,0 +1,913 @@
+[
+  {
+    "id": "roadmap-01",
+    "capability": "Sobol + log sampling",
+    "verdict": "T0",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "29",
+    "chapter": "3",
+    "rationale": "Honest coverage of every axis; always applicable; also the GP's opening phase",
+    "validation_entries": [
+      "V04",
+      "V05"
+    ],
+    "tier": "T0",
+    "cost_estimate": "days",
+    "what_it_buys": "honest coverage of every axis",
+    "when_applies": "always; also the GP's opening phase"
+  },
+  {
+    "id": "roadmap-02",
+    "capability": "Random-search baseline",
+    "verdict": "T0",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "30",
+    "chapter": "3",
+    "rationale": "The bar every searcher must clear; validation suite requirement",
+    "validation_entries": [
+      "V04"
+    ],
+    "tier": "T0",
+    "cost_estimate": "days",
+    "what_it_buys": "the bar every searcher must clear",
+    "when_applies": "validation suite"
+  },
+  {
+    "id": "roadmap-03",
+    "capability": "ASHA + median rule",
+    "verdict": "T0",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "31",
+    "chapter": "5",
+    "rationale": "Kills bad trials early; the biggest single saving",
+    "validation_entries": [
+      "V06"
+    ],
+    "tier": "T0",
+    "cost_estimate": "days",
+    "what_it_buys": "kills bad trials early; the biggest single saving",
+    "when_applies": "any workload with learning curves"
+  },
+  {
+    "id": "roadmap-04",
+    "capability": "TPE (wrap Optuna)",
+    "verdict": "T0",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "32",
+    "chapter": "4",
+    "rationale": "Conditional and categorical spaces from few trials",
+    "validation_entries": [
+      "V01",
+      "V04"
+    ],
+    "tier": "T0",
+    "cost_estimate": "days",
+    "what_it_buys": "conditional and categorical spaces from few trials",
+    "when_applies": "mixed spaces, cheaper trials"
+  },
+  {
+    "id": "roadmap-05",
+    "capability": "GP + qLogEI (BoTorch)",
+    "verdict": "T0",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "33",
+    "chapter": "4",
+    "rationale": "The most information per expensive trial",
+    "validation_entries": [
+      "V01",
+      "V04"
+    ],
+    "tier": "T0",
+    "cost_estimate": "weeks",
+    "what_it_buys": "the most information per expensive trial",
+    "when_applies": "costly, noisy trials"
+  },
+  {
+    "id": "roadmap-06",
+    "capability": "Dimension-scaled priors",
+    "verdict": "T0",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "34",
+    "chapter": "4",
+    "rationale": "Reliability past ten dimensions; always on",
+    "validation_entries": [
+      "V04"
+    ],
+    "tier": "T0",
+    "cost_estimate": "hours",
+    "what_it_buys": "reliability past ten dimensions",
+    "when_applies": "always on"
+  },
+  {
+    "id": "roadmap-07",
+    "capability": "qLogNEHVI",
+    "verdict": "T1",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "35",
+    "chapter": "7",
+    "rationale": "Noisy Pareto fronts, two to four objectives",
+    "validation_entries": [
+      "V09"
+    ],
+    "tier": "T1",
+    "cost_estimate": "weeks",
+    "what_it_buys": "noisy Pareto fronts, two to four objectives",
+    "when_applies": "Hamiltonian, finance"
+  },
+  {
+    "id": "roadmap-08",
+    "capability": "Chebyshev scalarization",
+    "verdict": "T1",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "36",
+    "chapter": "7",
+    "rationale": "Fallback at any objective count; random weights approximate the front when best-seen values proxy the ideal point",
+    "validation_entries": [
+      "V09"
+    ],
+    "tier": "T1",
+    "cost_estimate": "days",
+    "what_it_buys": "fallback at any objective count; random weights approximate the front when best-seen values proxy the ideal point",
+    "when_applies": "five-plus objectives, or cheap engine"
+  },
+  {
+    "id": "roadmap-09",
+    "capability": "MO-ASHA + veto gates",
+    "verdict": "T1",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "37",
+    "chapter": "7",
+    "rationale": "Early stopping for fronts; correctness gates",
+    "validation_entries": [
+      "V10",
+      "V13"
+    ],
+    "tier": "T1",
+    "cost_estimate": "week",
+    "what_it_buys": "early stopping for fronts; correctness gates",
+    "when_applies": "Hamiltonian, samplers"
+  },
+  {
+    "id": "roadmap-10",
+    "capability": "\u03c0BO + PriorBand",
+    "verdict": "T1",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "38",
+    "chapter": "8",
+    "rationale": "Expert head start that forgets bad advice",
+    "validation_entries": [
+      "V11"
+    ],
+    "tier": "T1",
+    "cost_estimate": "1--2 wks",
+    "what_it_buys": "expert head start that forgets bad advice",
+    "when_applies": "every study"
+  },
+  {
+    "id": "roadmap-11",
+    "capability": "Warm start from run store",
+    "verdict": "T1",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "39",
+    "chapter": "8",
+    "rationale": "Recurring studies start smart",
+    "validation_entries": [
+      "V12"
+    ],
+    "tier": "T1",
+    "cost_estimate": "days",
+    "what_it_buys": "recurring studies start smart",
+    "when_applies": "repeated model families"
+  },
+  {
+    "id": "roadmap-12",
+    "capability": "EI-per-cost + cooling",
+    "verdict": "T1",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "40",
+    "chapter": "8",
+    "rationale": "Budget-aware proposals",
+    "validation_entries": [
+      "V04"
+    ],
+    "tier": "T1",
+    "cost_estimate": "days",
+    "what_it_buys": "budget-aware proposals",
+    "when_applies": "unevenly priced trials"
+  },
+  {
+    "id": "roadmap-13",
+    "capability": "PB2-Mix, then BG-PBT",
+    "verdict": "T2",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "41",
+    "chapter": "6",
+    "rationale": "Schedules and architecture at scale",
+    "validation_entries": [
+      "V08"
+    ],
+    "tier": "T2",
+    "cost_estimate": "months",
+    "what_it_buys": "schedules and architecture at scale",
+    "when_applies": "RL with 8+ parallel workers"
+  },
+  {
+    "id": "roadmap-14",
+    "capability": "DEHB",
+    "verdict": "T3",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "42",
+    "chapter": "5",
+    "rationale": "Most consistent small-budget RL tuner",
+    "validation_entries": [
+      "V07"
+    ],
+    "tier": "T3",
+    "cost_estimate": "weeks",
+    "what_it_buys": "most consistent small-budget RL tuner",
+    "when_applies": "10--64 full runs"
+  },
+  {
+    "id": "roadmap-15",
+    "capability": "ifBO scheduler",
+    "verdict": "T3",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "43",
+    "chapter": "5",
+    "rationale": "Curve-shape-aware budget allocation",
+    "validation_entries": [
+      "V15"
+    ],
+    "tier": "T3",
+    "cost_estimate": "weeks",
+    "what_it_buys": "curve-shape-aware budget allocation",
+    "when_applies": "once pause/resume is solid"
+  },
+  {
+    "id": "roadmap-16",
+    "capability": "HEBO-style robustness",
+    "verdict": "T3",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "44",
+    "chapter": "4",
+    "rationale": "Warping and ensembles on the GP",
+    "validation_entries": [
+      "V04"
+    ],
+    "tier": "T3",
+    "cost_estimate": "weeks",
+    "what_it_buys": "warping and ensembles on the GP",
+    "when_applies": "messy real objectives"
+  },
+  {
+    "id": "roadmap-17",
+    "capability": "CARBS cost frontier",
+    "verdict": "hold",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "45",
+    "chapter": "8",
+    "rationale": "Tuning while a model scales; no current project needs it",
+    "validation_entries": [],
+    "tier": "hold",
+    "cost_estimate": "later",
+    "what_it_buys": "tuning while a model scales",
+    "when_applies": "scaling-bound projects",
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "roadmap-18",
+    "capability": "One-shot / zero-cost / grammar NAS",
+    "verdict": "skip",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
+    "source_lines": "46",
+    "chapter": "9",
+    "rationale": "No current project needs it; reliability concerns for one-shot",
+    "validation_entries": [],
+    "tier": "skip",
+    "cost_estimate": "---",
+    "what_it_buys": "see Section compute bill verdicts",
+    "when_applies": "no current project",
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch03-01",
+    "capability": "Log-scale and Sobol sampling",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/03-model-free.tex",
+    "source_lines": "245-255",
+    "chapter": "3",
+    "rationale": "Drawing scale-type knobs on a log scale, and drawing the opening batch from a scrambled Sobol sequence. An engineering default for knobs that span decades. Scrambling matters; at handful-of-trials budgets difference is below noise.",
+    "validation_entries": [
+      "V04",
+      "V05"
+    ],
+    "tier": "T0",
+    "cost_estimate": "days of work"
+  },
+  {
+    "id": "ch03-02",
+    "capability": "Random search",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/03-model-free.tex",
+    "source_lines": "256-260",
+    "chapter": "3",
+    "rationale": "Not as a product feature but as the mandatory baseline in validation suite: any searcher that cannot beat it at matched budget is not shipped",
+    "validation_entries": [
+      "V04"
+    ],
+    "tier": "T0",
+    "cost_estimate": "trivial"
+  },
+  {
+    "id": "ch03-03",
+    "capability": "Grid search",
+    "verdict": "exclude",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/03-model-free.tex",
+    "source_lines": "261-263",
+    "chapter": "3",
+    "rationale": "Keep only as a debugging utility for two-knob visual sweeps; the entire case against it as a tuner is in the figure",
+    "validation_entries": [],
+    "tier": "exclude",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch03-04",
+    "capability": "CMA-ES",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/03-model-free.tex",
+    "source_lines": "264-267",
+    "chapter": "3",
+    "rationale": "Only competitive when a study can afford hundreds of cheap, continuous trials (Hamiltonian-network regime). Building it ourselves would buy nothing.",
+    "validation_entries": [
+      "V01",
+      "V04"
+    ],
+    "tier": "T0",
+    "cost_estimate": "low priority, by wrapping"
+  },
+  {
+    "id": "ch03-05",
+    "capability": "Differential evolution",
+    "verdict": "no standalone entry",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/03-model-free.tex",
+    "source_lines": "268-270",
+    "chapter": "3",
+    "rationale": "Enters the package only inside DEHB in Chapter 5",
+    "validation_entries": [
+      "V07"
+    ],
+    "tier": null,
+    "cost_estimate": null
+  },
+  {
+    "id": "ch04-01",
+    "capability": "GP searcher with qLogEI on BoTorch",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/04-bayesian.tex",
+    "source_lines": "840-848",
+    "chapter": "4",
+    "rationale": "Extracts the most from the fewest trials on mostly continuous spaces of up to a few dozen dimensions, handles noise honestly via noisy-EI machinery, proposes batches so workers never idle. The searcher for expensive trials. Challenge evidence: model-based entries beat random search across the board.",
+    "validation_entries": [
+      "V01",
+      "V04"
+    ],
+    "tier": "T0",
+    "cost_estimate": "weeks (the core build)"
+  },
+  {
+    "id": "ch04-02",
+    "capability": "TPE by wrapping Optuna",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/04-bayesian.tex",
+    "source_lines": "849-855",
+    "chapter": "4",
+    "rationale": "Useful from a handful of trials, natively handles conditional and categorical spaces that GPs find awkward, costs almost nothing because we wrap the best-maintained implementation. Known blind spot is interactions between knobs.",
+    "validation_entries": [
+      "V01",
+      "V04"
+    ],
+    "tier": "T0",
+    "cost_estimate": "days"
+  },
+  {
+    "id": "ch04-03",
+    "capability": "Raw EI, anywhere",
+    "verdict": "exclude",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/04-bayesian.tex",
+    "source_lines": "856-859",
+    "chapter": "4",
+    "rationale": "The underflow analysis is not a nicety: past a modest incumbent quality the naive formula returns exactly zero over most of the space and the optimizer stalls. Log variants only.",
+    "validation_entries": [],
+    "tier": "exclude",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch04-04",
+    "capability": "Entropy-search acquisitions",
+    "verdict": "exclude",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/04-bayesian.tex",
+    "source_lines": "860-863",
+    "chapter": "4",
+    "rationale": "Elegant, costly to implement well, and the controlled comparisons show the repaired EI family matching or beating them. No capability we need survives their exclusion.",
+    "validation_entries": [],
+    "tier": "exclude",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch04-05",
+    "capability": "Dimension-scaled lengthscale priors",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/04-bayesian.tex",
+    "source_lines": "864-866",
+    "chapter": "4",
+    "rationale": "The cheapest high-dimensional fix on record. Always on.",
+    "validation_entries": [
+      "V04"
+    ],
+    "tier": "T0",
+    "cost_estimate": "one configuration line"
+  },
+  {
+    "id": "ch04-06",
+    "capability": "Trust-region searcher with mixed-space kernels",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/04-bayesian.tex",
+    "source_lines": "867-870",
+    "chapter": "4",
+    "rationale": "Justified twice over: it is the credible high-dimensional searcher, and it is a prerequisite we would build anyway for BG-PBT in Chapter 6",
+    "validation_entries": [
+      "V04",
+      "V08"
+    ],
+    "tier": "T1",
+    "cost_estimate": "weeks"
+  },
+  {
+    "id": "ch04-07",
+    "capability": "SAASBO",
+    "verdict": "defer",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/04-bayesian.tex",
+    "source_lines": "871-874",
+    "chapter": "4",
+    "rationale": "Striking sample efficiency when trials are precious and axes are few-but-unknown, at a per-iteration compute cost that only suits small, high-stakes studies. Revisit when such a study appears.",
+    "validation_entries": [],
+    "tier": "defer",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch04-08",
+    "capability": "SMAC",
+    "verdict": "do not adopt as a dependency",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/04-bayesian.tex",
+    "source_lines": "875-878",
+    "chapter": "4",
+    "rationale": "We use it as a correctness oracle in validation; its random-forest surrogate niche (huge conditional spaces) is not where our workloads live",
+    "validation_entries": [],
+    "tier": "validation oracle only",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch05-01",
+    "capability": "ASHA plus the median stopping rule",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/05-multifidelity.tex",
+    "source_lines": "481-486",
+    "chapter": "5",
+    "rationale": "The workhorse pair. Between them they capture the bulk of the order-of-magnitude savings this chapter promises, compose with any searcher, and ask almost nothing of the training code beyond reporting a metric as it goes. If the package shipped only one scheduler, it would be this one.",
+    "validation_entries": [
+      "V02",
+      "V06"
+    ],
+    "tier": "T0",
+    "cost_estimate": "days"
+  },
+  {
+    "id": "ch05-02",
+    "capability": "Hyperband as a distinct feature",
+    "verdict": "exclude",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/05-multifidelity.tex",
+    "source_lines": "487-491",
+    "chapter": "5",
+    "rationale": "Its insurance-portfolio idea survives inside our defaults (run a conservative bracket when curve crossing is suspected), but as a product surface ASHA superseded it and no user-facing knob is worth the confusion.",
+    "validation_entries": [],
+    "tier": "exclude",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch05-03",
+    "capability": "BOHB",
+    "verdict": "exclude",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/05-multifidelity.tex",
+    "source_lines": "492-496",
+    "chapter": "5",
+    "rationale": "The idea, model-guided entrants into the race, lives on in our BO-plus-ASHA composition; the reference implementation is formally unmaintained, and adopting it would import a dead dependency for no capability we lack.",
+    "validation_entries": [],
+    "tier": "exclude",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch05-04",
+    "capability": "DEHB, implemented against our interfaces",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/05-multifidelity.tex",
+    "source_lines": "497-503",
+    "chapter": "5",
+    "rationale": "The one scheduler-searcher hybrid with controlled RL evidence behind it at exactly our routine budgets: most consistent tuner at ten to sixty-four full runs across PPO, SAC, and DQN. The upstream package is frozen, so this is a reimplementation with the original as reference, not a wrap.",
+    "validation_entries": [
+      "V07"
+    ],
+    "tier": "T3",
+    "cost_estimate": "weeks"
+  },
+  {
+    "id": "ch05-05",
+    "capability": "PASHA",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/05-multifidelity.tex",
+    "source_lines": "504-506",
+    "chapter": "5",
+    "rationale": "Stops paying for top-rung training once the ranking has stabilized; cheap to add because it is a stopping condition, not a new scheduler.",
+    "validation_entries": [
+      "V02"
+    ],
+    "tier": "T0",
+    "cost_estimate": "small (as an ASHA option flag)"
+  },
+  {
+    "id": "ch05-06",
+    "capability": "Learning-curve scheduling, specifically ifBO",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/05-multifidelity.tex",
+    "source_lines": "507-514",
+    "chapter": "5",
+    "rationale": "The only entry that uses the shape of the curve between rungs, and the variant whose surrogate is pre-trained once rather than refit inside our loop, which is what makes its overhead tolerable. DyHPO and DPL taught the field the idea; we adopt the version that ships.",
+    "validation_entries": [
+      "V15"
+    ],
+    "tier": "T3",
+    "cost_estimate": "weeks, gated on pause/resume plumbing"
+  },
+  {
+    "id": "ch06-01",
+    "capability": "PBT",
+    "verdict": "expose, do not build",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/06-population.tex",
+    "source_lines": "481-485",
+    "chapter": "6",
+    "rationale": "Ray Tune already ships the reference distributed implementation; our package should surface it with the greediness warning attached (the FIRE-PBT ImageNet numbers, 71.7 versus 76.5 percent top-1, are the one-line version of that warning)",
+    "validation_entries": [
+      "V02"
+    ],
+    "tier": "T1",
+    "cost_estimate": "expose existing"
+  },
+  {
+    "id": "ch06-02",
+    "capability": "PB2 extended to mixed spaces",
+    "verdict": "build",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/06-population.tex",
+    "source_lines": "486-490",
+    "chapter": "6",
+    "rationale": "Ray's PB2 covers continuous knobs only; the categorical extension (PB2-Mix's bandit over categories, or directly the mixed-space kernels we build for the trust-region searcher) is the first genuine gap our package fills in this family.",
+    "validation_entries": [
+      "V08"
+    ],
+    "tier": "T2",
+    "cost_estimate": "moderate cost"
+  },
+  {
+    "id": "ch06-03",
+    "capability": "BG-PBT",
+    "verdict": "build",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/06-population.tex",
+    "source_lines": "491-499",
+    "chapter": "6",
+    "rationale": "The strongest published design when a real population, a schedule-shaped answer, and architecture search are all wanted at once: best mean return on five of seven Brax tasks against tuned PPO, random search, PBT, and PB2, and still ahead of a sequential baseline given six times the compute. The costs to state plainly: it needs the trust-region mixed-space searcher as a prerequisite, its theory does not cover the generational transfer that makes it shine, and below the population threshold it loses to methods a tenth its complexity.",
+    "validation_entries": [
+      "V08"
+    ],
+    "tier": "T2",
+    "cost_estimate": "months (the flagship)"
+  },
+  {
+    "id": "ch06-04",
+    "capability": "FIRE-PBT, MF-PBT, IPBT, SEARL",
+    "verdict": "watchlist, do not build now",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/06-population.tex",
+    "source_lines": "500-506",
+    "chapter": "6",
+    "rationale": "Each fixes a real PBT pathology (greediness, the evolution interval, off-policy data reuse), none ships in a framework we audited, and none has the cross-paper evidence BG-PBT has. SEARL's shared replay buffer is the one to revisit first when our off-policy work scales up.",
+    "validation_entries": [],
+    "tier": "watchlist",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch07-01",
+    "capability": "qLogNEHVI on BoTorch",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/07-multiobjective.tex",
+    "source_lines": "527-536",
+    "chapter": "7",
+    "rationale": "For two to four objectives with expensive, noisy trials, which is precisely the Hamiltonian and finance profile. It is the noise-aware, numerically repaired member of the hypervolume family, and the BoTorch ecosystem's own recommended default. Beyond four objectives its hypervolume arithmetic becomes the bottleneck, so the default switches to scalarization there.",
+    "validation_entries": [
+      "V09"
+    ],
+    "tier": "T1",
+    "cost_estimate": "weeks (the premium searcher)"
+  },
+  {
+    "id": "ch07-02",
+    "capability": "Chebyshev scalarization with random weights",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/07-multiobjective.tex",
+    "source_lines": "537-543",
+    "chapter": "7",
+    "rationale": "The cheap fallback that composes with every single-objective engine we own and has better coverage than weighted sums: it can reach concave stretches of the front that weighted sums cannot. Completeness under random weights requires the true ideal point and additional assumptions; the operational approximation using best-seen values gives better coverage in practice without the theoretical guarantee. This is also the answer for five or more objectives.",
+    "validation_entries": [
+      "V09"
+    ],
+    "tier": "T1",
+    "cost_estimate": "days"
+  },
+  {
+    "id": "ch07-03",
+    "capability": "Plain weighted sums as a product default",
+    "verdict": "exclude",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/07-multiobjective.tex",
+    "source_lines": "544-549",
+    "chapter": "7",
+    "rationale": "They silently discard the concave stretch of the front; if a user truly has fixed exchange rates, they have a single-objective problem and should declare it as one.",
+    "validation_entries": [],
+    "tier": "exclude",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch07-04",
+    "capability": "NSGA-II by wrapping Optuna",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/07-multiobjective.tex",
+    "source_lines": "550-552",
+    "chapter": "7",
+    "rationale": "For cheap trials in bulk, the evolutionary route is a tested default we get by wrapping, not building.",
+    "validation_entries": [
+      "V09"
+    ],
+    "tier": "T1",
+    "cost_estimate": "free"
+  },
+  {
+    "id": "ch07-05",
+    "capability": "MO-ASHA with veto gates",
+    "verdict": "build",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/07-multiobjective.tex",
+    "source_lines": "553-556",
+    "chapter": "7",
+    "rationale": "The multi-objective early-stopper, and the veto machinery doubles as the correctness gate the sampler workload needs (Chapter 9)",
+    "validation_entries": [
+      "V10",
+      "V13"
+    ],
+    "tier": "T1",
+    "cost_estimate": "about a week over ASHA"
+  },
+  {
+    "id": "ch07-06",
+    "capability": "MORBO and the hypervolume knowledge gradient",
+    "verdict": "defer",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/07-multiobjective.tex",
+    "source_lines": "557-561",
+    "chapter": "7",
+    "rationale": "Each answers a situation we do not yet have: very high-dimensional Pareto search, and objectives measurable separately at different prices. Revisit on demand.",
+    "validation_entries": [],
+    "tier": "defer",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch08-01",
+    "capability": "\u03c0BO's prior-weighted acquisition",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/08-priors-transfer.tex",
+    "source_lines": "372-380",
+    "chapter": "8",
+    "rationale": "Formula is a few lines over the Tier 0 GP searcher, every project lead has a prior to give it, and its built-in decay means bad advice costs a study its opening moves rather than its conclusion, provided the prior does not assign zero probability to the true region. The search-space schema should therefore require a lower-bounded mixture or explicitly nonzero support everywhere, so that wrong advice can be overruled by evidence. Highest value density in the document under that guard.",
+    "validation_entries": [
+      "V11"
+    ],
+    "tier": "T1",
+    "cost_estimate": "days"
+  },
+  {
+    "id": "ch08-02",
+    "capability": "PriorBand",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/08-priors-transfer.tex",
+    "source_lines": "381-385",
+    "chapter": "8",
+    "rationale": "The same idea where our savings actually live, the multi-fidelity rungs; the rung-dependent portfolio is what keeps a confidently wrong prior from doing damage",
+    "validation_entries": [
+      "V11"
+    ],
+    "tier": "T1",
+    "cost_estimate": "one to two weeks"
+  },
+  {
+    "id": "ch08-03",
+    "capability": "Warm starts from the run store",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/08-priors-transfer.tex",
+    "source_lines": "386-388",
+    "chapter": "8",
+    "rationale": "A ranked query over past studies. The prerequisite is the run store itself, which Tier 0 builds regardless.",
+    "validation_entries": [
+      "V12"
+    ],
+    "tier": "T1",
+    "cost_estimate": "days"
+  },
+  {
+    "id": "ch08-04",
+    "capability": "RGPE-style surrogate ensembles",
+    "verdict": "second wave",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/08-priors-transfer.tex",
+    "source_lines": "389-391",
+    "chapter": "8",
+    "rationale": "Real gains, but only once the store holds enough completed studies to ensemble; building it before the data exists would be decoration.",
+    "validation_entries": [],
+    "tier": "second wave",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch08-05",
+    "capability": "Pre-trained surrogates (PFN family)",
+    "verdict": "adopt one, build none",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/08-priors-transfer.tex",
+    "source_lines": "392-395",
+    "chapter": "8",
+    "rationale": "We take ifBO's published pre-trained model as our learning-curve surrogate (Chapter 5) and train nothing ourselves; OptFormer-scale training runs are a research program, not a package feature.",
+    "validation_entries": [
+      "V15"
+    ],
+    "tier": "adopt",
+    "cost_estimate": null
+  },
+  {
+    "id": "ch08-06",
+    "capability": "EI-per-cost with cost cooling",
+    "verdict": "include",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/08-priors-transfer.tex",
+    "source_lines": "396-403",
+    "chapter": "8",
+    "rationale": "One division and one annealing exponent on top of the GP searcher, dividing by a predicted cost rather than the realized cost the executor measures. A second GP fits log wall-clock time to configuration coordinates, refitting on the same cadence as the performance surrogate, with failed and killed trials entered as censored observations. The roadmap details the cold-start and calibration-logging protocol.",
+    "validation_entries": [
+      "V04"
+    ],
+    "tier": "T1",
+    "cost_estimate": "days"
+  },
+  {
+    "id": "ch08-07",
+    "capability": "CARBS-style cost frontier",
+    "verdict": "hold",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/08-priors-transfer.tex",
+    "source_lines": "404-406",
+    "chapter": "8",
+    "rationale": "Becomes relevant the day a project tunes a model that is destined to be scaled up; none is on the books today",
+    "validation_entries": [],
+    "tier": "hold",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch08-08",
+    "capability": "\u03bcP and the scaling-law literature",
+    "verdict": "encode, do not implement",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/08-priors-transfer.tex",
+    "source_lines": "407-412",
+    "chapter": "8",
+    "rationale": "These enter the package as priors, defaults, and sanity checks on the regime map, not as a searcher; at our current scales they advise rather than replace search.",
+    "validation_entries": [],
+    "tier": "encode",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch09-01",
+    "capability": "RL, routine budgets",
+    "verdict": "DEHB or BO-plus-ASHA",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/09-workloads.tex",
+    "source_lines": "369-372",
+    "chapter": "9",
+    "rationale": "A few dozen full runs: DEHB or BO-plus-ASHA over the full plausible space, several tuning seeds, disjoint test seeds, objective recorded explicitly",
+    "validation_entries": [
+      "V07"
+    ],
+    "tier": "workload template",
+    "cost_estimate": null
+  },
+  {
+    "id": "ch09-02",
+    "capability": "RL, large parallelism",
+    "verdict": "population line",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/09-workloads.tex",
+    "source_lines": "371-373",
+    "chapter": "9",
+    "rationale": "8+ workers: the population line, PB2-Mix now, BG-PBT when built",
+    "validation_entries": [
+      "V08"
+    ],
+    "tier": "workload template",
+    "cost_estimate": null
+  },
+  {
+    "id": "ch09-03",
+    "capability": "Neural-transport samplers",
+    "verdict": "GP + ASHA + vetoes",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/09-workloads.tex",
+    "source_lines": "374-377",
+    "chapter": "9",
+    "rationale": "GP searcher over flow and training knobs, ASHA over chain length, ESS-per-gradient objective, divergence and split-R-hat vetoes at every rung; leave the samplers' internal adapters on",
+    "validation_entries": [
+      "V13"
+    ],
+    "tier": "workload template",
+    "cost_estimate": null
+  },
+  {
+    "id": "ch09-04",
+    "capability": "Hamiltonian networks",
+    "verdict": "multi-objective study",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/09-workloads.tex",
+    "source_lines": "378-381",
+    "chapter": "9",
+    "rationale": "Two-to-three-objective study (prediction error, energy drift or rollout error, optionally cost) with qLogNEHVI or MO-ASHA, on the local execution backend",
+    "validation_entries": [
+      "V09"
+    ],
+    "tier": "workload template",
+    "cost_estimate": null
+  },
+  {
+    "id": "ch09-05",
+    "capability": "Architecture search: width, depth, flags",
+    "verdict": "include as ordinary axes",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/09-workloads.tex",
+    "source_lines": "381-383",
+    "chapter": "9",
+    "rationale": "Width, depth, and flags as ordinary search axes; parameter count and FLOPs reported as free objectives",
+    "validation_entries": [
+      "V08"
+    ],
+    "tier": "workload template",
+    "cost_estimate": null
+  },
+  {
+    "id": "ch09-06",
+    "capability": "One-shot supernets",
+    "verdict": "exclude",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/09-workloads.tex",
+    "source_lines": "383-384",
+    "chapter": "9",
+    "rationale": "Reliability evidence against, RL mismatch",
+    "validation_entries": [],
+    "tier": "exclude",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch09-07",
+    "capability": "Zero-cost proxy subsystem",
+    "verdict": "exclude",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/09-workloads.tex",
+    "source_lines": "384-385",
+    "chapter": "9",
+    "rationale": "Free quantities capture most of the value",
+    "validation_entries": [],
+    "tier": "exclude",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  },
+  {
+    "id": "ch09-08",
+    "capability": "Grammar-based spaces",
+    "verdict": "exclude for now",
+    "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/09-workloads.tex",
+    "source_lines": "385-389",
+    "chapter": "9",
+    "rationale": "Solves expressiveness, not cost; no current project needs topology discovery; NePS is the reference if that changes",
+    "validation_entries": [],
+    "tier": "exclude",
+    "cost_estimate": null,
+    "validation_note": "not validated: excluded, deferred, or guidance-only by verdict"
+  }
+]
