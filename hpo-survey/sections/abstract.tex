@@ -1,0 +1,26 @@
+We are planning a shared hyperparameter-tuning system for the training
+workloads in our workspace: reinforcement learning through RLlib,
+Hamiltonian neural networks, neural-transport samplers, and
+multi-objective models. This document surveys the tuning literature
+through August 2026 at a level meant to teach, with the load-bearing
+mechanisms derived in place and illustrated on one running example
+rather than quoted from their papers, audits the open-source tooling
+library by library against primary sources, and turns both into an
+implementation plan.
+
+The architectural conclusion is to keep Ray Tune
+as the execution layer (its distributed trials, checkpointing, and
+population-based training remain the strongest available, and we already
+operate Ray) while owning the search layer ourselves, since Tune's
+algorithm side has been in maintenance while method development moved to
+Optuna, BoTorch, and the AutoML groups' libraries.
+
+The algorithmic
+conclusion is a tiered roadmap: asynchronous successive halving plus a
+carefully configured Bayesian optimizer as the spine; noise-aware
+multi-objective acquisition with multi-objective early stopping, expert
+priors, cost-aware search, and the PB2-to-BG-PBT population line for
+reinforcement learning as the differentiators; freeze-thaw scheduling
+with a pre-trained learning-curve surrogate as the frontier bet. Each
+recommendation is tied to the controlled evidence that supports it, and
+a validation suite is specified before any of it is built.

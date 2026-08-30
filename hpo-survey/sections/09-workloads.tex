@@ -1,0 +1,436 @@
+\chapter{Our workloads, concretely}
+\label{sec:workloads}
+
+The preceding chapters organized the literature by method. This one flips
+the table and asks, for each family of work in our repositories, what the
+evidence says we should actually do. Each section ends in a concrete
+default: the study we would configure today, with the chapters that
+justify each choice.
+
+\section{Reinforcement learning}
+
+The controlled evidence base here is unusually good, and we have already
+leaned on it: \citet{eimer2023hyperparameters} tuned PPO, SAC, and DQN
+across eleven environments with matched budgets and seeds. Four of their
+findings should directly shape our defaults. First, hyperparameter
+importance is broad but concentrated: almost every swept knob mattered
+somewhere, importance analysis attributed most variance to one or two knobs
+per environment, and which knobs those were changed across environments, so
+the search space should include everything plausible rather than a
+hand-picked pair. This is the effective-dimensionality picture of
+Figure~\ref{fig:gridrandom} with a twist: the important axes exist, but we
+cannot know in advance which they are, which is precisely the situation
+where random-style coverage of every axis, and GP lengthscales that learn
+to switch axes off (Section~\ref{sec:gp}), earn their keep.
+
+Second, the
+response surfaces themselves looked smooth and well behaved; the
+difficulty of tuning RL comes overwhelmingly from seed noise, not from a
+pathological objective. That is good news for every surrogate in
+Chapter~\ref{sec:bayesian}, and it aims the engineering effort at noise
+handling (the noise-aware acquisitions of
+Section~\ref{sec:acquisition}) rather than at exotic models.
+
+Third, the
+seed noise is severe enough to corrupt conclusions: configurations tuned
+on one seed transferred poorly, incumbents evaluated on tuning seeds
+overstated test performance several-fold in the worst cases, and their
+protocol of tuning on a handful of seeds and reporting on disjoint test
+seeds is the minimum honest practice.
+
+Fourth, at budgets of ten to
+sixty-four full training runs, DEHB was the most dependable tuner, with
+random search respectable and population methods behind; the population
+methods' natural habitat is the large-parallelism regime of
+Chapter~\ref{sec:population}, where BG-PBT's own experiments live.
+
+Assembled into a default: an RL study below a few dozen full-run
+equivalents uses DEHB (or BO plus ASHA) over the full plausible space,
+evaluates each candidate on several tuning seeds, reports on disjoint
+test seeds, and holds the tuning budget fixed in any method comparison;
+a study with eight or more dedicated full-length workers and a
+schedule-shaped question upgrades to the population line, PB2-Mix now
+and BG-PBT when we build it.
+
+The broader AutoRL literature, surveyed by
+\citet{parkerholder2022autorl}, adds the framing that hyperparameters,
+architecture, and even algorithm components form one design space, but the
+budget-dependent boundary above is the piece with direct operational
+consequence for us.
+
+Two later results sharpen the picture. The ARLBench
+benchmark, built from hyperparameter-landscape data across many
+environments, reports that RL tuning landscapes are less benign than the
+supervised-learning ones and selects small representative environment
+subsets that cut the cost of evaluating a tuner by roughly an order of
+magnitude, which is precisely what our validation suite needs
+\citep{becktepe2024arlbench}. And a methodology paper on hyperparameter
+sensitivity warns that some reported algorithmic improvements in RL amount
+to increased reliance on tuning, one more reason to hold tuning budgets
+fixed when comparing methods \citep{adkins2024sensitivity}.
+
+For
+meta-gradient methods that adapt hyperparameters inside a single run, such
+as STAC \citep{zahavy2020selftuning}, our position is to treat them as
+properties of the RL algorithm, not of the tuner: worth enabling when
+RLlib exposes them, outside our product's scope to implement.
+
+One more RL-specific decision deserves sunlight: what number the tuner
+optimizes. Final evaluated return conflates stability with peak
+performance; area under the training curve rewards fast learners; return
+at a fixed step budget penalizes slow starters that would win given more
+steps. The three orderings genuinely disagree, and
+Figure~\ref{fig:curves} shows the disagreement in miniature: at the
+final step the blue configuration wins, on area under the curve the red
+one may, and a truncated budget flips the verdict again. The choice
+changes rankings, it interacts with early stopping (a curve that
+plateaus late looks like a curve worth killing), and it should be an
+explicit, recorded field of every study rather than a hidden default.
+
+When return and stability both matter, nothing stops us from declaring
+them as two objectives and using the machinery of Chapter~\ref{sec:moo};
+the multi-objective RL literature makes the matching argument on the
+agent's side, warning against collapsing genuinely conflicting
+objectives into a fixed linear combination \citep{hayes2022morl}, which
+is Figure~\ref{fig:chebyshev}'s lesson wearing a different hat. We found
+no dedicated literature on multi-objective hyperparameter tuning for RL
+specifically; the generic machinery is the state of the art.
+
+\section{Neural-transport samplers}
+
+Our NeuTra-style work trains a normalizing flow to reshape a posterior,
+then runs Hamiltonian Monte Carlo in the warped space
+\citep{hoffman2019neutra}. Tuning has two loops, and the division of
+labor matters enough to draw (Figure~\ref{fig:sampler-loops}).
+
+The inner
+loop belongs to the samplers themselves: step size adapts by the
+dual-averaging scheme introduced with the No-U-Turn Sampler (NUTS),
+trajectory length by NUTS's
+recursive doubling \citep{hoffman2014nuts} or, in the
+many-parallel-chains regime that accelerators favor, by gradient-based
+adaptation of the trajectory length against a mixing proxy, as in
+ChEES-HMC \citep{hoffman2021chees} and its successor that maximizes a
+bound on effective sample size per gradient along an estimated principal
+component \citep{sountsov2021snaper}.
+
+Where good internal adaptation
+exists, the outer tuner should not fight it: a tuner that overrides the
+step size NUTS would have chosen is spending trials to re-derive
+dual averaging, badly. What remains for the outer loop is everything the
+samplers cannot adapt on their own: the flow's architecture (depth,
+width, number of transformations), its optimizer and training length,
+the variational objective's minibatch size, and the target acceptance
+rate handed to the inner adapters.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners, align=center, inner sep=5pt, font=\small},
+  arr/.style={-{Latex}, thick},
+  node distance=8mm and 24mm]
+\node[box, minimum width=40mm, minimum height=15mm] (outer)
+  {\textbf{outer tuner (ours)}\\flow depth, width, layers;\\optimizer, training length;\\target acceptance rate};
+\node[box, right=of outer, minimum width=52mm, minimum height=15mm] (inner)
+  {\textbf{inner adaptation (the sampler's)}\\step size: dual averaging\\trajectory length: NUTS / ChEES};
+\draw[arr] (outer.east) -- node[above, font=\footnotesize] {configuration} (inner.west);
+\draw[arr] (inner.east) -- ++(0.9,0) node[right, box, minimum width=30mm, align=center] (score)
+  {ESS per gradient,\\after vetoes};
+\draw[arr] (score.south) |- ++(-2.0,-0.75) -| node[below, pos=0.25, font=\footnotesize]
+  {vetoes: divergences, split-$\widehat{R}$, reference checks} (outer.south);
+\end{tikzpicture}
+\caption{The two tuning loops of a neural-transport sampler. The inner
+adapters already solve step size and trajectory length; the outer tuner
+owns what they cannot reach, and its objective is efficiency (effective
+samples per gradient) gated by correctness vetoes that no efficiency
+score can buy off.}
+\label{fig:sampler-loops}
+\end{figure}
+
+The outer objective already has a citable template, and it is the NeuTra
+paper's own. Its authors selected step size and leapfrog steps by
+Bayesian optimization on an objective that rewards effective sample size
+(ESS, the number of independent draws a correlated chain is worth)
+per gradient evaluation while sharply penalizing configurations whose
+potential-scale-reduction diagnostic $\widehat{R}$ departs from one
+\citep{hoffman2019neutra}; tuning samplers by BO goes back at least to
+\citet{mahendran2012adaptive}. Effective samples per gradient is the
+right currency because gradient evaluations dominate cost in both flow
+training and leapfrog integration.
+
+But ESS estimated from short chains
+is exactly the kind of proxy that Chapter~\ref{sec:multifidelity} warned
+about, and sampler tuning has a sharper failure mode than slow starters:
+a chain that mixes quickly inside one mode of a multimodal posterior
+reports excellent short-run ESS while being wrong, the statistical
+equivalent of Figure~\ref{fig:curves}'s sprinter, except that this
+sprinter never stalls visibly; it simply reports the wrong answer with
+growing confidence.
+
+The remedy is to treat correctness diagnostics as
+vetoes rather than objectives: divergence counts, split $\widehat{R}$
+across independent chains, and, where a reference posterior is available
+on a pilot problem, agreement with it. A configuration that fails a veto
+is discarded no matter how efficient it looks; among configurations that
+pass, ESS per gradient is a legitimate objective. Multi-fidelity
+structure is still available (shorter chains, fewer chains), but rung
+promotion should require the vetoes to pass at every rung, which is
+exactly the kind of user-defined gate our scheduler interfaces must
+support (Chapter~\ref{sec:architecture}).
+
+The concrete default: a single-objective study on ESS per gradient with
+divergence and split-$\widehat{R}$ vetoes at every rung, ASHA over chain
+length as the scheduler, the GP searcher of Chapter~\ref{sec:bayesian}
+over the flow and training knobs, and the inner adapters left switched
+on with only their target acceptance rate exposed to the search.
+
+\section{Hamiltonian and physics-structured networks}
+
+Hamiltonian neural networks learn a scalar function whose symplectic
+gradient supplies the dynamics; conservation comes from the architecture
+rather than from a penalty term, and the original paper reports models
+that conserve an energy-like quantity where an unconstrained baseline
+drifts \citep{greydanus2019hnn}. Notably for us, its authors chose their
+hyperparameters by a coarse grid over learning rate, layer width,
+activation, and batch size, which is precisely the procedure
+Chapter~\ref{sec:modelfree} retired; the field's own tuning practice
+trails its modeling practice, and that gap is our opportunity.
+
+Tuning these models well is multi-objective in the evaluation even when
+the training loss is a single term: short-horizon prediction error,
+long-rollout state error, and energy drift move separately, the training
+loss sees only the first, and the scientific value lives in the second
+and third.
+
+The axes of Figure~\ref{fig:pareto} were chosen with this
+workload in mind, and the study template is the one that figure
+illustrates: a two-or-three-objective search (prediction error,
+long-rollout error or energy drift, optionally training cost) solved
+with qLogNEHVI or MO-ASHA from Chapter~\ref{sec:moo}, over a space that
+includes integrator choice and step size, width and depth, activation
+(smoothness matters when the learned function is differentiated),
+learning rate, and loss weights where present. Where variants do carry
+multi-term losses (the pixel-observation task in the original paper
+combines the dynamics loss with autoencoder terms), the weights joining
+them are exactly the knobs an outer tuner should own.
+
+Trials are cheap,
+minutes rather than hours, so this is also the workload where the
+tuner's own overhead (Section~\ref{sec:costmodel}) is most visible and
+the local execution backend of Chapter~\ref{sec:architecture} earns its
+keep.
+
+A neighboring literature balances competing loss terms inside training
+rather than outside it: gradient-statistics reweighting for
+physics-informed networks \citep{wang2020pathologies}, weights set
+from neural-tangent-kernel eigenvalues \citep{wang2020ntk}, and relative
+loss balancing schemes compared systematically by
+\citet{bischof2025relobralo}. The division-of-labor rule from the
+sampler subsection transfers unchanged: where internal balancing works,
+let the trainer balance and let the tuner search what the trainer
+cannot, and when in doubt, the internal balancer is a competitor our
+outer loop must beat at matched cost, not a rival to ignore.
+
+\section{Architecture search, in moderation}
+
+Our NAS folder is full of ambitious methods, and the sober reading of the
+field is that a small team should adopt its cheap findings and skip its
+expensive machinery. The thousand-paper survey of \citet{white2023nas1000}
+recommends random search as the mandatory baseline for any NAS claim
+(Chapter~\ref{sec:modelfree}'s discipline, enforced field-wide) and
+records that simple quantities such as parameter count and FLOPs
+(floating-point operation counts) are
+surprisingly competitive with the leading zero-cost proxies, whose
+reliability degrades on larger search spaces. Systematic bench-marking of
+those proxies found their value to lie in complementing a learned
+performance predictor rather than in standalone selection
+\citep{krishnakumar2022nasbenchsuite}.
+
+On the one-shot side, the DARTS
+family is documented to produce degenerate architectures across a range
+of search spaces without careful regularization \citep{zela2020robustifying},
+and controlled evaluations found much of the reported progress
+attributable to training tricks rather than to the search itself, with
+hand-designed macro-structure mattering more than the searched cells
+\citep{yang2020frustratingly}.
+
+Meanwhile the benchmark built for joint
+architecture-and-hyperparameter search motivates itself with the
+observation that good hyperparameters can matter more than the best
+architecture \citep{bansal2022jahs}.
+
+For us, the conclusion is comfortable: architecture search should mean
+width, depth, and a few structural flags included as ordinal and
+categorical axes in the ordinary search space (as BG-PBT does for policy
+and value networks, with the ordinal-aware kernels of
+Section~\ref{sec:highdim} doing the modeling), multi-fidelity doing the
+heavy lifting, parameter count reported as an objective when size
+matters, and no dedicated weight-sharing subsystem. That covers every
+architecture question our current projects actually ask, at a small
+fraction of the complexity.
+
+Because ``in moderation'' is the kind of phrase that drifts, the
+boundary is worth stating as a scope rather than as a mood. Inside it:
+width and depth as ordinal axes, a small number of structural flags
+(normalization choice, residual connections, activation family) as
+categorical axes, parameter count and measured FLOPs available as
+objectives for the multi-objective machinery of
+Chapter~\ref{sec:moo} rather than as proxies substituting for
+training, and architecture coordinates mutating through the same
+explore step every other coordinate uses, which is what BG-PBT's
+architecture handling amounts to once the weight-sharing is stripped
+out (Chapter~\ref{sec:population}). Outside it, deliberately: topology
+and cell search, one-shot or weight-sharing supernets, a zero-cost
+proxy subsystem, grammar-based or hierarchical architecture spaces
+\citep{schrodi2023grammar}, and differentiable search of any flavor.
+The exclusions are not a claim that those methods fail; they are the
+claim this chapter's evidence actually supports, which is that they
+cost a subsystem each and buy nothing our workloads have asked for. A
+project that needs them needs a different governing document, and the
+honest move then is to write one rather than to widen this sentence.
+
+One consequence is worth flagging where it lands. Changing width or
+depth mid-run invalidates the weights a population method wants to
+inherit, so a population arm that mutates an architecture coordinate
+pays for the change: either it restarts the trial from initialization,
+or it transfers what it can by distillation from the parent, which is
+the route BG-PBT takes \citep{wan2022bgpbt} and which
+Chapter~\ref{sec:population} treats as part of the population line's
+price rather than as free.
+
+\section{The compute bill, and the shortcuts we are asked about}
+\label{sec:computebill}
+
+Tuning reinforcement learning is expensive enough that the fair question
+is not ``which method'' but ``can we afford any of this,'' so the bill
+deserves to be written out. A study's cost factors cleanly into three
+multiplied terms: the number of candidate configurations examined, times
+the seeds per candidate that Chapter~\ref{sec:workloads}'s protocol
+demands, times the training steps per trial. In the running example the
+last factor alone is up to 150 million environment steps, hours on
+several accelerators, so a naive 64-candidate, 3-seed, full-length study
+is roughly two hundred full training runs before anything has been
+learned about tuning at all.
+
+Every lever this document recommends
+attacks one factor: multi-fidelity scheduling cuts steps per trial by
+an order of magnitude (Chapter~\ref{sec:multifidelity}, and it is the
+biggest single lever); model-based search and warm starts cut the
+number of candidates (Chapters~\ref{sec:bayesian}
+and~\ref{sec:transfer}); the seed protocol stops compute being spent
+optimizing luck; population methods make the trials \emph{be} the
+training run rather than a rehearsal for it
+(Chapter~\ref{sec:population}); and ARLBench-style representative
+benchmark subsets cut the cost of evaluating tuner changes by roughly
+an order of magnitude \citep{becktepe2024arlbench}, which is what makes
+our own validation suite affordable.
+
+Against that backdrop, three architecture-search shortcuts come up
+whenever the bill is discussed, and each deserves a plain description
+and a verdict.
+
+\emph{One-shot search} trains a single ``supernet'' that contains every
+candidate architecture as a sub-network with shared weights; candidates
+are then scored by inheriting weights from the supernet instead of being
+trained separately, so one big training run amortizes thousands of
+evaluations. The economics are attractive and the evidence is not. The
+DARTS family of one-shot methods is documented to produce degenerate
+architectures across search spaces without careful regularization
+\citep{zela2020robustifying}; controlled re-evaluations attribute much
+of the reported progress to training tricks rather than the search, with
+hand-designed macro-structure mattering more than the searched cells
+\citep{yang2020frustratingly}; and the field's own thousand-paper survey
+responds by making random search the mandatory baseline
+\citep{white2023nas1000}.
+
+Two further points are specific to us rather
+than to the literature, and we label them as our inference: supernet
+training assumes a stable supervised training signal, while RL's data
+distribution shifts under the policy as it learns; and our architecture
+questions concern small policy and value networks, where there is not
+enough training to amortize for the supernet's economy to pay. Verdict:
+no one-shot subsystem, for reliability reasons first and fit reasons
+second.
+
+\emph{Zero-shot search} (zero-cost proxies) scores architectures at
+initialization, without any training, from quantities like gradient
+statistics at the first batch; the promise is architecture selection
+for the price of a forward-backward pass. The systematic benchmark of
+these proxies found their value to lie in complementing a learned
+performance predictor rather than in standalone selection, with
+reliability degrading on larger spaces
+\citep{krishnakumar2022nasbenchsuite}, and the survey notes that plain
+parameter count and FLOPs are surprisingly competitive with the
+sophisticated proxies \citep{white2023nas1000}. That last fact is the
+actionable one: params and FLOPs are free, we already record them in
+the run store, and they can serve as objectives or tie-breakers today.
+Verdict: report the free quantities; build no proxy subsystem.
+
+\emph{Grammar-based spaces} attack a different problem than cost.
+A context-free grammar generates architectures the way a grammar
+generates sentences: production rules expand high-level structure into
+blocks and blocks into operations, which compactly defines hierarchical
+search spaces vastly larger than the usual cell catalogs, searched with
+Bayesian optimization over hierarchical kernels
+\citep{schrodi2023grammar}; NePS ships support for such spaces
+(Chapter~\ref{sec:libraries}). The honest reading for a manager: this
+is a solution to \emph{expressiveness}, letting one search whole
+macro-structures rather than a fixed menu, and a larger space raises
+rather than lowers the number of evaluations needed. It becomes
+relevant the day a project genuinely needs to discover topology; every
+architecture question our projects ask today is width, depth, and
+flags, where the benchmark evidence says hyperparameters matter at
+least as much as the architecture anyway \citep{bansal2022jahs}.
+Verdict: not in the package now; NePS is the reference implementation
+if a topology-search project ever lands.
+
+The summary sentence for the section: the compute problem in RL tuning
+is real, and its solution in our package is the stack of levers in the
+first paragraph, not an architecture-search shortcut; the shortcuts
+either lack reliability evidence (one-shot), reduce to free quantities
+we already record (zero-shot), or solve a problem we do not have
+(grammar spaces).
+
+\begin{decisions}
+\noindent\textbf{Decisions from this chapter.} Per workload, the study
+we configure today; and the architecture-search verdicts.
+\begin{itemize}[leftmargin=1.3em, itemsep=2pt]
+\item \textbf{RL, routine budgets} (a few dozen full runs): DEHB or
+BO-plus-ASHA over the full plausible space, several tuning seeds,
+disjoint test seeds, objective recorded explicitly. \textbf{RL, large
+parallelism} (8+ workers): the population line, PB2-Mix now, BG-PBT
+when built.
+\item \textbf{Neural-transport samplers}: GP searcher over flow and
+training knobs, ASHA over chain length, ESS-per-gradient objective,
+divergence and split-$\widehat{R}$ vetoes at every rung; leave the
+samplers' internal adapters on.
+\item \textbf{Hamiltonian networks}: two-to-three-objective study
+(prediction error, energy drift or rollout error, optionally cost)
+with qLogNEHVI or MO-ASHA, on the local execution backend.
+\item \textbf{Architecture search}: width, depth, and flags as
+ordinary search axes; parameter count and FLOPs reported as free
+objectives. \textbf{One-shot supernets}: exclude (reliability evidence
+against, RL mismatch). \textbf{Zero-cost proxy subsystem}: exclude
+(free quantities capture most of the value). \textbf{Grammar-based
+spaces}: exclude for now (solves expressiveness, not cost; no current
+project needs topology discovery); NePS is the reference if that
+changes.
+\end{itemize}
+\end{decisions}
+
+\section{What would overturn these verdicts}
+
+The routine-budget RL verdict (DEHB or BO+ASHA) is decided by V07;
+whichever loses is excluded and this section rewritten. The sampler
+study's veto gates are tied to V13: if vetoes prove unreliable
+(failing configurations promoted, or survivors ranking poorly
+against the reference posterior), correctness checking is pulled
+back into training code and the tuner's veto hook is disabled. The
+Hamiltonian study's reliance on the premium MO searcher follows
+V09's outcome; if qLogNEHVI is demoted, the study defaults to
+scalarization. The workload-template abstraction itself (four
+matched studies, not a general tuner) holds unless colleagues
+request a fifth workload family with evidence that it differs
+structurally from the four, at which point a new template is argued
+and added or the request is accommodated by parameterizing an
+existing one.

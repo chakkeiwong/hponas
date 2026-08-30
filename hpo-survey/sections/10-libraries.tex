@@ -1,0 +1,230 @@
+\chapter{The open-source libraries, one by one}
+\label{sec:libraries}
+
+The method chapters told us what is worth running; this one asks who
+actually ships it, and in what condition. Every version number,
+maintenance signal, and feature claim in this chapter was checked against
+the project's own repository, package index, release notes, or
+documentation on August 22, 2026, and re-checked on August 23; the
+summary appears in Table~\ref{tab:libraries}. Maintenance status is a fact with a date on it,
+not a permanent verdict, and it matters here as much as algorithmic content:
+several famous names below are no longer safe foundations. A useful way to
+read the section is to sort the field by what each project fundamentally is:
+a few are \emph{execution frameworks} that run and schedule trials, most are
+\emph{search engines} that propose configurations and expect someone else to
+run them, and two are \emph{services} wrapping a search engine behind a
+network API. Our product needs exactly one good member of the first kind and
+a curated set of the second.
+
+\section{Execution frameworks}
+
+\paragraph{Ray Tune.}
+Part of Ray (release 2.57.0, August 11, 2026, Apache 2.0), Tune runs
+distributed trials natively on a Ray cluster, with fault tolerance and a
+stable Tuner interface. Its scheduler side is genuinely strong: ASHA,
+Hyperband, median stopping, a BOHB scheduler, and the only mainstream
+native distributed implementations of population-based training, PBT with
+replay, and PB2, with the documented requirement that the trainable
+support checkpoint save and restore \citep{liaw2018tune, moritz2018ray}.
+Two findings from the release history temper the picture. First, across
+the five Ray releases from December 2025 to August 2026, every
+Tune-specific change was a documentation restructure, example, or bug fix;
+no new algorithm or capability landed in that window. Second, the roster
+of bundled search integrations has been deliberately pruned: Dragonfly,
+SigOpt, scikit-optimize, and FLAML's searchers are gone from the current
+documentation, leaving wrappers for Ax, bayesian-optimization, BOHB (whose
+upstream is unmaintained, see below), HEBO, Hyperopt, Nevergrad, Optuna,
+and ZOOpt. Core Tune has no native multi-objective support: the tuner
+takes one metric and one mode, and Pareto workloads pass through the
+Optuna searcher, which accepts lists of metrics. The fair summary: a
+first-class execution and scheduling substrate whose own search
+intelligence is coasting, which is precisely the shape of dependency we
+want underneath a search layer of our own.
+
+\paragraph{Syne Tune.}
+Originally from AWS, now in its own community organization (release
+0.16.0, August 3, 2026, Apache 2.0, about 420 GitHub stars), Syne Tune is
+the closest existing thing to the product this document proposes: a broad
+method zoo (multi-fidelity, multi-objective, transfer, and
+population-based training all claimed in its README) behind a backend
+abstraction that can execute trials locally, on SageMaker, or inside a
+simulator that replays tabular and surrogate benchmarks faster than real
+time \citep{salinas2022synetune}. That simulator is unique in the field
+and exactly the right idea for cheap algorithm regression tests. The
+concerns are social rather than technical: a small community and a
+post-corporate maintenance arrangement, with no Ray backend, so adopting
+it as our substrate would mean owning a second execution stack beside the
+one RLlib already requires. We take its backend-abstraction design and its
+simulator idea as blueprints rather than its code as foundation.
+
+\paragraph{Katib.}
+Kubeflow's Kubernetes-native tuner (v0.19.0, October 2025, Apache 2.0)
+runs trials as Kubernetes workloads defined by custom resources, with
+early stopping and a set of suggestion services that mostly wrap Optuna,
+Goptuna, and Hyperopt. It is the right shape for an organization whose
+platform is Kubeflow; on a Ray shop it duplicates the execution layer we
+already have while adding no search capability we could not get from the
+wrapped engines directly.
+
+\paragraph{Determined and NNI.}
+Two cautionary entries. Determined, the training platform whose adaptive
+ASHA implementation was well regarded, has had no repository activity
+since March 2025 and no release since then either, without any formal
+notice; do not build on it. NNI, Microsoft's once-popular AutoML toolkit,
+is formally archived (last release September 2023), and its fourteen
+thousand GitHub stars are a trap for anyone ranking libraries by
+popularity.
+
+\section{Search engines}
+
+\paragraph{Optuna.}
+Optuna (4.9.0 in June 2026, 5.0 release candidate in August 2026, MIT) is
+where sampler development is most active in 2026
+\citep{akiba2019optuna}. The 5.0 line promotes a multivariate TPE with a
+constant-liar strategy for parallel workers to the default sampler;
+recent 4.x releases grew the GP sampler into constrained and
+multi-objective territory (a log-EHVI acquisition, plus batch-proposal
+strategies), an automatic sampler-selection module ships through the
+OptunaHub plugin registry, and a Rust core accelerates the standard
+samplers. Its define-by-run interface remains the best available way to
+express conditional search spaces, and NSGA-II is the default for
+multi-objective studies, with the multi-objective TPE variant
+\citep{ozaki2020motpe} now folded into the standard sampler rather than
+shipped separately. The limitation is the mirror image of Ray
+Tune's: Optuna executes nothing. Its documented multi-node story is a
+relational database that workers poll, with an explicit warning about
+file-based storage over NFS, and it has no population-based training.
+Optuna behind Ray Tune's OptunaSearch is the pairing both projects
+document, and it is the pairing new tools reach for: DataRobot's syftr,
+an agent-workflow optimizer released in 2025, states in its README that
+it builds on Ray for distributed execution and Optuna for
+define-by-run search and multi-objective optimization.
+
+\paragraph{Ax and BoTorch.}
+Meta's pair covers the model-based frontier: BoTorch (0.18.1, June 2026,
+MIT) supplies the Gaussian-process machinery and the modern acquisition
+functions, including the qLogNEHVI family that Chapter~\ref{sec:moo}
+recommends, and its own documentation warns users off the older
+non-log variants; Ax (1.3.1, June 2026, MIT) wraps it in a clean ask-tell
+client aimed at practitioners, defaulting to noisy expected hypervolume
+improvement for multi-objective studies
+\citep{balandat2020botorch}. BoTorch's README is candid that end users
+not doing BO research should use Ax instead. Neither executes trials;
+both are exactly the acquisition engine our GP searchers should be built
+on rather than reimplemented.
+
+\paragraph{SMAC3.}
+The AutoML group's random-forest Bayesian optimizer (2.4.0, April 2026,
+BSD) remains actively developed, with multi-fidelity and multi-objective
+support across its facades and a 2.4.0 change of default surrogate to
+scikit-learn's random forest \citep{lindauer2022smac3}. It is the
+canonical engine for large conditional spaces and the tuner used as the
+sequential baseline in the BG-PBT paper. Its ergonomics are single-machine
+and academic; we would wrap it for awkward spaces rather than adopt its
+frame.
+
+\paragraph{NePS.}
+Neural Pipeline Search from the same group (0.16.0, March 2026, Apache
+2.0, under a hundred stars but actively developed) is the reference home
+of the prior-and-multi-fidelity methods we care about: PriorBand, ifBO,
+and a multi-objective variant with expert priors, plus grammar-based
+hierarchical architecture spaces. Its parallelism model is workers
+coordinating through a shared results directory, simple and DDP-friendly,
+though the same design that Optuna's documentation warns can race over
+NFS. For us it is a source of reference implementations and a
+correctness oracle for our own PriorBand and ifBO ports, not a substrate.
+
+\paragraph{DEHB and HpBandSter.}
+The two AutoML-group bandit engines are both frozen, in different ways.
+DEHB (0.1.2, mid 2024) announces in its README that it is maintained for
+stability but no longer actively developed; the algorithm remains the
+evidence-backed recommendation for small-budget RL tuning
+(Chapter~\ref{sec:workloads}), so the pragmatic path is to implement DEHB
+against our own interfaces with the frozen package as a reference.
+HpBandSter, the reference BOHB implementation, opens its README with
+``not maintained anymore''; notably, Ray Tune's BOHB searcher still
+depends on it.
+
+\paragraph{Hyperopt, Nevergrad, FLAML.}
+Hyperopt (0.3.0, July 2026) received its first release since 2021, a
+compatibility revival with no new methods; it matters today mainly as the
+legacy TPE many codebases still import. Nevergrad (1.0.12, April 2025,
+sixteen months without a release at our check date) remains a broad
+evolutionary toolbox whose NGOpt wizard picks among CMA-ES, differential
+evolution, and dozens of other solvers by problem features; a good
+non-BO baseline for bake-offs. FLAML (2.6.0, April 2026, active) is the
+cost-frugal specialist: its CFO and BlendSearch searchers start cheap and
+spend more only when justified, with explicit fields for the cost-related
+hyperparameters \citep{wang2021flaml}; its Ray integration, however, has
+disappeared from Ray's documentation, so using it means wiring it
+ourselves.
+
+\paragraph{OpenBox.}
+An academic black-box optimization service (0.9.0, March 2026, MIT) with
+an unusually broad claim sheet: multi-objective, constraints, transfer,
+early stopping, and a REST service mode \citep{li2021openbox}. Activity
+is modest and burst-like, and the service architecture duplicates
+infrastructure a Ray shop already runs. Worth watching, not depending on.
+
+\section{Services and partial offerings}
+
+\paragraph{Open-source Vizier.}
+Google's Vizier (client-server, Apache 2.0) publishes the most complete
+description of an industrial default anywhere: a Mat\'ern-5/2 GP with
+MAP-fit hyperparameters, an output-warping stack that tames outliers, a
+deliberately explorative UCB coefficient, trust regions, and an
+evolutionary acquisition maximizer, benchmarked in its own report against
+algorithms accessed through Ray Tune \citep{song2022ossvizier,
+song2024vizier}. The repository is active but the package on PyPI had not
+been released for eighteen months at our check date. Its value to us is
+the design disclosure more than the dependency.
+
+\paragraph{Weights and Biases sweeps.}
+The open pieces are the client and a small suggestion library (random,
+grid, a Bayesian sampler, Hyperband stopping) whose standalone package
+last shipped in 2022; orchestration and state live in the proprietary
+service. Fine as a convenience for W\&B customers; not an engine to build
+on.
+
+\paragraph{New arrivals worth a footnote.}
+The visible new energy of 2025 and 2026 sits in agentic tooling rather
+than classical search: an official Optuna server exposing studies to
+language-model agents, and a fast-growing project that has coding agents
+iterate on training configurations directly. None of these publish
+controlled evidence against the methods of
+Chapters~\ref{sec:bayesian}--\ref{sec:transfer} at matched budgets, so
+they change nothing in our plan, but they are worth rechecking in a year.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Open-source tuning libraries as checked on August 22, 2026.
+``Maintained'' reflects release and commit activity at that date, not a
+prediction. Stars are approximate GitHub counts.}
+\label{tab:libraries}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Library & Release (date) & Status & One-line reading \\
+\midrule
+Ray Tune & Ray 2.57.0 (2026-08) & active; Tune coasting & best executor; search layer aging \\
+Optuna & 4.9.0; 5.0rc1 (2026-08) & very active & best samplers; no executor \\
+Ax & 1.3.1 (2026-06) & active & polished BO client over BoTorch \\
+BoTorch & 0.18.1 (2026-06) & active & the acquisition engine to reuse \\
+Syne Tune & 0.16.0 (2026-08) & active, small team & broadest methods; design blueprint \\
+SMAC3 & 2.4.0 (2026-04) & active & conditional-space BO plus racing \\
+NePS & 0.16.0 (2026-03) & active, small team & PriorBand and ifBO reference code \\
+DEHB & 0.1.2 (2024-07) & stability-only & algorithm good; package frozen \\
+HpBandSter & 0.7.4 (2018-11) & unmaintained & BOHB reference; do not depend \\
+Hyperopt & 0.3.0 (2026-07) & compatibility only & legacy TPE \\
+Nevergrad & 1.0.12 (2025-04) & slowing & evolutionary baseline (NGOpt) \\
+FLAML & 2.6.0 (2026-04) & active & cost-frugal searchers \\
+OpenBox & 0.9.0 (2026-03) & sporadic & broad claims, small team \\
+OSS Vizier & 0.1.24 (2025-02) & repo active, releases stalled & reference design disclosure \\
+Katib & 0.19.0 (2025-10) & active & Kubernetes-native; redundant on Ray \\
+Determined & 0.38.1 (2025-03) & dormant & no activity since early 2025 \\
+NNI & 3.0 (2023-09) & archived & formally retired \\
+Orion & 0.2.7 (2023-03) & dormant & no release in over three years \\
+W\&B sweeps & lib 0.2.0 (2022-08) & minimal open core & orchestration is proprietary \\
+\bottomrule
+\end{tabular}
+\end{table}
