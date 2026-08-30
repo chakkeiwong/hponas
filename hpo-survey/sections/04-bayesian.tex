@@ -1,0 +1,895 @@
+\chapter{Model-based search: Bayesian optimization and its relatives}
+\label{sec:bayesian}
+
+Random search treats trial fifty exactly like trial one: it has learned
+nothing. When each trial costs GPU-hours, that indifference is expensive,
+and it pays to think hard between trials. Bayesian optimization (BO) spends
+that thought in two steps: fit a probabilistic model of the objective from
+the trials seen so far (the \emph{surrogate}), then choose the next
+configuration by maximizing an \emph{acquisition function} that scores
+candidate points by how useful evaluating them would be. The surrogate is
+cheap to evaluate, so the inner maximization can afford thousands of
+candidate evaluations to decide where to spend one real trial. Modern
+references are the book by \citet{garnett2023bayesoptbook} and the survey by
+\citet{shahriari2016taking}; here we develop the machinery far enough that
+the design choices in our product are not acts of faith, starting from the
+question the surrogate must answer: after eight trials of the running
+example, what do we believe about the loss at a learning rate we have never
+tried, and how sure are we?
+
+\section{Gaussian process surrogates}
+\label{sec:gp}
+
+The default surrogate is a Gaussian process (GP), and its entire content is
+one modeling assumption stated positively: we model the objective $f$ as a
+random function such that any finite collection of values
+$(f(\config_1), \dots, f(\config_n))$ is jointly Gaussian, with prior mean
+zero and covariance given by a kernel,
+$\operatorname{Cov}[f(\config), f(\config')] = k(\config, \config')$. The
+kernel is where all the prior knowledge lives: it says how similar the
+objective's values at two configurations should be as a function of how far
+apart the configurations are. The common default, and ours, is the
+Mat\'ern-5/2 kernel with a lengthscale per dimension,
+\begin{equation}
+k(\config, \config')
+= \sigma_f^2 \left( 1 + \sqrt{5}\,\rho + \tfrac{5}{3}\rho^2 \right)
+  e^{-\sqrt{5}\,\rho},
+\qquad
+\rho^2 = \sum_{j=1}^{d} \frac{(\lambda_j - \lambda'_j)^2}{\ell_j^2},
+\label{eq:matern}
+\end{equation}
+which produces functions that are twice differentiable but not infinitely
+smooth, a better match for loss surfaces than the very smooth squared
+exponential \citep{rasmussen2006gaussian}. Each lengthscale $\ell_j$ has a
+direct reading: it is the distance along axis $j$ over which the objective's
+values decorrelate. A long lengthscale on the entropy-coefficient axis says
+that moving the entropy coefficient barely changes the loss.
+
+It is worth pausing on why the model is nonparametric, because the
+obvious alternative is one every applied statistician has fit. Response
+surface methodology would posit a global parametric form, a quadratic in
+the knobs, and estimate its coefficients by least squares. That imposes
+one curvature on the entire space: the model must believe the loss bends
+the same way near $10^{-5}$ as near $10^{-2}$, and eight trials estimating
+a fifteen-dimensional quadratic are hopeless anyway (the quadratic alone
+has over a hundred coefficients). The kernel assumption is weaker and
+better matched to what we actually know: not the shape of the surface,
+only that configurations close together perform similarly, with
+``close'' learned per axis from the data. The GP is what Bayesian
+regression becomes when the parametric form is dropped and only that
+smoothness belief is kept; the price is that predictions lean on nearby
+data rather than on a global formula, which is exactly the right
+epistemic posture for a surface we know nothing else about.
+
+We assume observations are the true objective plus Gaussian noise,
+$y_i = f(\config_i) + \varepsilon_i$ with
+$\varepsilon_i \sim \N(0, \sigma^2)$, which is our stand-in for seed
+variation; it is a modeling choice, adopted because it keeps every formula
+below in closed form, and Section~\ref{sec:gp-practical} returns to what to
+do when the noise is visibly not Gaussian. Under these assumptions the
+prediction problem solves itself by pure linear algebra. The observed vector
+$\mathbf{y} = (y_1, \dots, y_n)$ and the unknown value $f(\config)$ at a new
+point are jointly Gaussian,
+\begin{equation}
+\begin{pmatrix} \mathbf{y} \\ f(\config) \end{pmatrix}
+\sim \N\!\left(
+\mathbf{0},
+\begin{pmatrix}
+\mathbf{K} + \sigma^2 \mathbf{I} & \mathbf{k}(\config) \\
+\mathbf{k}(\config)^\top & k(\config, \config)
+\end{pmatrix}
+\right),
+\qquad
+\mathbf{K}_{ij} = k(\config_i, \config_j),
+\quad
+\mathbf{k}(\config)_i = k(\config_i, \config),
+\label{eq:joint}
+\end{equation}
+and the standard formula for conditioning one block of a Gaussian on
+another (condition the second block on the first) gives the posterior at
+$\config$ as another Gaussian,
+\begin{equation}
+\mu_n(\config) = \mathbf{k}(\config)^\top
+\left( \mathbf{K} + \sigma^2 \mathbf{I} \right)^{-1} \mathbf{y},
+\qquad
+s_n^2(\config) = k(\config, \config) - \mathbf{k}(\config)^\top
+\left( \mathbf{K} + \sigma^2 \mathbf{I} \right)^{-1} \mathbf{k}(\config)
+\label{eq:gp}
+\end{equation}
+\citep{rasmussen2006gaussian}. Readers who know kriging from spatial
+statistics or Bayesian linear regression from econometrics are on home
+ground here: \eqref{eq:gp} is exactly that conditioning, with the kernel
+playing the role of the spatial covariance function.
+
+The two formulas
+carry the whole story, and they are worth reading term by term. The posterior mean is a weighted
+combination of the observed values, with weights
+$\mathbf{k}(\config)^\top (\mathbf{K} + \sigma^2 \mathbf{I})^{-1}$ set by
+similarity under the kernel: observations near $\config$ (as measured in
+lengthscale units) dominate the prediction.
+
+The posterior variance starts
+from the prior variance $k(\config,\config)$ and \emph{subtracts} a term
+that grows as data approaches $\config$; at fixed kernel
+hyperparameters nothing about the observed \emph{values} appears in it,
+only the observed \emph{locations}, so the model knows where it is
+ignorant before it knows what the answer is. The qualifier is not
+decoration: once the lengthscales and the noise variance are estimated
+from the data by \eqref{eq:mll}, the observed values do influence the
+variance, through the fitted hyperparameters rather than through the
+conditioning formula.
+
+The noise term $\sigma^2 \mathbf{I}$ deserves its own sentence: with
+$\sigma^2 = 0$ the posterior mean passes exactly through every
+observation, treating each score as gospel, while $\sigma^2 > 0$ turns
+interpolation into smoothing, letting the mean pass \emph{near} noisy
+scores instead of through them. Readers who know ridge regression will
+recognize the mechanism, since $(\mathbf{K} + \sigma^2\mathbf{I})^{-1}$
+applies precisely ridge's shrinkage, with the noise variance as the
+regularization constant; estimating $\sigma^2$ from the data by
+\eqref{eq:mll} below is what lets the model decide for itself how much
+of the spread in RL returns is signal and how much is seed luck.
+
+Figure~\ref{fig:gp} shows the shape this produces on the running example's
+learning-rate axis: the band of uncertainty is pinched near the trials we
+have paid for and swells between and beyond them, which is exactly the
+information an acquisition function needs.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=1.0, font=\small]
+% axes
+\draw[-{Latex}] (0,0) -- (9,0);
+\node[anchor=north] at (7.4,-0.12) {learning rate (log scale)};
+\draw[-{Latex}] (0,0) -- (0,4.4);
+\node[rotate=90, anchor=south] at (-0.4,2.2) {validation loss};
+% uncertainty band (upper then lower reversed)
+\fill[blue!12]
+  (0.3,3.9) .. controls (1.0,2.9) and (1.4,2.55) .. (1.8,2.45)
+  .. controls (2.6,2.25) and (3.2,1.75) .. (3.9,1.55)
+  .. controls (4.6,1.35) and (5.2,1.30) .. (5.8,1.45)
+  .. controls (6.6,1.70) and (7.4,2.9) .. (8.4,3.9)
+  -- (8.4,2.1)
+  .. controls (7.4,1.6) and (6.6,1.15) .. (5.8,1.05)
+  .. controls (5.2,0.95) and (4.6,1.00) .. (3.9,1.15)
+  .. controls (3.2,1.35) and (2.6,1.85) .. (1.8,2.15)
+  .. controls (1.4,2.25) and (1.0,2.3) .. (0.3,2.5)
+  -- cycle;
+% mean
+\draw[thick, blue!60!black]
+  (0.3,3.2) .. controls (1.0,2.6) and (1.4,2.4) .. (1.8,2.3)
+  .. controls (2.6,2.05) and (3.2,1.55) .. (3.9,1.35)
+  .. controls (4.6,1.18) and (5.2,1.12) .. (5.8,1.25)
+  .. controls (6.6,1.45) and (7.4,2.2) .. (8.4,3.0);
+% data points
+\fill (1.8,2.3) circle (2.2pt);
+\fill (3.9,1.35) circle (2.2pt);
+\fill (5.8,1.25) circle (2.2pt);
+\fill (7.6,2.45) circle (2.2pt);
+% annotations
+\draw[-{Latex}] (3.15,0.72) -- (3.8,1.12);
+\node[anchor=north, align=center] at (1.85,0.78) {band pinched where\\we have paid for data};
+\draw[-{Latex}] (2.9,3.4) -- (2.9,2.35);
+\node[anchor=south, align=center] at (2.9,3.4) {band swells between\\observations};
+\end{tikzpicture}
+\caption{A Gaussian-process posterior on the running example's
+learning-rate axis after four trials (schematic illustration of the
+mechanism, not measured data). The mean~\eqref{eq:gp} passes near the
+observations; the shaded one-standard-deviation band shows
+$\mu_n \pm s_n$, which is pinched near observed points and grows away
+from them. The figure is drawn in the low-noise regime for legibility:
+with $\sigma^2 > 0$ the mean does not interpolate exactly and the
+variance at an observed location stays strictly positive, and only in
+the noiseless limit $\sigma^2 \to 0$ does the band close completely.
+Given the kernel hyperparameters, the posterior variance depends only on
+\emph{where} we have evaluated, not on the values we saw, so the model
+maps its own ignorance; once those hyperparameters are themselves fitted
+by marginal likelihood (below), the observed values re-enter the
+variance indirectly through them.}
+\label{fig:gp}
+\end{figure}
+
+The kernel hyperparameters (the lengthscales $\ell_j$, signal variance
+$\sigma_f^2$, and noise $\sigma^2$) are learned by maximizing the marginal
+likelihood of the data,
+\begin{equation}
+\log p(\mathbf{y} \mid \boldsymbol{\ell}, \sigma_f, \sigma)
+= -\tfrac{1}{2} \mathbf{y}^\top (\mathbf{K} + \sigma^2 \mathbf{I})^{-1}
+   \mathbf{y}
+  \;-\; \tfrac{1}{2} \log \det (\mathbf{K} + \sigma^2 \mathbf{I})
+  \;-\; \tfrac{n}{2} \log 2\pi ,
+\label{eq:mll}
+\end{equation}
+whose two data-dependent terms pull in opposite directions: the first
+rewards kernels under which the observed values are unsurprising (fit), the
+second penalizes kernels that could explain anything (complexity), so
+maximizing the sum performs a built-in Occam trade-off
+\citep{rasmussen2006gaussian}.
+
+This is how a GP quietly performs the
+sensitivity analysis that grid search cannot: if the data can be explained
+with a very long lengthscale on some axis, the likelihood prefers it, and
+that axis is effectively switched off. The fitted numbers are worth
+reading, not just using: if the running example's model learns a
+lengthscale of half a decade on the log learning-rate axis, then trials
+a decade apart are nearly independent evidence and the axis needs dense
+coverage; a fitted lengthscale of five decades says the axis is
+effectively flat and the search can spend its trials elsewhere.
+
+The $n \times n$ solve in
+\eqref{eq:gp} and \eqref{eq:mll} costs $O(n^3)$ time, irrelevant at our
+trial counts (tens to low hundreds) but a real constraint for methods that
+model learning curves point by point, a fact that returns in
+Chapter~\ref{sec:multifidelity}.
+
+\subsection{What actually goes wrong in practice}
+\label{sec:gp-practical}
+
+Two practical amendments matter more than any exotic kernel choice, and
+both are the same move we made for random search: respect the data's
+geometry. First, inputs should be warped: search axes like learning rate
+live on a log scale, and beyond fixed transforms it helps to learn a
+monotone warping of each axis (HEBO uses a Kumaraswamy distribution
+function per axis) so that the objective looks stationary to the kernel;
+a kernel with one lengthscale per axis assumes the objective wiggles at
+the same rate everywhere along that axis, and warping is how we make that
+assumption true rather than hoping it holds.
+
+Second, outputs should be
+transformed toward Gaussianity by a power transform, because raw losses are
+often heavy-tailed and heteroscedastic: one diverged trial with a loss of
+$10^{6}$ will otherwise dominate the fit of \eqref{eq:mll} and flatten the
+model's view of the interesting region.
+
+HEBO's authors open their paper
+with hypothesis tests on 108 real tuning tasks showing that
+heteroscedasticity and non-stationarity are the rule, not the exception,
+and HEBO won the NeurIPS 2020 black-box optimization challenge with exactly
+these amendments plus one more hedge: instead of trusting any single
+rule for choosing the next trial, HEBO scores candidates by three
+standard such rules at once (the acquisition functions of the next
+section) and picks candidates that no rival beats on all three
+\citep{cowenrivers2022hebo, turner2021bayesian}. The lesson for
+implementers is encouraging: the wins come from respecting the data's
+geometry, not from acquisition novelty.
+
+\section{Acquisition functions}
+\label{sec:acquisition}
+
+The surrogate summarizes belief; the acquisition function turns belief into
+a decision, and the decision has a tension in it. Sampling where the mean
+$\mu_n$ is best exploits what we know; sampling where the variance $s_n^2$
+is largest explores what we do not. Every acquisition function is a
+different exchange rate between the two.
+
+\subsection{Expected improvement, derived and then broken}
+
+Expected improvement (EI), the traditional default, scores a candidate by
+the expected amount by which it beats the best value seen so far. Write
+$f^{\star}$ for the incumbent value (in minimization). If we evaluate at
+$\config$ and observe $f(\config)$, the improvement is
+$\max(f^{\star} - f(\config), 0)$: the amount by which we beat the
+incumbent, or zero if we fail to. An economist will recognize the shape
+immediately: this is an option payoff with strike $f^{\star}$, and EI is
+its expected value under the posterior, so Bayesian optimization spends
+its trials the way one prices options, paying for upside while the
+downside is capped at the cost of the trial.
+
+Under the posterior \eqref{eq:gp},
+$f(\config) \sim \N(\mu_n, s_n^2)$, and the expectation of the improvement
+has a closed form. Substituting $z = (f - \mu_n)/s_n$ and writing
+$u = (f^{\star} - \mu_n)/s_n$ for the incumbent's position in posterior
+standard units,
+\begin{equation}
+\alpha_{\mathrm{EI}}(\config)
+= \int_{-\infty}^{f^{\star}} (f^{\star} - f)\,
+  \frac{1}{s_n}\varphi\!\Big(\frac{f-\mu_n}{s_n}\Big)\, df
+= s_n \int_{-\infty}^{u} (u - z)\, \varphi(z)\, dz
+= s_n \left[ u\,\Phi(u) + \varphi(u) \right],
+\label{eq:ei-derive}
+\end{equation}
+using $\int_{-\infty}^{u} \varphi(z)\,dz = \Phi(u)$ and
+$\int_{-\infty}^{u} z\,\varphi(z)\,dz = -\varphi(u)$, the latter because
+$\varphi'(z) = -z\varphi(z)$. Rearranged into its usual form,
+\begin{equation}
+\alpha_{\mathrm{EI}}(\config)
+= \left( f^{\star} - \mu_n(\config) \right) \Phi(u)
+  + s_n(\config)\, \varphi(u),
+\qquad
+u = \frac{f^{\star} - \mu_n(\config)}{s_n(\config)},
+\label{eq:ei}
+\end{equation}
+with $\varphi$ and $\Phi$ the standard normal density and distribution
+function \citep{jones1998efficient}. The two terms are the two halves of
+the tension made explicit: the first rewards a promising mean (how much
+better than the incumbent we expect to be, times the probability of being
+better at all), the second rewards uncertainty, and the balance between
+them is automatic, with no exploration knob to tune.
+
+A small worked case shows the balance operating, and it is worth doing
+once by hand. Suppose the incumbent loss in the running example is
+$f^{\star} = 0.60$. Candidate A sits in unexplored territory: the
+posterior says $\mu_n = 0.62$, $s_n = 0.05$, so $u = -0.4$, and
+\eqref{eq:ei} gives
+$\alpha_{\mathrm{EI}} = (-0.02)(0.345) + (0.05)(0.368) \approx 0.012$.
+Candidate B sits next to the incumbent: $\mu_n = 0.59$, $s_n = 0.005$, so
+$u = 2$, and
+$\alpha_{\mathrm{EI}} = (0.01)(0.977) + (0.005)(0.054) \approx 0.010$.
+
+Candidate A has the \emph{worse} expected loss, yet EI ranks it slightly
+ahead, because its wide posterior leaves real probability of a large
+improvement, while candidate B can improve on the incumbent by at most a
+hair. That preference for informative gambles over safe pennies is the
+entire personality of EI, and Figure~\ref{fig:ei} draws where it comes
+from: the acquisition is the mass of the posterior lying below the
+incumbent line, weighted by how far below it lies.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=1.0, font=\small]
+\draw[-{Latex}] (0,0) -- (9,0) node[below left=1mm and 0mm] {learning rate};
+\draw[-{Latex}] (0,0) -- (0,4.4) node[rotate=90, above left=2mm and -14mm] {validation loss};
+% incumbent line
+\draw[dashed, thick] (0,1.6) -- (9,1.6) node[pos=0.03, above, font=\small] {incumbent $f^{\star}$};
+% posterior mean curve (light)
+\draw[blue!50]
+  (0.4,3.0) .. controls (1.6,2.2) and (2.8,1.9) .. (4.0,2.05)
+  .. controls (5.2,2.2) and (6.4,2.5) .. (8.4,3.1);
+% candidate location
+\draw[dotted] (4.0,0) node[below] {candidate $\config$} -- (4.0,4.1);
+% rotated gaussian at x=4 centered at mu=2.05, drawn as profile to the right
+\draw[thick]
+  (4.0,3.55) .. controls (4.15,3.35) and (4.55,2.75) .. (4.62,2.05)
+  .. controls (4.55,1.35) and (4.15,0.75) .. (4.0,0.55);
+% shade improvement region: part of bell below y=1.6
+\fill[blue!25]
+  (4.0,1.6) -- (4.45,1.6)
+  .. controls (4.3,1.15) and (4.15,0.85) .. (4.0,0.55) -- cycle;
+\node[anchor=west, align=left] at (5.1,0.9)
+  {shaded mass: outcomes that beat $f^{\star}$;\\
+   EI weights each by its depth below the line};
+\draw[-{Latex}] (5.05,0.95) -- (4.32,1.2);
+\fill (4.0,2.05) circle (1.6pt);
+\node[anchor=east] at (3.95,2.1) {$\mu_n(\config)$};
+\end{tikzpicture}
+\caption{What expected improvement measures (schematic). At the candidate,
+the posterior over the unknown loss is the sideways bell curve. Only the
+shaded tail below the incumbent line counts as improvement, and
+\eqref{eq:ei} is exactly this tail's mass weighted by its depth. When the
+whole bell sits far above the line, the shaded region, and with it EI and
+its gradient, vanishes; that observation is the doorway to the numerical
+failure discussed next.}
+\label{fig:ei}
+\end{figure}
+
+Now the flaw, which is not conceptual but floating-point, and which
+matters because we will inherit it the day we ship a naive
+implementation. Once a decent incumbent exists, most of the search space
+has $\mu_n$ far above $f^{\star}$, so $u$ is a large negative number. For
+large negative $u$ the standard tail expansion of $\Phi$ gives
+$\alpha_{\mathrm{EI}} \approx s_n \varphi(u)/u^2$, and $\varphi(u)$ decays
+like $e^{-u^2/2}$: at $u = -6$ the acquisition is already of order
+$10^{-10} s_n$, and near $u \approx -38$ the density $\varphi(u)$ leaves
+the range of double-precision numbers entirely, so \eqref{eq:ei} evaluates
+to exactly zero, its gradient with it. A value of $u = -6$ is not exotic;
+it just means the posterior mean is six posterior standard deviations
+worse than the incumbent, which describes most of the domain once the
+search has found anything good. In that regime multi-restart gradient
+ascent on the acquisition degenerates into random search among its own
+starting points.
+
+\citet{ament2023logei} analyze this failure, show that
+the affected region grows with observations, dimensions, and constraints,
+and repair it by optimizing numerically careful $\log$ transforms of the
+whole EI family (analytic, batch, constrained, and hypervolume variants):
+$\log \alpha_{\mathrm{EI}}$ is computed directly from stable asymptotic
+expansions rather than by taking the logarithm of an underflowed number,
+and smooth approximations replace the hard maximum inside the Monte
+Carlo versions, the sampling-based batch variants that arrive later in
+this section. The logarithm does not change where the maxima are; it changes
+whether an optimizer can find them, because gradients of order
+$10^{-300}$ become gradients of order one.
+
+The repaired acquisitions
+match or beat more elaborate alternatives across standard benchmarks,
+which suggests much of EI's mixed reputation was numerics all along. Our
+implementation should treat the LogEI variants as the default and never
+optimize raw EI.
+
+\subsection{The rest of the family, and when we need it}
+
+A different family spends its budget on information rather than
+improvement: predictive entropy search values a candidate by how much its
+observation would shrink uncertainty about the optimum's location
+\citep{hernandez2014pes}, max-value entropy search replaces the location
+(a $d$-dimensional object) with the optimum's value (a scalar), making the
+computation far cheaper \citep{wang2017mes}, and joint entropy search
+conditions on fantasized optimal input-output pairs to capture both at
+once \citep{hvarfner2022jes}.
+
+These acquisitions are elegant and
+occasionally worth their cost on very expensive problems, but given the
+LogEI result above we treat them as optional extras rather than defaults;
+\citet{frazier2018tutorial} is the standard tour of the whole acquisition
+zoo, including the knowledge gradient that Chapter~\ref{sec:moo} meets
+again in multi-objective form.
+
+Two families beyond EI matter for us directly. Upper confidence bound
+(UCB) style rules score a candidate by an optimistic quantile of the
+posterior,
+\begin{equation}
+\alpha_{\mathrm{UCB}}(\config)
+= \mu_n(\config) - \beta^{1/2}\, s_n(\config)
+\label{eq:ucb}
+\end{equation}
+for minimization: pretend every point is as good as its posterior allows
+at confidence level $\beta$, then pick the best pretend value. Larger
+$\beta$ explores harder. The rule comes with regret guarantees under
+GP-bandit assumptions, with $\beta$ growing slowly over time so that no
+region is starved forever \citep{srinivas2010gaussian}, and it extends
+naturally to the time-varying setting that population-based methods
+inhabit; PB2, a population-based tuner taught in
+Chapter~\ref{sec:population}, uses exactly such a rule, so
+the formula is worth remembering.
+
+Noise-aware variants of EI stop pretending the incumbent value
+$f^{\star}$ is known, and the reason they must is a bias economists
+teach under its own name. With noisy observations the ``best value
+seen'' is the \emph{minimum of noisy draws}, and the minimum of noisy
+draws is optimistically biased: the trial that reported the best return
+in the running example is disproportionately likely to be a decent
+configuration that also drew a lucky seed. This is the winner's curse,
+and plugging the lucky number into \eqref{eq:ei} as $f^{\star}$
+transmits the curse to every later decision: the reported incumbent is
+better than the true incumbent, so genuine improvements look smaller
+than they are, the acquisition under-rewards them, and the search
+stalls defending a score that no configuration, including the
+incumbent itself, can reproduce.
+
+The repair is to stop conditioning on
+the noisy draws and integrate over what the true values might be. Let
+$f(\config_{1:n})$ be the (unknown) true objective values at the
+evaluated points; the noisy-EI acquisition is
+\begin{equation}
+\alpha_{\mathrm{NEI}}(\config)
+= \E\!\left[ \max\!\Big( \min_{i \le n} f(\config_i) - f(\config),\; 0
+\Big) \right],
+\label{eq:nei}
+\end{equation}
+where the expectation runs over the \emph{joint} posterior of
+$f(\config)$ and $f(\config_{1:n})$: the incumbent value inside the
+expectation is the true best, not the lucky observed best, and the
+average over the posterior prices the luck out.
+
+The integral has no
+closed form and is estimated by Monte Carlo, jointly sampling the true
+values at old and candidate points; this is the formalization of the
+approach used in production at Meta and now standard in BoTorch
+\citep{letham2019noisyei, balandat2020botorch}, and its log-stabilized
+version inherits the LogEI repair \citep{ament2023logei}.
+Reinforcement learning returns and effective-sample-size measurements
+are noisy enough that a tuner without the noise-aware acquisition can
+waste budget refining estimates of points the GP already knows about
+rather than exploring genuinely new candidates, so we ship the
+noise-aware variant by default. A user whose observations are nearly
+deterministic may switch it off, but RL and sampling workloads keep
+it on.
+
+Batch and asynchronous proposals fall out of the same Monte Carlo
+formulation, and they answer the wall-clock concern of
+Section~\ref{sec:costmodel}. To propose $q$ points jointly, one optimizes
+the expected improvement of the \emph{best} of the $q$, which
+automatically spreads the batch out (two candidates next to each other
+mostly duplicate each other's improvement, so the joint objective prefers
+diversity without any explicit diversity penalty).
+
+To propose while $k$
+trials are still running, one conditions on their unknown outcomes by
+sampling them from the posterior (so-called fantasies) and averages the
+resulting decisions \citep{balandat2020botorch}. This is the machinery
+that lets model-based search keep a pool of workers busy rather than
+idling between sequential suggestions, and it is a hard requirement for
+us, not a luxury.
+
+One mechanical detail completes the picture, because ``maximize the
+acquisition'' is itself an optimization problem and its failure mode is
+the one LogEI fixed. In continuous spaces the standard recipe scores a
+few thousand quasi-random candidates (Sobol points again), keeps the
+best handful, and polishes each by gradient ascent, which is possible
+because $\mu_n$ and $s_n$ in \eqref{eq:gp} are differentiable in
+$\config$ and the Monte Carlo acquisitions are built to be
+differentiated \citep{balandat2020botorch}. In mixed spaces the
+gradient steps apply to the continuous coordinates and local moves to
+the discrete ones, the interleaving that Casmopolitan formalizes
+(Section~\ref{sec:highdim}). The polish step is exactly where a flat,
+underflowed acquisition strands the optimizer at its starting points,
+which is why the numerics of the previous subsection are an
+engineering requirement rather than a refinement.
+
+\section{Density-ratio and tree-based alternatives}
+\label{sec:tpe}
+
+The tree-structured Parzen estimator (TPE) inverts the modeling question,
+and the inversion is worth deriving because it explains both TPE's
+strengths and its blind spot. Instead of modeling $p(y \mid \config)$ as
+the GP does, TPE splits the observed trials at the $\gamma$-quantile of
+their scores $y^{\star}$ (say the best 25 percent versus the rest) and
+fits kernel density estimates to the two groups of \emph{configurations}:
+$\ell(\config)$ for configurations that scored well, $g(\config)$ for the
+rest \citep{bergstra2011tpe}. New candidates are proposed where the ratio
+$\ell(\config)/g(\config)$ is largest: where good trials cluster and bad
+trials are rare (Figure~\ref{fig:tpe-fig}).
+
+The connection to EI is not a
+heuristic. Under TPE's model, $p(\config \mid y)$ equals $\ell(\config)$
+when $y < y^{\star}$ and $g(\config)$ otherwise, so by Bayes' rule the
+marginal is
+$p(\config) = \gamma\, \ell(\config) + (1-\gamma)\, g(\config)$, and the
+expected improvement below the threshold becomes
+\begin{equation}
+\alpha_{\mathrm{EI}}(\config)
+= \int_{-\infty}^{y^{\star}} (y^{\star} - y)\,
+  \frac{p(\config \mid y)\, p(y)}{p(\config)} \, dy
+\;=\; \frac{\ell(\config)\int_{-\infty}^{y^{\star}}(y^\star - y)p(y)\,dy}
+  {\gamma\, \ell(\config) + (1-\gamma)\, g(\config)}
+\;\propto\;
+\left( \gamma + (1 - \gamma)\, \frac{g(\config)}{\ell(\config)}
+\right)^{-1},
+\label{eq:tpe}
+\end{equation}
+since the integral in the numerator does not depend on $\config$. The
+right-hand side is a monotone increasing function of
+$\ell(\config)/g(\config)$: maximizing the density ratio \emph{is}
+maximizing EI under this model \citep{bergstra2011tpe}.
+
+What the model
+gives up is visible in the same derivation: the densities are typically
+factorized per coordinate, so the ratio cannot represent ``this learning
+rate is good only when the batch size is large,'' an interaction a GP
+kernel captures without effort.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=1.0, font=\small]
+\draw[-{Latex}] (0,0) -- (9,0) node[below left=1mm and 0mm] {learning rate (log scale)};
+% good density l(x): concentrated bump
+\draw[thick, blue!60!black]
+  (0.3,0.05) .. controls (2.2,0.1) and (2.9,0.3) .. (3.5,1.5)
+  .. controls (3.8,2.1) and (4.2,2.1) .. (4.5,1.5)
+  .. controls (5.1,0.3) and (5.8,0.1) .. (8.6,0.05);
+\node[blue!60!black, anchor=south] at (4.0,2.15) {$\ell$: where good trials cluster};
+% bad density g(x): broad
+\draw[thick, red!60!black, densely dashed]
+  (0.3,0.75) .. controls (2.0,0.95) and (3.0,0.55) .. (4.0,0.45)
+  .. controls (5.0,0.55) and (6.5,1.0) .. (8.6,0.8);
+\node[red!60!black, anchor=west] at (6.1,1.25) {$g$: where the rest landed};
+% ratio argmax marker
+\draw[-{Latex}, thick] (4.0,-0.55) -- (4.0,-0.08);
+\node[anchor=north] at (4.0,-0.6) {propose where $\ell/g$ peaks};
+% data ticks
+\foreach \x in {3.3,3.7,4.05,4.4,4.7} \draw[blue!60!black, thick] (\x,0.02) -- (\x,0.18);
+\foreach \x in {0.8,1.5,2.3,5.6,6.4,7.2,7.9} \draw[red!60!black] (\x,0.02) -- (\x,0.14);
+\end{tikzpicture}
+\caption{TPE's view of the running example's learning-rate axis
+(schematic). Trials are split at a score quantile; the configurations of
+the good fraction (solid ticks) get density $\ell$, the rest (dashed
+ticks) get $g$, and the next candidate maximizes $\ell/g$, which
+by~\eqref{eq:tpe} is the same as maximizing expected improvement under
+TPE's model. The construction never represents interactions between axes;
+that is the price of its speed and its ease with categorical and
+conditional parameters.}
+\label{fig:tpe-fig}
+\end{figure}
+
+Three properties make TPE the workhorse of Optuna, the open-source
+tuning library where sampler development is most active (its record is
+audited in Chapter~\ref{sec:libraries}). It
+handles conditional (tree-structured) spaces natively, because densities
+are fit per branch of the configuration tree; it tolerates categorical
+and integer parameters without kernel gymnastics, since a kernel density
+over a finite set is just a weighted histogram; and its cost grows gently
+with both dimension and trial count, with none of the $O(n^3)$ algebra
+of~\eqref{eq:gp}. Its weakness is the flip side of the factorized
+densities above: blindness to interactions, and in low dimensions with
+smooth objectives a GP squeezes more out of each trial. The recent
+tutorial by \citet{watanabe2023tpe} documents the many small design
+choices (bandwidths, splitting quantile, prior weight) that separate a
+good TPE from a poor one; since Optuna implements these carefully,
+wrapping Optuna's sampler is more sensible than reimplementing TPE
+ourselves.
+
+SMAC replaces the GP with a random forest surrogate, which natively
+digests mixed and conditional spaces and yields uncertainty from the
+spread across trees \citep{lindauer2022smac3}. Forest surrogates are less
+sample-efficient than GPs on smooth low-dimensional problems but degrade
+gracefully on the awkward spaces where GPs struggle, and SMAC3 pairs the
+surrogate with multi-fidelity racing (Chapter~\ref{sec:multifidelity}).
+We cite it here both as an algorithmic reference point and because it is
+the tuner that \citet{wan2022bgpbt} used as their sequential BO baseline.
+
+\section{High-dimensional and mixed spaces}
+\label{sec:highdim}
+
+Vanilla GP BO has a reputation for failing beyond ten or twenty
+dimensions, which would be disqualifying for the running example's
+fifteen. The reputation is only half deserved, and the recent literature
+sorts out which half; the sorting matters to us because it changes what
+we build first.
+
+The mechanism behind the failures is worth stating before the fixes. In
+high dimension, with standard lengthscale priors, the fitted GP tends
+toward one of two degenerate postures: lengthscales so short that every
+observation is an island (posterior variance is high everywhere, and the
+acquisition chases pure exploration into the corners), or a fit that
+contorts itself around noise. Each published fix restricts the model in a
+different way, and each restriction is a bet about the objective.
+
+TuRBO bets that good local models beat bad global ones. It abandons the
+global search problem and maintains local trust regions: boxes around
+good points, inside each of which an independent BO runs with its own GP
+(Figure~\ref{fig:turbo}). A region's side length grows after runs of
+successes (the local model is trustworthy, let it see further) and
+shrinks after runs of failures (the local model is misleading, tighten
+the box); a region that shrinks below a floor is abandoned and restarted
+elsewhere, and a bandit allocates trials across regions
+\citep{eriksson2019turbo}. This concentrates samples where the model has
+earned trust and scales to hundreds of dimensions; it is the backbone
+that BG-PBT adapts for population training (Chapter~\ref{sec:population}),
+which is the specific reason this document cares about its details.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=0.9, font=\small]
+\draw[thick] (0,0) rectangle (5.2,4.2);
+\node[anchor=south west, font=\small\itshape] at (0.05,4.22) {search space (2D slice)};
+% incumbent
+\fill[blue!70] (2.4,2.0) circle (2.5pt);
+% trust region boxes
+\draw[blue!60!black, thick] (1.7,1.3) rectangle (3.1,2.7);
+\draw[blue!60!black, densely dashed] (1.0,0.6) rectangle (3.8,3.4);
+\draw[blue!60!black, dotted, thick] (2.05,1.65) rectangle (2.75,2.35);
+% arrows and labels
+\draw[-{Latex}] (5.6,3.4) -- (3.85,3.1);
+\node[anchor=west, align=left] at (5.6,3.4) {grow after successes:\\the local model has\\earned a longer leash};
+\draw[-{Latex}] (5.6,1.0) -- (2.78,1.85);
+\node[anchor=west, align=left] at (5.6,1.0) {shrink after failures;\\below a floor, restart\\elsewhere with a fresh model};
+\draw[-{Latex}, blue!70] (2.4,3.62) -- (2.4,2.12);
+\node[anchor=south, blue!70] at (2.4,3.66) {incumbent};
+\end{tikzpicture}
+\caption{TuRBO's trust region around the incumbent (schematic). All
+modeling and acquisition happen inside the current box; success and
+failure counters resize it, and collapse triggers a restart. The bet is
+that a GP asked only local questions stays reliable in dimensions where
+a global GP degenerates, and the same box-resizing logic reappears
+inside BG-PBT in Chapter~\ref{sec:population}.}
+\label{fig:turbo}
+\end{figure}
+
+SAASBO (sparse axis-aligned subspace BO) bets that only a few axes
+matter. It keeps the global view but
+places sparsity-inducing half-Cauchy priors on the kernel's inverse
+squared lengthscales, so that every axis starts effectively switched off
+(infinite lengthscale) and only axes with evidence of mattering wake up;
+inference is fully Bayesian over these priors, which buys striking sample
+efficiency in hundreds of nominal dimensions and costs enough per
+iteration to confine the method to small evaluation budgets
+\citep{eriksson2021saasbo}. If the effective-dimension picture behind
+Figure~\ref{fig:gridrandom} is right for a problem, SAASBO is that
+picture taken seriously as a prior. A related line grows a random
+embedding of the space as evidence accumulates rather than committing to
+one up front, with a mixed-space successor for combinatorial problems
+\citep{papenmeier2022baxus, papenmeier2023bounce}.
+
+Then the twist that reorders the whole subsection. \citet{hvarfner2024vanilla}
+showed that much of the classical failure was a prior mistake rather than
+a fundamental one: simply scaling the GP's lengthscale prior with the
+dimension, so that the model's complexity stays controlled as axes are
+added, lets plain BO with standard acquisitions outperform the
+specialized high-dimensional methods on common benchmarks, with no
+structural assumption about the objective. The intuition connects
+straight back to \eqref{eq:mll}: the complexity penalty a kernel pays
+scales with how much the function can wiggle across the whole space,
+which grows with dimension unless lengthscales grow too, so the fix is a
+prior that expects longer lengthscales in higher dimension. The
+practical ordering for us follows: fix the priors first (cheap, one line
+of configuration), reach for trust regions when the space is genuinely
+large or the budget is generous, and reserve SAASBO for sample-starved,
+high-stakes searches.
+
+Mixed spaces need kernels that understand their coordinates. Continuous
+axes take standard kernels; categorical axes take overlap or
+Hamming-style kernels (two configurations are similar to the extent they
+agree, with no notion of ``between''); ordinal axes (integers with
+order, like batch size or network width) should be treated as coarse
+continuous axes rather than unordered categories, because width 256
+really is between width 128 and width 512, and throwing that ordering
+away discards exactly the structure a kernel can use.
+
+Casmopolitan
+combines these with trust regions and interleaved acquisition
+optimization, alternating local search over the discrete coordinates
+with gradient steps over the continuous ones \citep{wan2021casmopolitan},
+and the BG-PBT paper reports that explicitly respecting ordinal
+structure gives measurable gains in the RL setting \citep{wan2022bgpbt}.
+
+An alternative with BoTorch support is probabilistic reparameterization,
+which relaxes discrete choices into distributions over them and
+optimizes the relaxation with gradients \citep{daulton2022pr}. Our
+product needs exactly one good mixed-space GP searcher; Casmopolitan-style
+kernels inside a trust region, reusing BoTorch primitives, is the path of
+least resistance and doubles as the core of a future BG-PBT
+implementation.
+
+\section{The evidence, and how it was produced}
+\label{sec:bo-evidence}
+
+Everything so far argues that model-based search \emph{should} work.
+A skeptical reader is entitled to ask what would count as evidence that
+it does, and to ask it before accepting any verdict, so this section
+describes the experiments themselves, not just their conclusions.
+
+The evidence problem in this field is selection bias, and it is worth
+naming before weighing any result. A paper introducing a method chooses
+its own benchmarks, its own baselines, and its own tuning of those
+baselines, and only successful comparisons reach print; a reader
+cannot tell how much of a reported gain is method and how much is
+choice of arena. The strongest evidence therefore comes from settings
+the method's authors did not control. Two such settings anchor this
+chapter's verdicts.
+
+The first is the NeurIPS 2020 black-box optimization challenge, a
+public competition in which entrant tuners were run on real
+machine-learning hyperparameter tuning problems at matched evaluation
+budgets, with the organizers rather than the entrants choosing the
+tasks. The organizers' published analysis found the Bayesian
+optimization entries clearly ahead of random search across the board
+\citep{turner2021bayesian}: an adversarial arena, fixed budgets, and
+the baseline of Chapter~\ref{sec:modelfree} still cleanly beaten. The
+winning entry, HEBO, is instructive for \emph{why} it won. Its
+authors' paper opens not with a new acquisition function but with
+hypothesis tests on 108 real tuning tasks showing that
+heteroscedastic, non-stationary objectives are the rule rather than
+the exception, and the winning design is essentially the standard GP
+machinery of this chapter plus the input and output transformations
+that make such objectives look well behaved to it
+\citep{cowenrivers2022hebo}. The reading we take: the competition
+validates the framework, and the margin came from respecting the
+data's geometry, which is an engineering discipline we can copy, not a
+secret.
+
+The second setting is the controlled RL tuning study of
+\citet{eimer2023hyperparameters}. Three algorithms (PPO, SAC, DQN)
+across eleven environments; tuners compared at matched budgets of ten
+to sixty-four full training runs, which is the regime our routine
+studies actually inhabit; candidates evaluated on several tuning seeds
+with final results reported on disjoint test seeds the tuner never
+saw; and the tuners' own overhead measured. The finding that matters
+here: sweeping hyperparameters across eleven environments, the fitted
+response surfaces looked smooth and well behaved, with the difficulty
+of RL tuning coming overwhelmingly from seed noise rather than from a
+pathological objective. Smooth surfaces are exactly what the kernel
+assumption \eqref{eq:matern} posits, and severe observation noise is
+exactly what the noisy-EI machinery \eqref{eq:nei} prices in, so the
+one controlled study of our hardest workload lands on both of this
+chapter's design choices. (The study's full design and its
+budget-regime findings occupy Chapter~\ref{sec:population}, where the
+population line's evidence lives.)
+
+Two honest boundaries on this evidence. It does not rank GP against
+TPE universally: which surrogate wins depends on the space's shape and
+the budget, which is why the package carries both and why the
+comparison that matters will be run on our own pinned tasks. And the
+LogEI results, showing the repaired classic acquisitions matching or
+beating the more elaborate ones across standard benchmarks
+\citep{ament2023logei}, are the authors' own experiments; we treat
+them as strong because the claim is negative and numerical (a bug
+explained away a literature's worth of differences) and because the
+mechanism, the underflow arithmetic of
+Section~\ref{sec:acquisition}, can be checked from first principles
+on one page, which we did.
+
+\section{The recommendation, argued from four angles}
+\label{sec:bo-angles}
+
+The chapter's verdict is that a carefully configured GP searcher with
+log-stabilized, noise-aware acquisitions is the core of the package,
+with TPE wrapped alongside for conditional spaces. Four independent
+lines of argument arrive at that verdict, and a reader should demand
+that they agree, because each could fail separately.
+
+From decision theory: when a trial costs GPU-hours, the value of
+deliberation between trials is high, and \eqref{eq:ei} is literally
+the option value of the next experiment under current beliefs. Any
+method that ignores posterior uncertainty is discarding the one
+quantity that says where deliberation pays.
+
+From statistics: the machinery is not exotic. The surrogate is
+kriging, the noise handling is ridge shrinkage with an estimated
+regularizer, the winner's-curse correction is the same bias argument
+auction theory makes. A reader who trusts those tools separately is
+most of the way to trusting their composition; nothing in the chapter
+asks for a new inferential principle.
+
+From evidence: an author-independent competition on real tuning tasks
+put the framework clearly ahead of the honest baseline, the winner's
+margin traced to checkable preprocessing rather than proprietary
+insight, and the one controlled study of our own hardest workload
+found exactly the surface smoothness and noise structure this design
+assumes.
+
+From operations: every component the chapter recommends exists,
+maintained, in BoTorch and Optuna (Chapter~\ref{sec:libraries}), so
+the build cost is composition rather than research; batch and
+asynchronous proposals keep a cluster busy; and the known numerical
+failure mode has a published, adopted repair.
+
+And the check on all four: the verdict is falsifiable in our own
+validation suite. The GP searcher must beat Sobol sampling at matched
+budgets on the pinned tasks of Chapter~\ref{sec:roadmap}, with the
+comparison repeated across seeds and reported with uncertainty. If it
+cannot, the verdict, not the suite, gives way; that is the standard we
+would demand of anyone else's recommendation, so the document applies
+it to its own.
+
+\begin{decisions}
+\noindent\textbf{Decisions from this chapter.} The choice among
+surrogates comes down to four manager-checkable questions: how few
+trials before the model helps, what kinds of knobs it digests, how it
+copes with noise, and what it costs us to ship.
+\begin{itemize}[leftmargin=1.3em, itemsep=2pt]
+\item \textbf{GP searcher with qLogEI on BoTorch} (include; the core
+build, weeks). Extracts the most from the fewest trials on mostly
+continuous spaces of up to a few dozen dimensions, handles noise
+honestly via the noisy-EI machinery, proposes batches so workers never
+idle. This is the searcher for expensive trials, which is to say for
+the studies where the tuner's quality is actually worth money. The
+challenge evidence is on its side: model-based entries beat random
+search across the board, and the winner was a GP method
+\citep{turner2021bayesian, cowenrivers2022hebo}.
+\item \textbf{TPE by wrapping Optuna} (include; days). Useful from a
+handful of trials, natively handles conditional and categorical spaces
+that GPs find awkward, and costs us almost nothing because we wrap the
+best-maintained implementation rather than writing one. Its known
+blind spot, interactions between knobs, is the price
+(equation~\ref{eq:tpe}); for smooth low-dimensional problems the GP
+squeezes more from each trial.
+\item \textbf{Raw EI, anywhere} (exclude). The underflow analysis is
+not a nicety: past a modest incumbent quality the naive formula returns
+exactly zero over most of the space and the optimizer stalls
+\citep{ament2023logei}. Log variants only.
+\item \textbf{Entropy-search acquisitions} (exclude). Elegant, costly
+to implement well, and the controlled comparisons show the repaired EI
+family matching or beating them \citep{ament2023logei}. No capability
+we need survives their exclusion.
+\item \textbf{Dimension-scaled lengthscale priors} (include;
+one configuration line). The cheapest high-dimensional fix on record
+\citep{hvarfner2024vanilla}. Always on.
+\item \textbf{Trust-region searcher with mixed-space kernels}
+(include; weeks). Justified twice over: it is the credible
+high-dimensional searcher, and it is a prerequisite we would build
+anyway for BG-PBT in Chapter~\ref{sec:population}.
+\item \textbf{SAASBO} (defer). Striking sample efficiency when trials
+are precious and axes are few-but-unknown, at a per-iteration compute
+cost that only suits small, high-stakes studies. Revisit when such a
+study appears.
+\item \textbf{SMAC} (do not adopt as a dependency). We use it as a
+correctness oracle in validation; its random-forest surrogate niche
+(huge conditional spaces) is not where our workloads live.
+\end{itemize}
+\end{decisions}
+
+\section{What would overturn these verdicts}
+
+The GP searcher's tier-0 status is tied to V04: if it cannot beat
+the Sobol floor on our pinned tasks, the complexity is not justified
+and it is demoted to an option. TPE's wrapping strategy holds as
+long as Optuna's maintenance remains current (audited in
+Chapter~\ref{sec:libraries}); if Optuna's TPE implementation
+stagnates or breaks backward compatibility repeatedly, the verdict
+changes to a native build. The trust-region searcher's shared role
+(high-dimensional search and population explore) is load-bearing; if
+the population line is demoted by V08, the trust-region design is
+re-argued on single-objective merits alone. Raw EI and
+entropy-search exclusions are reopened if a published study on RL or
+sampler workloads shows either beating qLogEI at matched budgets, at
+which point the evidence section is updated and the box reconsidered.

@@ -1,0 +1,161 @@
+\chapter{The product, concretely}
+\label{sec:product}
+
+Everything before this page weighed evidence; this part spends it. The
+reader changes here too: the chapters so far served whoever must judge
+our verdicts, and the chapters from here serve whoever must build from
+them, starting the week the plan is approved. The two jobs meet in one
+requirement, so we state it before any design.
+
+\emph{Concrete} has a checkable meaning in this part, and it is not
+``more detail.'' A verdict from the decision boxes counts as delivered
+only when four anchors exist for it: a contract (which interface,
+schema, or component carries it), a test (which entry of the
+validation suite would catch its failure), a schedule slot (which tier
+and week builds it), and a price (whose weeks pay for it). The master
+table of Chapter~\ref{sec:roadmap} already lists every verdict with
+its tier and cost; this part's job is to supply the two missing
+anchors, contracts and tests, and to close the loop so that no
+verdict lives only in a box.
+
+The part runs in build order. This chapter says what the product is
+and walks one study through it on day one.
+Chapter~\ref{sec:architecture} holds the architectural design, two
+interfaces, two adapters, and a database, unchanged from the verdict
+it argued. The chapters after it pin the contracts and the validation
+suite, and Chapter~\ref{sec:roadmap} closes the part with the
+schedule and the bill.
+
+\section{What we ship, and to whom}
+
+The product is an internal Python package: a tuning layer that our
+four workload families call, running on Ray Tune as its execution
+layer, exactly as Chapter~\ref{sec:architecture} argues. It is not a
+service, not a platform, and not a research program; every research
+bet it contains (the learning-curve scheduler, the population
+flagship) is scheduled behind a working default, not in front of it.
+
+The customers are the projects of Chapter~\ref{sec:workloads}, and
+the package meets each one with a configured study rather than a menu:
+the routine-budget RL study, the large-parallelism RL study, the
+sampler study with its correctness vetoes, and the two-objective
+Hamiltonian study. A researcher who knows only their own workload
+should be able to run the matching study without reading this part
+of the document; the chapters exist so that the person
+\emph{extending} the package can reconstruct why each default is what
+it is.
+
+What ships, in one sentence per layer: a search-space schema that
+knows the three knob kinds, conditional structure, and an optional
+prior; a searcher interface and a scheduler interface with wrapped
+implementations behind them (Optuna's TPE and the GP searcher on one
+side, ASHA and the median rule on the other); a run store that
+records configurations, seeds, curves, costs, and lineage; the seed
+protocol as the default study shape rather than an option; and the
+validation suite, which is a deliverable of the same rank as the
+tuner, because every falsification promise made in
+Chapters~\ref{sec:modelfree} through~\ref{sec:transfer} is an entry
+in it.
+
+\section{A study on day one}
+
+The fastest way to make the product concrete is to run one study
+through it in words, at tier~0, using only components that exist and
+are maintained today plus our thin glue. Nothing in this walk waits
+on research; that is what ``wire up what exists'' meant in
+Chapter~\ref{sec:roadmap}, and the walk doubles as the acceptance
+test for tier~0.
+
+A researcher opens a study for the running example: PPO on the Brax
+task, routine budget, the situation of Chapter~\ref{sec:workloads}.
+They declare the fifteen-knob space of Chapter~\ref{sec:problem} in the
+schema, unchanged and with no knob added: learning rate log-uniform
+between $10^{-5}$ and $10^{-2}$, the ordinal widths, depths, and batch
+sizes as ordered integers, and the two spectral-normalization flags as
+categories. The BG-PBT space carries no conditional knob, so this study
+declares a flat space; the schema's conditional support is exercised by
+the annealing switch of Chapter~\ref{sec:problem} and by the off-policy
+and sampler workloads of Chapter~\ref{sec:workloads}, and the
+capability test for it lives there rather than here. The schema also
+accepts the folklore prior (learning rate
+near $3 \times 10^{-4}$, discount near $0.99$) as a first-class
+field. On day one nothing consumes it; recording it from day one is
+deliberate, because Chapter~\ref{sec:transfer} showed that priors
+are cheap to store, expensive to retrofit, and eventually worth
+real trials.
+
+They declare the objective explicitly, mean evaluated return aggregated
+over the declared tuning seeds, because Chapter~\ref{sec:workloads}
+showed that final return, area under the curve, and truncated return
+genuinely disagree, and a hidden default here silently changes every
+ranking downstream. This tuning-seed mean is what the searcher observes
+and optimizes. After selection is frozen, the winner (or Pareto front)
+is evaluated once on disjoint test seeds that the tuner never saw, and
+that held-out performance is what the final report quotes.
+
+This seed protocol is the study's default shape: search driven by
+tuning-seed feedback, final evaluation on test seeds. This is not an
+option the researcher enables; it is the study shape, and opting
+\emph{out} is the act that requires writing something down. The
+evidence for that inversion is the seed-noise record of
+Chapters~\ref{sec:problem} and~\ref{sec:workloads}, and the protocol
+is what makes the test set a genuine held-out evaluation rather than
+part of the search feedback loop.
+
+The searcher on day one is the wrapped TPE; the scheduler is ASHA
+with the median rule beside it, granting first rungs at one tenth of
+full fidelity. While the study runs, every trial streams its curve
+into the run store with its configuration, seed, rung history, and
+bill, and the store computes one diagnostic the researcher did not
+ask for: the rank correlation between rung scores and final scores,
+logged per study. That number is Chapter~\ref{sec:multifidelity}'s
+crossing-curves hazard turned into a measured quantity of our own
+workloads, and the validation suite consumes it later.
+
+What the researcher gets back is the incumbent configuration with
+its test-seed mean and spread, the full record of trials in the
+store, and the study's own audit trail: which trials were stopped at
+which rungs, and what the early-versus-final correlation was. What
+they do not get on day one, stated as plainly: no schedules (the
+population line is tier~2), no premium multi-objective searcher (the
+Hamiltonian study runs on the wrapped evolutionary default until the
+qLogNEHVI searcher lands), and no prior-weighted acquisition yet.
+Each absence has a tier and a week in Chapter~\ref{sec:roadmap};
+none of them blocks the day-one study from being useful, which is
+the point of the tier ordering.
+
+\section{The register, and how this part uses it}
+
+Chapter~\ref{sec:roadmap}'s Table~\ref{tab:decisions} is the spine
+of this part: every verdict, its tier, its cost, and the chapter
+holding its evidence. The two chapters that follow extend each row
+with its remaining anchors. The contracts chapter names the
+interface or schema field that carries the verdict, so that a reader
+can point from ``priors are first-class'' to the line of the schema
+that makes it true. The validation chapter names the suite entry
+that would catch the verdict failing, and it inherits its content
+from promises already made: every ``argued from four angles''
+section in Chapters~\ref{sec:modelfree}
+through~\ref{sec:transfer} ended with a falsification criterion, and
+the suite is those criteria collected, priced, and scheduled rather
+than restated.
+
+Two bookkeeping rules keep the register honest while this part is
+written. A verdict with no plausible suite entry is marked
+untestable in place, with a sentence saying why, rather than
+receiving a decorative test. And any design sentence in this part
+that cannot cite a chapter of evidence is labeled an engineering
+judgment, so the reader always knows which statements the survey
+backs and which ones the build team owns.
+
+\section{What would overturn this chapter}
+
+The day-one walk is this chapter's load-bearing claim: tier~0 is
+composition, not construction. It fails, and this part gets
+rewritten, if the walk cannot be reproduced in software within the
+tier~0 budget of Chapter~\ref{sec:roadmap}, if any step turns out to
+require a component the audit of Chapter~\ref{sec:libraries} did not
+verify as maintained, or if the seed-protocol default proves too
+expensive to be the default on our routine studies. The first
+validation-suite run is scheduled to test exactly this walk, and the
+suite, not this chapter, has the last word.

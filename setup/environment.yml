@@ -1,0 +1,26 @@
+name: hponas
+channels:
+  - conda-forge
+  - pytorch
+  - defaults
+dependencies:
+  - python=3.12
+  - pip
+  - numpy
+  - scipy
+  - matplotlib
+  - jupyter
+  - pytest
+  - pip:
+      - ray[tune]==2.58.0
+      - torch>=2.2.0
+      - gpytorch>=1.13
+      - botorch>=0.18.0
+      - optuna>=4.9.0
+      - ConfigSpace>=1.2.0
+      - pandas>=2.2.0
+      - scikit-learn>=1.5.0
+      - pyyaml>=6.0
+      - tensorboard>=2.18.0
+      - gymnasium>=1.0.0
+      - stable-baselines3>=2.4.0

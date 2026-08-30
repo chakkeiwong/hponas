@@ -1,0 +1,283 @@
+\chapter{Search without a model: grid, random, quasi-random, evolutionary}
+\label{sec:modelfree}
+
+The simplest tuners evaluate configurations chosen without reference to any
+model of the objective. They are worth understanding not because we would
+ship them as the product's centerpiece but because they are the baselines
+every fancier method must beat, they parallelize perfectly, and one of them
+(random search) is quietly load-bearing inside several of the modern methods
+in later chapters.
+
+\section{Why random beats grid: an argument in one picture}
+
+Grid search evaluates the Cartesian product of a few values per axis. Its
+appeal is legibility: the results form a table a human can read. Its flaw is
+arithmetic. With a budget of $n$ trials spread over $d$ axes, each axis
+receives only $n^{1/d}$ distinct values. In the running example's full
+fifteen-dimensional space, a generous budget of $n = 100$ trials gives each
+axis $100^{1/15} \approx 1.36$ distinct values: the ``grid'' cannot even
+afford two settings per knob. Even on the two-dimensional slice we can draw,
+$n = 9$ trials buys a $3 \times 3$ grid, three distinct learning rates in
+total.
+
+Why is that so bad? \citet{bergstra2012random} made the now-standard
+observation that machine-learning objectives typically have low
+\emph{effective} dimensionality: a couple of hyperparameters dominate, but
+which ones dominate varies by problem. Suppose, as is typical for PPO, the
+learning rate matters enormously and the entropy coefficient barely at all.
+Then what determines a trial's quality is essentially its learning-rate
+coordinate alone, and the right question is not ``how well do the trials
+cover the plane'' but ``how well do their \emph{projections} cover the
+learning-rate axis.'' Figure~\ref{fig:gridrandom} shows the answer. The
+$3 \times 3$ grid projects onto three distinct learning rates, each tested
+three redundant times; nine random points project onto nine distinct
+learning rates. The grid wastes two thirds of its budget re-measuring values
+of the axis that matters while random search, which draws each coordinate
+afresh for every trial, places $n$ distinct values on every axis
+simultaneously, without needing to know in advance which axis is the
+important one.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=0.85, font=\small]
+% left panel: grid
+\begin{scope}
+\draw[thick] (0,0) rectangle (4,4);
+\foreach \x in {1,2,3}
+  \foreach \y in {1,2,3}
+    \fill (\x,\y) circle (2.2pt);
+% projections
+\foreach \x in {1,2,3}
+  \fill[blue!70] (\x,-0.55) circle (2.2pt);
+\draw[-{Latex}] (2,-0.05) -- (2,-0.35);
+\node[anchor=north] at (2,-0.85) {3 distinct values};
+\node[anchor=south] at (2,4.05) {grid, $n=9$};
+\node[rotate=90, anchor=south] at (-0.35,2) {entropy coeff.\ (barely matters)};
+\node[anchor=north] at (2,-1.35) {learning rate (matters)};
+\end{scope}
+% right panel: random
+\begin{scope}[xshift=7cm]
+\draw[thick] (0,0) rectangle (4,4);
+\foreach \p in {(0.5,1.1),(1.1,3.4),(1.6,0.6),(2.05,2.5),(2.5,3.8),(2.9,1.7),(3.3,0.3),(3.7,2.9),(0.85,2.1)}
+  \fill \p circle (2.2pt);
+\foreach \x in {0.5,1.1,1.6,2.05,2.5,2.9,3.3,3.7,0.85}
+  \fill[blue!70] (\x,-0.55) circle (2.2pt);
+\draw[-{Latex}] (2,-0.05) -- (2,-0.35);
+\node[anchor=north] at (2,-0.85) {9 distinct values};
+\node[anchor=south] at (2,4.05) {random, $n=9$};
+\node[anchor=north] at (2,-1.35) {learning rate (matters)};
+\end{scope}
+\end{tikzpicture}
+\caption{The projection argument for random search, after
+\citet{bergstra2012random}, drawn schematically. When one axis dominates the
+objective, only the coverage of that axis's projection (blue) matters. The
+same nine trials give the important axis three distinct values under a grid
+and nine under random sampling, and random search does not need to know
+which axis is important to collect this advantage.}
+\label{fig:gridrandom}
+\end{figure}
+
+The same point can be made with elementary probability, and the number is
+worth carrying around. Suppose ``good'' configurations occupy some fraction
+$p$ of the search space, say the top 5 percent. Each uniform random trial
+lands in the good region with probability $p$ independently, so the chance
+that $n$ trials all miss it is $(1-p)^n$, and
+\begin{equation}
+\Pr[\text{at least one good trial}] \;=\; 1 - (1-p)^n .
+\label{eq:coverage}
+\end{equation}
+With $p = 0.05$, sixty trials give $1 - 0.95^{60} \approx 0.95$: sixty
+random trials find a top-5-percent configuration with 95 percent
+probability, in any number of dimensions.
+
+The dimension-free character of
+\eqref{eq:coverage} is the honest content of the phrase ``random search
+scales'': what it cannot do is exploit structure, so when the good region
+is much smaller than 5 percent, or when we want the best of the good region
+rather than a member of it, the model-based methods of
+Chapter~\ref{sec:bayesian} earn their complexity.
+
+The empirical side of
+\citet{bergstra2012random} showed random search matching or beating grid
+search on neural-network tuning at a fraction of the cost, and the result
+has aged well: fifteen years later, tuning studies in reinforcement
+learning still reach for random search as the honest cheap baseline
+\citep{eimer2023hyperparameters}, and it remains the recommended floor in
+methodological guides \citep{bischl2023hyperparameter}.
+
+\section{Two free upgrades}
+
+Two refinements cost nothing and should be our defaults wherever
+plain random sampling appears. First, sample in a transformed space:
+learning rates and other scale parameters should be drawn log-uniformly, since
+the difference between $10^{-3}$ and $10^{-4}$ matters as much as the
+difference between $10^{-4}$ and $10^{-5}$. A uniform draw from
+$[10^{-5}, 10^{-2}]$ puts 90 percent of its samples above $10^{-3}$,
+crowding into the top decade of the range; a log-uniform draw spends a
+third of its budget in each of the three decades. The transform matters
+more than any sophistication layered on top of it, and the same logic will
+reappear as input warping inside Gaussian-process surrogates
+(Chapter~\ref{sec:bayesian}).
+
+Second, replace independent draws with a low-discrepancy sequence (Sobol
+points), which spreads samples more evenly than chance and removes the
+unlucky clusters and gaps of independent sampling: independent uniform draws
+are perfectly happy to put two of nine samples almost on top of each other,
+which purchases the same information twice. The gain is modest but free, and
+quasi-random initialization is already the default first phase inside
+several Bayesian optimization packages.
+
+\section{Respecting the baseline}
+
+Random search has one property that deserves respect when we evaluate our own
+product: it is unbiased and easy to reason about. \citet{wan2022bgpbt} found
+random search over their full 15-dimensional joint space to be, in their
+words, a surprisingly strong baseline on several Brax environments, on par
+with or better than the original population-based training on four of seven
+tasks; that is our running example's own search space, and the lesson
+transfers directly.
+
+When a proposed method fails to beat well-configured
+random search at matched compute, the method, not the baseline, is on trial.
+That said, model-based methods do beat it when configured sensibly: the
+analysis of the 2020 black-box optimization challenge, run on real tuning
+problems, found Bayesian optimization entries clearly ahead of random search
+across the board \citep{turner2021bayesian}.
+
+Both facts fit in one sentence:
+random search is hard to beat when its budget is generous relative to the
+difficulty of the space, and clearly beatable when trials are scarce enough
+that each one has to be chosen with care. Scarce, expensive trials are our
+situation, which is why Chapter~\ref{sec:bayesian} exists.
+
+\section{Adapting the sampler without modeling the objective}
+
+Evolutionary and direct-search methods occupy a middle ground: no fitted
+model of the objective, but the sampling distribution adapts. CMA-ES
+(covariance matrix adaptation evolution strategy)
+maintains a multivariate Gaussian over a continuous search space and, at
+each generation, samples a population from it, ranks the samples by
+objective value, and updates the Gaussian toward the successful ones: the
+mean moves to a weighted average of the best samples, and the covariance is
+updated so that directions in which good steps were recently taken become
+directions the sampler explores more boldly \citep{hansen2016cmaes}.
+
+Only
+the \emph{ranking} of samples enters the update, never the raw objective
+values, which buys invariance to any monotone rescaling of the objective, a
+genuinely useful robustness when losses are heavy-tailed.
+
+The price is
+appetite: covariance adaptation needs generations of populations to learn
+the geometry, so CMA-ES is a strong choice when trials are cheap enough to
+afford hundreds to thousands of evaluations, when the space is purely
+continuous, and when noise is moderate \citep{hansen2016cmaes}. In the
+running example's regime of hours-long trials it is mis-matched; in the
+Hamiltonian-network regime of minutes-long trials it is a live option.
+
+Differential evolution, the other family member we will need, proposes new
+points by recombining coordinate differences of existing population members:
+a mutant is formed by adding the scaled difference of two population members
+to a third, then crossed with a parent coordinate by coordinate. Its role
+for us is as the engine inside DEHB (Chapter~\ref{sec:multifidelity}),
+currently one of the most reliable budget-constrained tuners in
+reinforcement learning \citep{eimer2023hyperparameters}. The practical
+reading: evolutionary machinery earns its place at low fidelities and inside
+hybrid methods, not as a standalone tuner for expensive trials, where its
+appetite for evaluations collides with our budgets.
+
+\section{The baseline's case, argued from four angles}
+\label{sec:mf0-angles}
+
+The chapter's verdict, transforms and Sobol sampling on by default,
+random search enthroned as the mandatory baseline, grid retired to a
+debugging view, the evolutionary methods wrapped or embedded rather
+than built, is modest, which is why it is worth noticing that four
+separate arguments underwrite it.
+
+From arithmetic: the two computations of this chapter are one line
+each and dimension-free. The exponent $n^{1/d}$ says a grid starves
+every axis long before budgets we can afford; the bound
+\eqref{eq:coverage} says sixty random trials find the top twentieth
+with 95 percent confidence in any dimension. Between them they fix
+both the floor's strength and its limit, since nothing in
+\eqref{eq:coverage} improves when the good region shrinks or when we
+want its best member rather than any member.
+
+From evidence: the floor held up in the two most adversarial arenas
+this document has. In the BG-PBT authors' own fifteen-dimensional
+space, random search matched or beat the original population methods
+on four of seven tasks (Section~\ref{sec:pop-evidence}); in the
+outsiders' challenge on real tuning problems, the model-based entries
+beat it across the board (Section~\ref{sec:bo-evidence}). The two
+results are one fact seen from its two sides: generous budgets make
+the floor hard to beat, scarce trials make deliberation pay, and our
+studies live on the scarce side.
+
+From operations: random search has no state, no hyperparameters worth
+arguing about, no failure modes, and perfect parallelism, which makes
+it the one component whose behavior never needs explaining; the log
+and Sobol upgrades are free and are inherited by every later method,
+since quasi-random points are also the GP searcher's opening phase;
+and grid's single virtue, a table a human can read, survives intact
+as the two-knob visual sweep.
+
+From decision theory: the baseline's real product is epistemic. Every
+verdict in the chapters ahead has the form ``this method beats the
+honest cheap alternative at matched budget,'' and that sentence is
+only checkable if the honest cheap alternative is permanently
+installed in the validation suite. Carrying it costs nothing;
+dropping it would convert every later claim from a measurement into
+an opinion.
+
+The falsification here runs in both directions. The chapter's own
+positive claims are the cheapest in the document to test, the same
+searcher with and without the log transform on a pinned task settles
+the transform's value in an afternoon, and the chapter's main export
+is the standing criterion the rest of the document is judged by: any
+searcher that cannot beat the upgraded floor at matched budget, with
+seeds and uncertainty reported, is not shipped.
+
+\begin{decisions}
+\noindent\textbf{Decisions from this chapter.} For each method: what it
+is in one sentence, and whether it goes in the package.
+\begin{itemize}[leftmargin=1.3em, itemsep=2pt]
+\item \textbf{Log-scale and Sobol sampling} (include, days of work).
+Drawing scale-type knobs on a log scale, and drawing the opening batch
+from a scrambled Sobol sequence rather than independently. An
+engineering default, not a theorem: the log transform applies to knobs
+that span decades (learning rates, coefficients, step sizes) and not to
+ordinals or categories, and Sobol's even coverage is a claim about
+initialization batches, where it is also the GP searcher's opening
+phase anyway. Two caveats worth carrying: scrambling matters, since an
+unscrambled sequence's low-order points are visibly structured, and at
+budgets of a handful of trials the difference from independent sampling
+is below the noise we are measuring against.
+\item \textbf{Random search} (include, trivial). Not as a product
+feature but as the mandatory baseline in our validation suite: any
+searcher that cannot beat it at matched budget is not shipped. The
+arithmetic of \eqref{eq:coverage} is why it is harder to beat than its
+reputation suggests.
+\item \textbf{Grid search} (exclude as a search method). Keep only as a
+debugging utility for two-knob visual sweeps; Figure~\ref{fig:gridrandom}
+is the entire case against it as a tuner.
+\item \textbf{CMA-ES} (include by wrapping an existing implementation,
+low priority). Only competitive when a study can afford hundreds of
+cheap, continuous trials, which for us means the Hamiltonian-network
+regime and nothing else. Building it ourselves would buy nothing.
+\item \textbf{Differential evolution} (no standalone entry). It enters
+the package only inside DEHB in Chapter~\ref{sec:multifidelity}.
+\end{itemize}
+\end{decisions}
+
+\section{What would overturn these verdicts}
+
+The floor baseline is structural, not empirical: if the GP searcher
+cannot beat log-scale Sobol at matched budget on the pinned tasks of
+Chapter~\ref{sec:validation}, it is demoted and this chapter
+rewritten. CMA-ES's inclusion is conditional on the wrap remaining
+thin; if the dependency becomes unmaintained or the adapter requires
+ongoing surgery, the verdict changes to exclude and the register
+records it. Grid search's debug-view limit holds unless a colleague
+requests it as a search method with a use case the decision boxes
+did not consider, at which point the box is reopened.

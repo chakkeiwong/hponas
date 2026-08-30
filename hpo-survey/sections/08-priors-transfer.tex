@@ -1,0 +1,429 @@
+\chapter{Using what we already know: priors, transfer, and the price of a trial}
+\label{sec:transfer}
+
+A tuner that starts every study from ignorance wastes its first dozen trials
+rediscovering folklore: learning rates live near $3 \times 10^{-4}$, discount
+factors near $0.99$, dropout rarely helps reinforcement learning. Every GP in
+Chapter~\ref{sec:bayesian} began with a zero-mean prior that believes
+nothing; every project lead we serve believes a great deal, and is usually
+right. We tune the same families of models over and over, so encoded
+experience is the cheapest compute we own. The literature offers three
+grades of it, in increasing order of machinery, plus a fourth option that
+replaces search entirely at large scale.
+
+\section{Expert priors over the optimum}
+
+The lightest grade lets a human say where the optimum probably lies. In
+$\pi$BO, the user supplies a prior density $\pi(\config)$ over the
+\emph{location of the best configuration} (not over function values, which
+is the GP's job), and the acquisition function is multiplied by that
+density raised to a power that decays with the number of observations,
+\begin{equation}
+\alpha_n^{\pi}(\config)
+\;=\; \alpha_n(\config) \cdot \pi(\config)^{\beta / n},
+\label{eq:pibo}
+\end{equation}
+where $\alpha_n$ is any standard acquisition (EI in the paper), $n$ counts
+observations, and $\beta$ sets how long the advice matters
+\citep{hvarfner2022pibo}.
+
+The design reads directly off the formula. Early
+on ($n$ small) the exponent is large, the prior term dominates, and the
+search concentrates where the expert pointed; as evidence accumulates the
+exponent shrinks toward zero, $\pi(\config)^{\beta/n} \to 1$ for every
+$\config$ in the prior's support, and the acquisition converges back to
+its data-driven self on that support (Figure~\ref{fig:pibo}). Points
+assigned zero prior probability stay at zero. The decay is what makes
+the mechanism safe: the authors prove it preserves standard convergence
+behavior, and show large early gains when the prior is good and mild
+losses when it is wrong, since a wrong prior is overruled at the rate
+evidence arrives. A confidently wrong expert costs the study its opening
+moves, not its conclusion.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=1.0, font=\small]
+\draw[-{Latex}] (0,0) -- (9.3,0);
+\node[anchor=north] at (7.9,-0.12) {learning rate (log scale)};
+% prior density
+\draw[thick, densely dashed]
+  (0.5,0.1) .. controls (2.8,0.12) and (3.5,1.8) .. (4.1,1.85)
+  .. controls (4.7,1.8) and (5.4,0.15) .. (8.9,0.07);
+% early acquisition: pulled toward prior
+\draw[thick, blue!60!black]
+  (0.5,0.25) .. controls (2.6,0.4) and (3.4,2.3) .. (4.2,2.4)
+  .. controls (5.0,2.3) and (5.6,0.7) .. (8.9,0.3);
+% late acquisition: data-driven peak elsewhere
+\draw[thick, red!60!black]
+  (0.5,0.15) .. controls (4.0,0.25) and (6.0,0.4) .. (6.8,1.5)
+  .. controls (7.3,2.05) and (7.7,1.35) .. (8.9,0.25);
+% legend, top left, clear of all three curves
+\node[blue!60!black, anchor=west, font=\footnotesize] at (0.35,3.25)
+  {$\alpha^{\pi}_{n}$, $n$ small: the prior steers};
+\node[red!60!black, anchor=west, font=\footnotesize] at (0.35,2.9)
+  {$\alpha^{\pi}_{n}$, $n$ large: exponent $\beta/n$ decayed, data decides};
+\node[anchor=west, font=\footnotesize] at (0.35,2.55)
+  {expert prior $\pi$ (dashed)};
+\end{tikzpicture}
+\caption{The $\pi$BO mechanism~\eqref{eq:pibo} over a study's lifetime
+(schematic). The expert's prior (dashed) multiplies the acquisition with
+an exponent that decays as observations arrive: early proposals
+concentrate where the expert pointed, late proposals go where the data
+says, and a wrong prior is forgotten rather than obeyed.}
+\label{fig:pibo}
+\end{figure}
+
+PriorBand carries the same idea into the multi-fidelity world of
+Chapter~\ref{sec:multifidelity}, where the object being steered is not
+one acquisition but a stream of configurations entering ASHA-style rungs.
+Each new configuration is drawn from a portfolio mixing three samplers:
+uniform exploration, the user prior, and local perturbations of the
+current incumbent, with the mixing weights depending on the rung. The
+prior is trusted more at higher rungs, where evaluations are expensive
+and the expert's opinion matters most, and the incumbent component is
+switched on only once enough evidence has accumulated, which is what
+protects the method against a confidently wrong prior
+\citep{mallik2023priorband}. Priors of this kind should be a first-class
+field in our search-space schema from day one: every project lead we
+serve has them, and both mechanisms are simple to implement over
+components we are building anyway. The prior is also the natural home
+for the folklore this chapter opened with; writing
+$\pi(\config)$ down once beats re-teaching it to every study.
+
+\section{Transfer from our own past studies}
+
+The second grade learns from previous tuning studies instead of asking a
+human. The robust end of this spectrum is unglamorous and effective:
+initialize a new study with configurations that ranked well on similar
+past tasks \citep{feurer2015metalearning}, or combine surrogates fit to
+past tasks into an ensemble whose weights reflect how well each past
+task's surrogate predicts the current one, comparing on ranks so that
+tasks with different loss scales can vote together
+\citep{feurer2018rgpe}. Because our product will keep every trial of
+every study in one store (Chapter~\ref{sec:architecture}), the warm
+start costs a database query: the run store is Figure~\ref{fig:loop}'s
+bottom box earning its place.
+
+The research frontier goes further and meta-learns the surrogate itself,
+and the vehicle deserves a proper introduction because it has appeared
+twice already (ifBO in Chapter~\ref{sec:multifidelity}) and will appear
+again. A \emph{prior-fitted network} (PFN) is a transformer trained once,
+offline, on millions of synthetic datasets drawn from a chosen prior over
+functions. At use time it is shown the current study's observed
+(configuration, score) pairs as context, and it outputs a predictive
+distribution for new configurations in a single forward pass.
+
+Why that works is the part worth pausing on. Training on draws from
+the prior teaches the network to approximate the posterior predictive
+distribution under that prior, so the expensive part of Bayesian
+inference is paid once, by the pre-trainer, rather than at every step
+of every study. Where the GP of Section~\ref{sec:gp} refits
+\eqref{eq:mll} inside the loop, a PFN just reads its context. The
+model class changed; the economics changed with it.
+
+PFNs4BO demonstrates the swap directly, pre-training PFNs that mimic
+GP and Bayesian-neural-network surrogates and slotting them into
+standard BO \citep{muller2023pfns4bo}.
+
+OptFormer showed the scale endgame: a transformer trained on hundreds
+of thousands of tuning trajectories from Google's Vizier service
+imitates several tuners and improves on them when combined with
+expected improvement \citep{chen2022optformer}.
+
+The same idea specialized to learning curves gives ifBO's freeze-thaw
+surrogate (Chapter~\ref{sec:multifidelity}), and the line is still
+moving, with in-context amortization now reaching the acquisition
+function itself \citep{rakotoarison2026alphapfn}.
+
+These pre-trained surrogates are the most credible path to tuners
+that get smarter as our run store grows, and one of them (ifBO) ships
+with usable code today. We rate them a second-wave investment:
+valuable, but only after the plain warm start is in place and
+earning.
+
+\section{Cost-aware search}
+
+The third grade treats the price of a trial as part of the decision.
+Trials rarely cost the same: in the running example, doubling network
+width or unroll length can quadruple wall-clock, so two candidates with
+equal expected improvement can differ fourfold in what they cost to
+evaluate, and an acquisition that ignores this will happily spend its
+budget in the expensive corner of the space. The classical repair prices
+the acquisition in the right currency: improvement per unit cost,
+$\alpha_{\mathrm{EI}}(\config) / c(\config)$, with $c$ a model of trial
+cost, already present in \citet{snoek2012practical} as expected
+improvement per second. CArBO refines it with an explicit cheap-first
+initialization and a cost-cooling schedule, dividing by
+$c(\config)^{\alpha}$ with an exponent that anneals from one toward
+zero over the budget, so that early exploration favors cheap points and
+the endgame, where only the best candidates remain, ignores cost
+\citep{lee2020carbo}; the annealing acknowledges that a bargain matters
+when we are learning the space and stops mattering when we are
+choosing the winner.
+
+CARBS pushes cost-awareness to its logical end for scaling studies. It
+maintains a Pareto front in the plane of cost versus performance, the
+machinery of Chapter~\ref{sec:moo} with cost promoted to a full
+objective, and searches locally around that front: separate Gaussian
+processes model performance, cost, and the front's shape, candidates are
+Gaussian perturbations of current Pareto members, and the acquisition is
+expected improvement relative to the front weighted by expected cost, so
+the method tunes hyperparameters \emph{while} the model grows and emits
+a scaling law for every hyperparameter as a byproduct. Its authors
+demonstrate it by reproducing the Chinchilla scaling result for language
+models and by solving the full ProcGen benchmark with a tuned but
+otherwise plain PPO \citep{fetterman2023carbs}. For our fixed-size
+studies, EI-per-cost with cost cooling is the sensible default; a
+CARBS-style cost frontier becomes interesting the day we tune models
+meant to be scaled up afterward.
+
+\section{When not to search at all: transfer across scale}
+
+For large networks there is a fourth option that is not search. The
+maximal update parametrization ($\mu$P) rescales initialization and
+per-layer learning rates so that the size of each layer's update stays
+controlled as network width grows; under that parametrization the optimal
+values of many hyperparameters become approximately invariant to width,
+so one tunes a small proxy model and transfers the result to the wide
+target ($\mu$Transfer). Its authors validated the recipe by
+outperforming the published BERT-large and GPT-3 6.7B settings while
+spending a few percent of one pretraining run on tuning
+\citep{yang2022mutransfer}. The claim's boundary is part of the result:
+the theory covers width; transfer across depth, batch size, and training
+horizon is empirical, with stated failure cases (regularization
+hyperparameters do not transfer, and depth transfer breaks for
+post-layer-norm transformers), and follow-up parametrizations have since
+extended the depth story \citep{dey2025completep}.
+
+More recent LLM-era work makes the third regime of
+Figure~\ref{fig:regimes} explicit, fitting power laws for optimal
+hyperparameters as functions of scale and turning the largest tuning
+problems into curve lookups: compute-dependent learning-rate and
+batch-size laws appear in the DeepSeek LLM report \citep{deepseek2024llm},
+learning-rate dependence on the token horizon has its own fitted law
+\citep{bjorck2025tokenhorizon}, weight decay and batch size get the same
+treatment \citep{bergsma2025powerlines}, and a dedicated preprint fits
+joint optimum surfaces across model and data size \citep{li2025steplaw}.
+
+We track this line in Chapter~\ref{sec:roadmap} as guidance to encode
+rather than an algorithm to implement: the laws enter our product as
+priors and sanity checks, not as a searcher.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[font=\small]
+\draw[-{Latex}] (0,0) -- (12.6,0) node[above left=0.6mm and 0mm, font=\small\itshape] {model scale};
+\foreach \x in {4.2,8.4} \draw[dotted] (\x,0) -- (\x,2.6);
+\node[align=center] at (2.1,1.7) {\textbf{search directly}\\Chapters~\ref{sec:bayesian}--\ref{sec:moo}:\\trials are affordable,\\evidence beats folklore};
+\node[align=center] at (6.3,1.7) {\textbf{search a proxy, transfer}\\$\mu$Transfer: tune small,\\move to the wide model\\\citep{yang2022mutransfer}};
+\node[align=center] at (10.5,1.7) {\textbf{look up fitted laws}\\scaling rules for LR, batch,\\weight decay; one model,\\zero search trials};
+\node[anchor=north, font=\footnotesize] at (2.1,-0.35) {our RL, samplers, HNNs};
+\node[anchor=north, font=\footnotesize] at (6.3,-0.35) {medium pretraining};
+\node[anchor=north, font=\footnotesize] at (10.5,-0.35) {frontier-scale pretraining};
+\end{tikzpicture}
+\caption{The three tuning regimes by model scale. Everything before this
+chapter lives in the left band. As trials become unaffordable, search
+moves onto small proxies whose optima provably or empirically transfer,
+and at the largest scales it gives way to fitted scaling laws. A good
+tuner should know which band a study is in and say so.}
+\label{fig:regimes}
+\end{figure}
+
+The strategic point for the product is the figure's caption: at small
+scale we search, at medium scale we search on proxies and transfer, and
+at large scale search gives way to parametrization and extrapolation. A
+good tuner should know which regime it is in and say so.
+
+\section{The evidence, and how the failure mode was tested}
+\label{sec:prior-evidence}
+
+Every claim in this chapter has the same shape: knowledge from outside
+the study, an expert's hunch, a past study, a smaller model, someone
+else's fitted law, can safely be spent inside it. For claims of that
+shape the success story is cheap to produce and nearly beside the
+point, because of course good advice helps. The evidence that matters
+is what happens when the imported knowledge is wrong, and the reason
+this chapter's verdicts lean confident is that its sources, unusually,
+tested exactly that.
+
+The $\pi$BO experiments are built around controllable advice quality.
+On a toy function and two surrogate tuning tasks, where the true
+optimum is known and priors of any desired quality can be
+manufactured, the authors ran the spectrum from accurate to
+``purposefully detrimental,'' the wrong prior being a narrow density
+parked in the worst region of the space \citep{hvarfner2022pibo}.
+
+The findings match the mechanism read off
+formula~\eqref{eq:pibo}: strong priors buy large early gains, and
+under sabotage the method climbs back to roughly the regret of its
+prior-free baseline, while the baseline that trusts the prior only at
+initialization keeps paying for it. The trade-off is stated rather
+than hidden: a larger $\beta$ extracts more from good advice and
+forgives bad advice more slowly.
+
+The upside case is demonstrated
+separately on a deep-learning pipeline, a 12.5-fold time-to-accuracy
+speedup over vanilla BO and a new best validation accuracy for that
+pipeline. Author-run experiments, as usual in this document's
+sources; what tempers the caution here is that the safety half of the
+claim is also a theorem (the exponent $\beta/n$ dies as evidence
+arrives, dragging the acquisition back to its data-driven self), so
+the experiment confirms an argument the reader can check rather than
+substituting for one.
+
+PriorBand's evaluation had to build its own arena first, a benchmark
+suite in which priors are part of the task definition rather than an
+afterthought: synthetic multi-fidelity surfaces plus image and
+language tasks derived from recorded large-model training runs, each
+equipped with good and deliberately bad priors, run at the small
+budgets that define deep-learning tuning
+\citep{mallik2023priorband}. The motivating ablation is the honest
+part: naively biasing Hyperband's sampler toward the prior wins when
+the advice is good and burns exactly proportional budget when it is
+bad, while a half-random hedge is robust but never competitive, and
+the rung-dependent trust schedule is the repair that keeps both
+properties. One design detail is worth copying into our own suite:
+every prior-using method in the comparison had the prior's mode
+evaluated first, so nobody wins merely by being handed the expert's
+best guess. Across tasks and prior qualities, PriorBand ranked most
+consistently at the top.
+
+The transfer-across-scale evidence is differently shaped, and
+stronger for it. $\mu$Transfer's headline test pitted the recipe
+against external baselines its authors did not set: the published,
+expert-tuned settings of BERT-large and GPT-3 6.7B, beaten while
+spending a few percent of one pretraining run on proxy-model tuning
+\citep{yang2022mutransfer}, with the non-transfers (regularization
+strengths, depth under post-layer-norm) reported in the same paper.
+CARBS makes its case the same way, by reproducing a famous external
+result, the Chinchilla compute-optimal scaling law, and by solving
+the full ProcGen benchmark with an otherwise plain PPO
+\citep{fetterman2023carbs}. Replication of results the authors do
+not own is the closest thing this literature has to the
+adversarial arena of Section~\ref{sec:bo-evidence}, and both
+transfer claims clear it.
+
+The last tier is the one we deliberately did not audit. The
+scaling-law papers of the previous section report fitted power laws
+whose estimation we have not checked, and nothing in our product is
+allowed to depend on their exactness: they enter as priors and
+sanity checks, which is weight their evidentiary status can carry
+even if a particular fit is off. The demotion is a statement about
+our audit, not an accusation about their work.
+
+\section{The ordering, argued from four angles}
+\label{sec:prior-angles}
+
+The chapter's verdict is an ordering: priors and warm starts first,
+cost-aware acquisition alongside, pre-trained surrogates adopted
+rather than trained, scaling knowledge encoded rather than
+implemented. Four angles converge on it.
+
+From mechanism: the safety properties that make priors acceptable as
+a default are structural, not empirical. The decay exponent in
+\eqref{eq:pibo} guarantees the expert's influence is transient;
+PriorBand's incumbent component stays off until evidence justifies
+it; in both, the worst case of bad advice is a study's opening
+moves. Features whose failure modes are bounded by construction can
+be on by default; features whose failure modes are empirical
+questions cannot. That one sentence sorts most of the decision box.
+
+From evidence: the sources tested the sabotage case, not only the
+success case, and the transfer methods validated against external
+baselines their authors did not control. Where our own audit is
+thinner, the scaling-law fits, the verdict steps down to
+encode-as-guidance in lockstep. Nothing here asks the reader to
+extend more trust than the checked evidence covers.
+
+From economics: encoded experience is the cheapest compute we own.
+A written-down prior converts folklore into an asset that every
+study inherits for free; the run store turns past studies' sunk
+compute into a warm start that costs a query; and EI-per-cost simply
+prices candidates in the currency the cluster actually charges,
+improvement per unit cost rather than improvement per trial. The
+whole chapter is arbitrage on knowledge the organization has already
+paid for once.
+
+From operations: the entire first wave is days of work riding
+components that earlier chapters build anyway, a multiplier on the
+acquisition, a query over the run store, a divisor on the
+acquisition, and the single costly commitment, making the prior a
+first-class field of the search-space schema, costs nearly nothing
+on day one and a migration if retrofitted later. Adopting ifBO's
+published surrogate rather than training our own keeps a research
+program off the product's critical path.
+
+And the falsification criterion, stated in advance: the validation
+suite reruns the pinned tasks under three conditions, no prior, the
+folklore prior, and a deliberately wrong prior in $\pi$BO's sense,
+at our routine budgets. The prior-weighted searcher must beat its
+prior-free self under the folklore prior and must recover to the
+prior-free final, within noise, under the wrong one; if bad advice
+costs more than the opening moves on our workloads, prior weighting
+is demoted from default to opt-in. The warm start faces its own
+test the day the run store holds enough studies: measured trial
+savings on a new study of a familiar family, or it stays a query we
+offer rather than a step we perform.
+
+\begin{decisions}
+\noindent\textbf{Decisions from this chapter.} Ordered by payoff per
+week of engineering, which is the honest ranking here.
+\begin{itemize}[leftmargin=1.3em, itemsep=2pt]
+\item \textbf{$\pi$BO's prior-weighted acquisition} (include; days).
+Formula~\eqref{eq:pibo} is a few lines over the Tier 0 GP searcher,
+every project lead has a prior to give it, and its built-in decay
+means bad advice costs a study its opening moves rather than its
+conclusion, \emph{provided the prior does not assign zero probability
+to the true region}. The search-space schema should therefore require
+a lower-bounded mixture or explicitly nonzero support everywhere, so
+that wrong advice can be overruled by evidence \citep{hvarfner2022pibo}.
+Highest value density in the document under that guard.
+\item \textbf{PriorBand} (include; one to two weeks). The same idea
+where our savings actually live, the multi-fidelity rungs; the
+rung-dependent portfolio is what keeps a confidently wrong prior from
+doing damage \citep{mallik2023priorband}.
+\item \textbf{Warm starts from the run store} (include; days). A
+ranked query over past studies \citep{feurer2015metalearning}. The
+prerequisite is the run store itself, which Tier 0 builds regardless.
+\item \textbf{RGPE-style surrogate ensembles} (second wave). Real
+gains, but only once the store holds enough completed studies to
+ensemble; building it before the data exists would be decoration.
+\item \textbf{Pre-trained surrogates (PFN family)} (adopt one, build
+none). We take ifBO's published pre-trained model as our
+learning-curve surrogate (Chapter~\ref{sec:multifidelity}) and train
+nothing ourselves; OptFormer-scale training runs are a research
+program, not a package feature.
+\item \textbf{EI-per-cost with cost cooling} (include; days). One
+division and one annealing exponent on top of the GP searcher,
+\emph{dividing by a predicted cost} rather than the realized cost the
+executor measures \citep{lee2020carbo}. A second GP fits log
+wall-clock time to configuration coordinates, refitting on the same
+cadence as the performance surrogate, with failed and killed trials
+entered as censored observations. The roadmap details the cold-start
+and calibration-logging protocol.
+\item \textbf{CARBS-style cost frontier} (hold). Becomes relevant the
+day a project tunes a model that is destined to be scaled up; none is
+on the books today \citep{fetterman2023carbs}.
+\item \textbf{$\mu$P and the scaling-law literature} (encode, do not
+implement). These enter the package as priors, defaults, and sanity
+checks on the regime map of Figure~\ref{fig:regimes}, not as a
+searcher; at our current scales they advise rather than replace
+search.
+\end{itemize}
+\end{decisions}
+
+\section{What would overturn these verdicts}
+
+The $\pi$BO prior weight's default-on status depends on V11: if
+gains under a good prior do not materialize, or if recovery from a
+wrong prior takes longer than the no-prior baseline, the feature is
+demoted to opt-in. PriorBand's inclusion holds as long as its ASHA
+dependency does; if ASHA is demoted, PriorBand's rung-sampling
+portfolio loses its substrate. Warm starts (V12) mature as the store
+fills; if trial savings remain undetectable after the store holds
+dozens of studies, the query surface is re-examined. EI-per-cost's
+inclusion assumes executor cost metering is cheap; if metering
+overhead becomes visible in profiling, the feature becomes opt-in.
+RGPE's second-wave hold is lifted when an ensemble that cheap proves
+itself on public suites, at which point the evidence section is
+updated and a new decision box opened.

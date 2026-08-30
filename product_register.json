@@ -1,0 +1,476 @@
+{
+  "generated": "2026-08-28",
+  "source": "hpo-survey-decisions.json + validation register",
+  "entries": [
+    {
+      "id": "roadmap-01",
+      "chapter": "3",
+      "item": "Sobol + log sampling",
+      "verdict": "T0",
+      "tier": "T0",
+      "contract": "schema.transform + sobol/log searcher",
+      "validation": "V04,V05",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "roadmap-02",
+      "chapter": "3",
+      "item": "Random-search baseline",
+      "verdict": "T0",
+      "tier": "T0",
+      "contract": "floor searcher",
+      "validation": "none",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "roadmap-03",
+      "chapter": "5",
+      "item": "ASHA + median rule",
+      "verdict": "T0",
+      "tier": "T0",
+      "contract": "scheduler impl: asha",
+      "validation": "V06",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "roadmap-04",
+      "chapter": "4",
+      "item": "TPE (wrap Optuna)",
+      "verdict": "T0",
+      "tier": "T0",
+      "contract": "searcher wrap: optuna_tpe",
+      "validation": "V01,V04",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "roadmap-05",
+      "chapter": "4",
+      "item": "GP + qLogEI (BoTorch)",
+      "verdict": "T0",
+      "tier": "T0",
+      "contract": "searcher impl: gp_qlogei",
+      "validation": "V01,V04",
+      "cost_estimate": "weeks"
+    },
+    {
+      "id": "roadmap-06",
+      "chapter": "4",
+      "item": "Dimension-scaled priors",
+      "verdict": "T0",
+      "tier": "T0",
+      "contract": "gp searcher default config (dimension-scaled lengthscales)",
+      "validation": "none",
+      "cost_estimate": "hours"
+    },
+    {
+      "id": "roadmap-07",
+      "chapter": "7",
+      "item": "qLogNEHVI",
+      "verdict": "T1",
+      "tier": "T1",
+      "contract": "schema.transform + sobol/log searcher",
+      "validation": "V09",
+      "cost_estimate": "weeks"
+    },
+    {
+      "id": "roadmap-08",
+      "chapter": "7",
+      "item": "Chebyshev scalarization",
+      "verdict": "T1",
+      "tier": "T1",
+      "contract": "searcher impl: chebyshev_random",
+      "validation": "V09",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "roadmap-09",
+      "chapter": "7",
+      "item": "MO-ASHA + veto gates",
+      "verdict": "T1",
+      "tier": "T1",
+      "contract": "scheduler impl: asha",
+      "validation": "V10,V13",
+      "cost_estimate": "week"
+    },
+    {
+      "id": "roadmap-10",
+      "chapter": "8",
+      "item": "\u03c0BO + PriorBand",
+      "verdict": "T1",
+      "tier": "T1",
+      "contract": "acquisition decorator: pibo",
+      "validation": "V11",
+      "cost_estimate": "1--2 wks"
+    },
+    {
+      "id": "roadmap-11",
+      "chapter": "8",
+      "item": "Warm start from run store",
+      "verdict": "T1",
+      "tier": "T1",
+      "contract": "store query: ranked_similar",
+      "validation": "V12",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "roadmap-12",
+      "chapter": "8",
+      "item": "EI-per-cost + cooling",
+      "verdict": "T1",
+      "tier": "T1",
+      "contract": "acquisition decorator: ei_per_cost",
+      "validation": "none",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "roadmap-13",
+      "chapter": "6",
+      "item": "PB2-Mix, then BG-PBT",
+      "verdict": "T2",
+      "tier": "T2",
+      "contract": "explore engine: pb2_mixed",
+      "validation": "V08",
+      "cost_estimate": "months"
+    },
+    {
+      "id": "roadmap-14",
+      "chapter": "5",
+      "item": "DEHB",
+      "verdict": "T3",
+      "tier": "T3",
+      "contract": "searcher-scheduler hybrid: dehb",
+      "validation": "V07",
+      "cost_estimate": "weeks"
+    },
+    {
+      "id": "roadmap-15",
+      "chapter": "5",
+      "item": "ifBO scheduler",
+      "verdict": "T3",
+      "tier": "T3",
+      "contract": "scheduler impl: ifbo",
+      "validation": "V15",
+      "cost_estimate": "weeks"
+    },
+    {
+      "id": "roadmap-16",
+      "chapter": "4",
+      "item": "HEBO-style robustness",
+      "verdict": "T3",
+      "tier": "T3",
+      "contract": "searcher impl: hebo_robust (T3)",
+      "validation": "none",
+      "cost_estimate": "weeks"
+    },
+    {
+      "id": "ch03-01",
+      "chapter": "3",
+      "item": "Log-scale and Sobol sampling",
+      "verdict": "include",
+      "tier": "T0",
+      "contract": "schema.transform + sobol/log searcher",
+      "validation": "V04,V05",
+      "cost_estimate": "days of work"
+    },
+    {
+      "id": "ch03-02",
+      "chapter": "3",
+      "item": "Random search",
+      "verdict": "include",
+      "tier": "T0",
+      "contract": "floor searcher",
+      "validation": "V04",
+      "cost_estimate": "trivial"
+    },
+    {
+      "id": "ch03-04",
+      "chapter": "3",
+      "item": "CMA-ES",
+      "verdict": "include",
+      "tier": "T0",
+      "contract": "searcher wrap: cma",
+      "validation": "V01,V04",
+      "cost_estimate": "low priority, by wrapping"
+    },
+    {
+      "id": "ch03-05",
+      "chapter": "3",
+      "item": "Differential evolution",
+      "verdict": "no standalone entry",
+      "tier": null,
+      "contract": "inside DEHB only (no standalone entry)",
+      "validation": "none",
+      "cost_estimate": null
+    },
+    {
+      "id": "ch04-01",
+      "chapter": "4",
+      "item": "GP searcher with qLogEI on BoTorch",
+      "verdict": "include",
+      "tier": "T0",
+      "contract": "searcher impl: gp_qlogei",
+      "validation": "V01,V04",
+      "cost_estimate": "weeks (the core build)"
+    },
+    {
+      "id": "ch04-02",
+      "chapter": "4",
+      "item": "TPE by wrapping Optuna",
+      "verdict": "include",
+      "tier": "T0",
+      "contract": "searcher wrap: optuna_tpe",
+      "validation": "V01,V04",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "ch04-05",
+      "chapter": "4",
+      "item": "Dimension-scaled lengthscale priors",
+      "verdict": "include",
+      "tier": "T0",
+      "contract": "gp searcher default config (dimension-scaled lengthscales)",
+      "validation": "V04",
+      "cost_estimate": "one configuration line"
+    },
+    {
+      "id": "ch04-06",
+      "chapter": "4",
+      "item": "Trust-region searcher with mixed-space kernels",
+      "verdict": "include",
+      "tier": "T1",
+      "contract": "searcher impl: tr_mixed (shared with population explore)",
+      "validation": "V04,V08",
+      "cost_estimate": "weeks"
+    },
+    {
+      "id": "ch05-01",
+      "chapter": "5",
+      "item": "ASHA plus the median stopping rule",
+      "verdict": "include",
+      "tier": "T0",
+      "contract": "scheduler impl: asha",
+      "validation": "V02,V06",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "ch05-04",
+      "chapter": "5",
+      "item": "DEHB, implemented against our interfaces",
+      "verdict": "include",
+      "tier": "T3",
+      "contract": "searcher-scheduler hybrid: dehb",
+      "validation": "V07",
+      "cost_estimate": "weeks"
+    },
+    {
+      "id": "ch05-05",
+      "chapter": "5",
+      "item": "PASHA",
+      "verdict": "include",
+      "tier": "T0",
+      "contract": "scheduler impl: asha",
+      "validation": "V02",
+      "cost_estimate": "small (as an ASHA option flag)"
+    },
+    {
+      "id": "ch05-06",
+      "chapter": "5",
+      "item": "Learning-curve scheduling, specifically ifBO",
+      "verdict": "include",
+      "tier": "T3",
+      "contract": "scheduler impl: ifbo",
+      "validation": "V15",
+      "cost_estimate": "weeks, gated on pause/resume plumbing"
+    },
+    {
+      "id": "ch06-01",
+      "chapter": "6",
+      "item": "PBT",
+      "verdict": "expose, do not build",
+      "tier": "T1",
+      "contract": "expose Ray Tune PBT",
+      "validation": "V02",
+      "cost_estimate": "expose existing"
+    },
+    {
+      "id": "ch06-02",
+      "chapter": "6",
+      "item": "PB2 extended to mixed spaces",
+      "verdict": "build",
+      "tier": "T2",
+      "contract": "explore engine: pb2_mixed",
+      "validation": "V08",
+      "cost_estimate": "moderate cost"
+    },
+    {
+      "id": "ch06-03",
+      "chapter": "6",
+      "item": "BG-PBT",
+      "verdict": "build",
+      "tier": "T2",
+      "contract": "population flagship: bg_pbt",
+      "validation": "V08",
+      "cost_estimate": "months (the flagship)"
+    },
+    {
+      "id": "ch07-01",
+      "chapter": "7",
+      "item": "qLogNEHVI on BoTorch",
+      "verdict": "include",
+      "tier": "T1",
+      "contract": "schema.transform + sobol/log searcher",
+      "validation": "V09",
+      "cost_estimate": "weeks (the premium searcher)"
+    },
+    {
+      "id": "ch07-02",
+      "chapter": "7",
+      "item": "Chebyshev scalarization with random weights",
+      "verdict": "include",
+      "tier": "T1",
+      "contract": "searcher impl: chebyshev_random",
+      "validation": "V09",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "ch07-04",
+      "chapter": "7",
+      "item": "NSGA-II by wrapping Optuna",
+      "verdict": "include",
+      "tier": "T1",
+      "contract": "searcher wrap: optuna_nsga2",
+      "validation": "V09",
+      "cost_estimate": "free"
+    },
+    {
+      "id": "ch07-05",
+      "chapter": "7",
+      "item": "MO-ASHA with veto gates",
+      "verdict": "build",
+      "tier": "T1",
+      "contract": "scheduler impl: asha",
+      "validation": "V10,V13",
+      "cost_estimate": "about a week over ASHA"
+    },
+    {
+      "id": "ch08-01",
+      "chapter": "8",
+      "item": "\u03c0BO's prior-weighted acquisition",
+      "verdict": "include",
+      "tier": "T1",
+      "contract": "acquisition decorator: pibo",
+      "validation": "V11",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "ch08-02",
+      "chapter": "8",
+      "item": "PriorBand",
+      "verdict": "include",
+      "tier": "T1",
+      "contract": "scheduler portfolio: priorband",
+      "validation": "V11",
+      "cost_estimate": "one to two weeks"
+    },
+    {
+      "id": "ch08-03",
+      "chapter": "8",
+      "item": "Warm starts from the run store",
+      "verdict": "include",
+      "tier": "T1",
+      "contract": "store query: ranked_similar",
+      "validation": "V12",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "ch08-04",
+      "chapter": "8",
+      "item": "RGPE-style surrogate ensembles",
+      "verdict": "second wave",
+      "tier": "second wave",
+      "contract": "pre-gated (second wave)",
+      "validation": "none",
+      "cost_estimate": null
+    },
+    {
+      "id": "ch08-05",
+      "chapter": "8",
+      "item": "Pre-trained surrogates (PFN family)",
+      "verdict": "adopt one, build none",
+      "tier": "adopt",
+      "contract": "adopt ifBO surrogate; train none",
+      "validation": "none",
+      "cost_estimate": null
+    },
+    {
+      "id": "ch08-06",
+      "chapter": "8",
+      "item": "EI-per-cost with cost cooling",
+      "verdict": "include",
+      "tier": "T1",
+      "contract": "acquisition decorator: ei_per_cost",
+      "validation": "V04",
+      "cost_estimate": "days"
+    },
+    {
+      "id": "ch08-08",
+      "chapter": "8",
+      "item": "\u03bcP and the scaling-law literature",
+      "verdict": "encode, do not implement",
+      "tier": "encode",
+      "contract": "encoded as schema priors + sanity docs (guidance only)",
+      "validation": "none",
+      "cost_estimate": null
+    },
+    {
+      "id": "ch09-01",
+      "chapter": "9",
+      "item": "RL, routine budgets",
+      "verdict": "DEHB or BO-plus-ASHA",
+      "tier": "workload template",
+      "contract": "study template: rl_routine",
+      "validation": "V07",
+      "cost_estimate": null
+    },
+    {
+      "id": "ch09-02",
+      "chapter": "9",
+      "item": "RL, large parallelism",
+      "verdict": "population line",
+      "tier": "workload template",
+      "contract": "study template: rl_large_parallel",
+      "validation": "V08",
+      "cost_estimate": null
+    },
+    {
+      "id": "ch09-03",
+      "chapter": "9",
+      "item": "Neural-transport samplers",
+      "verdict": "GP + ASHA + vetoes",
+      "tier": "workload template",
+      "contract": "study template: sampler_neutra",
+      "validation": "V13",
+      "cost_estimate": null
+    },
+    {
+      "id": "ch09-04",
+      "chapter": "9",
+      "item": "Hamiltonian networks",
+      "verdict": "multi-objective study",
+      "tier": "workload template",
+      "contract": "study template: hamiltonian_mo",
+      "validation": "V09",
+      "cost_estimate": null
+    },
+    {
+      "id": "ch09-05",
+      "chapter": "9",
+      "item": "Architecture search: width, depth, flags",
+      "verdict": "include as ordinary axes",
+      "tier": "workload template",
+      "contract": "architecture factory: build/measure/compatible/transfer",
+      "validation": "none",
+      "cost_estimate": null
+    }
+  ]
+}

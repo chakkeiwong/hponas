@@ -1,0 +1,577 @@
+\chapter{More than one objective}
+\label{sec:moo}
+
+Several of our workloads do not have a single number to minimize, and the
+Hamiltonian network introduced in Section~\ref{sec:running} is the cleanest
+case: a model that nails one-step prediction but leaks energy over long
+rollouts is not better than one that does the reverse; it is better at one
+thing and worse at another. When the exchange rate between objectives is
+known in advance, the problem collapses back to
+Section~\ref{sec:formal}: fix the weights and minimize the combination.
+Usually the exchange rate is exactly what we do not know, and this chapter
+builds the machinery for optimizing honestly without inventing one. The
+build order mirrors the single-objective story: first the right notion of
+``better'' (dominance), then the right notion of progress (hypervolume),
+then the acquisition functions and schedulers that optimize it.
+
+\section{Dominance, the Pareto front, and how to score progress}
+
+With objectives $f_1, \dots, f_m$ to minimize, configuration $\config$
+\emph{dominates} $\config'$ if it is no worse in every objective and
+strictly better in at least one: there is no argument for keeping
+$\config'$ when $\config$ is on the table. (Economists are on home
+ground in this whole chapter: this is Pareto dominance exactly as
+welfare theory uses it, and the scalarization results below are the
+optimization mirror of familiar aggregation problems.) Domination is only a partial
+order, and that is the entire difficulty of this chapter: most pairs of
+configurations are simply incomparable, one better at prediction, the
+other at energy conservation, and no amount of cleverness removes the
+incomparability without importing a preference.
+
+The \emph{Pareto front} is
+the image of the undominated configurations, the trade-offs that survive
+every argument (Figure~\ref{fig:pareto}). Surveys of multi-objective
+tuning sort methods by when preferences enter: before the search, which
+fixes a scalarization and returns one point, or after it, which
+approximates the front and lets the user choose with the trade-off in view
+\citep{karl2023moo, morales2022survey}. Everything below is of the second
+kind unless said otherwise: the tuner returns an approximate front, and
+the exchange rate is made visible rather than assumed.
+
+If the target is a set rather than a point, what does progress mean? The
+standard scalar score is the \emph{hypervolume}: fix a reference point
+$\mathbf{r} \in \R^m$ that is worse than anything acceptable, and measure
+the volume of objective space that the current front dominates,
+\begin{equation}
+\mathrm{HV}(P) \;=\; \operatorname{vol}\!\Big(
+\bigcup_{\mathbf{y} \in P} \; [\mathbf{y}, \mathbf{r}] \Big),
+\label{eq:hv}
+\end{equation}
+the union of the axis-aligned boxes spanned between each front point
+$\mathbf{y}$ and the reference. The indicator goes back to
+\citet{zitzler1999spea}.
+
+A small computation makes it concrete. Take
+the Hamiltonian study with prediction error and energy drift both scaled
+to $[0,5]$, reference point $\mathbf{r} = (5,5)$, and three undominated
+trials at $(1,4)$, $(2,2)$, and $(4,1)$. Slicing the dominated region
+into vertical strips: for first-objective values in $[1,2)$ only the
+point $(1,4)$ dominates, contributing a strip of height $1$ and area
+$1$; on $[2,4)$ the point $(2,2)$ takes over, height $3$, area $6$; on
+$[4,5)$ the point $(4,1)$ gives height $4$, area $4$. Total hypervolume:
+$11$ of the $25$ available. Adding a new trial at $(3, 1.5)$ would carve
+out fresh territory (a rectangle of width $1$ and height $0.5$ that no
+existing box covers), so the hypervolume rises; adding a dominated trial
+adds nothing. This is why the indicator earns its role as the standard
+yardstick: by \eqref{eq:hv} it rewards convergence toward the true front
+and spread along it at once, and any addition that dominates new
+territory strictly increases it.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=1.05, font=\small]
+\draw[-{Latex}] (0,0) -- (5.9,0) node[below left=1mm and 0mm] {prediction error $f_1$};
+\draw[-{Latex}] (0,0) -- (0,5.9);
+\node[rotate=90, anchor=south] at (-0.4,2.9) {energy drift $f_2$};
+% reference point
+\fill (5,5) circle (2pt) node[above right] {$\mathbf{r}=(5,5)$};
+% dominated region (union of boxes), strips
+\fill[blue!12] (1,4) rectangle (2,5);
+\fill[blue!12] (2,2) rectangle (4,5);
+\fill[blue!12] (4,1) rectangle (5,5);
+% front points
+\fill[blue!70!black] (1,4) circle (2.2pt) node[below left] {$(1,4)$};
+\fill[blue!70!black] (2,2) circle (2.2pt) node[below left] {$(2,2)$};
+\fill[blue!70!black] (4,1) circle (2.2pt) node[below left] {$(4,1)$};
+% a dominated point
+\fill[red!70!black] (3.4,3.4) circle (2.2pt);
+\node[red!70!black, anchor=west] at (3.5,3.55) {dominated by $(2,2)$};
+% front staircase
+\draw[thick, blue!70!black] (1,5) -- (1,4) -- (2,4) -- (2,2) -- (4,2) -- (4,1) -- (5,1);
+\node[anchor=west, align=left] at (1.35,5.55)
+  {shaded area $=$ hypervolume $= 11$};
+\end{tikzpicture}
+\caption{The Hamiltonian study's objective plane (schematic, minimizing
+both axes). The three blue trials are mutually incomparable and form the
+current front; the red trial is dominated and argues for nothing. The
+shaded region is everything the front dominates up to the reference
+point, and its area, computed strip by strip in the text, is the
+hypervolume~\eqref{eq:hv}: the one number that grows only when the front
+genuinely advances or spreads.}
+\label{fig:pareto}
+\end{figure}
+
+Hypervolume's cost is the catch. Computing and decomposing the dominated
+region has time complexity that grows super-polynomially in the number of
+objectives $m$ \citep{daulton2021qnehvi}, which in practice confines
+hypervolume-driven methods to two to four objectives; beyond that,
+scalarization-based methods take over. All of our current use cases sit
+comfortably at $m \in \{2, 3\}$.
+
+\section{Scalarize many times, or evolve a population}
+
+The oldest trick converts the problem into many single-objective ones:
+draw a weight vector, optimize the scalarized objective, repeat with
+fresh weights, and collect the results. Whether this can even recover the
+whole front depends on the scalarization, and the failure of the obvious
+choice is geometric enough to draw.
+
+Minimizing a weighted sum
+$\sum_i w_i f_i$ with fixed positive weights means sliding the line (in
+general, hyperplane) $\sum_i w_i f_i = c$ toward the origin until it last
+touches the attainable region: the touching point is the minimizer. A
+supporting line can only touch the region's convex hull, so for
+\emph{any} positive weights, the minimizer of a weighted sum sits on the
+convex hull of the attainable objective vectors, and Pareto points inside
+a concave stretch of the front are never selected, whatever the weights
+(Figure~\ref{fig:chebyshev}, left).
+
+In the Hamiltonian study this is not
+a curiosity: if the best balanced models happen to sit in a dent of the
+front, every weighted-sum study we run will report only the two extremes,
+a model that predicts well and leaks, and a model that conserves and
+mispredicts, with the interesting compromises silently unreachable.
+
+The scalarization of choice is therefore the Chebyshev form: with an
+ideal point $\mathbf{z}^{\star}$ (each objective's best value, in
+practice the best seen) and weights $w_i > 0$,
+\begin{equation}
+g_{\mathbf{w}}(\config)
+= \max_{i = 1, \dots, m}\; w_i \left( f_i(\config) - z_i^{\star} \right),
+\label{eq:chebyshev}
+\end{equation}
+the weighted \emph{worst} gap to the ideal rather than the weighted sum
+of gaps. Its level sets are axis-aligned corners rather than lines, and a
+corner can nestle into a concave dent that no line can touch
+(Figure~\ref{fig:chebyshev}, right). The standard completeness statement
+(sweeping positive weights with an appropriate true ideal point recovers
+every Pareto point under convexity or boundary assumptions) is proven
+using the true utopian vector, not a best-seen point; the latter is
+usable in practice and provides a coverage advantage over weighted sums,
+but it is an operational approximation rather than a theoretical
+guarantee \citep{karl2023moo}.
+
+ParEGO runs exactly this inside BO: each iteration
+draws a random Chebyshev weight, scalarizes the observed data, and takes
+an EI step on the result \citep{knowles2006parego};
+random-scalarization bandits generalize the idea with guarantees
+\citep{paria2019scalarization}. Scalarization scales gracefully in $m$
+and composes with every single-objective engine we build, which is why
+it remains the fallback when hypervolume machinery gets expensive.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=0.82, font=\small]
+% ---- left panel: weighted sum ----
+\begin{scope}
+\draw[-{Latex}] (0,0) -- (5.4,0) node[below left=1mm and 0mm] {$f_1$};
+\draw[-{Latex}] (0,0) -- (0,5.4) node[left] {$f_2$};
+% attainable region boundary: front with concave dent
+\draw[thick, blue!70!black]
+  (0.6,4.8) .. controls (0.7,3.4) and (1.0,2.6) .. (1.6,2.3)
+  .. controls (2.3,2.0) and (2.6,2.9) .. (3.1,2.6)
+  .. controls (3.7,2.2) and (4.4,1.4) .. (4.9,0.7);
+% supporting line: hull chord through the two tangency points, spanning the dent
+\draw[red!60!black, thick] (1.0,2.59) -- (5.35,0.48);
+\fill[blue!70!black] (1.6,2.3) circle (2pt);
+\fill[blue!70!black] (4.9,0.7) circle (2pt);
+\fill[red!70!black] (2.56,2.54) circle (2pt);
+\draw[-{Latex}] (3.3,4.3) -- (2.64,2.72);
+\node[anchor=south, align=center] at (3.4,4.3) {dent: undominated,\\but no line reaches it};
+\node[anchor=north, align=center] at (2.7,-0.55) {weighted sum:\\supporting lines, hull only};
+\end{scope}
+% ---- right panel: chebyshev ----
+\begin{scope}[xshift=7.6cm]
+\draw[-{Latex}] (0,0) -- (5.4,0) node[below left=1mm and 0mm] {$f_1$};
+\draw[-{Latex}] (0,0) -- (0,5.4) node[left] {$f_2$};
+\draw[thick, blue!70!black]
+  (0.6,4.8) .. controls (0.7,3.4) and (1.0,2.6) .. (1.6,2.3)
+  .. controls (2.3,2.0) and (2.6,2.9) .. (3.1,2.6)
+  .. controls (3.7,2.2) and (4.4,1.4) .. (4.9,0.7);
+% ideal point
+\fill (0.6,0.7) circle (1.8pt) node[below right, font=\footnotesize] {$\mathbf{z}^{\star}$};
+% corner level sets: vertex slides along the ray from the ideal point
+\draw[red!60!black] (0.7,1.8) -- (1.78,1.8) -- (1.78,0.85);
+\draw[red!60!black, thick] (1.2,2.54) -- (2.56,2.54) -- (2.56,1.2);
+\fill[red!70!black] (2.56,2.54) circle (2pt);
+\draw[-{Latex}] (3.6,4.3) -- (2.66,2.7);
+\node[anchor=south, align=center] at (3.6,4.3) {growing corners:\\this one reaches the dent};
+\node[anchor=north, align=center] at (2.7,-0.55) {Chebyshev~\eqref{eq:chebyshev}:\\corner level sets, whole front};
+\end{scope}
+\end{tikzpicture}
+\caption{Why the obvious scalarization loses solutions (schematic). Left:
+minimizing a weighted sum slides a line toward the origin; it can only
+stop on the convex hull, so the concave stretch of the front is
+unreachable for every choice of weights. Right: the Chebyshev
+scalarization's level sets are corners, which can touch any Pareto point,
+concave stretches included; sweeping its weights traces the whole front.}
+\label{fig:chebyshev}
+\end{figure}
+
+Evolutionary methods attack the front directly with a population, using
+dominance itself as the fitness signal. NSGA-II (the name abbreviates
+non-dominated sorting genetic algorithm), the workhorse, sorts the
+population into non-domination ranks (rank 1: the undominated; rank 2:
+undominated once rank 1 is removed; and so on) and breaks ties within a
+rank by crowding distance, a dispersion measure that prefers points in
+sparsely covered stretches of the front, so selection pressure pushes
+toward the front while spreading along it \citep{deb2002nsga2}. It needs
+generous evaluation budgets, which multi-fidelity variants mitigate, and
+it is the default multi-objective sampler in Optuna, so we get a tested
+implementation for free when trials are cheap.
+
+\section{Bayesian optimization of the front, one repair at a time}
+\label{sec:mobo}
+
+When a trial costs hours, the population's appetite disqualifies it,
+and we are back in Chapter~\ref{sec:bayesian}'s situation: few,
+expensive, noisy evaluations, and a surrogate that has to make each
+one count. The machinery that results is best understood the way EI
+was: one natural idea, then a short chain of repairs, each forced by
+a failure that is easy to see once it is named.
+
+\subsection{EHVI: expected improvement, paid in area}
+
+The natural idea first. With one objective, EI asked how much a
+candidate would improve on the incumbent, averaged over the
+surrogate's uncertainty. With several objectives there is no single
+incumbent; there is the staircase of Figure~\ref{fig:pareto}, and
+progress means adding area to what it dominates. \emph{Expected
+hypervolume improvement} (EHVI) therefore scores a candidate by the
+expected increase of~\eqref{eq:hv} if we were to evaluate it: the
+expected area of fresh territory.
+
+One number makes the definition mechanical. Take the front of
+Figure~\ref{fig:pareto} and a candidate configuration whose GP
+posterior, say, puts half its mass at the outcome $(3, 1.5)$ and half
+at $(3, 2.5)$. The first outcome lands in the dent and carves out the
+$1 \times 0.5$ rectangle we computed earlier, an area of $0.5$; the
+second is dominated by $(2,2)$ and adds nothing. The candidate's EHVI
+is $0.5 \cdot 0.5 + 0.5 \cdot 0 = 0.25$. Every candidate gets such a
+score, and the searcher proposes the maximizer, exactly EI's decision
+logic with improvement measured in area. In practice the posterior is
+a continuous Gaussian rather than two points, so the average is
+estimated from posterior samples; nothing about the logic changes.
+
+\subsection{Making it computable in batches: qEHVI}
+
+Turning that definition into a working acquisition hits a geometric
+wall. Each posterior sample asks for the area a proposed outcome adds
+to a union of overlapping boxes, and we rarely propose one point at a
+time: Chapter~\ref{sec:bayesian}'s batch argument applies unchanged,
+since idle workers do not care that the objectives are plural. The
+joint fresh area of $q$ proposals is the area of a union over a
+union, and evaluating it naively by inclusion-exclusion sums over
+subsets of the batch, a count that grows exponentially in $q$.
+
+\citet{daulton2020qehvi} made the computation practical at batch
+sizes above one. The dominated region is decomposed once per front
+into disjoint boxes; each posterior sample's contribution is then a
+sum over those pieces, exact rather than approximated, and the whole
+estimator is differentiable in the candidate coordinates, so the
+batch is optimized by gradient ascent like any other acquisition of
+Chapter~\ref{sec:bayesian}.
+
+\subsection{Noise bends the front: qNEHVI}
+
+Now the failure our workloads force. Suppose one Hamiltonian trial,
+of genuinely middling quality, draws a lucky seed and reports
+$(1.8, 1.8)$. That phantom point dominates the honest compromise at
+$(2,2)$, so the observed staircase bends around an outcome the true
+objectives never produced. Every genuinely improving candidate is now
+scored against territory the phantom already claims, EHVI near zero
+across the board, and the study stalls defending a front that does
+not exist. This is the winner's curse of
+Section~\ref{sec:acquisition} again, with the lucky seed promoted
+from incumbent to front member.
+
+qNEHVI applies the same repair noisy EI used there: stop letting raw
+observations define the front. The improvement is integrated over the
+surrogate posterior at the observed points, so the front itself is
+treated as uncertain, and a phantom member holds exactly as much
+territory as the posterior believes it deserves
+\citep{daulton2021qnehvi}. The same paper removed the remaining cost
+wall, making joint batch proposals tractable where the naive
+computation grew exponentially in batch size.
+
+\subsection{Vanishing improvements again: qLogNEHVI}
+
+The last repair is inherited. Late in a good study, almost no
+candidate adds much area, and expected improvements shrink to the
+magnitudes where Section~\ref{sec:acquisition} showed plain EI
+underflowing to an exact floating-point zero; the underflow argument
+applies verbatim to hypervolume improvements. The fix is the same
+log-space computation, and the numerically stabilized variant
+qLogNEHVI is the recommended default in the BoTorch ecosystem
+\citep{ament2023logei}. The lineage that looked like alphabet soup at
+the chapter's door is thus three cumulative repairs to one idea, and
+the name now reads as a recipe: the q is the batch, the N is the noise
+treatment, the Log is the underflow repair, and EHVI is the idea they
+all serve.
+
+\subsection{Two extensions on file}
+
+Two further members solve problems we do not have yet, and one
+paragraph each is enough to know when to reach for them. For
+high-dimensional spaces, MORBO transplants the trust-region idea of
+Figure~\ref{fig:turbo}: several local regions each pursue
+hypervolume improvement with local models, coordinating through the
+shared front \citep{daulton2022morbo}.
+
+And when the objectives differ in evaluation cost, a profiler's
+latency reading next to a full training run's accuracy, the
+hypervolume knowledge gradient extends the machinery to decoupled
+evaluations: it decides not only where to evaluate next but which
+objective to measure there \citep{daulton2023hvkg}.
+
+Our product needs qLogNEHVI as the premium
+two-to-four-objective searcher and Chebyshev scalarization as the
+cheap many-objective fallback; both ride on the same GP
+infrastructure as Chapter~\ref{sec:bayesian}.
+
+\section{Multi-objective meets multi-fidelity}
+
+The savings of Chapter~\ref{sec:multifidelity} apply here too, with one
+twist: promotion decisions need a ranking, and ``better'' is now the
+partial order we started the chapter with. Promote-the-top-third is not
+defined when the top third is not defined.
+
+MO-ASHA resolves this with the layering NSGA-II already taught us.
+Rung members are sorted into non-domination ranks, and rank 1 promotes
+before rank 2. Ties within a front are broken by a dispersion rule in
+objective space, either NSGA-II's crowding distance or an epsilon-net
+that repeatedly picks the candidate farthest from those already
+chosen; the top fraction then promotes as usual. In its authors'
+experiments, promotion rules aware of the whole front beat scalarized
+promotion in wall-clock terms \citep{schmucker2021moasha}, which is
+the geometry of Figure~\ref{fig:chebyshev} surfacing inside the
+scheduler: a scalarized promotion inherits the scalarization's
+blind spots, rung by rung.
+
+The repair travels. MO-DEHB applies the same
+non-dominated-sorting-plus-crowding selection to DEHB's evolutionary
+rungs \citep{awad2023modehb}, and the population family of
+Chapter~\ref{sec:population} has its member too: MO-PBT swaps PBT's
+scalar exploit ranking for non-dominated selection, evaluated on
+trade-offs such as precision against recall and accuracy against
+fairness \citep{dushatskiy2023mopbt}.
+
+These are exactly the schedulers we will pair with cheap objectives
+such as short-horizon energy drift in Hamiltonian networks. The drift
+at rung 1 is cheap to measure and, per Figure~\ref{fig:curves}'s
+warning, worth a pilot check that its early rankings mean anything
+before we let it cull.
+
+\section{Constraints and preferences}
+
+Two pragmatic variants round out the toolkit. Hard constraints (memory
+ceilings, latency budgets, a minimum acceptable return) are handled by
+weighting acquisitions with the modeled probability of feasibility. A
+candidate whose acquisition score is $0.8$ but whose modeled chance of
+fitting under the memory ceiling is $0.3$ counts as
+$0.8 \times 0.3 = 0.24$: still on the table, discounted by exactly its
+chance of being usable. Noisy-observation treatments of the same idea
+exist \citep{letham2019noisyei}, and trust-region versions scale it to
+many constraints at once \citep{eriksson2021scbo}.
+
+Preferences short of hard
+constraints (``we care about drawdown roughly twice as much as
+turnover'') can be encoded by restricting the reference point or the
+weight distribution of the scalarization; this is cheap, transparent,
+and usually all a practitioner wants. We recommend exposing both, and
+resisting anything more elaborate until a real use case demands it.
+
+\section{The evidence, and the check it still lacks}
+\label{sec:mo-evidence}
+
+Weighed the way Section~\ref{sec:bo-evidence} taught us to weigh, this
+chapter's support has an unusual profile. A larger share than usual is
+mathematics that can be checked at a desk; the experiments that exist
+are the method authors' own; and the tier that anchored the last two
+chapters, an independent budget-matched comparison by outsiders, has no
+counterpart here that our literature sweeps could find. Each of those
+three facts shapes a different part of the decision box.
+
+Start with what the mathematics settles on its own. The weighted-sum
+blind spot is a one-page supporting-hyperplane argument, reproduced in
+full above; the Chebyshev form's ability to reach every Pareto point is
+its geometric mirror \citep{karl2023moo}; hypervolume strictly
+increases exactly when the front advances or spreads, the worked
+computation under Figure~\ref{fig:pareto}; and the cost of decomposing
+the dominated region grows super-polynomially in the number of
+objectives \citep{daulton2021qnehvi}, which draws the two-to-four
+boundary. These four facts alone decide the exclusion of weighted
+sums, the inclusion of Chebyshev as the fallback, the choice of
+progress score, and the boundary past which the premium searcher
+gives way. No experiment is being asked to carry those verdicts,
+which is fortunate, because experiments of the decisive kind are the
+scarce resource here.
+
+The experiment behind the premium pick is the qNEHVI paper's own
+evaluation, and its design earns a close look because of one choice:
+noise is a first-class experimental axis rather than a footnote. The
+comparison spans the modern acquisition families (information-based
+PESMO, MESMO, and PFES, the diversity-guided DGEMO, scalarizing
+TSEMO and MOEA/D-EGO, Thompson-sampling and plug-in variants of the
+hypervolume line) on synthetic and real-world problems, with
+observation noise scaled as a percentage of each objective's range
+and pushed to twenty percent, a regime the authors note prior noisy
+work had probed only at one percent \citep{daulton2021qnehvi}.
+
+Every
+method degrades as noise rises; qNEHVI degrades least and leads the
+noisy benchmarks in both sequential and batch settings, at
+competitive wall time thanks to the cached box decompositions. This
+is the authors' own arena, so the selection-bias caution applies, but
+two things temper it. The winning move is the same
+integrate-over-the-posterior treatment whose single-objective version
+carried the noise evidence of Chapter~\ref{sec:bayesian}, arriving
+here as transferred machinery rather than a fresh conjecture. And the
+axis the authors chose to stress, heavy observation noise, is not a
+flattering backdrop chosen for the method; it is the axis our
+workloads actually live on, seed-noisy RL returns and
+effective-sample-size measurements.
+
+The experiment behind the multi-objective early-stopper is the
+MO-ASHA paper's, three tasks chosen to be genuinely unlike one
+another: architecture search on a tabular benchmark whose exact
+Pareto front is knowable, fairness-accuracy trade-offs on a standard
+dataset, and Transformer language-model tuning, all run as
+thirty-minute wall-clock races with objectives normalized by
+empirical quantiles so that no objective's units dominate by
+accident \citep{schmucker2021moasha}. The comparison that matters
+inside it: promotion rules that see the whole front (non-dominated
+sorting with a dispersion tie-break) against three scalarized
+promotion rules, each given a hundred random weight vectors. The
+front-aware rules win in wall-clock hypervolume, which is the
+experimental echo of the geometry above: a scalarized promotion
+inherits the scalarization's blindness, rung by rung.
+
+What this family lacks is the third tier: no independent,
+budget-matched, seed-split study of multi-objective tuners on live
+training runs surfaced in our audit, nothing that does for this
+chapter what \citet{eimer2023hyperparameters} does for
+Chapters~\ref{sec:multifidelity} and \ref{sec:population}. The
+authors' arenas are also not ours; fairness datasets and tabular
+architecture-search benchmarks are a long way from Hamiltonian
+rollouts and sampler diagnostics.
+The consequence is not paralysis, because the geometry and the
+transferred noise machinery carry most of the weight; the
+consequence is that our own validation suite has to play the role
+the literature has not filled yet, and the falsification criterion
+below is written accordingly.
+
+\section{The verdicts, argued from four angles}
+\label{sec:mo-angles}
+
+The chapter recommends qLogNEHVI as the premium searcher inside the
+two-to-four-objective boundary, Chebyshev scalarization as the cheap
+universal fallback, NSGA-II by wrapping for bulk cheap trials, and
+MO-ASHA as the early-stopper. Four angles, one verdict.
+
+From geometry: the load-bearing exclusions and boundaries follow
+from arguments a reader can verify without trusting a single
+benchmark: the hull argument disqualifies weighted sums, the corner
+level sets qualify Chebyshev, and the decomposition cost draws the
+objective-count boundary. Decisions anchored this way are immune to
+the selection-bias worries that haunt benchmark-anchored ones, and
+the experiments are needed only for the choices the geometry leaves
+open.
+
+From economics: committing to weights before searching is assuming
+the exchange rate the study exists to discover; returning a front is
+handing the decision-maker the actual menu and letting preference be
+exercised when the trade-off is visible and the stakes are known.
+The Chebyshev-versus-weighted-sum contrast is the familiar one
+between corner-shaped and linear indifference curves, and the dent
+in Figure~\ref{fig:chebyshev} is precisely where a linear
+indifference curve misreports what is attainable. A reader who
+would not let a colleague assume a client's utility function before
+seeing the budget set should not let a tuner do it either.
+
+From evidence: the experiments that exist, though author-run, stress
+the failure modes that matter to us rather than flattering ones,
+heavy observation noise for the acquisition and wall-clock
+promotion honesty for the scheduler, and their findings are the
+experimental shadows of theorems taught above rather than
+free-standing claims. Nothing in this family's record contradicts
+any result we verified in the single-objective chapters, and the
+missing independent tier is named rather than papered over.
+
+From operations: the whole chapter rides rails already bought. The
+premium searcher runs on Chapter~\ref{sec:bayesian}'s GP stack and
+inherits its LogEI repair; the evolutionary default arrives by
+wrapping Optuna, whose maintenance we audited
+(Chapter~\ref{sec:libraries}); the early-stopper is a week of work
+on top of our ASHA; and the objective-count boundary is enforceable
+in software. The marginal cost of honest multi-objective tuning,
+given the rest of the product, is weeks, which changes the
+include-or-defer calculus in its favor.
+
+And the falsification criterion, stated in advance: the validation
+suite adopts the Hamiltonian study, prediction error against energy
+drift, as a pinned two-objective task, run at matched budgets across
+seeds with final hypervolume and its uncertainty reported. The
+premium searcher must beat random-weight Chebyshev and the wrapped
+NSGA-II there; MO-ASHA's cheap early signal, short-horizon drift,
+must pass the rank-correlation pilot of
+Chapter~\ref{sec:multifidelity} before it is allowed to cull; and if
+the cheap fallback matches the premium searcher on our tasks, the
+premium tier is demoted to an option, the same rule the
+single-objective chapters applied to themselves.
+
+\begin{decisions}
+\noindent\textbf{Decisions from this chapter.} Pick by the number of
+objectives, the noise level, and the price of a trial.
+\begin{itemize}[leftmargin=1.3em, itemsep=2pt]
+\item \textbf{qLogNEHVI on BoTorch} (include; the premium searcher;
+weeks). For two to four objectives with expensive, noisy trials, which
+is precisely the Hamiltonian and finance profile. It is the noise-aware,
+numerically repaired member of the hypervolume family, and the BoTorch
+ecosystem's own recommended default \citep{daulton2021qnehvi,
+ament2023logei}. Beyond four objectives its hypervolume arithmetic
+becomes the bottleneck, so the default switches to scalarization there;
+treat that as a calibrated cutoff on published complexity results
+rather than a prohibition, and make it a configurable threshold whose
+override is recorded in the study's audit trail.
+\item \textbf{Chebyshev scalarization with random weights} (include;
+days). The cheap fallback that composes with every single-objective
+engine we own and has better coverage than weighted sums: it can reach
+concave stretches of the front that weighted sums cannot
+(Figure~\ref{fig:chebyshev}). Completeness under random weights
+requires the true ideal point and additional assumptions; the
+operational approximation using best-seen values gives better coverage
+in practice without the theoretical guarantee. This is also the answer
+for five or more objectives.
+\item \textbf{Plain weighted sums as a product default} (exclude).
+They silently discard the concave stretch of the front; if a user
+truly has fixed exchange rates, they have a single-objective problem
+and should declare it as one.
+\item \textbf{NSGA-II by wrapping Optuna} (include; free). For cheap
+trials in bulk, the evolutionary route is a tested default we get by
+wrapping, not building.
+\item \textbf{MO-ASHA with veto gates} (build; about a week over
+ASHA). The multi-objective early-stopper, and the veto machinery
+doubles as the correctness gate the sampler workload needs
+(Chapter~\ref{sec:workloads}).
+\item \textbf{MORBO and the hypervolume knowledge gradient} (defer).
+Each answers a situation we do not yet have: very high-dimensional
+Pareto search, and objectives measurable separately at different
+prices. Revisit on demand.
+\end{itemize}
+\end{decisions}
+
+\section{What would overturn these verdicts}
+
+qLogNEHVI's tier-1 inclusion depends on V09: if it cannot beat
+random-weight Chebyshev scalarization and the wrapped NSGA-II on the
+Hamiltonian task by a margin that justifies its complexity, it is
+demoted to an option. MO-ASHA's veto gates are tied to V10 and V13:
+if cheap fidelity signals (short-horizon drift) fail the
+rank-correlation pilot, or if a veto-failing configuration ever gets
+promoted in validation, the mechanism is disabled and full-fidelity
+MO defaults to the scalarized floor. Weighted-sum exclusion is
+reopened if the convexity assumption turns out to hold on our tasks,
+which V09's results will show. MORBO's deferral is reconsidered when
+trust-region BO is proven and the Pareto-aware TR extension becomes
+a marginal cost rather than a second research bet.
