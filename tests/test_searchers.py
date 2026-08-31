@@ -164,3 +164,76 @@ def test_space_without_continuous_axes_is_refused():
 
     with pytest.raises(ValueError, match="no continuous knobs"):
         SobolSearcher(space, seed=0)
+
+
+def test_state_dict_round_trip_continues_sequence():
+    """
+    Crash recovery contract: state_dict + load_state_dict restores sequence position.
+
+    A searcher rebuilt from state continues the QMC sequence instead of restarting it.
+    """
+    space = _two_axis_space()
+
+    a = SobolSearcher(space, seed=42)
+    first_3 = a.propose(3)
+    state = a.state_dict()
+    next_3_from_a = a.propose(3)
+
+    # Rebuild from state
+    b = SobolSearcher(space, seed=42)
+    b.load_state_dict(state)
+    next_3_from_b = b.propose(3)
+
+    # b should continue where a left off (after first_3), not restart
+    assert next_3_from_b == next_3_from_a
+    # Sanity: b didn't just reemit first_3
+    assert next_3_from_b != first_3
+
+
+def test_state_dict_survives_json_round_trip():
+    """State dict is JSON-serializable (crash recovery persists to disk)."""
+    import json
+
+    space = _two_axis_space()
+    a = SobolSearcher(space, seed=99)
+    a.propose(5)
+
+    state = a.state_dict()
+    json_str = json.dumps(state)
+    recovered = json.loads(json_str)
+
+    b = SobolSearcher(space, seed=99)
+    b.load_state_dict(recovered)
+
+    # Same sequence continuation
+    assert a.propose(4) == b.propose(4)
+
+
+def test_state_dict_refuses_mismatched_space():
+    """load_state_dict validates space compatibility before restoring."""
+    space_a = _two_axis_space()
+    space_b = SearchSpace()
+    space_b.add_knob(Knob(name="a", kind="continuous", bounds=(0.0, 1.0)))
+    space_b.add_knob(Knob(name="b", kind="continuous", bounds=(0.0, 1.0)))
+
+    s_a = SobolSearcher(space_a, seed=1)
+    s_a.propose(2)
+    state = s_a.state_dict()
+
+    s_b = SobolSearcher(space_b, seed=1)
+    with pytest.raises(ValueError, match="state does not match space"):
+        s_b.load_state_dict(state)
+
+
+def test_state_dict_refuses_wrong_searcher_kind():
+    """State from one searcher kind cannot be loaded into another (type safety)."""
+    space = _two_axis_space()
+    s = SobolSearcher(space, seed=1)
+    s.propose(2)
+
+    state = s.state_dict()
+    state["kind"] = "tpe"  # Fake a different searcher's state
+
+    s2 = SobolSearcher(space, seed=1)
+    with pytest.raises(ValueError, match="cannot load state of kind"):
+        s2.load_state_dict(state)

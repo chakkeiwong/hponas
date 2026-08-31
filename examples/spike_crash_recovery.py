@@ -64,6 +64,7 @@ def run_study_with_crash(
 
     # Check if store exists (restart scenario)
     store_exists = db_path.exists()
+    searcher_state_path = output_path / "searcher_state.json"
 
     if store_exists:
         print("\n🔄 RESTARTING from existing store (crash recovery)")
@@ -104,11 +105,20 @@ def run_study_with_crash(
     scheduler = ASHAScheduler(ASHAConfig(eta=2, r_min=1.0, r_max=4.0))
     executor = LocalExecutor(checkpoint_dir=output_path / "checkpoints")
 
-    # If restarting, replay observations to searcher
+    # If restarting, restore searcher state
     if existing_trials:
-        print(f"   Replaying {len(existing_trials)} trials to searcher/scheduler")
+        if searcher_state_path.exists():
+            import json
+            with open(searcher_state_path) as f:
+                state = json.load(f)
+            searcher.load_state_dict(state)
+            print(f"   Restored searcher state: {state['n_proposed']} points already proposed")
+        else:
+            print("   WARNING: no searcher state found, will replay observations (weaker recovery)")
+
+        print(f"   Replaying {len(existing_trials)} trials to scheduler")
         for trial in existing_trials:
-            searcher.observe({"config": trial.config, "value": trial.value})
+            # Note: observe() is no longer used for recovery (state_dict handles it)
             scheduler.report(trial.trial_id, trial.fidelity, trial.value)
 
     # Run remaining trials
@@ -148,14 +158,20 @@ def run_study_with_crash(
             study_id=study_id,
         )
 
-        # Observe
+        # Observe (values don't advance Sobol state, but maintained for compatibility)
         searcher.observe({"config": config, "value": value})
         scheduler.report(trial_id, 1.0, value)
+
+        # Persist searcher state after each trial (crash recovery contract)
+        import json
+        with open(searcher_state_path, "w") as f:
+            json.dump(searcher.state_dict(), f, indent=2)
 
         # Simulate crash after N trials
         if not store_exists and i == crash_after - 1:
             print(f"\n💥 SIMULATING CRASH after trial {i}")
             print(f"   Store has {i+1} trials committed")
+            print(f"   Searcher state saved: {searcher_state_path}")
             store.close()
             print("   Restart this script to continue")
             sys.exit(0)
@@ -174,18 +190,29 @@ def run_study_with_crash(
     print(f"Total trials in store: {len(final_trials)}")
     print(f"Expected: {n_trials}")
 
-    # Check for duplicates
+    # Check for duplicate trial IDs (weak check: IDs are assigned by the loop counter)
     trial_ids = [t.trial_id for t in final_trials]
-    duplicates = len(trial_ids) - len(set(trial_ids))
+    id_duplicates = len(trial_ids) - len(set(trial_ids))
 
-    if duplicates > 0:
-        print(f"❌ FAILED: {duplicates} duplicate trial IDs found")
+    # Check for duplicate CONFIGS (strong check: catches searcher state loss).
+    # A searcher rebuilt from its seed restarts the QMC sequence and silently
+    # re-proposes pre-crash points; trial IDs stay unique, so only this catches it.
+    configs = [tuple(sorted(t.config.items())) for t in final_trials]
+    config_duplicates = len(configs) - len(set(configs))
+
+    if id_duplicates > 0:
+        print(f"❌ FAILED: {id_duplicates} duplicate trial IDs found")
         return False
     elif len(final_trials) != n_trials:
         print(f"❌ FAILED: expected {n_trials} trials, got {len(final_trials)}")
         return False
+    elif config_duplicates > 0:
+        print(f"❌ FAILED: {config_duplicates} duplicate configs "
+              f"({len(set(configs))} unique in {len(configs)} trials)")
+        print("   Cause: searcher state not restored — QMC sequence restarted after crash")
+        return False
     else:
-        print(f"✅ PASSED: {n_trials} unique trials, no duplicates")
+        print(f"✅ PASSED: {n_trials} unique trials, {len(set(configs))} unique configs")
         print(f"Best value found: {best_value:.6f}")
         return True
 
