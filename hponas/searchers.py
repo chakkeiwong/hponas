@@ -24,6 +24,7 @@ class Searcher(Protocol):
     propose(n): return n configurations to evaluate next (batch proposals are normal case).
     observe(trial): ingest one trial result.
     capabilities: static declaration of knob kinds supported, conditionals, priors, max dim.
+    state_dict() / load_state_dict(): crash recovery (R1 spike requirement).
     """
 
     def propose(self, n: int) -> list[dict[str, Any]]:
@@ -32,6 +33,14 @@ class Searcher(Protocol):
 
     def observe(self, trial: dict[str, Any]) -> None:
         """Ingest one trial result (config, fidelity, value, cost)."""
+        ...
+
+    def state_dict(self) -> dict[str, Any]:
+        """Return serializable state for crash recovery."""
+        ...
+
+    def load_state_dict(self, state: dict[str, Any]) -> None:
+        """Restore state from serialized checkpoint."""
         ...
 
     @property
@@ -93,10 +102,59 @@ class SobolSearcher:
 
     def observe(self, trial: dict[str, Any]) -> None:
         """
-        Sobol ignores observations (model-free).
+        Sobol ignores observation *values* (model-free).
         Survey: a learner would update its surrogate here; Sobol does not.
+
+        Note: this does NOT advance the QMC sequence. Position in the sequence is
+        tracked by propose() and persisted via state_dict(); replaying observations
+        into a fresh searcher does not restore its position. See load_state_dict().
         """
         pass
+
+    def state_dict(self) -> dict[str, Any]:
+        """
+        Serializable state for crash recovery (Ch 15 contract).
+
+        The QMC sequence position is the load-bearing piece: scipy's Sobol engine
+        is stateful, so a searcher rebuilt from the seed alone restarts the sequence
+        and re-proposes points that were already evaluated.
+        """
+        return {
+            "kind": "sobol",
+            "seed": self.seed,
+            "n_proposed": self._n_proposed,
+            "knob_names": [k.name for k in self.cont_knobs],
+        }
+
+    def load_state_dict(self, state: dict[str, Any]) -> None:
+        """
+        Restore sequence position after a crash.
+
+        Rebuilds the Sobol engine and fast-forwards it past the points already
+        proposed, so the resumed study continues the sequence instead of repeating it.
+
+        Spike: fast-forward by regenerating and discarding. Tier 0: consider
+        scipy's fast_forward() where available, and a state format that does not
+        require replaying the generator for large n.
+        """
+        if state.get("kind") != "sobol":
+            raise ValueError(f"SobolSearcher cannot load state of kind {state.get('kind')!r}")
+
+        expected = [k.name for k in self.cont_knobs]
+        if state.get("knob_names") != expected:
+            raise ValueError(
+                f"Searcher state does not match space: state has {state.get('knob_names')}, "
+                f"space has {expected}"
+            )
+
+        self.seed = state["seed"]
+        self._rng = np.random.default_rng(self.seed)
+        self._sobol = qmc.Sobol(d=self._dim, scramble=True, seed=self.seed)
+
+        n = int(state["n_proposed"])
+        if n > 0:
+            self._sobol.fast_forward(n)
+        self._n_proposed = n
 
     @property
     def capabilities(self) -> dict[str, Any]:
