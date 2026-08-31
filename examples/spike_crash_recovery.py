@@ -6,6 +6,7 @@ Survey reference: Ch 15 (store contract), R1 spike charter (deliverable 2).
 Exit criterion: no duplicate observations, trials 9-16 continue from checkpoint.
 """
 
+import json
 import sys
 import time
 from pathlib import Path
@@ -35,36 +36,36 @@ def objective_fn(config: dict) -> float:
     return branin(config["x"], config["y"])
 
 
-def run_study_with_crash(
-    crash_after: int = 8,
-    n_trials: int = 16,
-    seed: int = 99,
-    output_dir: str = "/tmp/hponas_crash",
-):
+def _restore_searcher_state(searcher: SobolSearcher, state_path: Path) -> None:
     """
-    Run a study that crashes after N trials, then recovers.
+    Restore the searcher's sequence position after a crash.
 
-    Args:
-        crash_after: simulate crash after this many trials
-        n_trials: total trials to run
-        seed: random seed
-        output_dir: directory for store and checkpoints
+    Without this, a searcher rebuilt from its seed restarts the QMC sequence and
+    silently re-proposes points that were already evaluated. Replaying observations
+    does not help: observe() carries values, not sequence position.
     """
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+    if not state_path.exists():
+        print("   WARNING: no searcher state found — resumed run will repeat pre-crash points")
+        return
 
-    db_path = output_path / "study_crash.db"
-    study_id = "branin_crash_recovery"
+    with open(state_path) as f:
+        state = json.load(f)
+    searcher.load_state_dict(state)
+    print(f"   Restored searcher state: {state['n_proposed']} points already proposed")
 
-    print(f"\n{'='*80}")
-    print("CRASH RECOVERY TEST")
-    print(f"{'='*80}")
-    print(f"Plan: run {crash_after} trials, simulate crash, restart, complete {n_trials} total")
-    print(f"Store: {db_path}")
 
-    # Check if store exists (restart scenario)
+def _setup_study_and_recover(
+    output_path: Path,
+    db_path: Path,
+    study_id: str,
+    seed: int,
+) -> tuple[Store, int, list]:
+    """
+    Setup store and recover from crash if needed.
+
+    Returns: (store, start_trial, existing_trials)
+    """
     store_exists = db_path.exists()
-    searcher_state_path = output_path / "searcher_state.json"
 
     if store_exists:
         print("\n🔄 RESTARTING from existing store (crash recovery)")
@@ -72,8 +73,6 @@ def run_study_with_crash(
         existing_trials = store.read_trials(study_id)
         n_completed = len(existing_trials)
         print(f"   Found {n_completed} existing trials")
-
-        # Resume from last trial
         start_trial = n_completed
     else:
         print("\n🚀 STARTING fresh study")
@@ -96,6 +95,46 @@ def run_study_with_crash(
         start_trial = 0
         existing_trials = []
 
+    return store, start_trial, existing_trials
+
+
+def run_study_with_crash(
+    crash_after: int = 8,
+    n_trials: int = 16,
+    seed: int = 99,
+    output_dir: str = "/tmp/hponas_crash",
+):
+    """
+    Run a study that crashes after N trials, then recovers.
+
+    Args:
+        crash_after: simulate crash after this many trials
+        n_trials: total trials to run
+        seed: random seed
+        output_dir: directory for store and checkpoints
+    """
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    db_path = output_path / "study_crash.db"
+    study_id = "branin_crash_recovery"
+    searcher_state_path = output_path / "searcher_state.json"
+
+    print(f"\n{'='*80}")
+    print("CRASH RECOVERY TEST")
+    print(f"{'='*80}")
+    print(f"Plan: run {crash_after} trials, simulate crash, restart, complete {n_trials} total")
+    print(f"Store: {db_path}")
+
+    # Must be read BEFORE setup, which creates the store file.
+    # This flag decides whether we are the pre-crash run or the resumed run.
+    is_fresh_run = not db_path.exists()
+
+    # Setup store and recover if needed
+    store, start_trial, existing_trials = _setup_study_and_recover(
+        output_path, db_path, study_id, seed
+    )
+
     # Setup components
     space = SearchSpace()
     space.add_knob(Knob(name="x", kind="continuous", bounds=(-5.0, 10.0)))
@@ -105,20 +144,12 @@ def run_study_with_crash(
     scheduler = ASHAScheduler(ASHAConfig(eta=2, r_min=1.0, r_max=4.0))
     executor = LocalExecutor(checkpoint_dir=output_path / "checkpoints")
 
-    # If restarting, restore searcher state
+    # If restarting, restore searcher state and replay scheduler events
     if existing_trials:
-        if searcher_state_path.exists():
-            import json
-            with open(searcher_state_path) as f:
-                state = json.load(f)
-            searcher.load_state_dict(state)
-            print(f"   Restored searcher state: {state['n_proposed']} points already proposed")
-        else:
-            print("   WARNING: no searcher state found, will replay observations (weaker recovery)")
-
+        _restore_searcher_state(searcher, searcher_state_path)
         print(f"   Replaying {len(existing_trials)} trials to scheduler")
         for trial in existing_trials:
-            # Note: observe() is no longer used for recovery (state_dict handles it)
+            # Note: observe() is not used for recovery (state_dict handles sequence position)
             scheduler.report(trial.trial_id, trial.fidelity, trial.value)
 
     # Run remaining trials
@@ -163,12 +194,11 @@ def run_study_with_crash(
         scheduler.report(trial_id, 1.0, value)
 
         # Persist searcher state after each trial (crash recovery contract)
-        import json
         with open(searcher_state_path, "w") as f:
             json.dump(searcher.state_dict(), f, indent=2)
 
         # Simulate crash after N trials
-        if not store_exists and i == crash_after - 1:
+        if is_fresh_run and i == crash_after - 1:
             print(f"\n💥 SIMULATING CRASH after trial {i}")
             print(f"   Store has {i+1} trials committed")
             print(f"   Searcher state saved: {searcher_state_path}")
