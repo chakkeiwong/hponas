@@ -11,7 +11,7 @@ __version__ = "0.1.0"
 # Core interfaces
 from .space import SearchSpace
 from .searchers import Searcher, SobolSearcher, RandomSearcher
-from .schedulers import ASHAScheduler
+from .schedulers import ASHAScheduler, PASHAScheduler
 from .executors import Executor, LocalExecutor
 from .store import Store
 
@@ -34,6 +34,7 @@ __all__ = [
     "TPESearcher",
     "GPqLogEISearcher",
     "ASHAScheduler",
+    "PASHAScheduler",
     "Executor",
     "LocalExecutor",
     "Store",
