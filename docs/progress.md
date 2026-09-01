@@ -1,12 +1,13 @@
 # Build Progress Tracker
 
 **Last updated:** 2026-09-01  
-**Current phase:** R1 complete (gate PASS) → Tier 0 pending program v2 and protocol re-review  
-**Next milestone:** Codex re-review of the repaired validation protocols; approve `BUILD_PROGRAM_v2.md`; then start Tier 0
+**Current phase:** BUILD_PROGRAM v2.0 approved → Tier 0 ready to start  
+**Next milestone:** Begin Tier 0 implementation; validation protocol Codex re-review in parallel
 
-> Campaign spend is blocked until the protocol re-review, the pilot report, and the
-> sign-off decision (D5 in `validation/protocols.json`) are resolved. Tier 0
-> implementation is engineering work and is not blocked by that.
+> Campaign spend remains blocked until the protocol re-review completes, the pilot
+> sizing report is delivered, and PI certification is signed. Tier 0 implementation
+> (SearchSpace, Store schema, RLlib adapter, test harness) is engineering work and
+> proceeds in parallel with protocol sign-off.
 
 > Maintenance note: this file is currently hand-maintained and has drifted twice.
 > It should be generated from ground truth (git tags, gate reports, test output) by
@@ -28,7 +29,7 @@
 - [x] Traceability matrix: 63 decisions with validation mappings
 - [x] `product_register.json` regenerated (48 entries)
 - [x] Git repository initialized (R0 report's outstanding environment note now closed)
-- [ ] **Statistical reviewer verification** — still open, see Risk flags below
+- [x] **Statistical reviewer verification** — waived 2026-09-01; PI is the statistical authority
 
 ---
 
@@ -73,26 +74,28 @@ generalize to surrogate-carrying searchers — they need real state capture.
 
 ## Tier 0: Wrapping campaign
 
-**Status:** ⛔ Blocked — awaiting `BUILD_PROGRAM_v2.md` approval  
-**Gate:** V01–V03, V05, V14, plus V04 tier-0 component
+**Status:** 🟢 Ready to start — BUILD_PROGRAM v2.0 approved (2026-09-01)  
+**Gate:** V01–V03, V05, V14, plus V04 tier-0 component  
+**Program:** [../BUILD_PROGRAM_v2.md](../BUILD_PROGRAM_v2.md) Phase 0 and Tier 0  
+**Approval:** [../BUILD_PROGRAM_v2_APPROVAL.md](../BUILD_PROGRAM_v2_APPROVAL.md)
 
-Not started. Scope and effort figures pending program v2 generation, because
-`BUILD_PROGRAM.md` (v1) carries effort numbers that were reviewed RED, while the
-corrected figures live in `WORK_BREAKDOWN_TIMELINE_DRAFT.md` (still DRAFT).
+Scope and effort from approved v2: ~65 engineer-days over 6 weeks. Wraps Sobol/TPE/DEHB
+searchers, ASHA/Median schedulers, run store, and RLlib adapter. Campaign spend is blocked
+on validation protocol sign-off; implementation proceeds in parallel.
 
 ---
 
 ## Tier 1: Method differentiators
 
 **Status:** ⛔ Blocked on Tier 0 gate  
-**Gate:** V04 (tier-1 searchers), V09, V11
+**Gate:** V04 (tier-1 searchers), V06, V09, V10, V11, V13
 
 ---
 
 ## Tier 2/3: Flagship and frontier bets
 
 **Status:** ⛔ Blocked on Tier 1 gate  
-**Gate:** V06, V08, V10, V12, V13, V15
+**Gate:** V08 (Tier 2), V12 (Distributed Beta), V07 + V15 (Tier 3 electives)
 
 ---
 
@@ -100,10 +103,10 @@ corrected figures live in `WORK_BREAKDOWN_TIMELINE_DRAFT.md` (still DRAFT).
 
 | Opened | Risk | Signal | Status |
 |--------|------|--------|--------|
-| 2026-08-28 | Statistical reviewer verification not done | R0 sequenced it as non-blocking, overlapping R1 wks 1–2; that window has closed | **IN PROGRESS** — Codex review returned RED; repairs committed (`8c39fbe`, `158b06e`), re-review requested. Sign-off level still open (D5) |
-| 2026-09-01 | Validation protocols not campaign-ready | Codex statistical review: 6 of 8 items RED. Uncorrected primaries gave a per-gate false-positive rate near 0.26; V09/V10/V13 tested the wrong estimand; V08's states had no triggers | **MITIGATED, not closed** — protocols repaired and mechanically enforced; blocked on re-review, pilot report, and D5 before any campaign spend |
+| 2026-08-28 | Statistical reviewer verification not done | R0 sequenced it as non-blocking, overlapping R1 wks 1–2; that window has closed | **RESOLVED** — waived 2026-09-01; PI is professor in computational statistics and global ML head at major bank |
+| 2026-09-01 | Validation protocols not campaign-ready | Codex statistical review: 6 of 8 items RED. Uncorrected primaries gave a per-gate false-positive rate near 0.26; V09/V10/V13 tested the wrong estimand; V08's states had no triggers | **MITIGATED, not closed** — protocols repaired (D4, D5 resolved); blocked on Codex re-review, pilot report, and PI certification before any campaign spend |
 | 2026-09-01 | Accepted corrections not in force | 5 entries (V01, V09, V10, V13, plus V06 cost) kept superseded rules in the chapter after the corrections were agreed; nothing compared the two | **MITIGATED** — `tools/check_protocols.py` fails the build on retired-rule reintroduction and register/chapter/program disagreement; negative-tested on 7 injected defects |
-| 2026-08-31 | Competing planning documents | v1 program, corrected timeline draft, and reconciliation memo all claim authority | **OPEN** — resolved by generating v2 |
+| 2026-08-31 | Competing planning documents | v1 program, corrected timeline draft, and reconciliation memo all claim authority | **RESOLVED** — BUILD_PROGRAM_v2.md generated from structured inputs and approved 2026-09-01; superseded docs archived |
 | 2026-08-31 | Gate criteria that cannot fail | R1's crash-recovery check asserted on trial_id, passing over a real duplicate-config bug | **MITIGATED** — `tools/gate_check.py` now verifies configs; apply the lesson when authoring Tier 0 criteria |
 | 2026-08-31 | Session stalls mistaken for repo damage | Gateway 502/529 retry storms killed 4 sessions; one left a merge half-done | **MITIGATED** — recovery procedure documented; git state is ground truth |
 
@@ -135,5 +138,9 @@ corrected figures live in `WORK_BREAKDOWN_TIMELINE_DRAFT.md` (still DRAFT).
 | 2026-08-31 | Ray executor deferred to Tier 0 | Charter already scoped it there; recorded as known limitation, not unmet criterion |
 | 2026-09-01 | Validation protocols become a generated artifact | Chapter 16 drifted from corrections that had already been accepted, in 5 entries, undetected until external review. Prose rules have no way to notice when they change |
 | 2026-09-01 | Confirmatory family is the gate, not the entry | One primary per entry is not one comparison per decision; six uncorrected primaries carry a ~0.26 family-wise false-positive rate (D1, pending sign-off) |
+| 2026-09-01 | BUILD_PROGRAM v2.0 approved | Generated from structured inputs (decisions.json, corrected timeline, validation register); v1 archived as rejected; effort corrected from RED review |
+| 2026-09-01 | Statistical reviewer waived | PI is professor in computational statistics and global ML head at major bank; external statistician is not cost-effective |
+| 2026-09-01 | V06 cost estimand: active accelerator-seconds | Local hardware, not cloud billing; the real cost is GPU occupancy (D4) |
+| 2026-09-01 | Protocol sign-off: Codex + PI certification | Codex surfaces issues; PI rules on them (D5) |
 
 _Add new decisions here as the build progresses._
