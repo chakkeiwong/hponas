@@ -4,13 +4,13 @@ A workspace-internal hyperparameter tuning system serving RL (PPO on RLlib), Ham
 
 **Status:** R1 spike complete, Tier 0 ready to start  
 **Survey:** [hpo-survey/main.pdf](hpo-survey/main.pdf) (118 pages, ready for review)  
-**Build program:** [BUILD_PROGRAM.md](BUILD_PROGRAM.md) (v2 pending generation)  
+**Build program:** [BUILD_PROGRAM_v2.md](BUILD_PROGRAM_v2.md) (v2.0 approved 2026-09-01)  
 **Environment setup:** [setup/INSTALL.md](setup/INSTALL.md)
 
 ## Quick links
 
-- **For reviewers:** Read the [survey Chapters 11–15](hpo-survey/main.pdf) (the product proposal) and the [memo to codex](MEMO_TO_CODEX.md)
-- **For builders:** Start with [BUILD_PROGRAM.md](BUILD_PROGRAM.md) Phase 0, then follow the tier breakdowns
+- **For reviewers:** Read the [survey Chapters 11–15](hpo-survey/main.pdf) (the product proposal) and [BUILD_PROGRAM_v2.md](BUILD_PROGRAM_v2.md)
+- **For builders:** Start with [BUILD_PROGRAM_v2.md](BUILD_PROGRAM_v2.md) Phase 0, then follow the tier breakdowns
 - **For users (post-build):** See `examples/quickstart.py` (will exist after tier 0)
 
 ## Repository structure
@@ -57,11 +57,11 @@ Build PB2-Mix, BG-PBT, ifBO curve model, full validation suite.
 
 ## How to start building
 
-1. **Review the program:** Read [BUILD_PROGRAM.md](BUILD_PROGRAM.md) and [MEMO_TO_CODEX.md](MEMO_TO_CODEX.md), provide feedback on feasibility/risks/scope.
+1. **Review the program:** Read [BUILD_PROGRAM_v2.md](BUILD_PROGRAM_v2.md) to understand scope, effort, and gate criteria.
 2. **Set up environment:** `conda env create -f setup/environment.yml && conda activate hponas`
 3. **Phase 0 (weeks 1–2):** Implement `src/contracts/` (study spec, search space schema, protocols), design store schema, write empty harness.
 4. **Checkpoint:** Interface freeze reviewed by stakeholders before tier 0 starts.
-5. **Tier 0 build:** Follow [BUILD_PROGRAM.md](BUILD_PROGRAM.md) tier-0 breakdown (6 weeks, 30 eng-days).
+5. **Tier 0 build:** Follow [BUILD_PROGRAM_v2.md](BUILD_PROGRAM_v2.md) tier-0 breakdown (6 weeks, ~65 eng-days).
 6. **Week 6 gate:** Run V01–V03, V05, V14 campaigns, apply demotion rules if any fail.
 7. **Continue or pivot:** Gate pass → tier 1; gate fail → diagnose and replan.
 
