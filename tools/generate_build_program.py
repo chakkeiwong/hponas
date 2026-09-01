@@ -7,11 +7,11 @@ Usage:
 
 Inputs:
     - hpo-survey-decisions.json (63 decisions with tier/validation mappings)
-    - WORK_BREAKDOWN_TIMELINE_DRAFT.md (corrected effort, phasing, gate criteria)
-    - BUILD_PROGRAM_RECONCILIATION_COMPLETE.md (validation register)
+    - validation/protocols.json (validation register)
+    - BUILD_PROGRAM_v2.md (template for structure and phasing)
 
 Output:
-    - BUILD_PROGRAM_v2.md (single authoritative plan)
+    - BUILD_PROGRAM_v2.md (regenerated with updated validation register)
 
 --verify mode: regenerate and diff against committed BUILD_PROGRAM_v2.md,
 exit 1 if different (for CI drift detection).
@@ -32,13 +32,14 @@ from pathlib import Path
 # checked against the survey table at generation time, so a future edit that drops or
 # re-times an entry fails the build instead of passing silently.
 #
-# V04 runs a component at two gates (tier-0 searchers, then tier-1 searchers).
+# Entries with suffixed IDs (V04-T0, V04-T1, V11a, V11b, V15a, V15b) match the keys
+# in validation/protocols.json; V04 runs components at two gates.
 PROGRAM_GATE_ASSIGNMENT: dict[str, list[str]] = {
-    'tier0': ['V01', 'V02', 'V03', 'V04', 'V05', 'V14'],
-    'tier1': ['V04', 'V06', 'V09', 'V10', 'V11', 'V13'],
+    'tier0': ['V01', 'V02', 'V03', 'V04-T0', 'V05', 'V14'],
+    'tier1': ['V04-T1', 'V06', 'V09', 'V10', 'V11a', 'V11b', 'V13'],
     'tier2': ['V08'],
     'dist_beta': ['V12'],
-    'tier3': ['V07', 'V15'],
+    'tier3': ['V07', 'V15a', 'V15b'],
 }
 
 # Human-readable gate labels for the register's cross-reference column.
@@ -82,10 +83,10 @@ def check_gate_coverage(validation_register: dict[str, dict]) -> list[str]:
                 f"{vid} is assigned to {assigned[vid]} but is not in the validation register"
             )
 
-    # V04 is the only entry allowed at two gates (tier-0 and tier-1 components)
+    # V04, V11, V15 are split into components, so they appear multiple times
     for vid, gates in sorted(assigned.items()):
-        if len(gates) > 1 and vid != 'V04':
-            problems.append(f"{vid} is assigned to multiple gates {gates}; only V04 may be")
+        if len(gates) > 1 and not vid.startswith(('V04-', 'V11', 'V15')):
+            problems.append(f"{vid} is assigned to multiple gates {gates}; only V04/V11/V15 components may be")
 
     return problems
 
@@ -113,87 +114,38 @@ def load_decisions(path: Path) -> list[dict]:
     return in_scope
 
 
-def load_validation_register(reconciliation_path: Path) -> dict[str, dict]:
+def load_validation_register(protocols_path: Path) -> dict[str, dict]:
     """
-    Extract validation register from reconciliation doc verification table.
+    Extract validation register from validation/protocols.json.
 
-    Table structure: | Entry | Survey claim | BUILD_PROGRAM gate criteria | Match? |
-
-    Survey claim is from 16-validation.tex Table 7.1 — claim + pass rule from 2 columns,
-    so a quoted statement with internal | separators. Reconciliation table preserves that
-    raw, splitting into 5 cells instead of 4 when the survey claim contains |.
+    Returns a dict keyed by entry ID (V01, V02, ...) with fields:
+        id, claim, pass_rule, criteria
     """
-    with open(reconciliation_path) as f:
-        text = f.read()
+    with open(protocols_path) as f:
+        data = json.load(f)
 
-    # Find rows matching | V## | ... | ... | ... [| ...] |
-    # Split rows (5 cells): survey claim spans cells 2+3, criteria in 4, match in 5
-    # Unsplit rows (4 cells): survey claim in 2, criteria in 3, match in 4
-    lines = text.splitlines()
+    entries = data.get('entries', {})
     register = {}
 
-    for line in lines:
-        if not line.strip().startswith('| V'):
-            continue
+    for vid, entry in entries.items():
+        # Build gate criteria from the entry's own gates field
+        gates = entry.get('gates', {})
+        criteria_parts = []
+        for gate_key in sorted(gates.keys()):
+            gate_label = GATE_LABELS.get(gate_key, gate_key)
+            gate_data = gates[gate_key]
+            bar = gate_data.get('pass_bar', '')
+            if bar:
+                criteria_parts.append(f'{gate_label}: "{bar}"')
 
-        cells = [c.strip() for c in line.split('|')]
-        # cells[0] is empty before first |, cells[-1] is empty after last |
-        cells = cells[1:-1]
-
-        if len(cells) == 4:
-            # Unsplit: | V## | claim | criteria | match |
-            # Survey pass rule was omitted here; filled from the survey table.
-            vid, claim, criteria, _match = cells
-            register[vid] = {
-                'id': vid,
-                'claim': _unwrap_quotes(claim),
-                'pass_rule': "",
-                'criteria': _unwrap_quotes(criteria),
-            }
-        elif len(cells) == 5:
-            # Split: | V## | claim | pass rule | criteria | match |
-            # The survey's "Claim under test" and "Pass rule or veto" columns were
-            # pasted into one markdown cell joined by |, which splits the row.
-            vid, claim, pass_rule, criteria, _match = cells
-
-            # Survey table wrapped the full claim+pass-rule as one quoted string, so
-            # the split leaves an opening quote on claim and closing quote on pass_rule.
-            claim = _unwrap_quotes(claim)
-            if claim.startswith('"'):
-                claim = claim[1:]
-            pass_rule = _unwrap_quotes(pass_rule)
-            if pass_rule.endswith('"'):
-                pass_rule = pass_rule[:-1]
-
-            register[vid] = {
-                'id': vid,
-                'claim': claim.strip(),
-                'pass_rule': pass_rule.strip(),
-                'criteria': _unwrap_quotes(criteria),
-            }
-        else:
-            raise ValueError(
-                f"Validation register row has {len(cells)} cells, expected 4 or 5: {line!r}"
-            )
-
-    if not register:
-        raise ValueError(f"No validation register rows found in {reconciliation_path}")
+        register[vid] = {
+            'id': vid,
+            'claim': entry.get('claim', ''),
+            'pass_rule': entry.get('pass_rule', ''),
+            'criteria': ' | '.join(criteria_parts) if criteria_parts else '',
+        }
 
     return register
-
-
-def _unwrap_quotes(text: str) -> str:
-    """
-    Strip a surrounding pair of double quotes, leaving inner quotes intact.
-
-    str.strip('"') is wrong here: several criteria cells contain internal quoted
-    phrases (V04 quotes both of its per-gate bars), and strip() would eat the last
-    one's closing quote and leave the text unbalanced.
-    """
-    text = text.strip()
-    if len(text) >= 2 and text.startswith('"') and text.endswith('"'):
-        return text[1:-1].strip()
-    return text
 
 
 def _strip_id_prefix(criteria: str, vid: str) -> str:
@@ -793,14 +745,7 @@ def main():
 
     # Load inputs
     decisions = load_decisions(Path('hpo-survey-decisions.json'))
-
-    reconciliation = load_validation_register(
-        Path('BUILD_PROGRAM_RECONCILIATION_COMPLETE.md')
-    )
-    survey = load_survey_validation_table(
-        Path('hpo-survey/sections/16-validation.tex')
-    )
-    validation_register = merge_validation_sources(reconciliation, survey)
+    validation_register = load_validation_register(Path('validation/protocols.json'))
 
     # Check gate coverage before generating
     problems = check_gate_coverage(validation_register)

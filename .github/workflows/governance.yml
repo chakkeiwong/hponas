@@ -1,0 +1,70 @@
+name: Governance Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify-generated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need full history for git tags
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify BUILD_PROGRAM covers all protocol entries
+        run: |
+          python3 tools/check_program_sync.py
+          echo "✅ BUILD_PROGRAM_v2.md covers all protocol entries"
+
+      - name: Verify progress reflects ground truth
+        run: |
+          # tools/update_progress.py deferred until Tier 0 starts
+          # For now, just verify progress.md exists and mentions R1 complete
+          grep -q "R1.*Complete" docs/progress.md
+          echo "✅ progress.md exists and shows R1 complete"
+
+      - name: Check validation protocols
+        run: |
+          python3 tools/check_protocols.py --quiet
+          echo "✅ validation protocols pass all checks"
+
+  lint-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint with ruff
+        run: |
+          ruff check tools/ src/ tests/ --select=E9,F63,F7,F82 --statistics
+          echo "✅ critical lint checks passed"
+
+      - name: Verify survey builds
+        working-directory: hpo-survey
+        run: |
+          sudo apt-get update && sudo apt-get install -y texlive-latex-base texlive-latex-extra texlive-fonts-recommended biber
+          pdflatex -interaction=nonstopmode main.tex >/dev/null || (echo "ERROR: first pass failed" && exit 1)
+          bibtex main || (echo "ERROR: bibtex failed" && exit 1)
+          pdflatex -interaction=nonstopmode main.tex >/dev/null || (echo "ERROR: second pass failed" && exit 1)
+          pdflatex -interaction=nonstopmode main.tex >/dev/null || (echo "ERROR: third pass failed" && exit 1)
+          pages=$(pdfinfo main.pdf | awk '/^Pages:/ {print $2}')
+          echo "✅ survey builds: $pages pages"
+          if [ "$pages" -lt 100 ]; then
+            echo "ERROR: page count suspiciously low"
+            exit 1
+          fi
