@@ -1,0 +1,134 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Hand-authored content for docs/progress.md. Everything here is a judgment call that cannot be derived from git, gate reports, or test output: why a risk matters, what a decision traded off, what a finding cost. tools/update_progress.py combines this with ground truth (tags, gate reports, test results, protocol register) to generate the tracker. Edit this file, never progress.md.",
+
+  "risks": [
+    {
+      "opened": "2026-08-28",
+      "risk": "Statistical reviewer verification not done",
+      "signal": "R0 sequenced it as non-blocking, overlapping R1 wks 1-2; that window has closed",
+      "status": "RESOLVED",
+      "detail": "waived 2026-09-01; PI is professor in computational statistics and global ML head at major bank"
+    },
+    {
+      "opened": "2026-09-01",
+      "risk": "Validation protocols not campaign-ready",
+      "signal": "Codex statistical review: 6 of 8 items RED. Uncorrected primaries gave a per-gate false-positive rate near 0.26; V09/V10/V13 tested the wrong estimand; V08's states had no triggers",
+      "status": "MITIGATED, not closed",
+      "detail": "protocols repaired (D4, D5 resolved); blocked on Codex re-review, pilot report, and PI certification before any campaign spend"
+    },
+    {
+      "opened": "2026-09-01",
+      "risk": "Accepted corrections not in force",
+      "signal": "5 entries (V01, V09, V10, V13, plus V06 cost) kept superseded rules in the chapter after the corrections were agreed; nothing compared the two",
+      "status": "MITIGATED",
+      "detail": "`tools/check_protocols.py` fails the build on retired-rule reintroduction and register/chapter/program disagreement; negative-tested on 7 injected defects"
+    },
+    {
+      "opened": "2026-08-31",
+      "risk": "Competing planning documents",
+      "signal": "v1 program, corrected timeline draft, and reconciliation memo all claim authority",
+      "status": "RESOLVED",
+      "detail": "BUILD_PROGRAM_v2.md generated from structured inputs and approved 2026-09-01; superseded docs archived"
+    },
+    {
+      "opened": "2026-08-31",
+      "risk": "Gate criteria that cannot fail",
+      "signal": "R1's crash-recovery check asserted on trial_id, passing over a real duplicate-config bug",
+      "status": "MITIGATED",
+      "detail": "`tools/gate_check.py` now verifies configs; apply the lesson when authoring Tier 0 criteria"
+    },
+    {
+      "opened": "2026-08-31",
+      "risk": "Session stalls mistaken for repo damage",
+      "signal": "Gateway 502/529 retry storms killed 4 sessions; one left a merge half-done",
+      "status": "MITIGATED",
+      "detail": "recovery procedure documented; git state is ground truth"
+    }
+  ],
+
+  "decisions": [
+    {"date": "2026-08-26", "decision": "Survey released for review", "rationale": "Clean build, decision boxes falsifiable"},
+    {"date": "2026-08-26", "decision": "Build program v1 written", "rationale": "Three tiers, 42 eng-weeks; later reviewed RED on effort"},
+    {"date": "2026-08-28", "decision": "NAS scope: Option A", "rationale": "Moderate architecture coordinates, +16 eng-days"},
+    {"date": "2026-08-28", "decision": "Statistical reviewer = verification gate, not author", "rationale": "Removed critical-path dependency"},
+    {"date": "2026-08-31", "decision": "Merge two disjoint git roots", "rationale": "Repo had two root commits; `--allow-unrelated-histories` was correct, merged as `88e2fea`"},
+    {"date": "2026-08-31", "decision": "Adopt mechanical gate checks", "rationale": "Drift went undetected three times because plan facts lived in unverifiable prose"},
+    {"date": "2026-08-31", "decision": "Add searcher state serialization to contract", "rationale": "Crash recovery is untrustworthy without it; found by strengthening the R1 gate"},
+    {"date": "2026-08-31", "decision": "Ray executor deferred to Tier 0", "rationale": "Charter already scoped it there; recorded as known limitation, not unmet criterion"},
+    {"date": "2026-09-01", "decision": "Validation protocols become a generated artifact", "rationale": "Chapter 16 drifted from corrections that had already been accepted, in 5 entries, undetected until external review. Prose rules have no way to notice when they change"},
+    {"date": "2026-09-01", "decision": "Confirmatory family is the gate, not the entry", "rationale": "One primary per entry is not one comparison per decision; six uncorrected primaries carry a ~0.26 family-wise false-positive rate (D1)"},
+    {"date": "2026-09-01", "decision": "BUILD_PROGRAM v2.0 approved", "rationale": "Generated from structured inputs (decisions.json, corrected timeline, validation register); v1 archived as rejected; effort corrected from RED review"},
+    {"date": "2026-09-01", "decision": "Statistical reviewer waived", "rationale": "PI is professor in computational statistics and global ML head at major bank; external statistician is not cost-effective"},
+    {"date": "2026-09-01", "decision": "V06 cost estimand: active accelerator-seconds", "rationale": "Local hardware, not cloud billing; the real cost is GPU occupancy (D4)"},
+    {"date": "2026-09-01", "decision": "Protocol sign-off: Codex + PI certification", "rationale": "Codex surfaces issues; PI rules on them (D5)"}
+  ],
+
+  "phases": {
+    "R0": {
+      "title": "Specification correction",
+      "effort_note": "2 days actual (14 planned)",
+      "report": "../R0_COMPLETION_REPORT.md",
+      "deliverables": [
+        {"done": true, "text": "All 8 statistical corrections applied; survey builds clean at 118 pages (114 at R0 close, before the protocol amendments of 2026-08-31)"},
+        {"done": true, "text": "NAS scope decided (Option A: moderate architecture coordinates, +16 eng-days)"},
+        {"done": true, "text": "Knob-kind ambiguity resolved (three typed kinds; conditionality is structural)"},
+        {"done": true, "text": "Architecture factory contract written into survey Ch 15 (`sec:archfactory`)"},
+        {"done": true, "text": "Traceability matrix: 63 decisions with validation mappings"},
+        {"done": true, "text": "`product_register.json` regenerated (48 entries)"},
+        {"done": true, "text": "Git repository initialized (R0 report's outstanding environment note now closed)"},
+        {"done": true, "text": "**Statistical reviewer verification** — waived 2026-09-01; PI is the statistical authority"}
+      ]
+    },
+    "R1": {
+      "title": "Executable architecture spike",
+      "charter": "../R1_SPIKE_CHARTER.md",
+      "interface_review": "SPIKE_REVIEW.md",
+      "deliverables": [
+        {"done": true, "text": "`SearchSpace` (continuous/ordinal/categorical, transforms, conditions declared)"},
+        {"done": true, "text": "`SobolSearcher` (scipy Sobol + log-scale, batch propose)"},
+        {"done": true, "text": "`ASHAScheduler` (rung promotion, async event handling, budget tracking)"},
+        {"done": true, "text": "`LocalExecutor` (in-process; subprocess isolation deferred to Tier 0)"},
+        {"done": true, "text": "`RayExecutor` (stub — real Ray Tune scoped to Tier 0 per charter)"},
+        {"done": true, "text": "`Store` (SQLite + WAL, crash recovery, lineage queries)"},
+        {"done": true, "text": "Architecture factory stubs (`build`/`measure`/`compatible`/`transfer`)"},
+        {"done": true, "text": "`examples/spike_branin.py` — 16 trials, determinism verified"},
+        {"done": true, "text": "`examples/spike_crash_recovery.py` — crash at 8, resume to 16"},
+        {"done": true, "text": "`docs/SPIKE_REVIEW.md` — interfaces approved for Tier 0"}
+      ],
+      "findings": [
+        "**Sobol state loss on resume (correctness bug).** `SobolSearcher` held QMC state in `self._sobol` with a no-op `observe()`, so a rebuilt searcher restarted the sequence: 16 trials covered only 8 distinct points, each evaluated twice. The example's own assertion tested `trial_id` uniqueness, which is trivially true and always passed. **Fixed:** added `state_dict()`/`load_state_dict()` to the `Searcher` protocol, implemented for Sobol via `fast_forward()`, persisted per-trial in the example, and strengthened the assertion to compare configs. Resumed sequence now equals the uninterrupted run point-for-point. 4 new contract tests.",
+        "**RayExecutor is a stub**, so the local-vs-Ray conformance check was local-vs-local. **Resolved as scope:** real Ray Tune is Tier 0 work (~4d) per the charter; recorded as a known limitation in SPIKE_REVIEW.md rather than an unmet criterion."
+      ],
+      "carried_forward": "**Interface change carried into Tier 0:** every searcher (GP+qLogEI, TPE, TuRBO) must implement the state serialization contract. Counter-based fast-forward will not generalize to surrogate-carrying searchers — they need real state capture."
+    },
+    "tier0": {
+      "title": "Wrapping campaign",
+      "status_line": "🟢 Ready to start — BUILD_PROGRAM v2.0 approved (2026-09-01)",
+      "program": "../BUILD_PROGRAM_v2.md",
+      "approval": "../BUILD_PROGRAM_v2_APPROVAL.md",
+      "body": "Scope and effort from approved v2: ~65 engineer-days over 6 weeks. Wraps Sobol/TPE/DEHB searchers, ASHA/Median schedulers, run store, and RLlib adapter. Campaign spend is blocked on validation protocol sign-off; implementation proceeds in parallel."
+    },
+    "tier1": {
+      "title": "Method differentiators",
+      "status_line": "⛔ Blocked on Tier 0 gate"
+    },
+    "tier23": {
+      "title": "Flagship and frontier bets",
+      "status_line": "⛔ Blocked on Tier 1 gate"
+    }
+  },
+
+  "gate_history_planned": [
+    {"gate": "Tier 0", "criteria_from": "tier0", "date": "TBD", "result": "Pending", "report": "—"},
+    {"gate": "Tier 1", "criteria_from": "tier1", "date": "TBD", "result": "Pending", "report": "—"},
+    {"gate": "Tier 2", "criteria_from": "tier2", "date": "TBD", "result": "Pending", "report": "—"},
+    {"gate": "Distributed Beta", "criteria_from": "dist_beta", "date": "TBD", "result": "Pending", "report": "—"}
+  ],
+
+  "header": {
+    "current_phase": "BUILD_PROGRAM v2.0 approved → Tier 0 ready to start",
+    "next_milestone": "Begin Tier 0 implementation; validation protocol Codex re-review in parallel",
+    "callout": "Campaign spend remains blocked until the protocol re-review completes, the pilot sizing report is delivered, and PI certification is signed. Tier 0 implementation (SearchSpace, Store schema, RLlib adapter, test harness) is engineering work and proceeds in parallel with protocol sign-off."
+  }
+}
