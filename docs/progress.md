@@ -1,8 +1,12 @@
 # Build Progress Tracker
 
-**Last updated:** 2026-08-31  
-**Current phase:** R1 complete (gate PASS) → Tier 0 pending program v2  
-**Next milestone:** Generate and approve `BUILD_PROGRAM_v2.md`, then start Tier 0
+**Last updated:** 2026-09-01  
+**Current phase:** R1 complete (gate PASS) → Tier 0 pending program v2 and protocol re-review  
+**Next milestone:** Codex re-review of the repaired validation protocols; approve `BUILD_PROGRAM_v2.md`; then start Tier 0
+
+> Campaign spend is blocked until the protocol re-review, the pilot report, and the
+> sign-off decision (D5 in `validation/protocols.json`) are resolved. Tier 0
+> implementation is engineering work and is not blocked by that.
 
 > Maintenance note: this file is currently hand-maintained and has drifted twice.
 > It should be generated from ground truth (git tags, gate reports, test output) by
@@ -96,7 +100,9 @@ corrected figures live in `WORK_BREAKDOWN_TIMELINE_DRAFT.md` (still DRAFT).
 
 | Opened | Risk | Signal | Status |
 |--------|------|--------|--------|
-| 2026-08-28 | Statistical reviewer verification not done | R0 sequenced it as non-blocking, overlapping R1 wks 1–2; that window has closed | **OPEN** — decide before Tier 0: chase or formally waive in v2 approval |
+| 2026-08-28 | Statistical reviewer verification not done | R0 sequenced it as non-blocking, overlapping R1 wks 1–2; that window has closed | **IN PROGRESS** — Codex review returned RED; repairs committed (`8c39fbe`, `158b06e`), re-review requested. Sign-off level still open (D5) |
+| 2026-09-01 | Validation protocols not campaign-ready | Codex statistical review: 6 of 8 items RED. Uncorrected primaries gave a per-gate false-positive rate near 0.26; V09/V10/V13 tested the wrong estimand; V08's states had no triggers | **MITIGATED, not closed** — protocols repaired and mechanically enforced; blocked on re-review, pilot report, and D5 before any campaign spend |
+| 2026-09-01 | Accepted corrections not in force | 5 entries (V01, V09, V10, V13, plus V06 cost) kept superseded rules in the chapter after the corrections were agreed; nothing compared the two | **MITIGATED** — `tools/check_protocols.py` fails the build on retired-rule reintroduction and register/chapter/program disagreement; negative-tested on 7 injected defects |
 | 2026-08-31 | Competing planning documents | v1 program, corrected timeline draft, and reconciliation memo all claim authority | **OPEN** — resolved by generating v2 |
 | 2026-08-31 | Gate criteria that cannot fail | R1's crash-recovery check asserted on trial_id, passing over a real duplicate-config bug | **MITIGATED** — `tools/gate_check.py` now verifies configs; apply the lesson when authoring Tier 0 criteria |
 | 2026-08-31 | Session stalls mistaken for repo damage | Gateway 502/529 retry storms killed 4 sessions; one left a merge half-done | **MITIGATED** — recovery procedure documented; git state is ground truth |
@@ -127,5 +133,7 @@ corrected figures live in `WORK_BREAKDOWN_TIMELINE_DRAFT.md` (still DRAFT).
 | 2026-08-31 | Adopt mechanical gate checks | Drift went undetected three times because plan facts lived in unverifiable prose |
 | 2026-08-31 | Add searcher state serialization to contract | Crash recovery is untrustworthy without it; found by strengthening the R1 gate |
 | 2026-08-31 | Ray executor deferred to Tier 0 | Charter already scoped it there; recorded as known limitation, not unmet criterion |
+| 2026-09-01 | Validation protocols become a generated artifact | Chapter 16 drifted from corrections that had already been accepted, in 5 entries, undetected until external review. Prose rules have no way to notice when they change |
+| 2026-09-01 | Confirmatory family is the gate, not the entry | One primary per entry is not one comparison per decision; six uncorrected primaries carry a ~0.26 family-wise false-positive rate (D1, pending sign-off) |
 
 _Add new decisions here as the build progresses._

@@ -13,7 +13,7 @@ During Phase R0 (specification correction), we applied 8 statistical corrections
 
 **Status:** R0 marked this item as "deferred, non-blocking" with the rationale that the reviewer validates finished protocols rather than deriving them, and that validation lead execution would provide an empirical check. The deferral window (R1 weeks 1-2) has closed without the review occurring.
 
-**Current situation:** Tier 0 implementation is underway. The validation protocols become load-bearing at the Tier 0 gate (8-10 weeks from now), when ~2,500 accelerator-hours of campaign compute runs against these specifications.
+**Current situation:** Tier 0 has not started; R1 is complete and Tier 0 is blocked on BUILD_PROGRAM_v2 approval. The validation protocols become load-bearing at the Tier 0 gate, when ~2,500 accelerator-hours of campaign compute runs against these specifications.
 
 **This memo requests Codex review of the 8 statistical corrections for internal consistency, adherence to standard practice, and operational clarity.**
 
