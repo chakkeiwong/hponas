@@ -70,14 +70,14 @@ Scope and effort from approved v2: ~65 engineer-days over 6 weeks. Wraps Sobol/T
 ## Tier 1: Method differentiators
 
 **Status:** ⛔ Blocked on Tier 0 gate
-**Gate:** V04-T1, V06, V09, V10, V11, V13
+**Gate:** V04-T1, V06, V09, V10, V11a, V11b, V13
 
 ---
 
 ## Tier 2/3: Flagship and frontier bets
 
 **Status:** ⛔ Blocked on Tier 1 gate
-**Gate:** V08 (Tier 2), V12 (Distributed Beta), V07, V15 (Tier 3 electives)
+**Gate:** V08 (Tier 2), V12 (Distributed Beta), V07, V15a, V15b (Tier 3 electives)
 
 ---
 
@@ -116,7 +116,7 @@ Repairs findings F1-F3 and items 1-8 of RESPONSE_TO_CODEX_STATISTICAL_REVIEW.md.
 |------|------|----------|--------|--------|
 | R1 | 2026-08-31 | R1 Gate Report | **PASS** | [r1_gate_2026-08-31.md](../gate_reports/r1_gate_2026-08-31.md) |
 | Tier 0 | TBD | V01, V02, V03, V04-T0, V05, V14 | Pending | — |
-| Tier 1 | TBD | V04-T1, V06, V09, V10, V11, V13 | Pending | — |
+| Tier 1 | TBD | V04-T1, V06, V09, V10, V11a, V11b, V13 | Pending | — |
 | Tier 2 | TBD | V08 | Pending | — |
 | Distributed Beta | TBD | V12 | Pending | — |
 
