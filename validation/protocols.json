@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "status": "DRAFT",
-  "status_note": "Repairs findings F1-F3 and items 1-8 of RESPONSE_TO_CODEX_STATISTICAL_REVIEW.md. Not signed off: requires Codex re-review, pilot report, and the sign-off level chosen in policy.open_decisions.D5.",
+  "status_note": "Repairs findings F1-F3 and items 1-8 of RESPONSE_TO_CODEX_STATISTICAL_REVIEW.md. Awaiting: Codex re-review, pilot report, PI certification.",
   "created": "2026-08-31",
   "sources": {
     "chapter": "hpo-survey/sections/16-validation.tex",
@@ -136,21 +136,20 @@
       },
       {
         "id": "D4",
-        "question": "V06 primary cost estimand: billed resource-seconds (chosen), vs active accelerator-seconds, vs elapsed wall-clock.",
-        "chosen": "billed_resource_seconds",
-        "status": "PROPOSED — requires program sign-off",
-        "impact": "The product claim is about what the user pays, which includes allocated-but-idle device time. Active accelerator-seconds can pass a configuration whose queue and idle cost is unacceptable; wall-clock penalizes an arm for unrelated cluster contention."
+        "question": "V06 primary cost estimand: active accelerator-seconds (chosen), vs elapsed wall-clock.",
+        "chosen": "active_accelerator_seconds",
+        "status": "RESOLVED",
+        "rationale": "Local hardware, not cloud. Billed seconds collapse to active compute. The real cost is opportunity: what else could have run on that GPU. Wall-clock penalizes an arm for unrelated contention. Active accelerator-seconds is the honest measure of GPU occupancy.",
+        "impact": "Primary is now GPU-seconds; wall-clock and queue wait are secondaries for diagnosis only."
       },
       {
         "id": "D5",
         "question": "Required sign-off level before confirmatory campaigns.",
-        "chosen": "undecided",
-        "status": "OPEN — blocks campaign execution, not implementation",
-        "options": [
-          "Codex re-review of this register plus validation-lead self-certification",
-          "Codex re-review plus paid human statistician review (~1 week)"
-        ],
-        "note": "The review is explicit that it is a text-level engineering/statistical review and not credentialed external certification (RESPONSE_TO_CODEX_STATISTICAL_REVIEW.md, amendment 8)."
+        "chosen": "codex_plus_pi_certification",
+        "status": "RESOLVED",
+        "rationale": "PI is a professor in computational statistics and global head of ML at a major bank. Codex surfaces issues; PI rules on them. External statistician would cost ~1 week and is unlikely to add material value beyond PI's domain expertise.",
+        "procedure": "Codex re-reviews the repaired protocols and chapter. Any items flagged as potentially unsound are raised to PI for ruling. PI certifies the final protocol set before any campaign spend.",
+        "note": "The review stated explicitly it is engineering review, not credentialed external certification (RESPONSE_TO_CODEX_STATISTICAL_REVIEW.md, amendment 8). With PI as the statistical authority, that certification is internal rather than external."
       }
     ]
   },
@@ -317,7 +316,7 @@
     "V06": {
       "id": "V06", "gate": "tier1_gate", "class": "confirmatory",
       "claim": "early stopping is nearly free",
-      "estimand": "Joint claim: (a) quality of searcher+ASHA is non-inferior to searcher-at-full-fidelity within margin delta on a range-normalized scale, and (b) the upper confidence bound on the billed-resource-second cost ratio is at or below one third.",
+      "estimand": "Joint claim: (a) quality of searcher+ASHA is non-inferior to searcher-at-full-fidelity within margin delta on a range-normalized scale, and (b) the upper confidence bound on the active-accelerator-second cost ratio is at or below one third.",
       "test": "non_inferiority_one_sided_plus_cost_bound",
       "sidedness": "one-sided",
       "direction": "higher_is_better_after_normalization",
@@ -327,10 +326,10 @@
       "combination": "intersection-union",
       "combination_note": "Both the quality non-inferiority condition and the cost bound must clear. Passing on quality while cost overruns is not a pass, and vice versa.",
       "primary_endpoint": "Paired non-inferiority on normalized final quality AND upper 95% confidence bound of the cost ratio <= 1/3.",
-      "cost_estimand": "billed_resource_seconds",
-      "cost_estimand_detail": "Billed resource-seconds is the primary and is what the user pays: allocated device time including allocated-but-idle, startup, checkpoint I/O, retries, and preempted work. Reported as separate secondary columns and never mixed into the primary: active accelerator-seconds, CPU-seconds, elapsed wall-clock, queue wait. Queue wait is reported in seconds and is not converted into accelerator-seconds.",
+      "cost_estimand": "active_accelerator_seconds",
+      "cost_estimand_detail": "Active accelerator-seconds is the primary: the honest measure of GPU occupancy on local hardware. The real cost is opportunity — what else could have run on that GPU. Reported as separate secondary columns for diagnosis: CPU-seconds, elapsed wall-clock, queue wait. Seconds are never converted across resource types.",
       "cost_uncertainty": "The cost ratio carries a paired cluster bootstrap interval; the gate reads its upper bound, not a point estimate.",
-      "cost_attribution": "Shared startup and queue time is attributed deterministically per trial by allocation record. Both arms run under the same scheduling and accounting policy and the same hardware class; heterogeneous hardware voids the comparison.",
+      "cost_attribution": "Shared startup and queue time is attributed deterministically per trial by allocation record. Both arms run under the same scheduling policy and the same hardware; heterogeneous hardware voids the comparison.",
       "scale_bounds": "Per-task, declared in the task registry before data.",
       "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
       "task_scope": "acceptance RL task set (multiple independent tasks)",
@@ -342,7 +341,7 @@
         "fail": "Promotion is blocked and the rung-correlation assumptions are diagnosed.",
         "inconclusive": "ASHA does not become a default; one pre-budgeted replication permitted, then terminal."
       },
-      "repairs": ["F3: queue wait no longer inside accelerator-seconds; primary cost estimand named", "item 6: separate cost columns, deterministic attribution, interval on the ratio", "accepted correction: quality non-inferiority, not CI overlap"]
+      "repairs": ["F3: queue wait no longer inside accelerator-seconds; primary cost estimand named", "item 6: separate cost columns, deterministic attribution, interval on the ratio", "accepted correction: quality non-inferiority, not CI overlap", "D4: active accelerator-seconds on local hardware, not billed resource-seconds"]
     },
     "V09": {
       "id": "V09", "gate": "tier1_gate", "class": "confirmatory",
