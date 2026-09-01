@@ -132,8 +132,36 @@ included in the bill. Results reported as performance-over-budget
 curves with uncertainty bands, never as single numbers. And a
 repetition count that is derived rather than declared: a pilot
 campaign estimates the between-run variance, and the sample size
-follows from that variance and the entry's decision margin at 80
-percent power. The ten repetitions this document has quoted since
+follows from that variance and the entry's decision margin.
+
+Derived, though, is only as good as the derivation, and an earlier draft
+of this paragraph stopped at the gesture. It named a pilot, a variance,
+a margin, and 80 percent power, and left out everything an implementer
+would need to reproduce the number: whether the test is paired or
+unpaired, one- or two-sided, on means or on a curve summary; which
+variance estimator; how the arms are allocated; how small a pilot is too
+small; and what to do when the answer exceeds the budget. Two
+statisticians following that text would size the same campaign
+differently, which means the sample size was not actually preregistered.
+
+So each entry fixes the whole calculation in
+\texttt{validation/protocols.json} before its pilot runs. The estimand,
+the direction, and the sidedness come from the entry. The sample size is
+obtained by Monte Carlo simulation under the entry's own hierarchy—task
+cluster, then paired study block—rather than from a closed-form
+two-sample formula, because the estimand is a cluster-level paired
+difference and the closed form does not describe it. The pilot is at
+least five replicates per arm per side, raised from the three an earlier
+draft implied, since a three-replicate variance estimate is too noisy to
+size anything on. And the sizing runs against the upper confidence bound
+on the pilot variance rather than its point estimate, so that pilot noise
+inflates the sample instead of shrinking it. Pilot observations do not
+enter the confirmatory estimate; the two campaigns use disjoint seed
+sets. The power target is 80 percent by default and 90 percent for V04's
+tier-1 component and for V08, whose builds carry enough sunk cost that a
+false demotion is the more expensive error.
+
+The ten repetitions this document has quoted since
 Chapter~\ref{sec:workloads} are a planning heuristic for the
 calendar and the budget, not a substitute for that calculation.
 Where the pilot shows low variance against a wide margin, fewer
@@ -146,7 +174,13 @@ sample size, and reaching it without crossing the decision threshold
 is a third outcome alongside pass and fail: \emph{inconclusive at
 budgeted precision}. That is a real verdict with a real consequence,
 which is that the capability does not become a default on evidence
-that never arrived. Pilot variance estimates are recorded before the
+that never arrived. The verdict also needs an end, which an earlier
+draft did not give it: a state that neither passes nor fails and has no
+funder and no deadline is a capability parked indefinitely next to a
+release decision. An inconclusive result therefore permits at most one
+replication, whose budget, owner, and stopping rule are fixed before the
+first confirmatory result is seen. After that replication the verdict is
+terminal and resolves to the consequence the entry's register names. Pilot variance estimates are recorded before the
 full campaign begins and are not revised during it, since a variance
 estimate updated mid-campaign is a decision threshold updated
 mid-campaign wearing a disguise. V08 remains the one entry whose arms
@@ -175,44 +209,93 @@ drama.
 The table above uses unquantified phrases to fit on one page; this
 section pins each one to a concrete rule before any entry runs.
 
-\textbf{``Within tolerance'' (V01):} Anytime and final scores differ
-by no more than $0.5\%$ of the reference method's final value on each
-benchmark, and rank orderings match exactly. The tolerance is loose
-by design—V01 gates implementation correctness, not optimizer
-superiority.
+\textbf{``Within tolerance'' (V01):} A fixed percentage band is the
+wrong instrument here, and an earlier draft of this chapter used one: it
+asked that anytime and final scores differ by no more than $0.5\%$ of
+the reference method's final value. The references are stochastic, so
+that band tests a determinism they do not have—two correct
+implementations of the same searcher differ by more than $0.5\%$ across
+seeds routinely, and a band tight enough to catch a wiring bug flags
+correct code as often as broken code. V01 instead compares the two
+implementations in distribution: final and anytime score vectors at
+shared seeds are compared by a two-sample distributional test, and the
+entry passes when the wrapper's score distribution is indistinguishable
+from the reference's. The comparison is loose on any single run and
+tight on the ensemble, which is the shape the question actually
+has—V01 gates implementation correctness, not optimizer superiority.
 
-\textbf{``Within noise'' (V06, V11):} The 95\% bootstrap confidence
-interval of the difference in means lies entirely inside the
-preregistered non-inferiority margin $[-\delta, +\delta]$: for V06,
-$\delta$ is 5 percent of the full-fidelity baseline's final quality;
-for V11, 10 percent of the no-prior baseline's. Bootstrap by
-resampling tuning runs with replacement, 10,000 iterations,
-empirical percentiles. The distinction from an interval that merely
-overlaps zero is the whole point. Overlapping zero says a difference
-was not detected, which a small enough sample says about everything;
-an interval contained in the margin says any difference that
-survives is too small to care about. An interval that overlaps zero
-but spills past $\pm\delta$ is recorded as inconclusive, not as a
-tie, and a tie is claimed only in the contained case. Both margins
-are set here, before the campaigns, as the smallest difference that
-would change what the product recommends.
+\textbf{``Within noise'' (V06, V11):} The claim these entries make is
+one-sided—that early stopping does not \emph{lose} quality, that a
+prior does not \emph{harm} a study that gets bad advice—so the test is
+one-sided non-inferiority, not the two-sided containment an earlier
+draft specified. That draft asked for the 95\% interval of the
+difference to lie entirely inside $[-\delta, +\delta]$, which is an
+equivalence criterion: it rejects an arm for being materially
+\emph{better} as well as materially worse. Requiring ASHA not to
+outperform full-fidelity search is not a property anyone wants. Each
+entry now declares its direction, and the criterion is that the lower
+bound of the one-sided 95\% interval on the direction-normalized
+difference clears $-\delta$.
+
+The margins are product tolerances rather than statistical quantities,
+and they cannot be read off observed noise: $\delta$ is the largest
+degradation that would not change what the product recommends. For V06
+it is 5 percent; for V11's wrong-prior arm, 10 percent. Both are set
+before the campaigns for that reason. The scale is a range
+normalization against bounds declared in the task registry, not a
+percentage of the baseline's value, because reinforcement-learning
+return is routinely zero or negative and a percentage of it is either
+undefined or unstable; a denominator estimated during the campaign is a
+decision threshold that moves with the data.
+
+The distinction from an interval that merely overlaps zero is the whole
+point. Overlapping zero says a difference was not detected, which a
+small enough sample says about everything; a bound clear of $-\delta$
+says any difference that survives is too small to care about. A result
+that fails to clear $-\delta$ but does not establish a loss either is
+recorded as inconclusive, not as a tie. V11 additionally splits in two,
+because its two claims have different shapes: the good-prior arm makes
+a superiority claim against no prior, and only the wrong-prior arm is a
+non-inferiority question. One margin cannot serve both.
 
 \textbf{``A fraction of compute'' (V06):} Early stopping reaches the
 same final quality, within the non-inferiority margin above, at no
 more than one-third the total compute of full-fidelity search.
-Compute is the accelerator-seconds and wall-clock the executor
-actually recorded, which puts startup, training, evaluation,
-checkpoint save and load, queue wait, and the optimizer's own
-overhead on the bill; the savings claim is about resources consumed,
-not about an idealization of them. Full-run equivalents survive as a
-normalized secondary measure for readability, computed by dividing
-total cost by the mean cost of one full-fidelity trial in the
-baseline arm, and they are never the number the gate reads. The
-threshold applies to accelerator-seconds. Where wall-clock diverges
-materially from it through scheduling or parallelism, both are
-reported and the verdict follows the accelerator-seconds, since that
-is the resource the budget buys. V06 passes only if ASHA delivers the
-factor-of-three saving on measured cost.
+The savings claim is about resources consumed, not about an
+idealization of them, but an earlier draft of this section made the
+opposite error and put queue wait, wall-clock, and accelerator-seconds
+into one bill before declaring that the threshold applies to
+accelerator-seconds. Those are different quantities. Queue wait
+consumes no accelerator time at all, and folding it into a count of
+accelerator-seconds requires a billing conversion the draft never
+stated. Worse, the resulting rule could pass a configuration whose
+active device time is low and whose queue and idle time is
+unacceptable, which is the opposite of the user-facing claim.
+
+The quantities are therefore reported in separate columns and one of
+them is named primary. The primary is billed resource-seconds: the
+device time the user is actually charged for, which includes
+allocated-but-idle time, startup, checkpoint save and load, retries,
+and preempted work. Active accelerator-seconds, CPU-seconds, elapsed
+wall-clock, and queue wait are each reported alongside it as
+secondaries and are never mixed into the primary. Billed
+resource-seconds is primary because the claim is about what a user
+pays: active accelerator-seconds understates a wasteful schedule, and
+wall-clock charges an arm for unrelated cluster contention. Shared
+startup and queue time is attributed per trial by allocation record
+rather than divided evenly, both arms run under the same scheduling and
+accounting policy, and a comparison across hardware classes is void.
+
+Full-run equivalents survive as a normalized secondary for readability,
+computed by dividing total cost by the mean cost of one full-fidelity
+trial in the baseline arm, and they are never the number the gate
+reads—that denominator is itself estimated, and a point estimate of a
+one-third ratio is not a gate. The cost ratio carries a paired cluster
+bootstrap interval and the gate reads its upper bound. V06 passes only
+when both conditions hold: quality is non-inferior within its margin
+\emph{and} the upper bound on the cost ratio clears one third. Passing
+on quality while cost overruns is not a pass, and neither is the
+reverse.
 
 \textbf{``Measured trial savings'' (V12):} The warm-started study
 reaches the same final objective value in at least 20\% fewer trials
@@ -221,10 +304,26 @@ only the initialization differs. Below 20\%, warm starting is not
 worth defaulting on.
 
 \textbf{``Hypervolume with uncertainty'' (V09):} Report hypervolume
-over budget with 95\% confidence bands from bootstrap resampling of
-tuning runs. Rank methods by their final hypervolume; demote the
-premium method (qLogNEHVI) to an option if the interval overlaps the
-simpler method's (Chebyshev) or if it loses outright.
+over budget with 95\% confidence bands from paired cluster bootstrap
+resampling. The decision is made on the paired difference between
+qLogNEHVI and each comparator, not on whether their marginal intervals
+touch. An earlier draft of this section demoted the premium method when
+its interval overlapped the simpler method's, which is not a test of a
+difference at all: two marginal intervals can overlap while the paired
+difference is decisively nonzero, because pairing removes the
+between-instance variance that makes each marginal wide, and they can
+separate while the paired difference is not significant. Reading overlap
+as a verdict throws away the pairing the design paid for and answers a
+question nobody asked.
+
+The reference point and the objective normalization are fixed from
+declared domain bounds in the task registry before any campaign data
+exists. Hypervolume is not scale-free—it moves with the reference point
+and with how the objectives are scaled—so a reference point chosen after
+seeing results is a threshold chosen after seeing results. qLogNEHVI
+must clear both the Chebyshev scalarization and the wrapped NSGA-II at
+the gate's adjusted level to hold its tier slot; a tie against the
+simpler method demotes it to an option, as the register says.
 
 \textbf{``Enough studies'' (V12):} The run store must contain at
 least ten completed studies from the same model family (same
@@ -232,10 +331,19 @@ architecture class, same task domain) before V12 runs. Below that,
 the warm-start query has no data to learn from and the test is
 meaningless.
 
-All numerical gates (0.5\%, one-third, 20\%, 0.6 for V10, 1.01 for
-V13) are judgments recorded before the data arrives, not fit to
-results. The V10 and V13 protocols later in this chapter set their
-thresholds explicitly; the phrases above inherit the same discipline.
+All numerical gates (one-third for V06, 20\% for V12, the false-cull
+and recall bounds for V10, 1.01 for V13) are judgments recorded before
+the data arrives, not fit to results. The V10 and V13 protocols later in
+this chapter set their thresholds explicitly; the phrases above inherit
+the same discipline. Every one of them, together with each entry's
+estimand, direction, family, power target, maximum sample, missingness
+rule, and release consequence, is recorded in
+\texttt{validation/protocols.json}, which is the machine-readable
+authority this prose is checked against. That file exists because this
+chapter drifted from a set of corrections it had already accepted, in
+five separate entries, and nothing detected the drift until review; a
+rule that lives only in prose is a rule with no way to notice when it
+changes.
 
 \subsection{Sampling levels and paired designs}
 
@@ -259,17 +367,39 @@ compute, and it applies wherever the methods being compared consume
 seeds the same way. Where they do not, because a population method
 spends seeds on a schedule a sequential method has no analogue for,
 the entry says so and falls back to unpaired sampling with the larger
-sample size the power calculation then demands.
+sample size the power calculation then demands. Which case an entry is
+in is declared before its data exists. ``Fall back to unpaired if the
+seed-level correlation breaks'' is not a rule unless \emph{breaks} was
+defined in advance, and an entry that chooses its pairing after seeing
+which choice looks better has chosen its threshold after seeing the
+data.
 
 Uncertainty is computed by hierarchical bootstrap rather than by
-resampling individual trials. The resampling unit is the complete
-tuning run; when runs span several tasks, tasks are resampled and
-then runs within the sampled tasks, preserving the nesting. The
-statistic of interest is recomputed on each of 10,000 bootstrap
-samples and reported at empirical percentiles. This propagates every
-level's variance without assuming a distributional form for any of
-them, and it is the procedure behind every interval quoted in this
-chapter.
+resampling individual trials, and the unit matters more than the
+nesting. The resampling unit is the complete study replicate: tasks are
+resampled with replacement, and within each sampled task, complete
+paired blocks are resampled with replacement, with the arms inside a
+block held together. An earlier draft said only that runs were
+resampled within sampled tasks, which reads as resampling each arm
+independently—and that destroys exactly the covariance pairing was
+introduced to exploit, quietly widening every paired interval in the
+chapter. Individual trials are never the unit: a searcher chooses its
+later trials in light of its earlier ones, so trials inside a run are
+adaptively selected and are not exchangeable.
+
+The statistic of interest is recomputed on each of 10,000 bootstrap
+samples and reported at empirical percentiles. Ten thousand draws bound
+the Monte Carlo error of the interval, not the number of clusters
+underneath it; with roughly ten clusters the interval is wide however
+many draws are taken, and no draw count converts a pinned-task result
+into a workload-family one. An entry whose acceptance set holds a single
+task says so and limits its claim to that task, which is why V08 and
+V09 report pinned-task results rather than family-level ones. Failed and
+stopped runs need the same discipline: each entry declares whether an
+incomplete replicate is dropped with its paired block, carried forward
+at its last observed value, or scored as worst case, and a campaign
+losing more than a tenth of its planned replicates in any arm is void
+rather than merely noisy.
 
 \subsection{Development and acceptance tasks}
 
@@ -297,6 +427,30 @@ numbers and dates in the task registry. The registry is what makes
 task-selection bias auditable after the fact, which matters
 precisely because the person selecting is usually the person hoping.
 
+Two details decide whether that audit can actually be performed.
+``Chosen by an engineer not implementing the capability'' is a role
+separation, and role separation is not a sampling design: it leaves the
+task universe, the eligibility filters, the stratification, and the
+tie-breaking unstated, so a selection made in good faith is still
+unreproducible. The registry therefore records the selection
+\emph{algorithm} and the candidate set, committed by hash before the
+implementation freeze, with the selected identifiers revealed at gate
+time as before. Blinding protects against reading results early;
+committing the algorithm protects against the discretion that survives
+blinding.
+
+The other detail is exposure. Migrating a development task into
+acceptance carries everything the implementers learned from it while
+debugging against it, so a task cannot be laundered by relabeling.
+Every task carries an exposure history in the registry, naming which
+capabilities have seen it and in which role, and a task that has been
+developed against does not become acceptance evidence for the same
+capability. Nor may a prior tier's acceptance result be recycled as new
+evidence at a later gate. And one task per family cannot carry a
+family-level claim however carefully it was chosen: either the acceptance
+set holds several independent tasks, or the claim names the pinned task
+and stops there.
+
 \subsection{Multiple comparisons and endpoints}
 
 Several entries ask more than one question. V04 compares searchers
@@ -307,24 +461,59 @@ spurious winner on average, which is enough to promote a searcher
 that does nothing.
 
 Each entry therefore predeclares one primary endpoint, the single
-comparison the tier's completion depends on, and labels the rest.
-The primary endpoint is judged at $\alpha = 0.05$ uncorrected,
-because there is one of it. Secondary comparisons that feed a ranking
-claim are controlled family-wise at $\alpha = 0.05$ by the
-Holm--Bonferroni stepdown procedure \citep{holm1979simple}, which is
-uniformly more powerful than plain Bonferroni at the same guarantee
-and needs no assumption about dependence among the tests.
-Comparisons that rank nothing and decide nothing, the descriptive
-kind this chapter has already licensed, need no correction, and
-saying so is what keeps multiplicity control from becoming a tax on
-honest reporting.
+comparison the tier's completion depends on, and labels the rest. But
+one primary endpoint per entry is not one comparison per decision, and
+an earlier draft of this chapter drew exactly that false inference: it
+judged each primary at $\alpha = 0.05$ uncorrected on the grounds that
+there was only one of it. There is only one per entry, and a gate
+decides several entries at once. Six independent primaries at an
+uncorrected threshold carry a family-wise false-positive probability of
+$1 - 0.95^6 \approx 0.26$, and the full suite of fifteen carries
+$1 - 0.95^{15} \approx 0.54$. A gate that promotes on those terms is
+promoting noise about half the time it promotes.
 
-V04's primary endpoint, as the worked instance: whether the tier-0 GP
-with qLogEI beats the log-plus-Sobol floor on the acceptance task at
-matched budget. Comparisons among GP variants, or across development
-tasks, are secondary and corrected. Every entry's primary endpoint is
-written into its protocol before its campaign begins, for the same
-reason its thresholds are.
+The family is therefore the gate, not the entry. Every decision-bearing
+primary at a gate joins that gate's confirmatory family and is
+controlled family-wise at $\alpha = 0.05$ by the Holm--Bonferroni
+stepdown procedure \citep{holm1979simple}, which is uniformly more
+powerful than plain Bonferroni at the same guarantee and needs no
+assumption about dependence among the tests. Secondary comparisons that
+feed a ranking claim are controlled in the same family. The gate, and
+not the program, is the unit because gates are separate decisions taken
+at different times on different data with different release
+consequences; a single family stretched across thirty weeks would cost
+the tier-0 floor tests real power for no inferential gain.
+
+Two kinds of entry sit outside the families and consume no
+$\alpha$. Hard vetoes decide on a deterministic criterion rather than a
+rejected null: a divergent run promoted, a veto-failing configuration
+surviving, a protected seed reaching the searcher, a mutation score
+below its floor. Reproduction checks likewise either reproduce or do
+not. Neither is a ranking claim, and correcting them would trade real
+power for a guarantee that was never at risk. Comparisons that rank
+nothing and decide nothing, the descriptive kind this chapter has
+already licensed, need no correction either, and saying so is what
+keeps multiplicity control from becoming a tax on honest reporting.
+
+Where an entry must beat more than one comparator to earn its slot, the
+entry declares an intersection--union rule and must clear every
+comparator at the adjusted level; V09 against both Chebyshev
+scalarization and NSGA-II is the worked case. Where beating any one
+comparator suffices, the comparators enter the family as separate
+members instead. And a budget point may not be chosen after inspecting
+a performance-over-budget curve, which is a repeated look wearing the
+costume of a summary: an entry whose decision rests on a curve names a
+summary functional, such as normalized area under the regret curve,
+before its campaign begins.
+
+V04's tier-0 primary endpoint, as the worked instance: whether the
+tier-0 GP with qLogEI beats the log-plus-Sobol floor on the acceptance
+tasks at matched measured budget, judged at the tier-0 gate's adjusted
+level. Comparisons among GP variants, or across development tasks, are
+secondary and corrected in the same family. Every entry's primary
+endpoint, its family, and its adjusted level are written into
+\texttt{validation/protocols.json} before its campaign begins, for the
+same reason its thresholds are.
 
 \subsection{Immutable artifacts and preregistration}
 
@@ -338,6 +527,34 @@ script with its thresholds and tests committed to version control
 while the results do not yet exist, a full dependency lock and
 hardware description, the commit hash of the code under test, and a
 creation timestamp with a signature.
+
+\emph{Signed} and \emph{immutable} have to name mechanisms rather than
+intentions, though, and an earlier draft of this section used both words
+without either. A SHA-256 checksum establishes integrity, not
+authenticity: it proves a file has not changed, not that the party who
+declared it had the authority to. So the scheme is named—the manifest is
+signed over a canonical JSON serialization, with a declared key owner, a
+verification key published through a channel separate from the
+repository, and a rotation procedure. Canonicalization matters more than
+it sounds: the same manifest with reordered keys or different whitespace
+hashes differently, so two honest parties can disagree about whether a
+signature verifies. The dependency lock is machine-readable and reaches
+past package versions to their hashes, the package indexes, the operating
+system, the Python, the accelerator driver and toolkit, the container
+image digest, and the cluster runtime.
+
+Immutability has a matching gap. Git history is not immutable if anyone
+can force-push, and a ten-gigabyte checkpoint is not governable by
+ordinary Git at all. Large artifacts therefore live in a
+content-addressed object store with a stated retention, backup, and
+deletion policy, and the manifest carries the URI and digest rather than
+the bytes. The order of operations is fixed too, since a manifest signed
+after a run began proves nothing: commit the analysis, freeze the task
+and seed registries, build and sign the manifest, verify it, and only
+then start the campaign. A pre-run check refuses to launch when the
+signature, the code commit, the task registry, or the dependency lock
+fails to verify, which is what makes the ordering an enforced property
+rather than a described one.
 
 Results are written as versioned JSON with the manifest hash
 embedded, under \texttt{validation/artifacts/}, a path deliberately
@@ -396,7 +613,28 @@ repetitions are bought. If they disagree, the entry reports
 \emph{unresolved at this budget} and the flagship keeps whatever
 status it had going in, which is a hold rather than a promotion; the
 one outcome V08 may never produce is a promotion on evidence that did
-not separate. The demotion direction is asymmetric and deliberately
+not separate.
+
+Agreement in ordering needs a definition, or the stopping rule inherits
+the flexibility it was written to remove. The statistic is the mean
+range-normalized difference against the worse of the two comparators,
+computed per side. Two arms within two percent of each other on that
+scale are a tie and count toward neither ordering. A side with fewer
+than three completed repetitions is not callable at all and is re-run
+rather than read. And consistent ordering alone does not demote: three
+noisy repetitions pointing the same way is weak evidence of direction
+and almost none of magnitude, so the shortfall must also exceed ten
+percent, twice the decision margin, before the tripwire fires. The
+probability that this rule fires when the flagship is in fact fine is
+estimated by simulation from the pilot hierarchy and printed in the gate
+report, because an asymmetric rule whose false-demotion rate nobody
+publishes is an asymmetry nobody can weigh.
+
+The regime the boundary divides is named as well: the home side is
+sixteen workers, and the lower side is four. The lower side exists to
+show that the population line is not winning merely by consuming
+parallelism no sequential method was given, and a result there cannot
+by itself call the entry either way. The demotion direction is asymmetric and deliberately
 so: a consistent loss in the flagship's home regime demotes it on
 three repetitions, because the claim being falsified is a strong one
 and a strong claim can be broken by a weak test, whereas confirming
@@ -422,6 +660,19 @@ repetitions per arm per side with preregistered margins and decision
 boundaries. The three-repetition run is a tripwire, not promotion
 evidence, and no accumulation of tripwires becomes one.
 
+A fourth state has to be distinguished from the three above, because
+conflating it with demotion would retire a method for a bug: the
+population manager failing to run correctly is an
+\emph{implementation failure}, not a method loss. It blocks the tier
+until fixed and the campaign is re-run; it never demotes.
+
+The demotion path also needs its fallback defined all the way down. If
+the flagship demotes, defaults revert to whichever of DEHB or BO+ASHA
+won V07—and if V07 tied or came back inconclusive, to DEHB. Naming that
+tie-break here matters because V08's fallback rule points at V07's
+outcome, and a rule that resolves to another entry's undefined state is
+undefined itself at exactly the moment a gate needs it.
+
 Tier~2 completion therefore requires that V08 be neither demoted nor
 blocked by an implementation failure; a hold is acceptable
 completion. That is the honest reading of a capability whose audience
@@ -431,30 +682,61 @@ documented as guidance rather than enforced as a default, and the
 campaign that would promote it waits for tier~3 or a post-release
 cycle, if demand and budget ever arrive together.
 
+But \emph{waits for a post-release cycle, if demand and budget ever
+arrive together} is how a hold becomes permanent by neglect, and a
+capability parked next to a release decision with no owner and no
+deadline is the failure mode this whole chapter is written against. A
+hold therefore carries three things or it is not a hold: a named owner,
+a dated expiry, and a funded follow-up campaign committed at the time
+the hold is entered rather than sought afterwards. Until the powered
+campaign runs, the population line ships opt-in only, with no default
+dispatch on any workload. If the expiry passes without that campaign
+completing, the entry auto-demotes to an option rather than lingering.
+The hold does not block the internal beta gate, which is what makes the
+expiry the load-bearing part: a state that costs nothing to hold and
+never ends is not a decision, it is a deferral wearing a decision's
+clothes.
+
 \section{Two entries whose protocol needs pinning}
 
 V10 and V13 both gate a capability on a threshold, so the threshold
 has to be a number chosen before the data arrives rather than after.
 
 V10 asks whether a short-horizon energy-drift measurement may cull a
-Hamiltonian trial. The pilot runs a fixed set of one hundred
-configurations drawn uniformly from the search space, each at a
-single fixed seed, to full fidelity (the study's declared endpoint),
-recording drift at the candidate rung (proposed as one third of the
-endpoint) and at the end. The gate metric is Spearman rank
-correlation between the two drift vectors (one value per
-configuration, not per run, since single-seed eliminates within-config
-variance). Compute the bootstrap 95\% confidence interval by
-resampling configurations with replacement 10,000 times and taking
-empirical percentiles of the resampled correlations. MO-ASHA may kill
-on that signal only if the interval's lower bound clears $0.6$. Below
-it, the scheduler still runs but the signal is advisory, promotion
-decisions falling back to the objective that does correlate. The
-number 0.6 is a judgment, not a result from the literature, and it is
-recorded here so that a later argument about it is an argument about
-a written-down choice. The hundred-trial campaign costs about 133
-full runs on the Hamiltonian task, budgeted under layer-two
-validation.
+Hamiltonian trial, and the question is a safety question rather than an
+association question. An earlier draft answered the wrong one. It ran a
+hundred configurations at a single fixed seed, measured drift at the
+candidate rung and at the endpoint, and let MO-ASHA kill on the signal
+whenever the bootstrap lower bound on the Spearman correlation cleared
+$0.6$. Two things are wrong with that. A rank correlation, however high,
+does not bound the probability that culling removes a configuration that
+would have finished top-$k$ or Pareto-optimal: correlation describes the
+middle of the distribution, and culling errors live in the tail where a
+late-blooming configuration sits low at the rung. And one seed per
+configuration confounds configuration quality with training-seed
+variance, so the design cannot estimate a culling error rate even in
+principle—there is no within-configuration variation left to estimate it
+from.
+
+The entry now measures the operational error directly. Configurations
+are evaluated across five training seeds each, on several independent
+tasks of the Hamiltonian family rather than one, and the gate reads two
+bounds: the upper confidence bound on the probability of culling a
+configuration that would have finished in the top ten must clear
+$0.05$, and the lower bound on top-ten survivor recall must clear
+$0.90$. Both must hold; clearing one is not a pass. The Spearman
+correlation survives as a descriptive statistic, reported with its
+interval and deciding nothing, and the normalized regret of the culled
+set is a corrected secondary. The candidate rung is fixed before any
+acceptance data is seen. Below the bounds the scheduler still runs but
+the signal is advisory, promotion decisions falling back to the
+objective that does correlate. The thresholds are judgments, not results
+from the literature, and they are recorded here and in the protocol
+register so that a later argument about them is an argument about a
+written-down choice. The campaign is larger than the earlier
+design—configurations times seeds times tasks—and is budgeted under
+layer-two validation accordingly, which is the price of measuring the
+error the scheduler can actually make.
 
 V13 asks whether the sampler study's correctness vetoes hold. Three
 components, each with its own rule. The vetoes themselves are
@@ -471,25 +753,59 @@ per the rank-normalized folded formula of \citet{vehtari2021rhat}; the
 veto fires if any marginal exceeds $1.01$ or if effective sample size
 falls below 400. Divergent transitions are reported by the sampler
 itself (a numerical-integration failure during the Hamiltonian
-trajectory). A bimodal or multimodal target is detected by visual
-inspection of marginal trace plots during the pilot; if found, chains
-are re-initialized from dispersed modes rather than randomly, per
-Bayesian workflow recommendations.
+trajectory). Bulk and tail effective sample size are both monitored, not
+a single pooled figure, since a chain can carry ample bulk mass and
+still resolve the tails too poorly to trust an interval.
+
+Multimodality is detected by an automated diagnostic: mixture-component
+detection on the pooled draws together with a between-chain mode
+disagreement statistic, each against a threshold declared in the
+protocol register. An earlier draft detected it by visual inspection of
+marginal trace plots during the pilot and re-initialized the chains from
+dispersed modes if anything looked bimodal. That is a researcher degree
+of freedom sitting in the middle of a correctness test: the decision to
+re-initialize depends on a judgment made after seeing the draws, and two
+analysts inspecting the same traces need not reach the same conclusion.
+The behavior it described is right—dispersed re-initialization is the
+correct response to a multimodal target—so it survives as a
+preregistered protocol branch that a declared statistic triggers, rather
+than as a response to an inspection.
 
 Survivors are ranked by effective sample size per gradient evaluation,
 the cost measure the executor records rather than one the user
-supplies. And agreement with the reference posterior is checked on the
-pilot: the reference is computed once at great length using the same
-four-chain protocol but with 20,000 retained draws per chain, and each
-candidate configuration's marginal means and variances are compared to
-the reference marginals. Agreement is defined as: the candidate's
-posterior mean falls within one standard error of the reference
-posterior mean, where the standard error of each mean is $\sigma /
-\sqrt{\text{ESS}}$, using each sampler's own reported effective sample
-size and posterior standard deviation. An entry that ranks a fast,
-subtly wrong sampler above a slow, correct one is the failure this
-test exists to catch, which is why speed enters only after the vetoes
-and the agreement check have passed.
+supplies. Correctness itself is established two ways. The first is
+simulation-based calibration: over a declared set of fixtures with known
+generating parameters, the rank of the true parameter within the
+posterior draws must be uniform, checked against a simultaneous band on
+the rank histogram. Calibration fixtures test the sampler against
+ground truth rather than against another sampler, which is the only
+check that can catch an error both implementations share.
+
+The second is agreement with a reference posterior computed once at
+great length using the same four-chain protocol but with 20,000
+retained draws per chain. An earlier draft defined agreement as the
+candidate's posterior mean falling within one standard error of the
+reference mean. That criterion is too weak in three ways at once. It
+treats the reference as exact when the reference is itself a finite
+sample with its own Monte Carlo error; a one-standard-error band is a
+roughly 68 percent interval, so a correct sampler fails it about a third
+of the time; and applied to each marginal separately across many
+marginals, it either flags a correct sampler somewhere by chance or, read
+charitably, flags nothing at all. Agreement is now Monte Carlo standard
+error aware and simultaneous: the band accounts for the sampling error of
+both the candidate and the reference, and the criterion is applied
+jointly across the monitored marginals rather than one at a time. The
+reference artifact, the monitored marginal list, and the fixture set are
+all frozen before any candidate is evaluated.
+
+The vetoes are deliberately conservative, and conservatism has a price
+worth naming: a hard veto will occasionally block a configuration that
+was in fact fine. That false-veto rate is reported in the gate report
+rather than left implicit, because a safety threshold whose error rate
+nobody publishes is a threshold nobody can argue with. An entry that
+ranks a fast, subtly wrong sampler above a slow, correct one is the
+failure this test exists to catch, which is why speed enters only after
+the vetoes, the calibration check, and the agreement check have passed.
 
 \section{Sabotage entries}
 

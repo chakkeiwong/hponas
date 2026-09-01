@@ -3,7 +3,7 @@
 A workspace-internal hyperparameter tuning system serving RL (PPO on RLlib), Hamiltonian neural networks, neural-transport samplers, and multi-objective financial models.
 
 **Status:** R1 spike complete, Tier 0 ready to start  
-**Survey:** [hpo-survey/main.pdf](hpo-survey/main.pdf) (114 pages, ready for review)  
+**Survey:** [hpo-survey/main.pdf](hpo-survey/main.pdf) (118 pages, ready for review)  
 **Build program:** [BUILD_PROGRAM.md](BUILD_PROGRAM.md) (v2 pending generation)  
 **Environment setup:** [setup/INSTALL.md](setup/INSTALL.md)
 
