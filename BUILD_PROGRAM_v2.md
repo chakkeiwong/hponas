@@ -44,7 +44,7 @@ Three-tier build with gates at end of Tier 0, Tier 1, and Tier 2, plus mandatory
 - Architecture factory contract written (Ch 15 `sec:archfactory`)
 - Traceability matrix: 63 decisions with tier/validation mappings
 - `product_register.json`: 48 in-scope entries
-- Survey builds clean at 114 pages
+- Survey builds clean at 118 pages
 
 ### Exit criteria
 - [x] All corrections reviewed and committed

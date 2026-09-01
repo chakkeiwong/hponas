@@ -28,10 +28,45 @@ Usage:
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
 PROTOCOLS_PATH = Path('validation/protocols.json')
+CHAPTER_PATH = Path('hpo-survey/sections/16-validation.tex')
+
+# Rules the accepted corrections retired. Each may still be *discussed* in the chapter
+# (the amendments explain why each was wrong, which is worth keeping), but may not
+# reappear as an active rule. The guard is proximity to a retirement marker: prose that
+# introduces one of these without framing it as retired is drift.
+#
+# This is the check that finding F1 needed and did not have. Five entries had already
+# been corrected on paper while the chapter still carried the superseded rule.
+RETIRED_RULES = [
+    (r'0\.5\\%', 'V01 fixed 0.5% tolerance band (replaced by distributional comparison)'),
+    (r'clears \$0\.6\$|lower bound clears \$0\.6\$',
+     'V10 gating on Spearman rho >= 0.6 (replaced by false-cull and recall bounds)'),
+    (r'single fixed seed',
+     'V10 single-seed design (replaced by 5 seeds per configuration)'),
+    (r'visual\s+inspection',
+     'V13 visual multimodality inspection (replaced by automated diagnostics)'),
+    (r'within one standard error',
+     'V13 one-standard-error agreement check (replaced by simultaneous MCSE bands)'),
+    (r'if the interval overlaps',
+     'V09 demotion on marginal-interval overlap (replaced by a paired test)'),
+    (r'threshold applies to accelerator-seconds',
+     'V06 threshold on accelerator-seconds with queue folded in (replaced by billed resource-seconds)'),
+    (r'\$\\alpha = 0\.05\$ uncorrected',
+     'uncorrected per-entry primary alpha (replaced by per-gate Holm-Bonferroni)'),
+]
+
+RETIREMENT_MARKERS = [
+    'earlier draft', 'no longer', 'replaced', 'superseded',
+    'an earlier version', 'that draft', 'wrong instrument',
+]
+
+# How far from an occurrence a retirement marker may sit and still frame it.
+RETIREMENT_WINDOW = 700
 
 # Fields every entry must carry, whatever its class.
 REQUIRED_ALL = [
@@ -317,6 +352,53 @@ def check_program_alignment(entries: dict) -> list[str]:
     return problems
 
 
+def check_retired_rules() -> list[str]:
+    """
+    The chapter may explain a retired rule but may not carry it as an active one.
+
+    Finding F1 was a set of retired rules still sitting in the chapter as live text.
+    Nothing compared the accepted corrections against the prose, so the drift survived
+    until external review. This check closes that loop: each retired rule must appear
+    within RETIREMENT_WINDOW characters of a marker that frames it as superseded.
+    """
+    problems = []
+    if not CHAPTER_PATH.exists():
+        return [f"{CHAPTER_PATH} not found; cannot check for retired rules"]
+
+    text = CHAPTER_PATH.read_text()
+    lowered = text.lower()
+
+    for pattern, description in RETIRED_RULES:
+        for match in re.finditer(pattern, text, re.I):
+            start = max(0, match.start() - RETIREMENT_WINDOW)
+            window = lowered[start : match.end() + RETIREMENT_WINDOW]
+            if any(marker in window for marker in RETIREMENT_MARKERS):
+                continue
+            line = text.count('\n', 0, match.start()) + 1
+            problems.append(
+                f"{CHAPTER_PATH}:{line}: retired rule present without a retirement "
+                f"marker — {description}"
+            )
+    return problems
+
+
+def check_entries_documented() -> list[str]:
+    """Every register entry is discussed in the chapter, so neither can drop the other."""
+    problems = []
+    if not CHAPTER_PATH.exists():
+        return []
+
+    text = CHAPTER_PATH.read_text()
+    data = json.loads(PROTOCOLS_PATH.read_text())
+
+    for vid in data['entries']:
+        # Split entries (V04-T0, V11a) are discussed under their base id in prose.
+        base = _base_id(vid)
+        if base not in text:
+            problems.append(f"{base}: in the protocol register but absent from the chapter")
+    return problems
+
+
 def check_open_decisions(data: dict) -> list[str]:
     """Open policy decisions are surfaced, not silently defaulted."""
     problems = []
@@ -348,6 +430,8 @@ def main() -> int:
         ("release consequences", check_consequences(entries)),
         ("power targets", check_power_targets(data)),
         ("program alignment", check_program_alignment(entries)),
+        ("retired rules absent", check_retired_rules()),
+        ("entries documented", check_entries_documented()),
         ("open decisions", check_open_decisions(data)),
     ]
 

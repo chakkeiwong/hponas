@@ -17,7 +17,7 @@
 **Effort:** 2 days actual (14 planned)  
 **Report:** [../R0_COMPLETION_REPORT.md](../R0_COMPLETION_REPORT.md)
 
-- [x] All 8 statistical corrections applied; survey builds clean at 114 pages
+- [x] All 8 statistical corrections applied; survey builds clean at 118 pages (114 at R0 close, before the protocol amendments of 2026-08-31)
 - [x] NAS scope decided (Option A: moderate architecture coordinates, +16 eng-days)
 - [x] Knob-kind ambiguity resolved (three typed kinds; conditionality is structural)
 - [x] Architecture factory contract written into survey Ch 15 (`sec:archfactory`)
