@@ -315,6 +315,7 @@ def check_program_alignment(entries: dict) -> list[str]:
         return [f"could not import gate map from generate_build_program: {exc}"]
 
     gate_name_map = {
+        'tier0_remediation': 'tier0_remediation',
         'tier0_gate': 'tier0',
         'tier1_gate': 'tier1',
         'tier2_gate': 'tier2',
@@ -323,7 +324,7 @@ def check_program_alignment(entries: dict) -> list[str]:
     }
 
     program_ids = {
-        base for entries_ in PROGRAM_GATE_ASSIGNMENT.values() for base in entries_
+        _base_id(vid) for entries_ in PROGRAM_GATE_ASSIGNMENT.values() for vid in entries_
     }
     protocol_ids = {_base_id(vid) for vid in entries}
 
@@ -342,11 +343,12 @@ def check_program_alignment(entries: dict) -> list[str]:
         if program_gate is None:
             problems.append(f"{vid}: gate {gate!r} is not a known program gate")
             continue
-        base = _base_id(vid)
-        if base not in PROGRAM_GATE_ASSIGNMENT.get(program_gate, []):
+        # Check if this exact vid (or its base) is in the program gate
+        assigned = PROGRAM_GATE_ASSIGNMENT.get(program_gate, [])
+        if vid not in assigned and _base_id(vid) not in assigned:
             problems.append(
                 f"{vid}: protocol assigns it to {gate}, but BUILD_PROGRAM runs "
-                f"{base} at {[g for g, v in PROGRAM_GATE_ASSIGNMENT.items() if base in v]}"
+                f"{_base_id(vid)} at {[g for g, v in PROGRAM_GATE_ASSIGNMENT.items() if vid in v or _base_id(vid) in v]}"
             )
 
     return problems
