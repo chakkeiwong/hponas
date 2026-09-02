@@ -22,16 +22,20 @@ from .searchers import Searcher
 
 try:
     from botorch.models import SingleTaskGP
-    from botorch.acquisition import qLogNoisyExpectedHypervolumeImprovement
+    from botorch.acquisition.multi_objective import (
+        qLogNoisyExpectedHypervolumeImprovement,
+    )
     from botorch.optim import optimize_acqf
     from botorch.utils.transforms import normalize, unnormalize
     from botorch.utils.multi_objective import Hypervolume
     from gpytorch.mlls import ExactMarginalLogLikelihood
-    from botorch import fit_gpytorch_model
+    from botorch.fit import fit_gpytorch_mll
     import torch
     BOTORCH_AVAILABLE = True
-except ImportError:
+    BOTORCH_IMPORT_ERROR: str | None = None
+except ImportError as _e:  # record why, so a silent False is never mistaken for "not installed"
     BOTORCH_AVAILABLE = False
+    BOTORCH_IMPORT_ERROR = f"{type(_e).__name__}: {_e}"
 
 
 class qLogNEHVISearcher(Searcher):
@@ -68,7 +72,10 @@ class qLogNEHVISearcher(Searcher):
             seed: Random seed
         """
         if not BOTORCH_AVAILABLE:
-            raise ImportError("qLogNEHVISearcher requires botorch: pip install botorch")
+            raise ImportError(
+                "qLogNEHVISearcher requires botorch. Underlying import error: "
+                f"{BOTORCH_IMPORT_ERROR}"
+            )
 
         self.space = space
         self.objectives = objectives
@@ -101,11 +108,15 @@ class qLogNEHVISearcher(Searcher):
             if knob.kind == "categorical":
                 raise ValueError(f"Tier 1: qLogNEHVI doesn't support categorical knobs yet")
 
-        self.capabilities = {
+    @property
+    def capabilities(self) -> dict[str, Any]:
+        """Declare what this searcher supports (Ch 15 contract)."""
+        return {
             "knob_kinds": ["continuous", "ordinal"],
+            "conditionals": False,
             "multi_objective": True,
-            "fidelity_aware": False,
-            "supports_log_transform": True,
+            "prior": False,
+            "max_dim": 20,
         }
 
     def propose(self, n: int = 1) -> list[dict[str, Any]]:
@@ -122,20 +133,25 @@ class qLogNEHVISearcher(Searcher):
         # BO acquisition
         return self._propose_bo(n)
 
+    def _denormalize_knob(self, u: float, knob) -> Any:
+        """Map u in [0, 1] to a knob value, honouring the declared transform."""
+        low, high = knob.bounds
+        if knob.transform == "log":
+            val = float(np.exp(np.log(low) + u * (np.log(high) - np.log(low))))
+        else:
+            val = float(low + u * (high - low))
+        if knob.kind == "ordinal":
+            return int(np.clip(round(val), low, high))
+        return val
+
     def _propose_random(self, n: int) -> list[dict[str, Any]]:
         """Random sampling for initialization."""
         configs = []
         for _ in range(n):
             config = {}
             for knob in self.space.knobs:
-                if knob.kind == "continuous":
-                    # Uniform in [0, 1], transform applied by space
-                    val = self.rng.uniform(0, 1)
-                    config[knob.name] = knob.denormalize(val)
-                elif knob.kind == "ordinal":
-                    # Random integer in range
-                    low, high = knob.bounds
-                    config[knob.name] = self.rng.randint(low, high + 1)
+                u = self.rng.uniform(0, 1)
+                config[knob.name] = self._denormalize_knob(u, knob)
             configs.append(config)
         return configs
 
@@ -152,7 +168,7 @@ class qLogNEHVISearcher(Searcher):
 
             model = SingleTaskGP(X_train, y_obj)
             mll = ExactMarginalLogLikelihood(model.likelihood, model)
-            fit_gpytorch_model(mll)
+            fit_gpytorch_mll(mll)
 
             models.append(model)
 
@@ -193,13 +209,7 @@ class qLogNEHVISearcher(Searcher):
         """Convert normalized tensor to config dict."""
         config = {}
         for i, knob in enumerate(self.space.knobs):
-            val = x[i]
-            if knob.kind == "continuous":
-                config[knob.name] = knob.denormalize(val)
-            elif knob.kind == "ordinal":
-                # Round to nearest integer
-                low, high = knob.bounds
-                config[knob.name] = int(np.clip(np.round(val * (high - low) + low), low, high))
+            config[knob.name] = self._denormalize_knob(float(x[i]), knob)
         return config
 
     def _compute_pareto_mask(self, Y: np.ndarray) -> np.ndarray:
@@ -249,13 +259,13 @@ class qLogNEHVISearcher(Searcher):
         self._Y.append(y)
 
     def _normalize_knob(self, val: Any, knob) -> float:
-        """Normalize knob value to [0, 1]."""
-        if knob.kind == "continuous":
-            return knob.normalize(val)
-        elif knob.kind == "ordinal":
-            low, high = knob.bounds
-            return (val - low) / (high - low)
-        return 0.0
+        """Normalize a knob value to [0, 1], inverting the declared transform."""
+        low, high = knob.bounds
+        if knob.transform == "log":
+            return float(
+                (np.log(val) - np.log(low)) / (np.log(high) - np.log(low))
+            )
+        return float((val - low) / (high - low))
 
     def state_dict(self) -> dict[str, Any]:
         """Serialize state."""
