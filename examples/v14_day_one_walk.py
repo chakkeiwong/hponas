@@ -158,21 +158,39 @@ def run_day_one_walk():
             )
 
         except ImportError as e:
-            print(f"  Skipped: {e}")
-            print(f"  (Install jax and brax to run RL workload)")
-            break
+            # Do NOT swallow this into a "complete" walk. A missing workload
+            # dependency means the day-one walk did not happen, and V14 must not
+            # be reported as satisfied.
+            print(f"  ABORT: {e}")
+            print(f"  (Install jax and brax to run the RL workload)")
+            store.close()
+            raise SystemExit(
+                "V14 day-one walk did NOT run: rl_routine dependencies missing. "
+                "This is a failure, not a skip."
+            )
 
     # Step 6: Verify seed isolation
+    trials = store.read_trials(study_id)
+    if not trials:
+        store.close()
+        raise SystemExit(
+            "V14 day-one walk produced zero trials — seed isolation and the "
+            "composition claim are both unverifiable. Reporting FAILURE."
+        )
+
     print("\n\n=== V14 Seed Isolation Verification ===")
     print(f"Protected test seed: {protected_test_seed}")
-    print(f"Searcher never observed this seed: TRUE")
-    print(f"  - Searcher only sees (config, value) pairs")
-    print(f"  - Test seed used only inside rl_routine for final evaluation")
-    print(f"  - V14 requirement: ✓ PASSED\n")
+    print(f"Trials recorded: {len(trials)}")
+    leaked = [t.trial_id for t in trials if t.seed == protected_test_seed]
+    if leaked:
+        store.close()
+        raise SystemExit(f"V14 seed leak: protected seed reached trials {leaked}")
+    print("  - Searcher only sees (config, value) pairs")
+    print("  - Test seed used only inside rl_routine for final evaluation")
+    print(f"  - V14 seed isolation over {len(trials)} trial(s): OK\n")
 
     # Step 7: Extract artifacts
     print("=== V14 Artifacts ===")
-    trials = store.read_trials(study_id)
     print(f"Trials completed: {len(trials)}")
 
     for trial in trials:

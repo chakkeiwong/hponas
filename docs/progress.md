@@ -115,7 +115,7 @@ Repairs findings F1-F3 and items 1-8 of RESPONSE_TO_CODEX_STATISTICAL_REVIEW.md.
 | Gate | Date | Criteria | Result | Report |
 |------|------|----------|--------|--------|
 | R1 | 2026-08-31 | R1 Gate Report | **PASS** | [r1_gate_2026-08-31.md](../gate_reports/r1_gate_2026-08-31.md) |
-| Tier 0 | 2024-09-02 | Tier 0 Gate Report | OUR | [tier0_gate_report.md](../gate_reports/tier0_gate_report.md) |
+| Tier 0 | 2026-09-02 | Tier 0 Gate Report | UNKNOWN | [tier0_gate_report.md](../gate_reports/tier0_gate_report.md) |
 | Tier 1 | TBD | V04-T1, V06, V09, V10, V11a, V11b, V13 | Pending | — |
 | Tier 2 | TBD | V08 | Pending | — |
 | Distributed Beta | TBD | V12 | Pending | — |

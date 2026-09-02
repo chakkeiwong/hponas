@@ -130,24 +130,42 @@ def v14_day_one_walk_validation(
         print(f"  ✓ Found: {checkpoint_dir}")
 
     # Check seed isolation (protected test seed should never be in observations)
+    #
+    # NOTE (2026-09-02): this check previously read only "999 not in trial_seeds".
+    # On an empty trials table that is vacuously true, so V14 reported PASS after a
+    # run that executed zero trials. That is the same class of defect the R1 gate hit
+    # (asserting on trial_id, which is trivially unique). The check now requires a
+    # non-empty trials table AND the expected training seeds, so it cannot pass on
+    # an empty run.
     print("\nChecking seed isolation...")
     seed_isolated = True
+    trials_executed = False
     protected_seed = 999  # From v14_day_one_walk.py
+    n_trials = 0
 
     if db_path.exists():
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
 
-            # Check if protected seed appears in trial seeds
             cursor.execute("SELECT seed FROM trials")
             trial_seeds = [row[0] for row in cursor.fetchall()]
+            n_trials = len(trial_seeds)
 
-            if protected_seed in trial_seeds:
-                print(f"  ✗ VIOLATION: Protected seed {protected_seed} found in trials")
+            if n_trials == 0:
+                print("  ✗ VACUOUS: trials table is empty — no trial ever ran.")
+                print("     Seed isolation cannot be demonstrated by a run with no trials.")
                 seed_isolated = False
             else:
-                print(f"  ✓ Protected seed {protected_seed} never reached searcher")
+                trials_executed = True
+                if protected_seed in trial_seeds:
+                    print(f"  ✗ VIOLATION: Protected seed {protected_seed} found in trials")
+                    seed_isolated = False
+                else:
+                    print(
+                        f"  ✓ {n_trials} trial(s) recorded; protected seed "
+                        f"{protected_seed} never reached the searcher"
+                    )
 
             conn.close()
 
@@ -157,8 +175,14 @@ def v14_day_one_walk_validation(
     else:
         seed_isolated = False
 
-    # Overall pass/fail
-    passed = executed_successfully and artifacts_present and seed_isolated
+    # Overall pass/fail. trials_executed is a separate, explicit requirement:
+    # V14 claims the day-one walk *reproduces*, which a zero-trial run does not.
+    passed = (
+        executed_successfully
+        and artifacts_present
+        and trials_executed
+        and seed_isolated
+    )
 
     print(f"\nOverall: {'✓ PASSED' if passed else '✗ FAILED'}")
 
@@ -174,6 +198,8 @@ def v14_day_one_walk_validation(
     return {
         "executed_successfully": executed_successfully,
         "artifacts_present": artifacts_present,
+        "trials_executed": trials_executed,
+        "n_trials": n_trials,
         "seed_isolated": seed_isolated,
         "passed": passed,
         "script_path": str(script_path),
