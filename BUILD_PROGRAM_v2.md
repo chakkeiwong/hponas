@@ -134,6 +134,90 @@ Three-tier build with gates at end of Tier 0, Tier 1, and Tier 2, plus mandatory
 
 ---
 
+## Tier 0 Remediation (BLOCKING)
+
+**Context:** Tier 0 gate report (2026-09-02) recorded GATE NOT MET after withdrawing an
+earlier false CONDITIONAL PASS. V14 was a vacuous pass (zero trials executed, validator
+checked only `999 not in SELECT seed FROM trials` on an empty table), V01 was
+tautological (scipy compared to scipy), V04-T0 threshold was tuned post-hoc (10%→5%),
+and V02/V03 were never implemented. This remediation block is the actual Tier 0 exit.
+
+**Duration:** 2-3 weeks  
+**Effort:** ~18 engineer-days
+
+### Scope
+
+| Category | Tasks | Effort | Notes |
+|----------|-------|--------|-------|
+| **Dependencies** | Install jax/brax for rl_routine, or declare substitute workload | 0.5d | Unblocks V14, V04-T0, V05 |
+| **V01 completion** | Run TPE vs Optuna, GP vs BoTorch parity | 1d | Current V01 is Sobol-vs-scipy (tautological) |
+| **V02 implementation** | State-machine replay: out-of-order/duplicate/late/dropped events | 3d | Property tests exist but replay harness doesn't |
+| **V03 implementation** | Mutation testing with ≥0.9 kill score | 3d | Never started |
+| **V04-T0 re-run** | TPE and GP vs random+log-Sobol floor, fixed threshold | 2d | Current run tuned threshold mid-campaign |
+| **V05 re-run** | Log-warping on acceptance task (not synthetic Gaussian in log-space) | 1d | Current result is informative but not conclusive |
+| **V14 re-run** | Day-one walk with real rl_routine execution | 0.5d | After dependencies resolved |
+| **Test repair** | Fix 6 broken R1 tests (RayExecutor AttributeError, spike/capability mismatches) | 2d | Tests never re-run after Tier 0 changes |
+| **Validator audit** | V16: non-vacuous validator enforcement | 2d | New protocol (see below) |
+| **Gate report** | Honest Tier 0 gate verdict with corrected protocols | 1d | No tuning, no vacuous passes |
+| **Program sync** | Update this document with actual completion state | 1d | Remove "Tier 0 complete" claims |
+| **Total** | | ~17d | |
+
+### V16: Validator Audit Protocol (NEW)
+
+**Claim:** Validators detect the failure modes they exist to catch; they cannot pass vacuously.
+
+**Pass rule:** All validators in the active tier pass the audit criteria below.
+
+**Criteria:**
+
+1. **Non-vacuity:** Every validator must fail when given structurally empty input:
+   - Performance validators: fail on zero trials
+   - Parity validators: fail when reference and implementation produce zero samples
+   - Property validators: fail when zero events are replayed
+   - Mutation validators: fail when zero mutants are generated
+
+2. **No post-hoc tuning:** Performance validators (V04, V05, V06, V09, V10) must record
+   their threshold/hypothesis **before** the campaign runs. Lowering a threshold or
+   changing an objective after seeing results is forbidden and causes FAIL.
+
+3. **Correct reference:** Parity validators (V01) must compare the wrapped implementation
+   against the declared vendor reference (TPE→Optuna, GP→BoTorch), not against itself.
+
+4. **Runnable independently:** `python validation/vXX_*.py` must execute the full protocol
+   and report PASS/FAIL without requiring manual setup beyond installing dependencies
+   declared in the validator's docstring.
+
+**Implementation:** Each validator gets a `--audit` mode that:
+- Runs the validator on deliberately empty input and asserts it returns FAIL
+- Checks that thresholds are read from a committed file, not computed in the script
+- Verifies reference implementations are imported from external packages
+
+**Gate assignment:** V16 runs at every gate starting with Tier 0 remediation. A validator
+that passes V16 can be trusted; one that doesn't is presumed vacuous until fixed.
+
+### Gate: V01-V05, V14, V04-T0, V16
+
+Same as original Tier 0 gate (line 107) plus V16 (validator audit).
+
+### Exit criteria
+- [ ] jax/brax installed OR substitute workload declared and V14/V04-T0/V05 re-scoped
+- [ ] V01 run against Optuna (TPE) and BoTorch (GP), not scipy (tautological)
+- [ ] V02 state-machine replay implemented, scheduler property tests passing
+- [ ] V03 mutation testing implemented with ≥0.9 kill score
+- [ ] V04-T0 re-run with fixed threshold, on real workload, TPE+GP vs floor
+- [ ] V05 re-run on acceptance task (not synthetic)
+- [ ] V14 re-run with non-zero trials executed
+- [ ] 6 broken R1 tests fixed (full suite ≥109 passed)
+- [ ] V16 audit: all T0 validators pass non-vacuity/no-tuning/correct-reference checks
+- [ ] Gate report with honest verdict (no conditional passes)
+- [ ] BUILD_PROGRAM_v2.md synchronized with actual state
+
+**Blocking dependency for Tier 1:** This remediation block must complete before Tier 1
+work begins. Tier 1 MO/prior/cost-aware work is built on top of Tier 0 searchers and
+executors; if those aren't validated, Tier 1 results are meaningless.
+
+---
+
 ## Tier 1: Method Differentiators
 
 **Duration:** 8-10 weeks (calendar, was 6 in rejected plan)
@@ -489,6 +573,18 @@ Complete test suite V01-V15:
 **Program gate:** Tier 3 (per-item, post-beta)
 
 **Survey gate:** T3
+
+### V16
+
+**Claim:** validators detect the failure modes they exist to catch; they cannot pass vacuously
+
+**Pass rule:** all validators pass non-vacuity, no-tuning, and reference-correctness audits
+
+**Gate criteria:** V16 (validator audit)
+
+**Program gate:** Tier 0 Remediation
+
+**Survey gate:** meta-validation
 
 ---
 

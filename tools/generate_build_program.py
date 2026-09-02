@@ -35,6 +35,7 @@ from pathlib import Path
 # Entries with suffixed IDs (V04-T0, V04-T1, V11a, V11b, V15a, V15b) match the keys
 # in validation/protocols.json; V04 runs components at two gates.
 PROGRAM_GATE_ASSIGNMENT: dict[str, list[str]] = {
+    'tier0_remediation': ['V16'],
     'tier0': ['V01', 'V02', 'V03', 'V04-T0', 'V05', 'V14'],
     'tier1': ['V04-T1', 'V06', 'V09', 'V10', 'V11a', 'V11b', 'V13'],
     'tier2': ['V08'],
@@ -44,6 +45,7 @@ PROGRAM_GATE_ASSIGNMENT: dict[str, list[str]] = {
 
 # Human-readable gate labels for the register's cross-reference column.
 GATE_LABELS: dict[str, str] = {
+    'tier0_remediation': 'Tier 0 Remediation gate',
     'tier0': 'Tier 0 gate',
     'tier1': 'Tier 1 gate',
     'tier2': 'Tier 2 gate',

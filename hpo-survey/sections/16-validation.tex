@@ -117,6 +117,10 @@ budget & \ref{sec:product} & T0 \\
 V15 & the curve-model bet is live before we pay for it & ifBO
 matches or beats ASHA on the curve-informative public suites before
 any integration work & \ref{sec:multifidelity} & T3 \\
+V16 & validators detect the failure modes they exist to catch &
+all validators pass non-vacuity (fail on empty input), no-tuning
+(thresholds recorded before data), and reference-correctness (parity
+vs declared reference, not self) audits & \ref{sec:sabotage} & T0$^{\mathrm{rem}}$ \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -808,8 +812,9 @@ failure this test exists to catch, which is why speed enters only after
 the vetoes, the calibration check, and the agreement check have passed.
 
 \section{Sabotage entries}
+\label{sec:sabotage}
 
-Two entries test the testers. V03 seeds defects into the wiring, an
+Three entries test the testers. V03 seeds defects into the wiring, an
 off-by-one rung, a dropped seed, a flipped objective sign, and
 requires the parity and replay layers to catch them; a suite that
 cannot catch a planted bug is decoration, and this entry is the
@@ -817,7 +822,14 @@ reason we can trust green elsewhere. V11 seeds bad advice, the
 purposefully detrimental prior in $\pi$BO's own sense, and requires
 the mechanism's safety half, recovery to the prior-free baseline, to
 hold on our tasks and budgets, not only in the paper
-(Chapter~\ref{sec:transfer}).
+(Chapter~\ref{sec:transfer}). V16 audits the validators themselves:
+it requires that every validator fail when given structurally empty
+input (zero trials, zero events, zero mutants), that performance
+thresholds be recorded before data rather than tuned afterward, and
+that parity validators compare against their declared reference rather
+than against self. The tier-0 gate initially recorded a pass on
+validators that failed all three criteria; V16 closes that class of
+drift.
 
 \section{What the suite costs, and when it runs}
 
