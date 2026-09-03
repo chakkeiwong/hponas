@@ -12,7 +12,7 @@ Tier 1: adds TuRBO trust regions, prior-aware acquisition (πBO).
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 
@@ -22,6 +22,7 @@ try:
     from botorch.models import SingleTaskGP
     from botorch.fit import fit_gpytorch_mll
     from botorch.acquisition.logei import qLogExpectedImprovement
+    from botorch.acquisition import AcquisitionFunction
     from botorch.optim import optimize_acqf
     from botorch.sampling import SobolQMCNormalSampler
     import gpytorch
@@ -57,6 +58,8 @@ class GPqLogEISearcher:
         n_fantasies: int = 64,  # qLogEI MC samples
         raw_samples: int = 512,  # Acquisition optimization initial samples
         n_restarts: int = 10,  # Acquisition optimization restarts
+        prior_beta: float = 2.0,  # πBO: prior decay rate (Tier 1)
+        prior_fn: Optional[callable] = None,  # πBO: user prior π(x) (Tier 1)
     ):
         if not BOTORCH_AVAILABLE:
             raise ImportError("GPqLogEISearcher requires botorch: pip install botorch gpytorch torch")
@@ -66,6 +69,8 @@ class GPqLogEISearcher:
         self.n_fantasies = n_fantasies
         self.raw_samples = raw_samples
         self.n_restarts = n_restarts
+        self.prior_beta = prior_beta
+        self.prior_fn = prior_fn
 
         # Filter to continuous knobs (Tier 0 limitation)
         self.cont_knobs = [k for k in space.knobs if k.kind == "continuous" and not k.condition]
@@ -174,7 +179,12 @@ class GPqLogEISearcher:
         fit_gpytorch_mll(mll)
 
     def _build_acqf(self, batch_size: int) -> None:
-        """Build qLogEI acquisition function."""
+        """
+        Build qLogEI acquisition function, optionally with πBO prior weighting.
+
+        Tier 1: If prior_fn is provided, wrap qLogEI with prior-weighted acquisition:
+        α^π(x) = α(x) · π(x)^(β/n), where n is number of observations.
+        """
         if self._model is None:
             return
 
@@ -187,11 +197,25 @@ class GPqLogEISearcher:
         # qLogEI with MC sampling
         sampler = SobolQMCNormalSampler(sample_shape=torch.Size([self.n_fantasies]), seed=self.seed)
 
-        self._acqf = qLogExpectedImprovement(
+        base_acqf = qLogExpectedImprovement(
             model=self._model,
             best_f=best_f,
             sampler=sampler,
         )
+
+        # Tier 1: πBO prior weighting if prior_fn provided
+        if self.prior_fn is not None:
+            self._acqf = PriorWeightedAcquisition(
+                base_acqf=base_acqf,
+                prior_fn=self.prior_fn,
+                n_observed=self._n_observed,
+                beta=self.prior_beta,
+                bounds_low=self._bounds_low,
+                bounds_high=self._bounds_high,
+                cont_knobs=self.cont_knobs,
+            )
+        else:
+            self._acqf = base_acqf
 
     def propose(self, n: int) -> list[dict[str, Any]]:
         """
@@ -317,6 +341,88 @@ class GPqLogEISearcher:
             "knob_kinds": ["continuous"],  # Tier 0: continuous only
             "conditionals": False,
             "multi_objective": False,  # Tier 1: qLogNEHVI
-            "prior": False,  # Tier 1: πBO
+            "prior": self.prior_fn is not None,  # Tier 1: πBO
             "max_dim": 20,  # Reasonable for standard GP without trust regions
         }
+
+
+# Tier 1: πBO prior-weighted acquisition
+class PriorWeightedAcquisition(AcquisitionFunction):
+    """
+    πBO: Prior-weighted acquisition function.
+
+    Survey: Ch 8 roadmap-10, ch08-01.
+    Formula: α^π(x) = α(x) · π(x)^(β/n)
+
+    The prior multiplier π(x)^(β/n) decays as n (observations) grows:
+    - Early in optimization (small n), large exponent β/n steers toward prior
+    - Late in optimization (large n), exponent ~0 and data dominates
+    - Wrong priors are forgotten rather than obeyed indefinitely
+
+    Args:
+        base_acqf: Underlying acquisition function (e.g. qLogEI)
+        prior_fn: User prior density π(x), takes dict config → float
+        n_observed: Number of observations so far
+        beta: Decay rate (controls how long prior matters)
+        bounds_low: Lower bounds for denormalization
+        bounds_high: Upper bounds for denormalization
+        cont_knobs: List of continuous knobs for config reconstruction
+    """
+
+    def __init__(
+        self,
+        base_acqf: AcquisitionFunction,
+        prior_fn: callable,
+        n_observed: int,
+        beta: float,
+        bounds_low: torch.Tensor,
+        bounds_high: torch.Tensor,
+        cont_knobs: list,
+    ):
+        super().__init__(model=base_acqf.model)
+        self.base_acqf = base_acqf
+        self.prior_fn = prior_fn
+        self.n_observed = n_observed
+        self.beta = beta
+        self.bounds_low = bounds_low
+        self.bounds_high = bounds_high
+        self.cont_knobs = cont_knobs
+
+        # Compute exponent once (constant for this acquisition build)
+        self.prior_exponent = beta / max(n_observed, 1)  # Avoid division by zero
+
+    def forward(self, X: torch.Tensor) -> torch.Tensor:
+        """
+        Evaluate prior-weighted acquisition at candidate points X.
+
+        Args:
+            X: (batch_size, dim) tensor in [0, 1]^d normalized space
+
+        Returns:
+            (batch_size,) tensor of acquisition values
+        """
+        # Base acquisition values
+        base_values = self.base_acqf(X)
+
+        # Evaluate prior at each candidate
+        prior_weights = torch.zeros(X.shape[0], dtype=torch.float64)
+        for i in range(X.shape[0]):
+            x_unit = X[i]
+            # Denormalize to original space
+            x_orig = self.bounds_low + x_unit * (self.bounds_high - self.bounds_low)
+
+            # Build config dict
+            config = {
+                knob.name: float(x_orig[j].item())
+                for j, knob in enumerate(self.cont_knobs)
+            }
+
+            # Evaluate prior
+            prior_val = self.prior_fn(config)
+
+            # Apply exponent: π(x)^(β/n)
+            # Add small epsilon to prevent log(0) if prior returns exactly 0
+            prior_weights[i] = max(prior_val, 1e-12) ** self.prior_exponent
+
+        # Multiply base acquisition by prior weight
+        return base_values * prior_weights
