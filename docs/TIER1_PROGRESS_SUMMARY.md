@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-03  
 **Status:** IN PROGRESS  
-**Completion:** ~23/70 engineer-days (33%)  
+**Completion:** ~25/70 engineer-days (36%)  
 **Program Reference:** BUILD_PROGRAM_v2.md lines 137-182
 
 ---
@@ -90,14 +90,25 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
   contribution collapses to 0 and promotion degenerates to insertion order. Fixed by
   ranking on Pareto fronts first and adapting the reference point to `max(obs) * 1.1`.
 
+### 8. MO Reporting Utilities (2d - complete today)
+- **Status:** COMPLETE (32/32 tests passing)
+- **Features:**
+  - Exact hypervolume for 2D (sweep) and 3D+ (inclusion-exclusion)
+  - Pareto front computation and masking
+  - Hypervolume-over-budget curves (V09 validation)
+  - Adaptive reference point derivation
+  - JSON-serializable front summaries
+- **Files:** `hponas/reporting_mo.py`, `tests/test_reporting_mo.py`
+- **Design note:** 2D uses O(n log n) sweep; 3D+ uses inclusion-exclusion capped
+  at 20 front points. Independent of store schema (operates on objective arrays).
+
 ---
 
-## Remaining (47 engineer-days)
+## Remaining (45 engineer-days)
 
-### MO Stack (5.5d remaining)
-- MO reporting utilities (~2d)
+### MO Stack (3.5d remaining)
 - MO veto logic tests (~1.5d)
-- Hypervolume-over-budget curves (V09) (~2d)
+- V09 validation campaign (~2d)
 
 ### Priors (13d)
 - Correct πBO implementation
