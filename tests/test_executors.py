@@ -111,6 +111,6 @@ def test_ray_executor_checkpoint_copy():
         # Copy checkpoint to new trial
         executor.copy_checkpoint("trial_src", "trial_dst")
 
-        # Destination trial should exist
-        assert "trial_dst" in executor._trials
-        assert executor._trials["trial_dst"]["status"] == "running"
+        # Tier 0: Destination checkpoint file should exist
+        dst_checkpoint = Path(tmpdir) / "trial_dst.pkl"
+        assert dst_checkpoint.exists(), "Destination checkpoint should exist after copy"

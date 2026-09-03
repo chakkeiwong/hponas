@@ -1,8 +1,8 @@
 # Tier 1 Progress Summary
 
-**Date:** 2024-09-02  
+**Date:** 2026-09-03  
 **Status:** IN PROGRESS  
-**Completion:** ~9/70 engineer-days (13%)  
+**Completion:** ~23/70 engineer-days (33%)  
 **Program Reference:** BUILD_PROGRAM_v2.md lines 137-182
 
 ---
@@ -22,7 +22,7 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 
 ---
 
-## Completed (9 engineer-days)
+## Completed (15 engineer-days)
 
 ### 1. V04-T1 Real Workload Validation (1d)
 - **Status:** INFORMATIONAL (not blocker)
@@ -39,29 +39,65 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
   - Checkpoint storage and recovery
 - **Files:** `hponas/executors.py`, `tests/test_ray_executor.py`
 
----
+### 3. Tier 0 Bug Fixes and Remediation (3d)
+- **Status:** COMPLETE (115/115 tests passing)
+- **Fixes:**
+  - Critical ASHA async bug fixed
+  - Mixed-type search space support
+  - Ray executor integration
+- **Files:** `hponas/schedulers.py`, `hponas/executors.py`, `hponas/searchers.py`
 
-## In Progress
-
-### 3. MO Stack - qLogNEHVI (started, ~3/16d)
-- **Status:** Implementation complete, tests pending
+### 4. qLogNEHVI Implementation (3d)
+- **Status:** COMPLETE (3/3 tests passing)
 - **Features:**
   - GP with log expected hypervolume improvement
-  - 2-3 objectives support (Tier 1 scope)
+  - 2-3 objectives support
   - Pareto front computation
   - BoTorch integration
 - **Files:** `hponas/searchers_mo.py`, `tests/test_searchers_mo.py`
-- **Blocker:** BoTorch installation in progress (background task bzdwgys15)
+
+### 5. Chebyshev Scalarization (1.5d - verification complete today)
+- **Status:** COMPLETE (5/5 tests passing)
+- **Features:**
+  - Weighted Chebyshev scalarization for MO
+  - Works with any single-objective searcher
+  - No BoTorch dependency
+  - Reference point adaptation
+- **Files:** `hponas/searchers_mo.py`, `tests/test_chebyshev.py`
+
+### 6. NSGA-II Implementation (2.5d - verification complete today)
+- **Status:** COMPLETE (8/8 tests passing)
+- **Features:**
+  - Fast non-dominated sorting
+  - Crowding distance for diversity
+  - Tournament selection
+  - SBX crossover and polynomial mutation
+- **Files:** `hponas/searchers_mo.py`, `tests/test_nsgaii.py`
 
 ---
 
-## Remaining (61 engineer-days)
+### 7. MO-ASHA Scheduler (4d - complete today)
+- **Status:** COMPLETE (9/9 tests passing)
+- **Features:**
+  - Multi-objective successive halving over ASHA rungs
+  - Fast non-dominated sorting for front assignment
+  - Hypervolume contribution as within-front tie-break
+  - Reference point adapted from observed objectives
+  - 2-3 objectives (Tier 1 scope)
+- **Files:** `hponas/schedulers.py` (MOASHAScheduler, MOASHAConfig), `tests/test_mo_asha.py`
+- **Design note:** first draft ranked purely by hypervolume against the default
+  reference point `[1.1, 1.1]`. When observed objectives exceed the reference, every
+  contribution collapses to 0 and promotion degenerates to insertion order. Fixed by
+  ranking on Pareto fronts first and adapting the reference point to `max(obs) * 1.1`.
 
-### MO Stack (13d remaining)
-- Chebyshev scalarization (fallback method)
-- NSGA-II evolutionary optimizer
-- MO-ASHA scheduler
-- MO reporting utilities
+---
+
+## Remaining (47 engineer-days)
+
+### MO Stack (5.5d remaining)
+- MO reporting utilities (~2d)
+- MO veto logic tests (~1.5d)
+- Hypervolume-over-budget curves (V09) (~2d)
 
 ### Priors (13d)
 - Correct πBO implementation
