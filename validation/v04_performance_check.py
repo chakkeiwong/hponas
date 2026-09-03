@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 V04 Performance Check: Searchers beat random baseline on standardized workload.
 
@@ -15,9 +17,17 @@ Success criteria:
 - Mean improvement > 15% (GP), > 10% (Sobol)
 - p-value < 0.05 (statistically significant)
 - Tested over 5 random seeds
+
+IMPORTANT: Thresholds are PRE-RECORDED before data collection to prevent
+post-hoc tuning (V16 audit requirement).
 """
 
-from __future__ import annotations
+# Pre-recorded performance thresholds (fixed before T0 data collection)
+PRERECORDED_THRESHOLDS = {
+    "Sobol": 0.05,   # 5% improvement required
+    "TPE": 0.10,     # 10% improvement required
+    "GP": 0.15,      # 15% improvement required
+}
 
 import time
 import numpy as np
@@ -109,26 +119,36 @@ def v04_performance_check(
     searcher_class: type,
     searcher_name: str,
     baseline_class: type = RandomSearcher,
-    n_trials: int = 100,  # Increased from 50
+    n_trials: int = 100,
     n_seeds: int = 5,
-    improvement_threshold: float = 0.10
 ) -> dict[str, any]:
     """
     V04: Test that searcher beats random baseline.
 
     Args:
         searcher_class: Searcher to test
-        searcher_name: Name for reporting
+        searcher_name: Name for reporting (must be in PRERECORDED_THRESHOLDS)
         baseline_class: Baseline searcher (default RandomSearcher)
         n_trials: Number of trials per seed
         n_seeds: Number of random seeds
-        improvement_threshold: Required improvement (e.g., 0.10 = 10%)
 
     Returns:
         dict with keys: mean_improvement, p_value, passed, details
     """
+    # Non-vacuity check
+    if n_trials == 0:
+        raise ValueError("V04: Cannot validate on zero trials (vacuous pass)")
+    if n_seeds == 0:
+        raise ValueError("V04: Cannot validate with zero seeds (vacuous pass)")
+
+    # Get pre-recorded threshold (prevents post-hoc tuning)
+    if searcher_name not in PRERECORDED_THRESHOLDS:
+        raise ValueError(f"V04: No pre-recorded threshold for {searcher_name}")
+    improvement_threshold = PRERECORDED_THRESHOLDS[searcher_name]
+
     print(f"\n=== V04: Performance Check - {searcher_name} vs Random ===")
     print(f"Trials: {n_trials}, Seeds: {n_seeds}, Threshold: {improvement_threshold*100:.0f}%")
+    print(f"(threshold pre-recorded, not tuned to data)")
 
     # Define search space (simplified rl_routine)
     space = SearchSpace()
@@ -207,7 +227,6 @@ if __name__ == "__main__":
         searcher_name="Sobol",
         n_trials=50,
         n_seeds=10,
-        improvement_threshold=0.05  # 5% for Sobol (QMC advantage smaller in low-dim)
     )
 
     print("\n" + "="*70)

@@ -106,10 +106,10 @@ def test_capabilities_declared_honestly():
     """
     The capability flag exists because the Ch 10 audit found mismatches shipping silently.
 
-    The spike searcher handles continuous axes only, and must say so.
+    Tier 0: Sobol handles continuous, ordinal, and categorical axes.
     """
     caps = SobolSearcher(_two_axis_space(), seed=0).capabilities
-    assert caps["knob_kinds"] == ["continuous"]
+    assert caps["knob_kinds"] == ["continuous", "ordinal", "categorical"]
     assert caps["conditionals"] is False
     assert caps["multi_objective"] is False
     assert caps["prior"] is False
@@ -118,10 +118,9 @@ def test_capabilities_declared_honestly():
 
 def test_ordinal_and_categorical_axes_ignored_in_spike():
     """
-    Spike limitation, asserted rather than assumed: non-continuous axes are dropped.
+    Tier 0: Sobol now handles ordinal and categorical axes.
 
-    Tier 0 replaces this with integer Sobol columns for ordinals and a categorical
-    treatment; this test is expected to change then, which is the point of pinning it now.
+    Ordinals use integer Sobol columns, categoricals use mapped Sobol values.
     """
     space = _two_axis_space()
     space.add_knob(Knob(name="width", kind="ordinal", bounds=(32, 512)))
@@ -131,9 +130,14 @@ def test_ordinal_and_categorical_axes_ignored_in_spike():
 
     config = SobolSearcher(space, seed=0).propose(1)[0]
 
-    assert set(config) == {"x", "y"}
-    assert "width" not in config
-    assert "activation" not in config
+    # Tier 0: all knobs are sampled
+    assert set(config) == {"x", "y", "width", "activation"}
+
+    # Check types
+    assert isinstance(config["x"], float)
+    assert isinstance(config["y"], float)
+    assert isinstance(config["width"], int)
+    assert config["activation"] in ["relu", "tanh"]
 
 
 def test_conditional_axes_excluded_from_spike_proposals():
@@ -155,15 +159,20 @@ def test_conditional_axes_excluded_from_spike_proposals():
 
 def test_space_without_continuous_axes_is_refused():
     """
-    Refusing early is cheaper than diagnosing a silently degenerate study (Ch 15).
+    Tier 0: Sobol now accepts ordinal-only and categorical-only spaces.
 
-    A space the spike searcher cannot model must fail at construction, not at proposal time.
+    The spike limitation of requiring at least one continuous axis is lifted.
     """
     space = SearchSpace()
     space.add_knob(Knob(name="width", kind="ordinal", bounds=(32, 512)))
 
-    with pytest.raises(ValueError, match="no continuous knobs"):
-        SobolSearcher(space, seed=0)
+    # Should not raise
+    searcher = SobolSearcher(space, seed=0)
+    config = searcher.propose(1)[0]
+
+    assert "width" in config
+    assert isinstance(config["width"], int)
+    assert 32 <= config["width"] <= 512
 
 
 def test_state_dict_round_trip_continues_sequence():

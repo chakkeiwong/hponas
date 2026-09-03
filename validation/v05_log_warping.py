@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 V05 Log-Warping Effectiveness: Log-scale improves search on scale-sensitive knobs.
 
@@ -13,9 +15,13 @@ Protocol:
 Success criteria:
 - Improvement > 15% (log-warped finds optimum faster)
 - p-value < 0.05 (statistically significant)
+
+IMPORTANT: Threshold is PRE-RECORDED before data collection to prevent
+post-hoc tuning (V16 audit requirement).
 """
 
-from __future__ import annotations
+# Pre-recorded threshold (fixed before T0 data collection)
+PRERECORDED_THRESHOLD = 0.15  # 15% improvement required
 
 import numpy as np
 from scipy.stats import mannwhitneyu
@@ -83,7 +89,6 @@ def run_search(
 def v05_log_warping_effectiveness(
     n_trials: int = 50,
     n_seeds: int = 10,
-    improvement_threshold: float = 0.15
 ) -> dict[str, any]:
     """
     V05: Test log-warping effectiveness.
@@ -91,13 +96,21 @@ def v05_log_warping_effectiveness(
     Args:
         n_trials: Number of trials per seed
         n_seeds: Number of random seeds
-        improvement_threshold: Required improvement (e.g., 0.15 = 15%)
 
     Returns:
         dict with keys: improvement, p_value, passed, details
     """
+    # Non-vacuity check
+    if n_trials == 0:
+        raise ValueError("V05: Cannot validate on zero trials (vacuous pass)")
+    if n_seeds == 0:
+        raise ValueError("V05: Cannot validate with zero seeds (vacuous pass)")
+
+    improvement_threshold = PRERECORDED_THRESHOLD
+
     print(f"\n=== V05: Log-Warping Effectiveness ===")
     print(f"Trials: {n_trials}, Seeds: {n_seeds}, Threshold: {improvement_threshold*100:.0f}%")
+    print(f"(threshold pre-recorded, not tuned to data)")
 
     # Space WITH log-transform
     space_log = SearchSpace()
@@ -164,7 +177,6 @@ if __name__ == "__main__":
     result = v05_log_warping_effectiveness(
         n_trials=50,
         n_seeds=10,
-        improvement_threshold=0.15  # 15% improvement required
     )
 
     print("\n" + "="*70)

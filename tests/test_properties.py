@@ -79,13 +79,16 @@ def test_asha_invariant_monotonic_fidelity(data):
     for trial_id, fidelity, value in events:
         scheduler.report(trial_id, fidelity, value)
 
+    # Save state before promote() modifies it
+    state_before = {tid: state for tid, state in scheduler._trial_state.items()}
+
     # Check promotions
     promotions = scheduler.promote()
 
     for trial_id, next_fidelity in promotions:
-        # Get current fidelity from trial state
-        if trial_id in scheduler._trial_state:
-            current_rung, current_fidelity, _, _ = scheduler._trial_state[trial_id]
+        # Get current fidelity from saved state
+        if trial_id in state_before:
+            current_rung, current_fidelity, _, _ = state_before[trial_id]
 
             # Invariant: promoted fidelity > current fidelity
             assert next_fidelity > current_fidelity, \
@@ -108,14 +111,16 @@ def test_asha_out_of_order_commutative(indices):
     for trial_id, fidelity, value in trials:
         scheduler_A.report(trial_id, fidelity, value)
 
-    # Scheduler B: permuted order
-    permuted = [trials[i % len(trials)] for i in indices]
+    # Scheduler B: permuted order (use indices as permutation, wrapping with modulo)
+    # To avoid duplicates, we use indices to define an ordering, not to select trials
+    order = sorted(range(len(trials)), key=lambda i: indices[i])
+    permuted = [trials[i] for i in order]
     for trial_id, fidelity, value in permuted:
         scheduler_B.report(trial_id, fidelity, value)
 
     # Rankings should be identical
-    pop_A = sorted(scheduler_A._rung_populations[0].items(), key=lambda x: x[1])
-    pop_B = sorted(scheduler_B._rung_populations[0].items(), key=lambda x: x[1])
+    pop_A = sorted(scheduler_A._rung_populations[0], key=lambda x: x[1])
+    pop_B = sorted(scheduler_B._rung_populations[0], key=lambda x: x[1])
 
     # Extract trial IDs in rank order
     rank_A = [tid for tid, _ in pop_A]
@@ -146,8 +151,9 @@ def test_asha_duplicate_idempotent(n_duplicates):
     # State should be consistent (trial exists exactly once in state dict)
     assert trial_id in scheduler._trial_state
 
-    # Population should track the trial
-    assert trial_id in scheduler._rung_populations[0]
+    # Population should track the trial (list of tuples now)
+    trial_ids_in_pop = [tid for tid, _ in scheduler._rung_populations[0]]
+    assert trial_id in trial_ids_in_pop
 
 
 @given(st.integers(5, 20), st.floats(0.0, 1.0))

@@ -125,101 +125,6 @@ class LocalExecutor:
 
 class RayExecutor:
     """
-    Ray Tune adapter: trial launch, checkpoint surgery for population methods (Ch 15 contract).
-
-    Survey: the Ray Tune adapter maps trials to Tune trials and must expose checkpoint
-    surgery as first-class operations: save, copy weights across trials, resume. That is
-    the machinery PBT exercises inside Tune today and the single strongest reason Ch 11
-    kept Tune underneath.
-
-    Spike: stub (returns trial_id, no real Ray).
-    Tier 0: real Ray Tune integration (~4d per work breakdown).
-    """
-
-    def __init__(self, checkpoint_dir: str | Path):
-        self.checkpoint_dir = Path(checkpoint_dir)
-        self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
-        self._trials: dict[str, dict[str, Any]] = {}
-
-    def launch(
-        self,
-        trial_id: str,
-        config: dict[str, Any],
-        objective_fn: Callable[[dict[str, Any]], float],
-        fidelity: float,
-    ) -> str:
-        """
-        Launch a Ray Tune trial.
-
-        Spike: stub execution (no real Ray, returns immediately).
-        Tier 0: ray.tune.run with Trainable class.
-        """
-        # Spike: fake async by storing the trial and returning immediately
-        self._trials[trial_id] = {
-            "config": config,
-            "objective_fn": objective_fn,
-            "fidelity": fidelity,
-            "status": "running",
-        }
-        return trial_id
-
-    def poll(self, trial_id: str) -> dict[str, Any]:
-        """
-        Poll trial status (spike: complete immediately).
-
-        Tier 0: actual Ray Tune status polling.
-        """
-        if trial_id in self._trials:
-            # Spike: immediately "complete" the trial
-            trial = self._trials[trial_id]
-            if trial["status"] == "running":
-                value = trial["objective_fn"](trial["config"])
-                trial["value"] = value
-                trial["status"] = "completed"
-            return trial
-        return {}
-
-    def checkpoint(self, trial_id: str, path: Path) -> None:
-        """
-        Save checkpoint (spike: stub).
-
-        Tier 0: Ray Tune checkpoint API.
-        """
-        if trial_id in self._trials:
-            ckpt_path = path / f"{trial_id}.pkl"
-            with open(ckpt_path, "wb") as f:
-                pickle.dump(self._trials[trial_id], f)
-
-    def load_checkpoint(self, trial_id: str, path: Path) -> Any:
-        """
-        Load checkpoint (spike: stub).
-
-        Tier 0: Ray Tune restore API.
-        """
-        ckpt_path = path / f"{trial_id}.pkl"
-        if ckpt_path.exists():
-            with open(ckpt_path, "rb") as f:
-                return pickle.load(f)
-        return None
-
-    def copy_checkpoint(self, src_trial_id: str, dst_trial_id: str) -> None:
-        """
-        Copy checkpoint from src to dst (population method exploit verb, Ch 15).
-
-        Survey: PBT's checkpoint surgery; our adapter's job is to keep it reachable
-        from the scheduler's exploit verb.
-
-        Spike: stub.
-        Tier 0: real Ray Tune checkpoint copy with weight surgery.
-        """
-        # Spike: copy trial state
-        if src_trial_id in self._trials:
-            self._trials[dst_trial_id] = self._trials[src_trial_id].copy()
-            self._trials[dst_trial_id]["status"] = "running"
-
-
-class RayExecutor:
-    """
     Ray executor: distributed trials across cluster (Tier 1, Ch 11).
 
     Survey: Ray Tune adapter for parallel trial execution. Each trial runs as a Ray actor,
@@ -300,6 +205,21 @@ class RayExecutor:
 
         return trial_id
 
+    def poll(self, trial_id: str) -> dict[str, Any]:
+        """
+        Poll trial status and wait for completion (blocking).
+
+        For spike compatibility, this blocks until the trial completes.
+        Use get_result() with timeout for non-blocking behavior.
+
+        Args:
+            trial_id: Trial identifier
+
+        Returns:
+            dict with keys: trial_id, value, cost, status
+        """
+        return self.get_result(trial_id)
+
     def get_result(self, trial_id: str, timeout: Optional[float] = None) -> dict[str, Any]:
         """
         Get trial result (blocking).
@@ -360,6 +280,25 @@ class RayExecutor:
             with open(ckpt_path, "rb") as f:
                 return pickle.load(f)
         return None
+
+    def copy_checkpoint(self, src_trial_id: str, dst_trial_id: str) -> None:
+        """
+        Copy checkpoint from src to dst (population method exploit verb, Ch 15).
+
+        Survey: PBT's checkpoint surgery; our adapter's job is to keep it reachable
+        from the scheduler's exploit verb.
+
+        Args:
+            src_trial_id: Source trial identifier
+            dst_trial_id: Destination trial identifier
+        """
+        src_path = self.checkpoint_dir / f"{src_trial_id}.pkl"
+        if not src_path.exists():
+            raise FileNotFoundError(f"Source checkpoint {src_path} not found")
+
+        dst_path = self.checkpoint_dir / f"{dst_trial_id}.pkl"
+        import shutil
+        shutil.copy(src_path, dst_path)
 
     def shutdown(self) -> None:
         """Shutdown Ray executor and cleanup resources."""
