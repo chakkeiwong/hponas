@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-03  
 **Status:** IN PROGRESS  
-**Completion:** ~25/70 engineer-days (36%)  
+**Completion:** ~31/70 engineer-days (44%)  
 **Program Reference:** BUILD_PROGRAM_v2.md lines 137-182
 
 ---
@@ -102,19 +102,38 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 - **Design note:** 2D uses O(n log n) sweep; 3D+ uses inclusion-exclusion capped
   at 20 front points. Independent of store schema (operates on objective arrays).
 
+### 9. πBO Prior-Weighted Acquisition (4d - complete today)
+- **Status:** COMPLETE (6/6 tests passing)
+- **Features:**
+  - Prior-weighted acquisition: α^π(x) = α(x) · π(x)^(β/n)
+  - Prior influence decays as observations grow (exponent β/n)
+  - Good priors help early, wrong priors forgotten
+  - Epsilon guard prevents log(0) crashes
+  - Integrated into GPqLogEISearcher
+- **Files:** `hponas/searchers_gp.py`, `tests/test_pibo.py`
+
+### 10. PriorBand Portfolio Sampler (2d - complete today)
+- **Status:** COMPLETE (9/9 tests passing)
+- **Features:**
+  - Portfolio mixing: uniform, prior-biased, incumbent perturbations
+  - Rung-adaptive weights (early: prior, late: incumbent)
+  - Rejection sampling from prior density
+  - Incumbent tracking for local search
+  - Graceful degradation for degenerate priors
+- **Files:** `hponas/searchers_priorband.py`, `tests/test_priorband.py`
+
 ---
 
-## Remaining (45 engineer-days)
+## Remaining (39 engineer-days)
 
 ### MO Stack (3.5d remaining)
 - MO veto logic tests (~1.5d)
 - V09 validation campaign (~2d)
 
-### Priors (13d)
-- Correct πBO implementation
-- Correct PriorBand implementation  
-- Nonzero guard for prior distributions
-- Warm-start integration
+### Priors (7d remaining)
+- Nonzero guard for prior distributions (~1d)
+- Warm-start integration (~2d)
+- V11 validation campaign (~4d)
 
 ### Cost-Aware (7d)
 - EI-per-cost acquisition function
