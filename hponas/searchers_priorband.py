@@ -19,6 +19,7 @@ from typing import Any, Optional
 
 import numpy as np
 
+from hponas.priors import ensure_guarded
 from hponas.space import SearchSpace, Knob
 
 
@@ -47,7 +48,8 @@ class PriorBandSampler:
         perturbation_scale: float = 0.1,
     ):
         self.space = space
-        self.prior_fn = prior_fn
+        # Guard user prior at entry to guarantee nonzero density
+        self.prior_fn = ensure_guarded(prior_fn, space)
         self.seed = seed
         self.rng = np.random.default_rng(seed)
 
@@ -101,9 +103,9 @@ class PriorBandSampler:
         # Evaluate prior density for each candidate
         weights = np.array([self.prior_fn(c) for c in candidates])
 
-        # Normalize to probabilities
+        # Normalize to probabilities. GuardedPrior never returns 0, so this
+        # branch is defensive only (e.g. a hand-injected unguarded prior_fn).
         if weights.sum() == 0:
-            # Degenerate prior, fallback to uniform
             return self._sample_uniform()
 
         probs = weights / weights.sum()
