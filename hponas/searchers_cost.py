@@ -40,13 +40,41 @@ class CostModelGP:
         self._train_x: list[np.ndarray] = []
         self._train_y: list[float] = []
 
+        # Extract continuous knobs for normalization
+        self.cont_knobs = [k for k in space.knobs if k.kind == "continuous" and not k.condition]
+        if not self.cont_knobs:
+            raise ValueError("CostModelGP requires continuous knobs")
+
+        # Store bounds for normalization to [0, 1]^d
+        self._bounds_low = torch.tensor([k.bounds[0] for k in self.cont_knobs], dtype=torch.float64)
+        self._bounds_high = torch.tensor([k.bounds[1] for k in self.cont_knobs], dtype=torch.float64)
+        self._log_dims = torch.tensor([k.transform == "log" for k in self.cont_knobs], dtype=torch.bool)
+
+    def _to_unit_cube(self, config: dict) -> np.ndarray:
+        """Transform config from original space to [0, 1]^d unit cube."""
+        x = np.zeros(len(self.cont_knobs), dtype=np.float64)
+        for i, knob in enumerate(self.cont_knobs):
+            val = config[knob.name]
+            low, high = knob.bounds
+
+            if knob.transform == "log":
+                # Log-warp: x_unit = (log(val) - log(low)) / (log(high) - log(low))
+                log_low, log_high = np.log(low), np.log(high)
+                log_val = np.log(val)
+                x[i] = (log_val - log_low) / (log_high - log_low)
+            else:
+                # Linear: x_unit = (val - low) / (high - low)
+                x[i] = (val - low) / (high - low)
+
+        return x
+
     def observe(self, config: dict, cost: float) -> None:
         """Record a trial's wall-clock cost (seconds)."""
         if cost <= 0:
             raise ValueError(f"Cost must be positive, got {cost}")
 
         # Normalize config to [0, 1]^d
-        x_norm = self.space.normalize(config)
+        x_norm = self._to_unit_cube(config)
         self._train_x.append(x_norm)
         self._train_y.append(np.log(cost))  # Log transform for wide ranges
 
@@ -76,7 +104,7 @@ class CostModelGP:
 
         # Normalize and predict
         X = torch.tensor(
-            np.array([self.space.normalize(c) for c in configs]),
+            np.array([self._to_unit_cube(c) for c in configs]),
             dtype=torch.float64
         )
 
@@ -120,11 +148,25 @@ class CostAwareAcquisition(AcquisitionFunction):
         # Base acquisition
         base_values = self.base_acq(X)
 
-        # Predict costs
-        configs = [
-            self.cost_model.space.denormalize(x.numpy())
-            for x in X
-        ]
+        # Predict costs (X is already in [0,1]^d unit cube)
+        configs = []
+        for x in X:
+            config = {}
+            for i, knob in enumerate(self.cost_model.cont_knobs):
+                u = x[i].item()
+                low, high = knob.bounds
+
+                if knob.transform == "log":
+                    # Inverse log-warp
+                    log_low, log_high = np.log(low), np.log(high)
+                    val = np.exp(log_low + u * (log_high - log_low))
+                else:
+                    # Inverse linear
+                    val = low + u * (high - low)
+
+                config[knob.name] = float(val)
+            configs.append(config)
+
         costs = self.cost_model.predict(configs)
         cost_tensor = torch.tensor(costs, dtype=X.dtype, device=X.device)
 
