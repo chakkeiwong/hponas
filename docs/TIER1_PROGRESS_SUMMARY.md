@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-04  
 **Status:** IN PROGRESS  
-**Completion:** ~38/70 engineer-days (54%)  
+**Completion:** ~39/70 engineer-days (56%)  
 **Program Reference:** BUILD_PROGRAM_v2.md lines 137-182
 
 ---
@@ -14,7 +14,7 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 | Category | Effort | Status |
 |----------|--------|--------|
 | MO stack | 16d | Complete |
-| Priors | 13d | 6d complete, 7d remaining |
+| Priors | 13d | 7d complete, 6d remaining |
 | Cost-aware | 7d | Complete |
 | Workloads | 15d | Not started |
 | Tests | 7d | Not started |
@@ -22,7 +22,7 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 
 ---
 
-## Completed (15 engineer-days)
+## Completed (39 engineer-days)
 
 ### 1. V04-T1 Real Workload Validation (1d)
 - **Status:** INFORMATIONAL (not blocker)
@@ -136,16 +136,32 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
   Cost model learns independently from performance model. Temperature schedule prevents
   premature cost optimization before cost model has enough data.
 
+### 12. Priors Nonzero Guard (1d - complete today)
+- **Status:** COMPLETE (13/13 tests passing, 193/193 full suite)
+- **Features:**
+  - Nonzero-everywhere mixture: π_guarded(x) = α · π̂_user(x) + (1 − α), default α = 0.95
+  - Unit-mean rescaling π̂_user = π_user / E[π_user] by Monte Carlo, making α scale-free
+  - Base-measure consistency: rescaling draws from `space.sample_config`, so log-transformed
+    knobs are averaged log-uniformly (same measure the searchers propose from)
+  - Defensive evaluation: user callables that raise, or return NaN/inf/negative, collapse
+    to 0.0 ("no information") rather than poisoning the acquisition
+  - Idempotent wrapping via `ensure_guarded(prior, space)`; `None` passes through unchanged
+  - Wired into `GPqLogEISearcher` (πBO) and `PriorBandSampler`
+- **Files:** `hponas/priors.py` (199 lines, 98% coverage), `hponas/searchers_gp.py`,
+  `hponas/searchers_priorband.py`, `tests/test_priors.py`
+- **Design note:** The guarantee is that no region of the space can be assigned zero
+  acquisition weight by a user prior, so πBO/PriorBand always retain 5% uniform escape
+  mass. This is what makes a wrong prior recoverable instead of fatal.
+
 ---
 
-## Remaining (32 engineer-days)
+## Remaining (31 engineer-days)
 
 ### MO Stack (3.5d remaining)
 - MO veto logic tests (~1.5d)
 - V09 validation campaign (~2d)
 
-### Priors (7d remaining)
-- Nonzero guard for prior distributions (~1d)
+### Priors (6d remaining)
 - Warm-start integration (~2d)
 - V11 validation campaign (~4d)
 
@@ -215,9 +231,9 @@ Program allows method demotion on validation failure:
 
 ## Next Actions
 
-1. **Complete Priors nonzero guard** (~1d)
-2. **Implement warm-start integration** (~2d)
-3. **Run V11 validation campaign** (~4d)
+1. **Implement warm-start integration** (~2d)
+2. **Run V11 validation campaign** (~4d)
+3. **Implement MO veto logic tests** (~1.5d)
 4. **Begin Workloads implementation** (15d)
 5. **Run remaining validation campaigns** (V06, V09, V10, V13)
 

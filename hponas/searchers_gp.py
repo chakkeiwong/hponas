@@ -33,6 +33,7 @@ try:
 except ImportError:
     BOTORCH_AVAILABLE = False
 
+from .priors import ensure_guarded
 from .space import SearchSpace
 
 
@@ -70,7 +71,8 @@ class GPqLogEISearcher:
         self.raw_samples = raw_samples
         self.n_restarts = n_restarts
         self.prior_beta = prior_beta
-        self.prior_fn = prior_fn
+        # Guard user prior at entry to guarantee nonzero density
+        self.prior_fn = ensure_guarded(prior_fn, space)
 
         # Filter to continuous knobs (Tier 0 limitation)
         self.cont_knobs = [k for k in space.knobs if k.kind == "continuous" and not k.condition]
@@ -408,21 +410,27 @@ class PriorWeightedAcquisition(AcquisitionFunction):
         prior_weights = torch.zeros(X.shape[0], dtype=torch.float64)
         for i in range(X.shape[0]):
             x_unit = X[i]
-            # Denormalize to original space
-            x_orig = self.bounds_low + x_unit * (self.bounds_high - self.bounds_low)
+            # Denormalize to original space (matching _from_unit_cube transform)
+            config = {}
+            for j, knob in enumerate(self.cont_knobs):
+                u = x_unit[j].item()
+                low, high = self.bounds_low[j].item(), self.bounds_high[j].item()
 
-            # Build config dict
-            config = {
-                knob.name: float(x_orig[j].item())
-                for j, knob in enumerate(self.cont_knobs)
-            }
+                if knob.transform == "log":
+                    # Log-warped inverse: exp(log(low) + u * (log(high) - log(low)))
+                    log_low, log_high = np.log(low), np.log(high)
+                    val = np.exp(log_low + u * (log_high - log_low))
+                else:
+                    # Linear inverse: low + u * (high - low)
+                    val = low + u * (high - low)
 
-            # Evaluate prior
+                config[knob.name] = float(val)
+
+            # Evaluate prior (GuardedPrior never returns 0, so no epsilon needed)
             prior_val = self.prior_fn(config)
 
             # Apply exponent: π(x)^(β/n)
-            # Add small epsilon to prevent log(0) if prior returns exactly 0
-            prior_weights[i] = max(prior_val, 1e-12) ** self.prior_exponent
+            prior_weights[i] = prior_val ** self.prior_exponent
 
         # Multiply base acquisition by prior weight
         return base_values * prior_weights
