@@ -1,8 +1,8 @@
 # Tier 1 Progress Summary
 
-**Date:** 2026-09-03  
+**Date:** 2026-09-04  
 **Status:** IN PROGRESS  
-**Completion:** ~31/70 engineer-days (44%)  
+**Completion:** ~38/70 engineer-days (54%)  
 **Program Reference:** BUILD_PROGRAM_v2.md lines 137-182
 
 ---
@@ -13,9 +13,9 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 
 | Category | Effort | Status |
 |----------|--------|--------|
-| MO stack | 16d | In progress (qLogNEHVI started) |
-| Priors | 13d | Not started |
-| Cost-aware | 7d | Not started |
+| MO stack | 16d | Complete |
+| Priors | 13d | 6d complete, 7d remaining |
+| Cost-aware | 7d | Complete |
 | Workloads | 15d | Not started |
 | Tests | 7d | Not started |
 | Validation | 12d | V04-T1 complete (informational) |
@@ -122,9 +122,23 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
   - Graceful degradation for degenerate priors
 - **Files:** `hponas/searchers_priorband.py`, `tests/test_priorband.py`
 
+### 11. Cost-Aware Acquisition (7d - complete today)
+- **Status:** COMPLETE (9/9 tests passing, 180/180 full suite)
+- **Features:**
+  - CostModelGP: GP surrogate over log(wall-clock time)
+  - EI-per-cost: α_cost(x) = α(x) / cost_model(x)^T
+  - Cost cooling: Temperature T anneals from 0 (warmup) to 1 (full cost-aware)
+  - Linear annealing schedule over configurable cooldown duration
+  - Handles wide cost ranges (0.1s to 1000s+) via log-transform
+  - Config normalization to [0,1]^d unit cube with log-warping
+- **Files:** `hponas/searchers_cost.py`, `tests/test_cost_aware.py`
+- **Design note:** Implemented _to_unit_cube normalization following GPSearcher pattern.
+  Cost model learns independently from performance model. Temperature schedule prevents
+  premature cost optimization before cost model has enough data.
+
 ---
 
-## Remaining (39 engineer-days)
+## Remaining (32 engineer-days)
 
 ### MO Stack (3.5d remaining)
 - MO veto logic tests (~1.5d)
@@ -134,11 +148,6 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 - Nonzero guard for prior distributions (~1d)
 - Warm-start integration (~2d)
 - V11 validation campaign (~4d)
-
-### Cost-Aware (7d)
-- EI-per-cost acquisition function
-- Predictive cost model (GP or RF)
-- Integration with searchers
 
 ### Workloads (15d)
 - hamiltonian_mo: Multi-objective physics simulation
@@ -206,11 +215,11 @@ Program allows method demotion on validation failure:
 
 ## Next Actions
 
-1. **Complete qLogNEHVI testing** (waiting on BoTorch installation)
-2. **Implement Chebyshev scalarization** (MO fallback, ~2d)
-3. **Implement NSGA-II** (evolutionary MO, ~3d)
-4. **Clarify TuRBO scope** (V04-T1 gate criterion references it)
-5. **Begin MO-ASHA scheduler** (~4d)
+1. **Complete Priors nonzero guard** (~1d)
+2. **Implement warm-start integration** (~2d)
+3. **Run V11 validation campaign** (~4d)
+4. **Begin Workloads implementation** (15d)
+5. **Run remaining validation campaigns** (V06, V09, V10, V13)
 
 ---
 
