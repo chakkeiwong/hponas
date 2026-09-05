@@ -361,3 +361,28 @@ class Store:
     def close(self) -> None:
         """Close the database connection."""
         self._conn.close()
+
+    def list_studies(self) -> list[Study]:
+        """
+        List all studies in the store (Tier 2: cross-study warm start query).
+
+        Survey: V12 warm start from "similar completed studies," plural. A Tier 2 helper
+        queries all studies, filters by `check_space_compatibility`, and loads best trials
+        from any compatible study, not just one named study_id.
+
+        Returns: All studies, newest first.
+        """
+        rows = self._conn.execute("""
+            SELECT study_id, space_json, objective, seed, budget, incumbent_value, status
+            FROM studies
+            ORDER BY ROWID DESC
+        """).fetchall()
+        return [Study(
+            study_id=row[0],
+            space_json=row[1],
+            objective=row[2],
+            seed=row[3],
+            budget=row[4],
+            incumbent_value=row[5],
+            status=row[6],
+        ) for row in rows]

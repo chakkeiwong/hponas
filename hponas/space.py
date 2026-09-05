@@ -8,6 +8,7 @@ conditionality is structural (lives in the `condition` field).
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from typing import Any, Literal, Optional
 
@@ -49,6 +50,54 @@ class Knob:
         elif self.kind == "categorical":
             if not isinstance(self.bounds, list) or len(self.bounds) < 2:
                 raise ValueError(f"{self.name}: categorical requires list of >=2 values")
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Serialize to a JSON-safe dict.
+
+        Tuples (bounds for continuous/ordinal, condition pairs) become lists, since JSON
+        has no tuple type; `from_dict` restores them. Round-tripping through this pair is
+        lossless for the fields the schema contract covers.
+        """
+        return {
+            "name": self.name,
+            "kind": self.kind,
+            "bounds": list(self.bounds),
+            "transform": self.transform,
+            "condition": list(self.condition) if self.condition is not None else None,
+            "prior": self.prior,
+            "note": self.note,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Knob":
+        """
+        Rebuild a Knob from `to_dict` output.
+
+        Restores tuple types that JSON flattened to lists: continuous/ordinal bounds and
+        the (parent_name, parent_value) condition pair. Categorical bounds stay a list,
+        which is what `__post_init__` requires.
+        """
+        kind = data["kind"]
+        bounds = data["bounds"]
+        if kind in ("continuous", "ordinal"):
+            bounds = tuple(bounds)
+        else:
+            bounds = list(bounds)
+
+        condition = data.get("condition")
+        if condition is not None:
+            condition = tuple(condition)
+
+        return cls(
+            name=data["name"],
+            kind=kind,
+            bounds=bounds,
+            transform=data.get("transform", "none"),
+            condition=condition,
+            prior=data.get("prior"),
+            note=data.get("note", ""),
+        )
 
 
 @dataclass
@@ -146,3 +195,34 @@ class SearchSpace:
         elif knob.kind == "categorical":
             if val not in knob.bounds:
                 raise ValueError(f"{knob.name}: {val} not in {knob.bounds}")
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the space to a JSON-safe dict."""
+        return {"knobs": [k.to_dict() for k in self.knobs]}
+
+    def to_json(self) -> str:
+        """
+        Serialize the space to canonical JSON for the run store's `Study.space_json`.
+
+        The schema is the contract (Ch 15), so the serialized form has to be readable by
+        anything that queries the store — warm start compares a prior study's space
+        against the current one. Keys are sorted so the same space always produces the
+        same string.
+        """
+        return json.dumps(self.to_dict(), sort_keys=True)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "SearchSpace":
+        """Rebuild a space from `to_dict` output."""
+        return cls(knobs=[Knob.from_dict(k) for k in data.get("knobs", [])])
+
+    @classmethod
+    def from_json(cls, text: str) -> "SearchSpace":
+        """
+        Rebuild a space from `to_json` output.
+
+        Raises json.JSONDecodeError on malformed input and ValueError/KeyError if the
+        payload is well-formed JSON but not a space (callers that treat deserialization
+        as best-effort should catch these).
+        """
+        return cls.from_dict(json.loads(text))

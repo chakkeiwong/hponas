@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-04  
 **Status:** IN PROGRESS  
-**Completion:** ~39/70 engineer-days (56%)  
+**Completion:** ~41/70 engineer-days (59%)  
 **Program Reference:** BUILD_PROGRAM_v2.md lines 137-182
 
 ---
@@ -14,7 +14,7 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 | Category | Effort | Status |
 |----------|--------|--------|
 | MO stack | 16d | Complete |
-| Priors | 13d | 7d complete, 6d remaining |
+| Priors | 13d | 9d complete, 4d remaining |
 | Cost-aware | 7d | Complete |
 | Workloads | 15d | Not started |
 | Tests | 7d | Not started |
@@ -22,7 +22,7 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 
 ---
 
-## Completed (39 engineer-days)
+## Completed (41 engineer-days)
 
 ### 1. V04-T1 Real Workload Validation (1d)
 - **Status:** INFORMATIONAL (not blocker)
@@ -153,16 +153,42 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
   acquisition weight by a user prior, so πBO/PriorBand always retain 5% uniform escape
   mass. This is what makes a wrong prior recoverable instead of fatal.
 
+### 13. Warm-Start Integration (2d - complete today)
+- **Status:** COMPLETE (23/23 tests passing, 216/216 full suite, 100% coverage)
+- **Features:**
+  - `load_seed_configs`: ranked best trials from one prior study, filtered through the
+    target space's `validate_config` (best-effort — incompatible configs are skipped,
+    never raised)
+  - `load_seed_configs_from_all_studies`: pools best trials across every structurally
+    compatible study, re-ranks globally, deduplicates, honors `exclude_study_ids`
+  - `check_space_compatibility`: knob-name/kind/bounds equality over canonical JSON;
+    unparseable or legacy repr records are treated as incompatible rather than fatal
+  - `WarmStartSearcher`: wraps any searcher, drains a seed queue before delegating.
+    Works uniformly across all searcher types with no per-searcher changes
+  - `from_store` classmethod: single-study or cross-study seeding; an empty store
+    degrades to the base searcher's exact cold-start sequence
+  - Crash recovery via `state_dict`/`load_state_dict` — the unconsumed queue is restored
+    verbatim so recovery does not re-propose already-evaluated seeds
+- **Supporting changes:** canonical `to_json`/`from_json` on `SearchSpace`/`Knob`
+  (replaces the `str(space.knobs)` repr previously written to `Study.space_json`),
+  `Store.list_studies()`, and both example call sites migrated
+- **Files:** `hponas/warm_start.py` (303 lines, 100% coverage),
+  `tests/test_warm_start.py`, `hponas/space.py`, `hponas/store.py`
+- **Design note:** Seeds are *proposed*, not injected as observations. Prior objective
+  values are not comparable across workloads, and feeding them to the base searcher's
+  surrogate would bias it toward whatever the earlier study measured. The base only
+  ever sees the shortfall, so a warm-started Sobol run draws the same points as a cold
+  one, offset by the seeds spent.
+
 ---
 
-## Remaining (31 engineer-days)
+## Remaining (29 engineer-days)
 
 ### MO Stack (3.5d remaining)
 - MO veto logic tests (~1.5d)
 - V09 validation campaign (~2d)
 
-### Priors (6d remaining)
-- Warm-start integration (~2d)
+### Priors (4d remaining)
 - V11 validation campaign (~4d)
 
 ### Workloads (15d)
@@ -231,11 +257,10 @@ Program allows method demotion on validation failure:
 
 ## Next Actions
 
-1. **Implement warm-start integration** (~2d)
-2. **Run V11 validation campaign** (~4d)
-3. **Implement MO veto logic tests** (~1.5d)
-4. **Begin Workloads implementation** (15d)
-5. **Run remaining validation campaigns** (V06, V09, V10, V13)
+1. **Run V11 validation campaign** (~4d)
+2. **Implement MO veto logic tests** (~1.5d)
+3. **Begin Workloads implementation** (15d)
+4. **Run remaining validation campaigns** (V06, V09, V10, V13)
 
 ---
 

@@ -75,7 +75,7 @@ def run_study(
     study_id = f"branin_{executor_name}_{seed}"
     store.write_study(Study(
         study_id=study_id,
-        space_json=str(space.knobs),
+        space_json=space.to_json(),
         objective="minimize",
         seed=seed,
         budget=100.0,  # dummy budget

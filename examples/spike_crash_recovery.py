@@ -86,7 +86,7 @@ def _setup_study_and_recover(
         # Write study
         store.write_study(Study(
             study_id=study_id,
-            space_json=str(space.knobs),
+            space_json=space.to_json(),
             objective="minimize",
             seed=seed,
             budget=100.0,
