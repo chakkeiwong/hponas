@@ -197,3 +197,64 @@ def test_pibo_zero_prior_handled():
     # Should not crash, epsilon guard prevents log(0)
     configs = searcher.propose(2)
     assert len(configs) == 2
+
+
+@pytest.mark.skipif(not BOTORCH_AVAILABLE, reason="BoTorch not available")
+def test_pibo_prefers_high_prior_region_when_qlogei_negative():
+    """
+    Log-space weighting prevents preference inversion when qLogEI is negative.
+
+    When the GP model has a good incumbent (best_f close to optimum), qLogEI
+    can return negative values (log(EI) where EI < 1). Multiplicative weighting
+    π(x)^(β/n) * qLogEI(x) inverts preference in this regime: high prior (>1)
+    makes negative values more negative, low prior (<1) makes them less negative.
+
+    The fix applies weighting additively in log-space:
+        qLogEI_weighted(x) = qLogEI(x) + (β/n) * log π(x)
+
+    This test confirms the corrected behavior by seeding a GP with the true
+    optimum (driving qLogEI negative) and verifying that acquisition at the
+    prior center exceeds acquisition at a low-prior region.
+    """
+    import torch
+
+    space = SearchSpace()
+    space.add_knob(Knob("x", kind="continuous", bounds=(0, 1)))
+
+    def objective(config: dict) -> float:
+        x = config.get("x", 0.5)
+        return -(x - 0.7) ** 2
+
+    # Prior centered at 0.65, floor at 0.05
+    def prior(config: dict) -> float:
+        x = config.get("x", 0.5)
+        val = np.exp(-0.5 * ((x - 0.65) / 0.15) ** 2)
+        return max(val, 0.05)
+
+    searcher = GPqLogEISearcher(space, seed=99, prior_fn=prior, prior_beta=2.0,
+                                 raw_samples=32, n_restarts=2)
+
+    # Seed with Sobol, then observe the true optimum to drive qLogEI negative
+    for _ in range(4):
+        c = searcher.propose(1)[0]
+        searcher.observe({"config": c, "value": objective(c)})
+    searcher.observe({"config": {"x": 0.7}, "value": objective({"x": 0.7})})
+
+    # Build GP and acquisition
+    searcher._build_gp()
+    searcher._build_acqf(batch_size=1)
+    acqf = searcher._acqf
+
+    # Evaluate at high-prior center (x=0.65) vs low-prior corner (x=0.1)
+    high_prior_x = torch.tensor([[[0.65]]], dtype=torch.float64)
+    low_prior_x  = torch.tensor([[[0.1]]], dtype=torch.float64)
+
+    with torch.no_grad():
+        acq_high = float(acqf(high_prior_x))
+        acq_low  = float(acqf(low_prior_x))
+
+    # Acquisition should prefer the high-prior region
+    assert acq_high > acq_low, (
+        f"Weighted acquisition prefers low-prior region (acq_high={acq_high:.4f}, "
+        f"acq_low={acq_low:.4f}). Log-space weighting may be broken."
+    )
