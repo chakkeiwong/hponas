@@ -33,7 +33,7 @@ try:
 except ImportError:
     BOTORCH_AVAILABLE = False
 
-from .priors import ensure_guarded
+from .priors import MIN_DENSITY, ensure_guarded
 from .space import SearchSpace
 
 
@@ -398,22 +398,42 @@ class PriorWeightedAcquisition(AcquisitionFunction):
         Evaluate prior-weighted acquisition at candidate points X.
 
         Args:
-            X: (batch_size, dim) tensor in [0, 1]^d normalized space
+            X: (batch_size, q, dim) or (batch_size, dim) tensor in [0, 1]^d normalized space
 
         Returns:
-            (batch_size,) tensor of acquisition values
+            Tensor matching `base_acqf(X)`'s shape (one value per t-batch element).
+
+        Implementation notes:
+            1. qLogEI returns log-transformed expected improvement, which can be
+               negative when EI < 1. Multiplicative weighting π(x)^(β/n) * qLogEI(x)
+               inverts preference in the negative regime: a high prior makes a negative
+               value more negative (worse), a low prior makes it less negative (better).
+               Weighting is therefore applied additively in log-space:
+
+                 qLogEI_weighted(x) = qLogEI(x) + (β/n) * log π(x)
+
+               which is the log of the intended π(x)^(β/n) * EI(x) and preserves the
+               intended preference at every sign of qLogEI.
+
+            2. For q > 1 the base acquisition scores the q-set jointly, returning one
+               value per t-batch element, while the prior is per point. The q per-point
+               log-priors are averaged so the prior term keeps a fixed scale relative to
+               the base acquisition as q varies (a sum would grow with q and let the
+               prior swamp the acquisition for large batches).
         """
-        # Base acquisition values
+        # Base acquisition values (log-scale), shape (batch_size,) for (batch_size, q, dim) input
         base_values = self.base_acqf(X)
 
-        # Evaluate prior at each candidate
-        prior_weights = torch.zeros(X.shape[0], dtype=torch.float64)
-        for i in range(X.shape[0]):
-            x_unit = X[i]
+        # X may be (batch_size, q, dim) or (batch_size, dim); batch dimension is always first
+        X_2d = X.reshape(-1, X.shape[-1])  # flatten to (n_points, dim)
+
+        # Evaluate log-prior at each candidate point
+        log_priors = torch.zeros(X_2d.shape[0], dtype=base_values.dtype, device=X.device)
+        for i in range(X_2d.shape[0]):
             # Denormalize to original space (matching _from_unit_cube transform)
             config = {}
             for j, knob in enumerate(self.cont_knobs):
-                u = x_unit[j].item()
+                u = float(X_2d[i, j].item())
                 low, high = self.bounds_low[j].item(), self.bounds_high[j].item()
 
                 if knob.transform == "log":
@@ -426,11 +446,20 @@ class PriorWeightedAcquisition(AcquisitionFunction):
 
                 config[knob.name] = float(val)
 
-            # Evaluate prior (GuardedPrior never returns 0, so no epsilon needed)
-            prior_val = self.prior_fn(config)
+            # Guarded priors never return 0; floor anyway so a directly-constructed
+            # PriorWeightedAcquisition with a raw prior cannot produce log(0) = -inf.
+            prior_val = max(float(self.prior_fn(config)), MIN_DENSITY)
+            log_priors[i] = np.log(prior_val)
 
-            # Apply exponent: π(x)^(β/n)
-            prior_weights[i] = prior_val ** self.prior_exponent
+        # Average the per-point log-priors over q, then scale by the decayed exponent
+        if X.ndim >= 3:
+            q = X.shape[-2]
+            log_prior_term = log_priors.reshape(-1, q).mean(dim=-1)
+        else:
+            log_prior_term = log_priors
+        log_prior_term = self.prior_exponent * log_prior_term
 
-        # Multiply base acquisition by prior weight
-        return base_values * prior_weights
+        # Additive in log-space: log(π(x)^(β/n) * EI(x)) = qLogEI(x) + (β/n) * log π(x)
+        if base_values.ndim == 0:
+            return base_values + log_prior_term.reshape(())
+        return base_values + log_prior_term.reshape(base_values.shape)
