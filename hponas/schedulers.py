@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Callable, Literal, Optional
 
 import numpy as np
 
@@ -352,12 +352,20 @@ class MOASHAScheduler:
     - Hypervolume contribution ranking for promotion
     - Pareto front tracking
     - 2-3 objectives (Tier 1 scope)
+    - Veto gates: correctness constraints evaluated at every rung
 
     Algorithm:
     1. Trials report multi-objective values at rungs
-    2. Compute hypervolume contribution of each trial
-    3. Promote top 1/eta by hypervolume contribution
-    4. Stop the rest
+    2. Evaluate veto gates (if registered); failing trials are stopped immediately
+    3. Compute hypervolume contribution of each non-vetoed trial
+    4. Promote top 1/eta by hypervolume contribution
+    5. Stop the rest
+
+    Veto gates (Ch 15 contracts):
+    - Register predicates via `gate(predicate)` that are evaluated at every rung
+    - A trial failing any gate is discarded regardless of objective quality
+    - Vetoed trials are never promoted, even if Pareto-optimal
+    - Used by V13 (sampler correctness) and V10 (MO constraint satisfaction)
     """
 
     def __init__(self, config: MOASHAConfig):
@@ -383,13 +391,17 @@ class MOASHAScheduler:
         if self.rungs[-1] < config.r_max:
             self.rungs.append(config.r_max)
 
-        # Track trials: trial_id -> (rung_idx, fidelity, objectives, status)
-        self._trial_state: dict[str, tuple[int, float, np.ndarray, str]] = {}
+        # Track trials: trial_id -> (rung_idx, fidelity, objectives, status, vetoed)
+        self._trial_state: dict[str, tuple[int, float, np.ndarray, str, bool]] = {}
 
         # Track rung populations: rung_idx -> list of (trial_id, objectives) tuples
         self._rung_populations: dict[int, list[tuple[str, np.ndarray]]] = {
             i: [] for i in range(len(self.rungs))
         }
+
+        # Veto gates: predicates evaluated at every rung
+        self._gates: list[Callable[[str, dict[str, float]], bool]] = []
+        self._vetoed_trials: set[str] = set()
 
     def report(
         self, trial_id: str, fidelity: float, objectives: dict[str, float]
@@ -414,24 +426,34 @@ class MOASHAScheduler:
             # Not at rung boundary, continue training
             return "continue"
 
-        # At rung boundary
+        # At rung boundary: evaluate veto gates
+        if self._gates and trial_id not in self._vetoed_trials:
+            for gate_fn in self._gates:
+                if not gate_fn(trial_id, objectives):
+                    # Veto this trial
+                    self._vetoed_trials.add(trial_id)
+                    self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "vetoed", True)
+                    return "stop"
+
         # Update trial state
         if trial_id not in self._trial_state:
-            self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "active")
+            self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "active", False)
         else:
-            prev_rung, _, prev_objs, status = self._trial_state[trial_id]
-            self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "active")
+            prev_rung, _, prev_objs, status, vetoed = self._trial_state[trial_id]
+            self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "active", vetoed)
 
         # Record at rung
         self._rung_populations[rung_idx].append((trial_id, obj_values))
 
         # At final rung, stop
         if rung_idx == len(self.rungs) - 1:
-            self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "stopped")
+            trial_rung, trial_fid, trial_obj, _, vetoed = self._trial_state[trial_id]
+            self._trial_state[trial_id] = (trial_rung, trial_fid, trial_obj, "stopped", vetoed)
             return "stop"
 
         # Pause and wait for promotion decision
-        self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "paused")
+        trial_rung, trial_fid, trial_obj, _, vetoed = self._trial_state[trial_id]
+        self._trial_state[trial_id] = (trial_rung, trial_fid, trial_obj, "paused", vetoed)
         return "pause"
 
     def promote(self) -> list[tuple[str, float]]:
@@ -444,7 +466,12 @@ class MOASHAScheduler:
         to_promote: list[tuple[str, float]] = []
 
         for rung_idx in range(len(self.rungs) - 1):
-            pop = self._rung_populations[rung_idx]
+            # Filter out vetoed trials from the population
+            pop = [
+                (tid, obj)
+                for tid, obj in self._rung_populations[rung_idx]
+                if tid not in self._vetoed_trials
+            ]
             if not pop:
                 continue
 
@@ -462,19 +489,43 @@ class MOASHAScheduler:
             promoted_ids = set(ranked[:n_promote])
 
             # Update states and build promotion list
-            for trial_id, (trial_rung, fidelity, obj_values, status) in list(self._trial_state.items()):
-                if trial_rung == rung_idx and status == "paused":
+            for trial_id, (trial_rung, fidelity, obj_values, status, vetoed) in list(self._trial_state.items()):
+                if trial_rung == rung_idx and status == "paused" and not vetoed:
                     if trial_id in promoted_ids:
                         # Promote
                         next_rung = rung_idx + 1
                         next_fidelity = self.rungs[next_rung]
                         to_promote.append((trial_id, next_fidelity))
-                        self._trial_state[trial_id] = (next_rung, next_fidelity, obj_values, "active")
+                        self._trial_state[trial_id] = (next_rung, next_fidelity, obj_values, "active", False)
                     else:
                         # Stop
-                        self._trial_state[trial_id] = (trial_rung, fidelity, obj_values, "stopped")
+                        self._trial_state[trial_id] = (trial_rung, fidelity, obj_values, "stopped", False)
 
         return to_promote
+
+    def gate(self, predicate: Callable[[str, dict[str, float]], bool]) -> None:
+        """
+        Register a veto gate evaluated at every rung.
+
+        A trial failing any gate is discarded regardless of its objective values.
+        Multiple gates can be registered; a trial must pass all gates to avoid veto.
+
+        Survey reference: Ch 15 contracts (gate predicate), Ch 7 MO-ASHA correctness.
+
+        Args:
+            predicate: Function(trial_id, objectives) -> bool
+                       Returns True if trial passes, False if trial should be vetoed
+        """
+        self._gates.append(predicate)
+
+    def get_vetoed_trials(self) -> list[str]:
+        """
+        Return trial IDs that failed any gate.
+
+        Returns:
+            Sorted list of vetoed trial IDs
+        """
+        return sorted(self._vetoed_trials)
 
     def _rank_population(self, population: list[tuple[str, np.ndarray]]) -> list[str]:
         """
