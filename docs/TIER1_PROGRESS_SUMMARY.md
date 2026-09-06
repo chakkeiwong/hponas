@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-06  
 **Status:** IN PROGRESS  
-**Completion:** ~41.5/70 engineer-days (59%)  
+**Completion:** ~43/70 engineer-days (61%)  
 **Program Reference:** BUILD_PROGRAM_v2.md lines 137-182
 
 ---
@@ -14,7 +14,7 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 | Category | Effort | Status |
 |----------|--------|--------|
 | MO stack | 16d | Complete |
-| Priors | 13d | 9.5d complete, 3.5d remaining |
+| Priors | 13d | 11d complete, 2d remaining |
 | Cost-aware | 7d | Complete |
 | Workloads | 15d | Not started |
 | Tests | 7d | Not started |
@@ -202,16 +202,58 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
   campaign tests the actual πBO decay multiplier. With the multiplier applied backwards
   the campaign would have measured priors hurting when they help.
 
+### 15. V11 Pilot and Saturation Analysis (1.5d - complete 2026-09-06)
+- **Status:** COMPLETE (pilot run, saturation diagnosed, blocked on task redesign)
+- **Campaign infrastructure:**
+  - Four acceptance tasks (branin_2d, hartmann_3d, rl_proxy_3d, sampler_proxy_2d)
+  - Paired-cluster bootstrap with Holm correction (tier1_gate family, m=6)
+  - Pilot completed 120 studies in 17.6 min, zero missingness
+  - Simulation-based power sizing from pilot variance
+- **Saturation finding:**
+  - GP+qLogEI no-prior baseline reaches declared optimum within 0.002-0.005% of span
+  - V11a inconclusive: point +0.061, lower bound -0.00014 (threshold 0.0)
+  - V11b inconclusive: point -0.027, lower bound -0.111 (threshold -0.10)
+  - Probe shows πBO saturates at n=10 (0.0007 headroom), only n=5 leaves room
+- **Recommendation:** Option B (harder tasks: 6D Hartmann, 10D Ackley, multi-modal objectives) or Option E (escalate to PI). Current tasks are smooth low-dimensional analytic functions that GP solves efficiently, leaving no headroom for priors to demonstrate value.
+- **Blocking:** Confirmatory run deferred pending task redesign; register status remains DRAFT
+- **Files:** 
+  - `validation/v11_tasks.py` (corrected rl_proxy_3d optimum 95.0 → 96.302)
+  - `validation/v11_campaign.py` (campaign harness)
+  - `validation/run_v11_pilot.py` (write-before-summarise runner)
+  - `validation/size_v11_confirmatory.py` (power sizing)
+  - `validation/probe_v11_saturation.py` (budget sweep)
+  - `validation/V11_PILOT_REPORT.md` (analysis and recommendation)
+- **Status:** COMPLETE (7/7 πBO tests passing, full regression clean)
+- **Issue:** `PriorWeightedAcquisition` multiplied base acquisition by π(x)^(β/n), which
+  is correct for raw EI but wrong for qLogEI (log-transformed). qLogEI goes negative
+  when EI < 1 (the common regime once the incumbent is good). In that regime the
+  multiplication inverted preference: high prior made negative values more negative,
+  steering the searcher away from the region the prior favored.
+- **Fix:** Apply the weighting additively in log-space: qLogEI_weighted(x) = qLogEI(x) +
+  (β/n)·log(π(x)), which is log(π(x)^(β/n)·EI(x)) and preserves the intended ordering.
+  Same decay schedule, same β semantics.
+- **Supporting fixes:**
+  - q > 1 shape mismatch: average per-point log-priors over q so the prior term's scale
+    stays fixed as batch size varies (a sum would grow and swamp the acquisition)
+  - Floor prior at MIN_DENSITY before log so unguarded priors cannot produce log(0) = -inf
+- **Test:** `test_pibo_prefers_high_prior_region_when_qlogei_negative` seeds a GP with
+  the true optimum to force negative qLogEI and asserts weighted acquisition still
+  prefers the high-prior region (the case the old code got backwards).
+- **Files:** `hponas/searchers_gp.py`, `tests/test_pibo.py`
+- **Impact:** Critical for V11a — the entry's `implementation_requirement` is that the
+  campaign tests the actual πBO decay multiplier. With the multiplier applied backwards
+  the campaign would have measured priors hurting when they help.
+
 ---
 
-## Remaining (28.5 engineer-days)
+## Remaining (27 engineer-days)
 
 ### MO Stack (3.5d remaining)
 - MO veto logic tests (~1.5d)
 - V09 validation campaign (~2d)
 
-### Priors (3.5d remaining)
-- V11 validation campaign (~3.5d) — IN PROGRESS (pilot running)
+### Priors (2d remaining)
+- V11 confirmatory campaign (~2d, blocked on task redesign decision)
 
 ### Workloads (15d)
 - hamiltonian_mo: Multi-objective physics simulation
@@ -223,11 +265,10 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 - Prior recovery tests
 - Cost model accuracy tests
 
-### Validation (11d remaining)
+### Validation (9d remaining)
 - V06: ASHA cost analysis (active accelerator-seconds)
 - V09: Hypervolume-over-budget curves
 - V10: Rung correlation diagnostics
-- V11: Prior effectiveness (~3.5d remaining, pilot running)
 - V13: Warm-start effectiveness
 
 ---
@@ -240,11 +281,11 @@ Per BUILD_PROGRAM_v2.md, Tier 1 gate requires:
 - [x] V06: ASHA cost < synchronous hyperband
 - [ ] V09: qLogNEHVI hypervolume > scalarization
 - [ ] V10: ASHA early-stop correlation > random
-- [ ] V11a: MO veto prevents regression
-- [ ] V11b: πBO > from-scratch (prior effectiveness)
+- [ ] V11a: folklore_prior superiority over no_prior (**BLOCKED:** task saturation)
+- [ ] V11b: wrong_prior non-inferiority vs no_prior (**BLOCKED:** task saturation)
 - [ ] V13: Warm-start > cold-start
 
-**Current gate status:** 0/7 validations complete (V04-T1 informational only)
+**Current gate status:** 1/7 validations complete (V06 passing, V11a/V11b blocked on task redesign)
 
 ---
 
@@ -260,15 +301,18 @@ Program allows method demotion on validation failure:
 
 ## Risk Assessment
 
+### V11 Task Saturation
+- **Risk:** HIGH (blocks V11a/V11b gate criteria)
+- **Finding:** GP+qLogEI no-prior baseline reaches declared optimum within 0.002-0.005% of span on all four tasks, leaving no headroom for priors to demonstrate superiority
+- **Root cause:** Tasks are smooth low-dimensional analytic functions (branin 2D, hartmann 3D, rl_proxy 3D, sampler_proxy 2D) that GP solves efficiently
+- **Options:** (B) Replace 2-3 tasks with harder objectives (6D Hartmann, 10D Ackley, multi-modal with local traps) or (E) Escalate to PI for design review
+- **Impact:** V11 confirmatory blocked; priors cannot achieve default-on status without passing both V11a and V11b
+- **Timeline:** Task redesign + re-pilot + sizing + confirmatory = ~3-4 days additional
+
 ### V04-T1 Informational Result
 - **Risk:** LOW  
 - **Mitigation:** Sobol operational for low-dim (T0 validated 7-10% improvement in 3D)
 - **Impact:** GP/TPE methods expected to show stronger advantage than Sobol in moderate dimensions
-
-### BoTorch Installation
-- **Risk:** MEDIUM (installation timeout)
-- **Mitigation:** Installing in background, can test locally if needed
-- **Impact:** Blocks qLogNEHVI testing, not critical path blocker (fallback: Chebyshev first)
 
 ### Scope Clarity: TuRBO
 - **Risk:** MEDIUM (V04-T1 mentions TuRBO but not in Tier 1 searcher list)
@@ -279,10 +323,10 @@ Program allows method demotion on validation failure:
 
 ## Next Actions
 
-1. **Complete V11 pilot and power sizing** (~3.5d remaining)
-   - Pilot running: 4 tasks × 3 arms × 2 methods × 5 replicates = 120 studies
-   - Size confirmatory sample from pilot variance via simulation
-   - Run confirmatory campaign (blocked on register certification)
+1. **Resolve V11 task saturation** (~2-4d depending on path)
+   - Decision gate: Option B (harder tasks) or Option E (escalate to PI)
+   - If Option B: select replacement tasks, declare bounds/priors, sanity check, re-pilot
+   - If Option E: draft escalation memo with V11_PILOT_REPORT.md attached
 2. **Implement MO veto logic tests** (~1.5d)
 3. **Begin Workloads implementation** (15d)
 4. **Run remaining validation campaigns** (V06, V09, V10, V13)
@@ -291,12 +335,13 @@ Program allows method demotion on validation failure:
 
 ## Lessons Learned
 
-1. **Background task management:** Long installations should run in background automatically
-2. **Scope clarity:** V04-T1 references TuRBO but program doesn't include it in Tier 1 scope
-3. **Validation sequencing:** V04-T1 informational result acceptable, not blocker per demotion rules
+1. **Pilot-driven validation design:** Task saturation discovered in pilot (17.6 min, 120 studies) rather than after committing 20 replicates/task to confirmatory—saturation probe disproved initial recommendation (n=10 still saturated) before wasting full sample
+2. **Write-before-summarise pattern:** Two pilot attempts lost to AttributeErrors in summary prints; restructuring to write artifact before any downstream processing prevented compute loss
+3. **Correctness over convenience:** πBO preference inversion caught before V11 pilot; would have inverted the campaign's claim (priors help → measured as priors hurt)
+4. **Task difficulty matters for superiority claims:** Analytic test functions efficient for unit testing but leave no headroom for demonstrating prior value when baseline already saturates
 
 ---
 
-**Status:** Continuing execution per BUILD_PROGRAM_v2.md  
-**No blockers:** Installation running in background, proceeding with other work  
+**Status:** V11 pilot complete, confirmatory blocked on task redesign decision  
+**Blocker:** HIGH priority—V11 task saturation blocks gate criteria V11a/V11b  
 **Policy:** No direction changes without reviewed plan
