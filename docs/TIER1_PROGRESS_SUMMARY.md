@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-07  
 **Status:** IN PROGRESS  
-**Completion:** ~45/70 engineer-days (64%)  
+**Completion:** ~48/70 engineer-days (69%)  
 **Program Reference:** BUILD_PROGRAM_v2.md lines 137-182
 
 ---
@@ -14,10 +14,10 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 | Category | Effort | Status |
 |----------|--------|--------|
 | MO stack | 16d | Complete |
-| Priors | 13d | 11d complete, 2d remaining |
+| Priors | 13d | Complete |
 | Cost-aware | 7d | Complete |
 | Workloads | 15d | Not started |
-| Tests | 7d | 1.5d complete, 5.5d remaining |
+| Tests | 7d | 4.5d complete, 2.5d remaining |
 | Validation | 12d | V04-T1 complete (informational) |
 
 ---
@@ -244,7 +244,22 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
   campaign tests the actual πBO decay multiplier. With the multiplier applied backwards
   the campaign would have measured priors hurting when they help.
 
-### 15. MO-ASHA Veto Gates (1.5d - complete 2026-09-07)
+### 16. Prior Recovery Tests (3d - complete 2026-09-07)
+- **Status:** COMPLETE (7/7 unit tests passing, 5 integration tests marked slow)
+- **Features:**
+  - PriorBand recovery tests: portfolio weight progression, early rung prior bias, late rung incumbent bias, uniform component presence, nonzero support enforcement
+  - πBO recovery tests: beta decay formula verification, nonzero support enforcement
+  - Integration tests: good prior convergence advantage, wrong prior recovery within 15% of uniform, multi-prior quality comparison
+  - Branin 2D test infrastructure with known optimum (0.397887)
+  - Shared fixtures for prior creation (good/wrong/mediocre), regret measurement, density overlap
+- **Test coverage:**
+  - Unit tests verify mechanisms (portfolio weights, decay formulas, component presence)
+  - Integration tests verify end-to-end recovery (marked @pytest.mark.slow due to GP optimization cost)
+  - Fast unit tests run in ~12s, slow tests require separate execution
+- **Files:** `tests/test_prior_recovery_priorband.py`, `tests/test_prior_recovery_pibo.py`, `tests/fixtures/recovery_fixtures.py`, `pyproject.toml` (marker registration)
+- **Design note:** Per BUILD_PROGRAM_REVIEW_VERDICT.md: "Test the actual decaying multiplier and rung portfolio over several prior qualities, require nonzero support, predefine early gain and worst-case recovery margins, and report regret over budget." Unit tests verify the mechanisms exist and work correctly; integration tests verify end-to-end behavior but are expensive and marked for optional execution.
+
+---
 - **Status:** COMPLETE (19/19 tests passing)
 - **Implementation:**
   - `MOASHAScheduler.gate(predicate)` registers veto predicates evaluated at every rung
@@ -271,27 +286,24 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 
 ---
 
-## Remaining (25 engineer-days)
+## Remaining (22 engineer-days)
 
 ### MO Stack (2d remaining)
 - V09 validation campaign (~2d)
-
-### Priors (2d remaining)
-- V11 confirmatory campaign (~2d, blocked on task redesign decision)
 
 ### Workloads (15d)
 - hamiltonian_mo: Multi-objective physics simulation
 - sampler_neutra: MCMC convergence diagnostics
 - finance (conditional): Portfolio optimization
 
-### Tests (5.5d remaining)
-- Prior recovery tests (~3d)
+### Tests (2.5d remaining)
 - Cost model accuracy tests (~2.5d)
 
-### Validation (9d remaining)
+### Validation (9d remaining, includes V11 overlap)
 - V06: ASHA cost analysis (active accelerator-seconds)
 - V09: Hypervolume-over-budget curves
 - V10: Rung correlation diagnostics
+- V11: Confirmatory campaign (blocked on task redesign)
 - V13: Warm-start effectiveness
 
 ---
@@ -350,11 +362,8 @@ Program allows method demotion on validation failure:
    - Decision gate: Option B (harder tasks) or Option E (escalate to PI)
    - If Option B: select replacement tasks, declare bounds/priors, sanity check, re-pilot
    - If Option E: draft escalation memo with V11_PILOT_REPORT.md attached
-2. **Implement prior recovery tests** (~3d)
-3. **Begin Workloads implementation** (15d)
-4. **Run remaining validation campaigns** (V06, V09, V10, V13)
-2. **Implement MO veto logic tests** (~1.5d)
-3. **Begin Workloads implementation** (15d)
+2. **Implement cost model accuracy tests** (~2.5d)
+3. **Begin Workloads implementation** (15d): hamiltonian_mo, sampler_neutra, finance
 4. **Run remaining validation campaigns** (V06, V09, V10, V13)
 
 ---
