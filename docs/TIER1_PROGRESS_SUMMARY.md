@@ -1,8 +1,8 @@
 # Tier 1 Progress Summary
 
-**Date:** 2026-09-06  
+**Date:** 2026-09-07  
 **Status:** IN PROGRESS  
-**Completion:** ~43/70 engineer-days (61%)  
+**Completion:** ~45/70 engineer-days (64%)  
 **Program Reference:** BUILD_PROGRAM_v2.md lines 137-182
 
 ---
@@ -17,12 +17,12 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 | Priors | 13d | 11d complete, 2d remaining |
 | Cost-aware | 7d | Complete |
 | Workloads | 15d | Not started |
-| Tests | 7d | Not started |
+| Tests | 7d | 1.5d complete, 5.5d remaining |
 | Validation | 12d | V04-T1 complete (informational) |
 
 ---
 
-## Completed (41.5 engineer-days)
+## Completed (45 engineer-days)
 
 ### 1. V04-T1 Real Workload Validation (1d)
 - **Status:** INFORMATIONAL (not blocker)
@@ -244,12 +244,36 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
   campaign tests the actual πBO decay multiplier. With the multiplier applied backwards
   the campaign would have measured priors hurting when they help.
 
+### 15. MO-ASHA Veto Gates (1.5d - complete 2026-09-07)
+- **Status:** COMPLETE (19/19 tests passing)
+- **Implementation:**
+  - `MOASHAScheduler.gate(predicate)` registers veto predicates evaluated at every rung
+  - Trials failing any gate return "stop" from `report()` and are excluded from promotion
+  - Multiple gates enforce AND logic (all must pass)
+  - Veto status persists across rungs (once vetoed, always vetoed)
+  - Zero performance overhead when no gates registered
+- **API:**
+  - `gate(predicate: Callable[[str, dict[str, float]], bool])` — register veto
+  - `get_vetoed_trials() -> list[str]` — return vetoed trial IDs
+  - Predicate signature: `predicate(trial_id, objectives) -> bool` (True = pass, False = veto)
+- **Test coverage:**
+  - Gate registration and evaluation
+  - Veto stops trial immediately (returns "stop")
+  - Vetoed trials excluded from promotion (even if Pareto-optimal)
+  - Multiple gates (AND logic)
+  - Veto persistence across rungs
+  - Edge cases: all trials vetoed, NaN objectives, empty gate list
+- **Files:** `hponas/schedulers.py`, `tests/test_mo_asha.py`, `docs/MO_VETO_GATES_SPEC.md`
+- **Survey reference:** Ch 15 contracts (gate predicate), Ch 7 MO-ASHA correctness
+- **Validation tie-in:**
+  - V13 (sampler correctness): uses gates for divergence/R̂/ESS vetoes
+  - V10 (MO rung correlation): may use gates for constraint satisfaction
+
 ---
 
-## Remaining (27 engineer-days)
+## Remaining (25 engineer-days)
 
-### MO Stack (3.5d remaining)
-- MO veto logic tests (~1.5d)
+### MO Stack (2d remaining)
 - V09 validation campaign (~2d)
 
 ### Priors (2d remaining)
@@ -260,10 +284,9 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 - sampler_neutra: MCMC convergence diagnostics
 - finance (conditional): Portfolio optimization
 
-### Tests (7d)
-- MO veto logic tests
-- Prior recovery tests
-- Cost model accuracy tests
+### Tests (5.5d remaining)
+- Prior recovery tests (~3d)
+- Cost model accuracy tests (~2.5d)
 
 ### Validation (9d remaining)
 - V06: ASHA cost analysis (active accelerator-seconds)
@@ -327,6 +350,9 @@ Program allows method demotion on validation failure:
    - Decision gate: Option B (harder tasks) or Option E (escalate to PI)
    - If Option B: select replacement tasks, declare bounds/priors, sanity check, re-pilot
    - If Option E: draft escalation memo with V11_PILOT_REPORT.md attached
+2. **Implement prior recovery tests** (~3d)
+3. **Begin Workloads implementation** (15d)
+4. **Run remaining validation campaigns** (V06, V09, V10, V13)
 2. **Implement MO veto logic tests** (~1.5d)
 3. **Begin Workloads implementation** (15d)
 4. **Run remaining validation campaigns** (V06, V09, V10, V13)
