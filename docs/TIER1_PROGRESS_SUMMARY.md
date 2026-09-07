@@ -122,8 +122,8 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
   - Graceful degradation for degenerate priors
 - **Files:** `hponas/searchers_priorband.py`, `tests/test_priorband.py`
 
-### 11. Cost-Aware Acquisition (7d - complete today)
-- **Status:** COMPLETE (9/9 tests passing, 180/180 full suite)
+### 11. Cost-Aware Acquisition (7d - complete 2026-09-07)
+- **Status:** COMPLETE (22/22 tests passing, 72s)
 - **Features:**
   - CostModelGP: GP surrogate over log(wall-clock time)
   - EI-per-cost: α_cost(x) = α(x) / cost_model(x)^T
@@ -131,10 +131,25 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
   - Linear annealing schedule over configurable cooldown duration
   - Handles wide cost ranges (0.1s to 1000s+) via log-transform
   - Config normalization to [0,1]^d unit cube with log-warping
-- **Files:** `hponas/searchers_cost.py`, `tests/test_cost_aware.py`
-- **Design note:** Implemented _to_unit_cube normalization following GPSearcher pattern.
-  Cost model learns independently from performance model. Temperature schedule prevents
-  premature cost optimization before cost model has enough data.
+  - `CostAwareGPSearcher.propose()` wraps base acquisition and runs `optimize_acqf`
+  - `CostAwareAcquisition` applies penalty subtractively for log-scale acquisitions
+  - Differentiable `posterior_mean_log_cost()` preserves gradients for L-BFGS optimizer
+- **Files:** `hponas/searchers_cost.py`, `tests/test_cost_aware.py`, `tests/test_cost_efficiency.py`, `docs/COST_MODEL_ACCURACY_TESTS_SPEC.md`
+- **Implementation note:** The cost-aware acquisition was completed during accuracy test
+  development. The original `propose()` method delegated to the base searcher on both
+  branches, so the cost penalty was never applied. `CostAwareAcquisition` was unexercised
+  by `test_cost_aware.py` (grep for the class name returns nothing), which is how three
+  defects survived initial "COMPLETE" status: (1) log-scale acquisitions divided by cost^T,
+  inverting preference when EI < 1; (2) forward() iterated rows instead of handling BoTorch's
+  b × q × d shape; (3) cost term round-tripped through numpy under no_grad, contributing no
+  gradient. Fixed during Suite 2 development; all 22 tests now pass (9 from Suite 1, 4 from
+  Suite 2, 9 pre-existing from test_cost_aware.py).
+- **Design note:** Cost model learns independently from performance model. Temperature
+  schedule prevents premature cost optimization before cost model has enough data. On a
+  smooth peaked objective the qLogEI spread (~35 nats) dominates log-cost spread (~4.6 nats
+  at 100× range), so the cost term cannot compete — this is correct EI-per-cost behavior,
+  not a defect. The lever is a flatter/noisier quality surface (keeps EI alive across the
+  space) rather than a steeper cost function.
 
 ### 12. Priors Nonzero Guard (1d - complete today)
 - **Status:** COMPLETE (13/13 tests passing, 193/193 full suite)
