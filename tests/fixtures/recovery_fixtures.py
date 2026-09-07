@@ -134,7 +134,8 @@ def run_priorband_study(scheduler_config, prior, budget, seed):
     while fidelity_consumed < budget:
         # Propose new trials
         while len([t for t in trial_states.values() if t[2] == "running"]) < 4:
-            config = sampler.propose(rung_idx=0)
+            configs = sampler.propose(n=1, rung_idx=0)
+            config = configs[0]
             trial_id = f"trial_{trial_counter}"
             trial_counter += 1
             trial_states[trial_id] = (config, scheduler_config.r_min, "running")
@@ -148,7 +149,8 @@ def run_priorband_study(scheduler_config, prior, budget, seed):
             fidelity_consumed += fidelity
 
             decision = scheduler.report(trial_id, fidelity, obj)
-            sampler.observe(config, obj, rung_idx=0)
+            trial_result = {"config": config, "value": -obj}
+            sampler.observe(trial_result)
 
             incumbent = min(incumbent, obj)
             best_so_far.append(incumbent)
