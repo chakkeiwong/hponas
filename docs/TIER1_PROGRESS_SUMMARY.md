@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-07  
 **Status:** IN PROGRESS  
-**Completion:** ~48/70 engineer-days (69%)  
+**Completion:** ~60/70 engineer-days (86%)  
 **Program Reference:** BUILD_PROGRAM_v2.md lines 137-182
 
 ---
@@ -16,13 +16,13 @@ Per BUILD_PROGRAM_v2.md lines 146-153:
 | MO stack | 16d | Complete |
 | Priors | 13d | Complete |
 | Cost-aware | 7d | Complete |
-| Workloads | 15d | Not started |
+| Workloads | 15d | 12d complete (hamiltonian_mo, sampler_neutra), 3d deferred (finance out of scope) |
 | Tests | 7d | 4.5d complete, 2.5d remaining |
 | Validation | 12d | V04-T1 complete (informational) |
 
 ---
 
-## Completed (45 engineer-days)
+## Completed (57 engineer-days)
 
 ### 1. V04-T1 Real Workload Validation (1d)
 - **Status:** INFORMATIONAL (not blocker)
@@ -395,3 +395,45 @@ Program allows method demotion on validation failure:
 **Status:** V11 pilot complete, confirmatory blocked on task redesign decision  
 **Blocker:** HIGH priority—V11 task saturation blocks gate criteria V11a/V11b  
 **Policy:** No direction changes without reviewed plan
+
+### 17. Production Workloads (12d - complete 2026-09-07)
+- **Status:** COMPLETE (hamiltonian_mo, sampler_neutra; finance deferred per R0)
+- **Implementation:**
+  - `hamiltonian_mo`: Multi-objective Hamiltonian network tuning (prediction error vs drift)
+  - `sampler_neutra`: MCMC sampler correctness tuning (ESS, R̂, divergences)
+  - Both production-ready with tests and examples
+- **Features:**
+  - **hamiltonian_mo:**
+    - Real Hamiltonian neural network with symplectic structure
+    - Pendulum dynamics (H(q,p) = p²/2 - cos(q))
+    - Two objectives: prediction_error (MSE on held-out trajectories), drift (energy conservation violation)
+    - Multi-fidelity: training epochs (max 100)
+    - Config: learning_rate, batch_size, hidden_sizes, activation, weight_decay, optimizer
+    - 11/11 tests passing (35s)
+  - **sampler_neutra:**
+    - HMC sampler with leapfrog integration on Neal's funnel
+    - Three metrics: ESS (effective sample size), R̂ (Gelman-Rubin), divergences
+    - Veto gates for V13: divergences < 5%, R̂ < 1.1, ESS > 100
+    - Multi-fidelity: number of MCMC samples (max 1000)
+    - Config: step_size, n_leapfrog, n_chains, target
+    - 14/14 tests passing (6s)
+  - **Examples:**
+    - `examples/hamiltonian_mo_example.py`: qLogNEHVI + MO-ASHA, hypervolume reporting
+    - `examples/sampler_neutra_example.py`: Sobol + MO-ASHA with veto gates, ESS ranking
+- **Files:**
+  - `workloads/hamiltonian_mo.py` (287 lines)
+  - `workloads/sampler_neutra.py` (281 lines)
+  - `tests/test_hamiltonian_mo.py` (11 tests)
+  - `tests/test_sampler_neutra.py` (14 tests)
+  - `examples/hamiltonian_mo_example.py`
+  - `examples/sampler_neutra_example.py`
+- **Design note:** Finance workload deferred per R0 decision (out of scope for internal beta).
+  The two workloads cover the required MO (V09, V10) and sampler correctness (V13)
+  validation campaigns. Both workloads expose real physics/statistics tasks with
+  measurable objectives (not analytic test functions), multi-fidelity scheduling support,
+  and complete config validation. hamiltonian_mo provides the Hamiltonian multi-objective
+  task for V09/V10; sampler_neutra provides the correctness metrics and veto gates for V13.
+- **Validation tie-in:**
+  - V09: qLogNEHVI vs scalarization on hamiltonian_mo
+  - V10: Drift-at-rung correlation on hamiltonian_mo
+  - V13: Veto gates, ESS ranking, posterior agreement on sampler_neutra
