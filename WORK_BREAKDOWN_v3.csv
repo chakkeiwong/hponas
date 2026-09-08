@@ -1,0 +1,83 @@
+Task ID,Task Name,Tier,Effort (eng-days),Duration (calendar days),Dependencies,Staff Assignment,GPU Requirements,Start Week,End Week
+W1.1,Work Breakdown Reconciliation,Recovery,3,3,None,Project lead,None,1,1
+W1.2,Traceability Matrix,Recovery,3,3,W1.1,Project lead,None,1,1
+W1.3,NAS Scope Decision,Recovery,1,1,W1.2,Project lead,None,1,1
+W2.1,Contract Conformance Tests - Searcher,Recovery,1,1,W1.3,Engineer 1,None,2,2
+W2.2,Contract Conformance Tests - Scheduler,Recovery,1,1,W1.3,Engineer 1,None,2,2
+W2.3,Contract Conformance Tests - Executor,Recovery,1,1,W1.3,Engineer 1,None,2,2
+W2.4,Contract Conformance Tests - Store,Recovery,1,1,W1.3,Engineer 1,None,2,2
+W2.5,Contract Conformance Tests - Checkpoint,Recovery,1,1,W1.3,Engineer 1,None,2,2
+W2.6,Define Missing Contract Semantics,Recovery,2,2,W2.1-W2.5,Project lead,None,2,2
+W3.1,Repair V01 Protocol,Recovery,1,1,W2.6,Engineer 1,None,3,3
+W3.2,Repair V02 Protocol,Recovery,0.5,0.5,W2.6,Engineer 1,None,3,3
+W3.3,Repair V03 Protocol,Recovery,0.5,0.5,W2.6,Engineer 1,None,3,3
+W3.4,Repair V04-T0 Protocol,Recovery,0.5,0.5,W2.6,Engineer 1,None,3,3
+W3.5,Repair V04-T1 Protocol,Recovery,1,1,W2.6,Engineer 1,None,3,3
+W3.6,Repair V05-V15 Protocols,Recovery,3,3,W2.6,Engineer 1,None,3,3
+W3.7,Design Test Pyramid,Recovery,2,2,W3.1-W3.6,Project lead,None,3,3
+W3.8,Implement V16 Validator Audit,Recovery,1,1,W3.7,Engineer 1,None,3,3
+W4.1,BUILD_PROGRAM_v3 - Tier 0 Scope,Recovery,2,2,W3.8,Project lead,None,4,4
+W4.2,BUILD_PROGRAM_v3 - Tier 1 Scope,Recovery,1,1,W4.1,Project lead,None,4,4
+W4.3,BUILD_PROGRAM_v3 - Tier 2 Scope,Recovery,1,1,W4.2,Project lead,None,4,4
+W4.4,BUILD_PROGRAM_v3 - Distributed Beta,Recovery,1,1,W4.3,Project lead,None,4,4
+W4.5,Approval Checklist Verification,Recovery,1,1,W4.4,Project lead,None,4,4
+W4.6,Approval Request Package,Recovery,1,1,W4.5,Project lead,None,4,4
+T0.1,Install Dependencies (jax/brax),T0-Remediation,0.5,0.5,W4.6,Engineer 1,None,5,5
+T0.2,V01 Re-implementation (vendor parity),T0-Remediation,1,1,T0.1,Engineer 1,None,5,5
+T0.3,V02 Implementation (state replay),T0-Remediation,3,3,T0.1,Engineer 1,None,5,5
+T0.4,V03 Implementation (mutation testing),T0-Remediation,3,3,T0.1,Engineer 1,None,5,6
+T0.5,V04-T0 Re-run (fixed threshold),T0-Remediation,2,2,T0.1,Engineer 1,A100 × 4 × 48h,5,6
+T0.6,V05 Re-run (real workload),T0-Remediation,1,1,T0.1,Engineer 1,A100 × 2 × 24h,6,6
+T0.7,V14 Re-run (non-zero trials),T0-Remediation,0.5,0.5,T0.1,Engineer 1,A100 × 1 × 12h,6,6
+T0.8,Fix 6 Broken R1 Tests,T0-Remediation,2,2,T0.3,Engineer 1,None,6,6
+T0.9,V16 Audit Execution (all T0 validators),T0-Remediation,2,2,T0.2-T0.7,Engineer 1,None,6,7
+T0.10,Tier 0 Gate Report,T0-Remediation,1,1,T0.9,Project lead,None,7,7
+T0.11,BUILD_PROGRAM_v2 Synchronization,T0-Remediation,1,1,T0.10,Project lead,None,7,7
+T1.1,qLogNEHVI Implementation,T1,3,3,T0.11,Engineer 1,None,8,8
+T1.2,Chebyshev Scalarization,T1,2,2,T0.11,Engineer 1,None,8,8
+T1.3,NSGA-II Wrapper,T1,3,3,T0.11,Engineer 1,None,8,9
+T1.4,MO-ASHA Scheduler,T1,4,4,T1.1-T1.3,Engineer 1,None,9,9
+T1.5,Hypervolume/Front Reporting,T1,2,2,T1.1-T1.3,Engineer 1,None,9,10
+T1.6,Correct πBO Implementation,T1,3,3,T0.11,Engineer 2,None,8,8
+T1.7,Correct PriorBand Implementation,T1,4,4,T0.11,Engineer 2,None,8,9
+T1.8,Prior Nonzero Guard,T1,1,1,T1.6-T1.7,Engineer 2,None,9,9
+T1.9,Warm-Start Ranked Query,T1,3,3,T0.11,Engineer 2,None,9,10
+T1.10,EI-per-cost Implementation,T1,4,4,T0.11,Engineer 1,None,10,10
+T1.11,Predictive Cost Model,T1,3,3,T1.10,Engineer 1,None,10,11
+T1.12,hamiltonian_mo Workload,T1,5,5,T1.1-T1.5,Engineer 2,None,10,11
+T1.13,sampler_neutra Workload,T1,5,5,T1.1-T1.5,Engineer 2,None,11,12
+T1.14,finance Workload (conditional),T1,5,5,T1.1-T1.5,TBH (domain expert),None,12,12
+T1.15,MO Veto Tests,T1,2,2,T1.4,Engineer 1,None,11,11
+T1.16,Prior Recovery Tests,T1,2,2,T1.6-T1.9,Engineer 2,None,11,11
+T1.17,Cost Model Tests,T1,2,2,T1.10-T1.11,Engineer 1,None,11,12
+T1.18,V04-T1 Campaign (500 trials),T1,3,3,T1.1-T1.17,Engineer 1,A100 × 8 × 120h,12,13
+T1.19,V06 Campaign,T1,2,2,T1.4,Engineer 1,A100 × 4 × 48h,13,13
+T1.20,V09 Campaign,T1,3,3,T1.1-T1.5,Engineer 1,A100 × 8 × 72h,13,14
+T1.21,V10 Campaign (deferred from T1),T1,0,0,N/A,N/A,N/A,N/A,N/A
+T1.22,V11 Campaign,T1,4,4,T1.6-T1.9,Engineer 2,A100 × 8 × 96h,14,14
+T1.23,V13 Campaign (deferred from T1),T1,0,0,N/A,N/A,N/A,N/A,N/A
+T1.24,Tier 1 Gate Report,T1,1,1,T1.18-T1.22,Project lead,None,14,15
+T2.1,Mixed-Space TuRBO,T2,10,10,T1.24,Engineer 1 + Engineer 2,None,15,17
+T2.2,PB2 Implementation,T2,5,5,T2.1,Engineer 1,None,17,18
+T2.3,PB2-Mix Implementation,T2,5,5,T2.1,Engineer 1,None,18,19
+T2.4,BG-PBT Population Manager,T2,8,8,T2.2-T2.3,Engineer 1 + Engineer 2,None,19,20
+T2.5,Architecture Factory Contract,T2,3,3,T2.1,TBH (NAS specialist),None,17,18
+T2.6,Compatibility Policy,T2,2,2,T2.5,TBH (NAS specialist),None,18,18
+T2.7,Distillation Protocol,T2,5,5,T2.5-T2.6,TBH (NAS specialist),None,18,19
+T2.8,Architecture Proposal Method,T2,4,4,T2.5-T2.6,TBH (NAS specialist),None,19,20
+T2.9,Measured Objectives (params/FLOPs/latency),T2,3,3,T2.5,TBH (NAS specialist),None,20,20
+T2.10,TuRBO Mixed-Space Tests,T2,3,3,T2.1,Engineer 2,None,17,18
+T2.11,Population Checkpoint Compatibility Tests,T2,2,2,T2.2-T2.4,Engineer 1,None,20,20
+T2.12,Distillation Correctness Tests,T2,3,3,T2.7,TBH (NAS specialist),None,19,20
+T2.13,rl_large_parallel Workload,T2,5,5,T2.1-T2.4,Engineer 1,None,20,21
+T2.14,V08 Campaign,T2,5,5,T2.1-T2.13,Engineer 1 + Engineer 2,A100 × 16 × 240h,21,22
+T2.15,V10 Campaign (from T1 deferral),T2,3,3,T2.4,Engineer 2,A100 × 8 × 72h,22,22
+T2.16,V13 Campaign (from T1 deferral),T2,3,3,T2.4,Engineer 2,A100 × 8 × 72h,22,23
+T2.17,Tier 2 Gate Report,T2,1,1,T2.14-T2.16,Project lead,None,23,23
+DB.1,Persistent Store (PostgreSQL),Distributed-Beta,3,3,T2.17,Engineer 1,None,24,24
+DB.2,Backup/Restore Protocol,Distributed-Beta,2,2,DB.1,Engineer 1,None,24,25
+DB.3,Monitoring/Alerting,Distributed-Beta,3,3,DB.1,TBH (SRE),None,24,25
+DB.4,Scale Tests (concurrent trials),Distributed-Beta,2,2,DB.1-DB.3,Engineer 1 + Engineer 2,A100 × 32 × 48h,25,25
+DB.5,Security Audit (user code sandbox),Distributed-Beta,3,3,DB.1,TBH (Security),None,25,26
+DB.6,Hard Budget Enforcement,Distributed-Beta,2,2,DB.1,Engineer 1,None,26,26
+DB.7,Distributed Beta Gate Report,Distributed-Beta,1,1,DB.1-DB.6,Project lead,None,26,26
