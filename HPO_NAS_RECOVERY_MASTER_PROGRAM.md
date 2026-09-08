@@ -11,12 +11,12 @@
 
 ## Current Phase Marker
 
-**PHASE:** Week 1 complete, Week 2 ready to start  
+**PHASE:** Week 2 Day 1-2 complete  
 **WEEK:** 2  
-**DAY:** 1  
-**LAST COMPLETED:** Week 1 Day 7 - NAS_SCOPE_DECISION.md created, Option A (moderate architecture coordinates) affirmed (2026-09-04)  
-**NEXT TASK:** Week 2 Day 1-2 - Contract conformance tests (Searcher, Scheduler, Executor, Store, Checkpoint)  
-**DATE:** 2026-09-04  
+**DAY:** 2  
+**LAST COMPLETED:** Week 2 Day 1-2 - Contract conformance tests created, all 16 tests passing (W2.1-W2.5 deliverable complete, 2026-09-09)  
+**NEXT TASK:** Week 2 Day 3-4 - Define Missing Contract Semantics (W2.6)  
+**DATE:** 2026-09-09  
 
 **Update this section after completing each day's work.**
 
