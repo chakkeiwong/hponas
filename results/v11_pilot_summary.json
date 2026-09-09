@@ -1,0 +1,40 @@
+{
+  "validation_id": "V11",
+  "mode": "pilot",
+  "claim": "Priors help under good advice, recover under wrong advice",
+  "status": "PILOT_COMPLETE",
+  "timestamp": "2026-09-04",
+  "elapsed_minutes": 17.9,
+  "n_studies": 120,
+  "n_replicates": 5,
+  "n_trials": 25,
+  "voided": false,
+  "entries": {
+    "V11a": {
+      "claim": "folklore_prior beats no_prior",
+      "verdict": "inconclusive",
+      "point_estimate": 0.0604,
+      "lower_bound": -0.0002,
+      "p_value": 0.0195,
+      "alpha_used": 0.01,
+      "clears": false,
+      "n_blocks": 40,
+      "note": "Pilot mode returns inconclusive rather than fail - used to estimate variance for confirmatory sample size"
+    },
+    "V11b": {
+      "claim": "wrong_prior recovers (does not fall below no_prior)",
+      "verdict": "inconclusive",
+      "point_estimate": -0.0249,
+      "lower_bound": -0.1125,
+      "p_value": 0.0172,
+      "alpha_used": 0.008333,
+      "clears": false,
+      "n_blocks": 40,
+      "note": "Pilot mode returns inconclusive rather than fail - used to estimate variance for confirmatory sample size"
+    }
+  },
+  "gate": "Tier 1",
+  "program_reference": "BUILD_PROGRAM_v2.md line 247",
+  "artifact_path": "validation/results/v11_pilot.json",
+  "next_step": "Run confirmatory campaign based on pilot variance estimates"
+}

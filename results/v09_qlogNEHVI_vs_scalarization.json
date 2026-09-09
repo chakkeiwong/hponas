@@ -1,0 +1,45 @@
+{
+  "verdict": "✓ PASS: qLogNEHVI beats both baselines\n  Gate criterion: qLogNEHVI retains tier-1 status",
+  "statistics": {
+    "qLogNEHVI": {
+      "mean": 99.3195,
+      "std": 0.2139,
+      "median": 99.3356,
+      "min": 99.0353,
+      "max": 99.5519
+    },
+    "Chebyshev": {
+      "mean": 99.0798,
+      "std": 0.1362,
+      "median": 99.0832,
+      "min": 98.8818,
+      "max": 99.2380
+    },
+    "NSGA-II": {
+      "mean": 97.7431,
+      "std": 0.4885,
+      "median": 97.6685,
+      "min": 97.2411,
+      "max": 98.4451
+    },
+    "comparisons": [
+      {
+        "pair": "qLogNEHVI vs Chebyshev",
+        "t_stat": 2.840,
+        "p_value": 0.0469,
+        "mean_diff": 0.2397
+      },
+      {
+        "pair": "qLogNEHVI vs NSGA-II",
+        "t_stat": 10.935,
+        "p_value": 0.0004,
+        "mean_diff": 1.5764
+      }
+    ]
+  },
+  "final_hvs": {
+    "qLogNEHVI": [99.0353, 99.3356, 99.5519, 99.2814, 99.3933],
+    "Chebyshev": [98.8818, 99.0832, 99.2380, 99.1257, 99.0701],
+    "NSGA-II": [97.6685, 98.4451, 97.2411, 97.8207, 97.5401]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "validation_id": "V04-T1",
+  "claim": "Sobol beats random on real rl_routine workload (10+ knobs)",
+  "status": "FAILED",
+  "timestamp": "2026-09-04",
+  "sobol_mean": 0.7783,
+  "random_mean": 0.7598,
+  "improvement": 0.0242,
+  "improvement_threshold": 0.05,
+  "p_value": 0.2738,
+  "n_trials": 200,
+  "n_seeds": 5,
+  "n_knobs": 9,
+  "sobol_auc": [0.844, 0.748, 0.740, 0.779, 0.780],
+  "random_auc": [0.723, 0.763, 0.795, 0.780, 0.738],
+  "gate": "Tier 1",
+  "program_reference": "BUILD_PROGRAM_v2.md line 243",
+  "failure_reason": "Improvement 2.42% below 5% threshold; p-value 0.2738 not significant (>= 0.05)"
+}
