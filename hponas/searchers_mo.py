@@ -21,7 +21,7 @@ from .space import SearchSpace
 from .searchers import Searcher
 
 try:
-    from botorch.models import SingleTaskGP
+    from botorch.models import SingleTaskGP, ModelListGP
     from botorch.acquisition.multi_objective import (
         qLogNoisyExpectedHypervolumeImprovement,
     )
@@ -176,11 +176,13 @@ class qLogNEHVISearcher(Searcher):
         pareto_mask = self._compute_pareto_mask(Y_train.numpy())
         pareto_Y = Y_train[pareto_mask]
 
-        # qLogNEHVI acquisition function
+        # qLogNEHVI acquisition function with ModelListGP
         ref_point_tensor = torch.tensor(self.reference_point, dtype=torch.float64)
 
+        model_list = ModelListGP(*models)
+
         acq = qLogNoisyExpectedHypervolumeImprovement(
-            model=models[0],  # Single model for now (Tier 1 simplification)
+            model=model_list,
             ref_point=ref_point_tensor,
             X_baseline=X_train,
             prune_baseline=True,
