@@ -1,793 +1,465 @@
 # Traceability Matrix v1.0
 
 **Date:** 2026-09-09  
-**Purpose:** Map LaTeX specification → implementation → tests → validations  
-**Authority:** BUILD_PROGRAM_REVIEW_VERDICT.md line 76 (B2: reconcile LaTeX with program)  
-**Satisfies:** Week 1 Day 4-6 deliverable, approval checklist items 2 and 5  
+**Authority:** HPO_NAS_RECOVERY_MASTER_PROGRAM.md Week 1 Day 4-6  
+**Purpose:** Map LaTeX specifications → implementation → tests → validations  
 
 ---
 
-## Executive Summary
+## Matrix Structure
 
-This matrix documents the complete traceability chain from governing LaTeX specification through implementation, test coverage, and validation protocols. It identifies **15+ algorithm specification violations** requiring correction during Tier 1/2 execution.
-
-**Status Legend:**
-- ✓ **Match** - Implementation faithful to LaTeX specification
-- ❌ **Violation** - Implementation differs from specification (must fix)
-- ⚠️ **Missing** - Specification exists but implementation not yet written
-- 🔀 **Deferred** - Moved to different tier or marked Tier 3
-
-**Tier Distribution:**
-- **Tier 0:** 8 components (5 ✓, 1 ❌, 2 ⚠️)
-- **Tier 1:** 13 components (6 ✓, 5 ❌, 2 ⚠️)
-- **Tier 2:** 5 components (0 ✓, 2 ❌, 3 ⚠️)
-- **Tier 3:** 3 components (0 ✓, 0 ❌, 3 ⚠️)
-
-**Critical Violations (must fix before gate):**
-1. πBO uses GP mean as weight instead of acquisition multiplier (V11 blocker)
-2. PriorBand uses wrong sampling strategy (V11 blocker)
-3. Warm-start builds RGPE immediately instead of ranked query first (V13 impact)
-4. TuRBO missing entirely (V04-T1 failure likely caused by missing method)
-5. ifBO not using pretrained surrogate (V15 research misdirection)
+Each entry maps:
+- **LaTeX Reference:** Section, equation, algorithm line in hpo-survey/
+- **Claim/Requirement:** Exact text or mathematical specification
+- **Implementation:** File:line in hponas/
+- **Unit Test:** File:line in tests/unit/
+- **Integration Test:** File:line in tests/integration/
+- **Validation:** V01-V15 campaign ID
+- **Status:** ✓ match / ❌ violation / ⚠️ missing
+- **Notes:** Additional context, known issues
 
 ---
 
-## Tier 0: Foundation
+## Tier 0: Baseline Methods
 
-### T0.1 Sobol + Log Sampling
+### Random Search
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `hpo-survey/sections/03-model-free.tex:89-124` (Sobol), `04-bayesian.tex:840-866` (log warping) |
-| **Product Register** | roadmap-01, ch03-01 |
-| **Contract** | `SearchSpace.transform="log"`, `SobolSearcher` |
-| **Implementation** | `hponas/searchers.py:45-98` (SobolSearcher), `hponas/space.py:78-123` (log transform) |
-| **Tests** | `tests/test_space.py:89-145` (log warping), `tests/test_schedulers_tier0.py:12-45` (Sobol) |
-| **Validation** | V04 (performance), V05 (log-warping effectiveness) |
-| **Status** | ✓ **Match** |
-| **Notes** | Implementation uses scipy.stats.qmc.Sobol as specified. Log warping applied at SearchSpace level per contract. |
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/03-model-free.tex:73-88 |
+| **Claim** | "Uniform random sampling from search space, seed-deterministic" |
+| **Implementation** | hponas/searchers/random_searcher.py:11-46 (RandomSearcher class) |
+| **Unit Test** | tests/unit/test_random_searcher.py:50-70 (test_random_deterministic_with_seed) |
+| **Integration Test** | tests/integration/test_study_baseline.py:15-30 (test_random_study) |
+| **Validation** | V04-T0 (Random vs Sobol baseline floor) |
+| **Status** | ✓ MATCH |
+| **Notes** | Implementation verified Phase 1 Day 1, 19 unit tests passing, 97% coverage |
 
----
+### Sobol Quasi-Random
 
-### T0.2 Random Search Baseline
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/03-model-free.tex:51-72 |
+| **Claim** | "Quasi-random low-discrepancy sequence using scipy.stats.qmc.Sobol" |
+| **Implementation** | hponas/searchers/random_searcher.py:49-159 (SobolSearcher class) |
+| **Unit Test** | tests/unit/test_random_searcher.py:135-160 (test_sobol_better_coverage) |
+| **Integration Test** | tests/integration/test_study_baseline.py:50-75 (test_sobol_study) |
+| **Validation** | V04-T0 (Sobol beats Random on benchmark) |
+| **Status** | ✓ MATCH |
+| **Notes** | Implementation verified Phase 1 Day 1, log-scale supported, gap variance test passing |
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `03-model-free.tex:73-88` |
-| **Product Register** | roadmap-02, ch03-02 |
-| **Contract** | `RandomSearcher` (floor comparator) |
-| **Implementation** | `hponas/searchers.py:101-135` |
-| **Tests** | `tests/test_schedulers_tier0.py:48-67` |
-| **Validation** | V04 (baseline comparison) |
-| **Status** | ✓ **Match** |
-| **Notes** | Simple uniform sampler, correctly implemented. |
+### GP+qLogEI Baseline
 
----
-
-### T0.3 TPE (Optuna Wrapper)
-
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `04-bayesian.tex:467-521` |
-| **Product Register** | roadmap-04, ch04-02 |
-| **Contract** | `TPESearcher` wrapping `optuna.samplers.TPESampler` |
-| **Implementation** | `hponas/searchers_tpe.py:1-187` |
-| **Tests** | `tests/test_schedulers_tier0.py:70-102` |
-| **Validation** | V01 (wrapper parity), V04 (performance) |
-| **Status** | ✓ **Match** |
-| **Notes** | Wrapper delegates to Optuna TPE with state serialization contract. V01 parity tests required. |
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/04-bayesian.tex:Section 3.1 "Baseline Methods" |
+| **Claim** | "Gaussian Process with Matérn 5/2 kernel, q-Expected Improvement with log transform" |
+| **Implementation** | hponas/searchers/gp_searcher.py:1-205 (GPSearcher class) |
+| **Unit Test** | tests/unit/test_gp_searcher.py:1-366 (20 tests, 99% coverage) |
+| **Integration Test** | tests/integration/test_study_gp.py:1-197 (8 tests) |
+| **Validation** | V01 (Vendor parity vs BoTorch) |
+| **Status** | ✓ MATCH (after Phase 0 fixes) |
+| **Notes** | Phase 0 recovery: fixed NotImplementedError, trial mapping, Y_train shape. FIXED: _prepare_training_data() implemented, RNG serialization fixed |
 
 ---
 
-### T0.4 GP + qLogEI (BoTorch)
+## Tier 0: Executors
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `04-bayesian.tex:522-866` (GP), `04-bayesian.tex:840-866` (qLogEI) |
-| **Product Register** | roadmap-05, ch04-01 |
-| **Contract** | `GPSearcher` with `qLogExpectedImprovement` acquisition |
-| **Implementation** | `hponas/searchers_gp.py:1-340` |
-| **Tests** | `tests/test_schedulers_tier0.py:105-189`, `tests/test_priors.py:18-56` |
-| **Validation** | V01 (parity), V04 (performance vs baseline) |
-| **Status** | ✓ **Match** (base GP), ❌ **Violation** (πBO integration wrong—see T1.6) |
-| **Notes** | GP implementation faithful to BoTorch SingleTaskGP. qLogEI acquisition correct. **Violation in prior integration** (see Tier 1). |
+### LocalExecutor
 
----
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | BUILD_PROGRAM_v3.md:98-122 (interface contract) |
+| **Claim** | "Synchronous/async local execution with error handling: NaN, inf, exceptions, timeouts" |
+| **Implementation** | hponas/executors/local_executor.py:1-149 (LocalExecutor class) |
+| **Unit Test** | tests/unit/test_local_executor.py:1-366 (23 tests, 95% coverage) |
+| **Integration Test** | tests/integration/test_study_baseline.py (uses LocalExecutor) |
+| **Validation** | Contract tests (W2.3) |
+| **Status** | ✓ MATCH |
+| **Notes** | Phase 1 Day 2 verified, sync/async modes operational, error capture working |
 
-### T0.5 Dimension-Scaled Lengthscale Priors
+### RayExecutor
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `04-bayesian.tex:864-866`, `12-roadmap.tex:33-34` |
-| **Product Register** | roadmap-06, ch04-05 |
-| **Contract** | GP default config: `length_prior = gpytorch.priors.GammaPrior(3.0, 6.0 / sqrt(d))` |
-| **Implementation** | `hponas/searchers_gp.py:87-95` |
-| **Tests** | `tests/test_priors.py:59-78` |
-| **Validation** | None (default always-on) |
-| **Status** | ✓ **Match** |
-| **Notes** | Gamma(3.0, 6.0/√d) prior applied per dimension as specified. |
-
----
-
-### T0.6 ASHA Scheduler
-
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `05-multifidelity.tex:234-289` |
-| **Product Register** | roadmap-03, ch05-01 |
-| **Contract** | `ASHAScheduler` with promotion factor η, rungs |
-| **Implementation** | `hponas/schedulers.py:45-289` |
-| **Tests** | `tests/test_schedulers.py:23-178`, `tests/test_mo_asha.py:15-89` |
-| **Validation** | V02 (state replay), V06 (efficiency) |
-| **Status** | ✓ **Match** |
-| **Notes** | R1 spike implementation, refined in Tier 0. Promotion logic matches LaTeX. |
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | BUILD_PROGRAM_v3.md:124-147 (distributed execution contract) |
+| **Claim** | "Distributed Ray execution with fault tolerance: retry failed trials, handle worker crashes" |
+| **Implementation** | hponas/executors/ray_executor.py:1-255 (RayExecutor class) |
+| **Unit Test** | tests/unit/test_ray_executor_tier0.py:1-366 (24 tests, 84% coverage) |
+| **Integration Test** | ⚠️ MISSING (Study-level Ray integration test) |
+| **Validation** | Contract tests (W2.3) |
+| **Status** | ✓ MATCH (after Phase 1 Day 3 fixes) |
+| **Notes** | Phase 1 Day 3 fixes: contract violation (dict→Result), retry logic implemented, dead code removed. Uncovered: import guard (64-65), remote worker body (211-230), shutdown exception (252-253) |
 
 ---
 
-### T0.7 PASHA (ASHA Option)
+## Tier 0: Workloads
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `05-multifidelity.tex:504-506`, `15-contracts.tex:140-144` |
-| **Product Register** | ch05-05 |
-| **Contract** | `ASHAScheduler(promotion_mode="pasha")` |
-| **Implementation** | ⚠️ **Missing** |
-| **Tests** | ⚠️ **Missing** |
-| **Validation** | V02 (state replay variant) |
-| **Status** | ⚠️ **Missing** |
-| **Notes** | BUILD_PROGRAM_REVIEW_VERDICT.md B2 line 61: "PASHA is an ASHA option" but not implemented. Add as ASHA flag in T0 remediation. |
+### rl_routine (Brax Ant)
 
----
-
-### T0.8 Median Stopping Rule
-
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `05-multifidelity.tex:211-233` |
-| **Product Register** | Implicit in roadmap-03 |
-| **Contract** | `MedianStoppingRule` scheduler |
-| **Implementation** | ⚠️ **Missing** |
-| **Tests** | ⚠️ **Missing** |
-| **Validation** | None (utility scheduler) |
-| **Status** | ⚠️ **Missing** |
-| **Notes** | Listed in BUILD_PROGRAM_v2.md Tier 0 scope (line 98) but not yet implemented. |
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/09-workloads.tex + BUILD_PROGRAM_v3.md:149-179 |
+| **Claim** | "9-knob RL policy search space on Brax Ant: width, depth, activation, optimizer, lr, batch_size, dropout, weight_decay, lr_schedule" |
+| **Implementation** | workloads/rl_routine.py:1-250 (rl_routine function) |
+| **Unit Test** | ⚠️ MISSING (unit test for rl_routine interface) |
+| **Integration Test** | ⚠️ MISSING (Study + rl_routine end-to-end) |
+| **Validation** | V05 (workload correctness), V14 (day-one walk seed isolation) |
+| **Status** | ✓ MATCH (after Phase 0 brax upgrade) |
+| **Notes** | Phase 0 fix: upgraded brax from GitHub source for JAX 0.11.1 compat, fixed inference API to provide key_sample. JAX_AVAILABLE=True, workload functional |
 
 ---
 
-## Tier 1: Method Differentiators
+## Tier 1: Core Methods
 
-### T1.1 qLogNEHVI (Multi-Objective)
+### TPE (Tree-structured Parzen Estimator)
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `07-multiobjective.tex:268-401` |
-| **Product Register** | roadmap-07, ch07-01 |
-| **Contract** | `qLogNEHVISearcher` with BoTorch ModelListGP |
-| **Implementation** | `hponas/searchers_mo.py:41-289` |
-| **Tests** | `tests/test_reporting_mo.py:18-92`, `tests/test_nsgaii.py:89-145` |
-| **Validation** | V09 (hypervolume over budget vs Chebyshev/NSGA-II) |
-| **Status** | ✓ **Match** |
-| **Notes** | BoTorch qLogNoisyExpectedHypervolumeImprovement with reference point adaptation. 2-3 objectives (Tier 1 scope). |
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/04-bayesian.tex (TPE section) |
+| **Claim** | "Tree-structured Parzen Estimator using Optuna backend" |
+| **Implementation** | hponas/legacy_searchers.py:150-245 (TPESearcher class, OLD API) |
+| **Unit Test** | ⚠️ MISSING (no Tier 0 TPE tests) |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | V01 (Vendor parity: hponas.TPE vs Optuna.TPE) |
+| **Status** | ⚠️ MISSING (Tier 1 task T1.1, not yet implemented in new API) |
+| **Notes** | OLD API exists in legacy_searchers.py, needs migration to hponas/searchers/ package for Tier 1 |
 
----
+### ASHA (Asynchronous Successive Halving)
 
-### T1.2 Chebyshev Scalarization
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/05-multifidelity.tex (ASHA algorithm) |
+| **Claim** | "Asynchronous successive halving with geometric rung spacing, promotion on top-K" |
+| **Implementation** | ⚠️ NOT IMPLEMENTED (Tier 1 task T1.2) |
+| **Unit Test** | ⚠️ MISSING |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | V06 (ASHA vs median stopping) |
+| **Status** | ⚠️ MISSING (Tier 1 core, 3 eng-days) |
+| **Notes** | Scheduler interface needs definition, ASHA is Tier 1 dependency for MO-ASHA |
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `07-multiobjective.tex:527-568` |
-| **Product Register** | roadmap-08, ch07-02 |
-| **Contract** | `ChebyshevSearcher` |
-| **Implementation** | `hponas/searchers_mo.py:294-443` |
-| **Tests** | `tests/test_reporting_mo.py:95-134` |
-| **Validation** | V09 (MO fallback comparator) |
-| **Status** | ✓ **Match** |
-| **Notes** | Scalarization formula: max_i w_i |y_i - r_i| correctly implemented per LaTeX. |
+### MO-ASHA (Multi-objective ASHA)
 
----
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/07-multiobjective.tex + 05-multifidelity.tex |
+| **Claim** | "Multi-objective variant of ASHA with hypervolume-based promotion" |
+| **Implementation** | ⚠️ NOT IMPLEMENTED (Tier 1 task T1.3) |
+| **Unit Test** | ⚠️ MISSING |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | V07 (MO-ASHA early stopping quality) |
+| **Status** | ⚠️ MISSING (Tier 1 core, 2 eng-days, depends on T1.2) |
+| **Notes** | Requires ASHA base + multi-objective promotion logic |
 
-### T1.3 NSGA-II (Optuna Wrapper)
+### qLogNEHVI (Multi-objective Bayesian Optimization)
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `07-multiobjective.tex:527-568` (listed as oracle comparator) |
-| **Product Register** | ch07-04 |
-| **Contract** | `NSGAIISearcher` wrapping `optuna.samplers.NSGAIISampler` |
-| **Implementation** | `hponas/searchers_mo.py:461-834` |
-| **Tests** | `tests/test_nsgaii.py:15-178` |
-| **Validation** | V09 (MO oracle comparator) |
-| **Status** | ✓ **Match** |
-| **Notes** | BUILD_PROGRAM_REVIEW_VERDICT.md B4 line 99: "V09 requires NSGA-II" — now implemented. Wrapper with fast non-dominated sorting. |
-
----
-
-### T1.4 MO-ASHA + Veto Gates
-
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `07-multiobjective.tex:568-622`, `15-contracts.tex:145-161` (veto contract) |
-| **Product Register** | roadmap-09, ch07-05 |
-| **Contract** | `ASHAScheduler` with `veto_fn` callback |
-| **Implementation** | `hponas/schedulers.py:292-456` |
-| **Tests** | `tests/test_mo_asha.py:92-234` |
-| **Validation** | V10 (rung correlation), V13 (sampler veto correctness) |
-| **Status** | ✓ **Match** |
-| **Notes** | Veto gate kills trials violating domain constraints before promotion. LaTeX: "scheduler.observe returns Continue|Stop|Veto". |
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/07-multiobjective.tex (qLogNEHVI algorithm) |
+| **Claim** | "BoTorch-based multi-objective BO with log expected hypervolume improvement" |
+| **Implementation** | hponas/searchers_mo.py:60-350 (qLogNEHVISearcher class, OLD API) |
+| **Unit Test** | ⚠️ MISSING (no unit tests for qLogNEHVI) |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | V09 (qLogNEHVI vs Chebyshev vs NSGA-II) |
+| **Status** | ✓ IMPLEMENTATION EXISTS (Phase 0 import fix), ⚠️ TESTS MISSING |
+| **Notes** | OLD API in searchers_mo.py functional (V09 validation passing), needs migration to new API + unit tests for Tier 1 |
 
 ---
 
-### T1.5 Hypervolume/Front Reporting
+## Tier 1: Priors & Transfer Learning
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `07-multiobjective.tex:402-445` (Pareto front), `14-product.tex:84-89` (reporting contract) |
-| **Product Register** | Implicit in roadmap-07 |
-| **Contract** | `reporting_mo.py`: `compute_hypervolume`, `extract_pareto_front` |
-| **Implementation** | `hponas/reporting_mo.py:1-312` |
-| **Tests** | `tests/test_reporting_mo.py:137-256` |
-| **Validation** | V09 (hypervolume metric) |
-| **Status** | ✓ **Match** |
-| **Notes** | BoTorch Hypervolume utility with fixed reference point. Front extraction uses fast non-dominated sorting. |
+### πBO (Prior-weighted Bayesian Optimization)
 
----
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/08-priors-transfer.tex (πBO algorithm) |
+| **Claim** | "Prior-guided BO: multiply acquisition function by prior weight, NOT GP mean" |
+| **Implementation** | hponas/legacy_searchers.py or similar (location TBD) |
+| **Unit Test** | ⚠️ MISSING |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | V15 (Prior encoding validation) |
+| **Status** | ❌ VIOLATION - "Uses GP mean as weight instead of acquisition function value" |
+| **Notes** | **KNOWN SPECIFICATION VIOLATION** per BUILD_PROGRAM_REVIEW_VERDICT.md line 66. Must fix: change from GP mean → acquisition multiplier. Tier 1 task T1P.1 (3d) |
 
-### T1.6 πBO (Prior-Weighted Acquisition)
+### PriorBand (Prior-aware Successive Halving)
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `08-priors-transfer.tex:14-41,368-380` |
-| **Product Register** | roadmap-10, ch08-01 |
-| **Contract** | `PriorWeightedAcquisition` multiplies acquisition by `π(x)^(β/n)` |
-| **Implementation** | `hponas/priors.py:1-199`, `hponas/searchers_gp.py:351-466` |
-| **Tests** | `tests/test_prior_recovery_pibo.py:18-134` |
-| **Validation** | V11 (prior recovery) |
-| **Status** | ✓ **MATCH** |
-| **Notes** | Correctly implements α_π(x) = α(x) · π(x)^(β/n) in log-space via additive form: `qLogEI_weighted(x) = qLogEI(x) + (β/n)·log π(x)`. This is mathematically equivalent to `log(π(x)^(β/n) · EI(x))` and preserves preference ordering across negative values (when EI < 1). See `searchers_gp.py:396-465` for detailed implementation and correctness notes. |
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/08-priors-transfer.tex (PriorBand algorithm) |
+| **Claim** | "Prior-guided ASHA: use portfolio sampler (randomized weighted selection), NOT top-K" |
+| **Implementation** | hponas/searchers_priorband.py (location TBD) |
+| **Unit Test** | ⚠️ MISSING |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | V11 (PriorBand effectiveness) |
+| **Status** | ❌ VIOLATION - "Uses top-K promotion instead of portfolio sampler" |
+| **Notes** | **KNOWN SPECIFICATION VIOLATION** per BUILD_PROGRAM_REVIEW_VERDICT.md line 67. Must fix: change from top-K → randomized weighted selection. Tier 1 task T1P.2 (3d) |
 
-**Specification (08-priors-transfer.tex:368-380):**
-```
-The πBO acquisition is:
-  α_π(x) = α_base(x) · [π(x)]^(β/n)
-where α_base is qLogEI and β > 0 is the prior strength decay.
-```
+### ifBO (Iterative Feature Bayesian Optimization)
 
-**Correct Implementation (searchers_gp.py:396-465):**
-```python
-# Log-space additive form (equivalent to multiplicative in EI-space)
-base_values = self.base_acqf(X)  # qLogEI(x)
-log_prior_term = self.prior_exponent * log_priors  # (β/n)·log π(x)
-return base_values + log_prior_term  # log(π^(β/n) · EI)
-```
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/08-priors-transfer.tex (ifBO section) |
+| **Claim** | "Transfer learning with pretrained surrogate model, NOT custom power-law" |
+| **Implementation** | ⚠️ NOT IMPLEMENTED or WRONG (location TBD) |
+| **Unit Test** | ⚠️ MISSING |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | ⚠️ TBD (no validation defined yet) |
+| **Status** | ❌ VIOLATION - "Builds custom power-law model instead of using pretrained surrogate" |
+| **Notes** | **KNOWN SPECIFICATION VIOLATION** per BUILD_PROGRAM_REVIEW_VERDICT.md line 68. Must fix: use pretrained surrogate. Tier 1 task T1P.3 (4d) |
 
----
+### Warm-start Transfer Learning
 
-### T1.7 PriorBand (Portfolio Sampler)
-
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `08-priors-transfer.tex:76-91,381-384` |
-| **Product Register** | roadmap-10, ch08-02 |
-| **Contract** | `PriorBandSampler` with rung-dependent portfolio (uniform, prior, incumbent) |
-| **Implementation** | `hponas/searchers_priorband.py:1-198` |
-| **Tests** | `tests/test_priors.py:81-167` |
-| **Validation** | V11 (prior recovery) |
-| **Status** | ✓ **MATCH** |
-| **Notes** | Correctly implements portfolio sampler per LaTeX (line 381-384). Implementation at `searchers_priorband.py:140-181` selects strategy via `rng.choice(["uniform", "prior", "incumbent"], p=weights)` then samples from chosen strategy. Rung-dependent weight adaptation increases uniform weight at higher rungs. BUILD_PROGRAM_REVIEW_VERDICT B2 claim of "top-K prior density" was incorrect—actual code matches LaTeX specification. |
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/08-priors-transfer.tex (RGPE section) |
+| **Claim** | "Query ranked/quantile samples FIRST, build RGPE only AFTER query" |
+| **Implementation** | hponas/warm_start.py (location TBD) |
+| **Unit Test** | ⚠️ MISSING |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | V13 (Warm-start effectiveness) |
+| **Status** | ❌ VIOLATION - "Builds RGPE immediately instead of querying first" |
+| **Notes** | **KNOWN SPECIFICATION VIOLATION** per BUILD_PROGRAM_REVIEW_VERDICT.md line 69. Must fix: ranked query → RGPE build. Tier 1 task T1P.4 (3d) |
 
 ---
 
-### T1.8 Prior Nonzero Guard
+## Tier 1: Advanced Methods
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `08-priors-transfer.tex:42-75` (guard mechanism) |
-| **Product Register** | Implicit in roadmap-10 |
-| **Contract** | `GuardedPrior` mixing α·π_user + (1-α)·1 |
-| **Implementation** | `hponas/priors.py:89-199` |
-| **Tests** | `tests/test_priors.py:170-234` |
-| **Validation** | V11 (wrong-prior recovery) |
-| **Status** | ✓ **Match** |
-| **Notes** | Guard formula: π_guarded(x) = α·π̂_user(x) + (1-α) with α=0.95 default. Prevents zero-density exclusion. |
+### TuRBO (Trust Region Bayesian Optimization)
 
----
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/04-bayesian.tex (TuRBO local modeling) |
+| **Claim** | "Trust region BO with local GP models, adaptive trust region sizing" |
+| **Implementation** | ⚠️ NOT IMPLEMENTED (Tier 1 task T1.5) |
+| **Unit Test** | ⚠️ MISSING |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | V11 (TuRBO local trust region behavior) |
+| **Status** | ⚠️ MISSING (Tier 1 core, 5 eng-days) |
+| **Notes** | Requires local GP + trust region logic, GPU validation planned |
 
-### T1.9 Warm-Start Ranked Query
+### Chebyshev Scalarization
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `08-priors-transfer.tex:93-142,385-390` |
-| **Product Register** | roadmap-11, ch08-03 |
-| **Contract** | `WarmStartSearcher` loads ranked trials from store, **RGPE is second wave** |
-| **Implementation** | `hponas/warm_start.py:1-303` |
-| **Tests** | `tests/test_warm_start.py:15-189` |
-| **Validation** | V12 (warm-start savings ≥20%), V13 (transfer validity) |
-| **Status** | ❌ **VIOLATION** (partial) |
-| **Notes** | **ISSUE:** LaTeX line 385-390: "First wave: ranked/quantile query. Second wave: RGPE." Current implementation at `warm_start.py:180-303` correctly implements **ranked query** (WarmStartSearcher.from_store). BUILD_PROGRAM_REVIEW_VERDICT.md B2 line 67 claims implementation "builds RGPE immediately" but **no RGPE code exists** in warm_start.py. **Verdict may be stale.** Mark ✓ **Match** for Tier 1 scope (ranked query). RGPE deferred to second wave (not in scope). |
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/07-multiobjective.tex (scalarization baseline) |
+| **Claim** | "Multi-objective scalarization using Chebyshev distance with random weights" |
+| **Implementation** | hponas/searchers_mo.py:400-550 (ChebyshevSearcher, OLD API) |
+| **Unit Test** | ⚠️ MISSING |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | V09 (Chebyshev vs qLogNEHVI comparison) |
+| **Status** | ✓ IMPLEMENTATION EXISTS (Phase 0 import fix), ⚠️ TESTS MISSING |
+| **Notes** | Used in V09 validation (passing), needs migration + unit tests for Tier 1 task T1.6 (2d) |
 
-**Status correction:** ✓ **Match** for Tier 1 (ranked query). RGPE correctly deferred (not in current implementation).
+### NSGA-II
 
----
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/07-multiobjective.tex (evolutionary MO baseline) |
+| **Claim** | "Non-dominated Sorting Genetic Algorithm II for multi-objective optimization" |
+| **Implementation** | hponas/searchers_mo.py:600-860 (NSGAIISearcher, OLD API) |
+| **Unit Test** | ⚠️ MISSING |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | V09 (NSGA-II vs qLogNEHVI comparison) |
+| **Status** | ✓ IMPLEMENTATION EXISTS (Phase 0 import fix), ⚠️ TESTS MISSING |
+| **Notes** | Used in V09 validation (passing), needs migration + unit tests for Tier 1 task T1.7 (2d) |
 
-### T1.10 EI-per-Cost Acquisition
+### EI-per-cost
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `08-priors-transfer.tex:396-403`, `12-roadmap.tex:94-113` |
-| **Product Register** | roadmap-12, ch08-06 |
-| **Contract** | `CostAwareGPSearcher` with `α_cost(x) = α(x) / cost_model(x)^T` |
-| **Implementation** | `hponas/searchers_cost.py:1-356` |
-| **Tests** | `tests/test_cost_aware.py:18-145`, `tests/test_cost_efficiency.py:15-98` |
-| **Validation** | V04 (cost efficiency variant—not dedicated validation) |
-| **Status** | ✓ **Match** |
-| **Notes** | Cost cooling: T anneals from 0 (ignore cost) to 1 (full EI-per-cost). Log-scale division: qLogEI(x) - T·log(cost(x)). |
-
----
-
-### T1.11 Predictive Cost Model
-
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `08-priors-transfer.tex:396-403` (cost model for EI-per-cost) |
-| **Product Register** | Implicit in roadmap-12 |
-| **Contract** | `CostModelGP` fits log(wall-clock time) |
-| **Implementation** | `hponas/searchers_cost.py:30-128` |
-| **Tests** | `tests/test_cost_model_accuracy.py:18-123` |
-| **Validation** | None (internal component for T1.10) |
-| **Status** | ✓ **Match** |
-| **Notes** | SingleTaskGP over log(cost). Censored observations (killed trials) not yet supported (Tier 1 scope). |
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/08-priors-transfer.tex roadmap-12 (cost-aware BO) |
+| **Claim** | "Cost-aware BO: divide acquisition by predicted cost^T with temperature annealing" |
+| **Implementation** | hponas/searchers_cost.py:1-432 (CostAwareSearcher, OLD API) |
+| **Unit Test** | ⚠️ MISSING |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | V12 (EI-per-cost efficiency validation) |
+| **Status** | ✓ IMPLEMENTATION EXISTS (Phase 0 import fix), ⚠️ TESTS MISSING |
+| **Notes** | OLD API functional, needs migration + unit tests for Tier 1 task T1.8 (3d) |
 
 ---
 
-### T1.12 hamiltonian_mo Workload Template
+## Tier 2: Population & Advanced
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `09-workloads.tex:189-233`, `14-product.tex:86-98` |
-| **Product Register** | ch09-04 |
-| **Contract** | Study template with 2+ objectives (energy, constraint violation) |
-| **Implementation** | `examples/hamiltonian_mo_example.py` |
-| **Tests** | `tests/test_hamiltonian_mo.py:15-134` |
-| **Validation** | V09 (MO workload for qLogNEHVI) |
-| **Status** | ✓ **Match** |
-| **Notes** | Hamiltonian neural network tuning: minimize energy error + constraint violation. Multi-objective test bed. |
+### BG-PBT (Population-based Training)
 
----
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | hpo-survey/sections/06-population.tex (PBT algorithm) |
+| **Claim** | "Population-based training with exploit/explore dynamics" |
+| **Implementation** | ⚠️ NOT IMPLEMENTED (Tier 2 task T2.1) |
+| **Unit Test** | ⚠️ MISSING |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | V04-T1 (CONDITIONAL - PBT effectiveness) |
+| **Status** | ⚠️ MISSING (Tier 2, 8 eng-days, CONDITIONAL on V04-T1 resolution) |
+| **Notes** | Depends on V04-T1 passing, population line demotion triggered by V04-T1 failure |
 
-### T1.13 sampler_neutra Workload Template
+### Mixed-space TuRBO
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `09-workloads.tex:131-188`, `14-product.tex:86-98` |
-| **Product Register** | ch09-03 |
-| **Contract** | Study template with GP + ASHA + veto gates |
-| **Implementation** | `examples/sampler_neutra_example.py` |
-| **Tests** | ⚠️ **Missing** (V13 campaign will serve as acceptance test) |
-| **Validation** | V13 (sampler veto correctness) |
-| **Status** | ⚠️ **Partial** (example exists, needs acceptance test) |
-| **Notes** | Neural transport MCMC sampler tuning. Veto gate kills configs with R-hat > 1.1 or ESS < 100. |
-
----
-
-## Tier 2: Population Methods
-
-### T2.1 Mixed-Space TuRBO
-
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `04-bayesian.tex:867-932`, `12-roadmap.tex:199-205` |
-| **Product Register** | ch04-06 |
-| **Contract** | `TuRBOSearcher` with trust-region + mixed-space kernel |
-| **Implementation** | ⚠️ **Missing** |
-| **Tests** | ⚠️ **Missing** |
-| **Validation** | V04-T1 (local search efficiency), V08 (BG-PBT explore engine) |
-| **Status** | ❌ **VIOLATION** (not implemented, should be in T2) |
-| **Notes** | **CRITICAL:** BUILD_PROGRAM_REVIEW_VERDICT.md B2 line 63: "Mixed-space trust-region work is the Tier 2 prerequisite" but BUILD_PROGRAM_v2.md moved it to Tier 1 (line 92-107). **V04-T1 failure likely caused by missing TuRBO**—Sobol vs Random test underpowered without TR local search. Per recovery program, **TuRBO deferred to Tier 2**. WORK_BREAKDOWN_v3.csv allocates 10 eng-days (T2.1). |
-
-**LaTeX Specification (04-bayesian.tex:867-932):**
-- Trust region with radius adaptation
-- Mixed continuous/categorical kernel
-- Local optimization within trust region
-- Success/failure counters for radius update
-
-**Required for:** BG-PBT explore (T2.4), V08 home regime
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 2 scope |
+| **Claim** | "TuRBO extended to categorical + continuous hyperparameters" |
+| **Implementation** | ⚠️ NOT IMPLEMENTED (Tier 2 task T2.2) |
+| **Unit Test** | ⚠️ MISSING |
+| **Integration Test** | ⚠️ MISSING |
+| **Validation** | ⚠️ TBD |
+| **Status** | ⚠️ MISSING (Tier 2, 5 eng-days) |
+| **Notes** | Extension of T1.5 TuRBO to mixed search spaces |
 
 ---
 
-### T2.2 PB2 (Population-Based Bandits)
+## Validation Protocol Traceability
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `06-population.tex:245-312` |
-| **Product Register** | ch06-02 |
-| **Contract** | `PB2Scheduler` |
-| **Implementation** | ⚠️ **Missing** |
-| **Tests** | ⚠️ **Missing** |
-| **Validation** | V08 (as BG-PBT component) |
-| **Status** | ⚠️ **Missing** |
-| **Notes** | Tier 2 scope. WORK_BREAKDOWN_v3.csv: T2.2 (5 days). Prerequisite: TuRBO (T2.1). |
+### V01: Vendor Parity
 
----
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 0 remediation |
+| **Claim** | "hponas.GP matches BoTorch.GP, hponas.TPE matches Optuna.TPE" |
+| **Implementation** | validation/v01_wrapper_parity.py |
+| **Test Protocol** | validation/protocols/v01_protocol.md (to be created Week 3) |
+| **Status** | ❌ NEEDS FIX - "Current V01 compares two internal implementations, not vendor" |
+| **Notes** | Week 3 task W3.2 (1d): Fix to compare against declared vendors, not internal |
 
-### T2.3 PB2-Mix (Mixed-Space Extension)
+### V02: State Replay
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `06-population.tex:313-356` |
-| **Product Register** | ch06-02 |
-| **Contract** | `PB2Scheduler` with mixed-space explore |
-| **Implementation** | ⚠️ **Missing** |
-| **Tests** | ⚠️ **Missing** |
-| **Validation** | V08 (as BG-PBT component) |
-| **Status** | ⚠️ **Missing** |
-| **Notes** | Tier 2 scope. WORK_BREAKDOWN_v3.csv: T2.3 (5 days). Depends on T2.1 (TuRBO) + T2.2 (PB2). |
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 0 remediation |
+| **Claim** | "Deterministic save/load/replay: resume from checkpoint produces identical results" |
+| **Implementation** | validation/v02_state_replay.py |
+| **Test Protocol** | validation/protocols/v02_protocol.md (to be created Week 3) |
+| **Status** | ⚠️ MISSING - "Not implemented" |
+| **Notes** | Week 3 task W3.3 (3d): Implement deterministic replay test |
 
----
+### V03: Mutation Testing
 
-### T2.4 BG-PBT (Background Population-Based Training)
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 0 remediation + Approval Checklist Item 8 |
+| **Claim** | "Mutation score ≥0.9 on searcher/scheduler core logic" |
+| **Implementation** | validation/v03_mutation_testing.py |
+| **Test Protocol** | validation/protocols/v03_protocol.md (to be created Week 3) |
+| **Status** | ⚠️ MISSING - "No mutation tests exist" |
+| **Notes** | Week 3 task W3.4 (3d): Implement mutmut-based mutation testing |
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `06-population.tex:357-498` |
-| **Product Register** | roadmap-13, ch06-03 |
-| **Contract** | `BGPBTScheduler` with population manager, exploit/explore |
-| **Implementation** | ⚠️ **Missing** |
-| **Tests** | ⚠️ **Missing** |
-| **Validation** | V08 (home regime: RL large-scale parallel) |
-| **Status** | ❌ **VIOLATION** (not implemented, specification different from LaTeX) |
-| **Notes** | **CRITICAL:** BUILD_PROGRAM_REVIEW_VERDICT.md B6 line 116: "BG-PBT implementation not faithful" but **no implementation exists yet**. Tier 2 scope (8 days per WORK_BREAKDOWN_v3.csv T2.4). Depends on T2.1-T2.3. **V08 cannot run until BG-PBT built**. |
+### V04-T0: Baseline Floor
 
-**LaTeX Specification (06-population.tex:357-498):**
-- Population manager with generation tracking
-- Exploit: copy + perturb top-K members
-- Explore: PB2-Mix trust-region search
-- Distillation protocol for architecture changes
-- Checkpoint compatibility checks
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 0 gate criterion |
+| **Claim** | "GP+qLogEI beats Sobol by ≥5% on Branin (preregistered threshold)" |
+| **Implementation** | validation/v04_t0_baseline_floor.py |
+| **Test Protocol** | validation/protocols/v04_t0_protocol.md (to be created Week 3) |
+| **Status** | ❌ NEEDS RE-RUN - "Post-hoc tuned threshold, needs preregistration" |
+| **Notes** | Week 3 task W3.5 (2d): Re-run with preregistered 5% threshold + correct impl |
 
----
+### V04-T1: Population Line
 
-### T2.5 Architecture Factory Contract
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 1 gate criterion |
+| **Claim** | "BG-PBT effectiveness validation" |
+| **Implementation** | validation/v04_performance_check.py (existing, FAILED) |
+| **Test Protocol** | validation/protocols/v04_t1_protocol.md (needs power analysis) |
+| **Status** | ❌ FAILED - "Underpowered, demotion rule triggered" |
+| **Notes** | Week 2 task W2.6 (2d): Investigate failure (GP floor violation or test bug). Tier 2 CONDITIONAL on resolution |
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `11-architecture.tex:96-187`, `15-contracts.tex:206-243` |
-| **Product Register** | ch09-05 |
-| **Contract** | `ArchitectureFactory`: build/measure/compatible/transfer |
-| **Implementation** | `hponas/architecture.py:1-158` (stubs from R1) |
-| **Tests** | `tests/test_architecture.py:15-134` (contract conformance) |
-| **Validation** | None (internal contract) |
-| **Status** | ⚠️ **Partial** (stubs exist, full implementation Tier 2) |
-| **Notes** | NAS scope decision (Week 1 Day 7) determines if this advances beyond stubs. Moderate architecture coordinates: width/depth/flags. Full distillation protocol in T2.7. |
+### V05: Workload Correctness
 
----
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 0 rl_routine requirement |
+| **Claim** | "Real rl_routine workload (Brax Ant) produces valid results" |
+| **Implementation** | validation/v05_log_warping.py |
+| **Test Protocol** | validation/protocols/v05_protocol.md (to be created Week 3) |
+| **Status** | ✓ FUNCTIONAL (after Phase 0 brax upgrade) - ⚠️ NEEDS RE-RUN |
+| **Notes** | Week 3 task W3.6 (1d): Re-run V05 with real rl_routine (not proxy). Phase 0: upgraded brax, workload operational |
 
-## Tier 3: Electives
+### V06: ASHA vs Median Stopping
 
-### T3.1 DEHB Reimplementation
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 1 ASHA validation |
+| **Claim** | "ASHA early stopping quality vs median stopping baseline" |
+| **Implementation** | validation/v06_asha_vs_median.py (passing per TIER1_GATE_STATUS.md) |
+| **Test Protocol** | validation/protocols/v06_protocol.md (to be created Week 3) |
+| **Status** | ✓ PASSED (per prior gate report) |
+| **Notes** | Tier 1 task T1.9 (2d): Re-run after ASHA implementation (T1.2). GPU: A100 x1 x3d |
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `05-multifidelity.tex:497-503`, `12-roadmap.tex:139-143,213-216` |
-| **Product Register** | roadmap-14, ch05-04 |
-| **Contract** | `DEHBSearcher` (searcher-scheduler hybrid) |
-| **Implementation** | ⚠️ **Missing** |
-| **Tests** | ⚠️ **Missing** |
-| **Validation** | V07 (RL routine regime) |
-| **Status** | ⚠️ **Missing** (Tier 3, post-week-30) |
-| **Notes** | BUILD_PROGRAM_REVIEW_VERDICT.md B2 line 62: "DEHB is Tier 3" but BUILD_PROGRAM_v2.md incorrectly listed as Tier 0. Recovery program correctly defers to Tier 3. V07 gate required before implementation decision. |
+### V09: qLogNEHVI vs Scalarization
 
----
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 1 MO validation |
+| **Claim** | "qLogNEHVI beats Chebyshev and NSGA-II on hypervolume" |
+| **Implementation** | validation/v09_qlogNEHVI_vs_scalarization.py (passing after Phase 0 fix) |
+| **Test Protocol** | validation/protocols/v09_protocol.md (to be created Week 3) |
+| **Status** | ✓ PASSED (Phase 0 verification: qLogNEHVI beats both baselines, p<0.05) |
+| **Notes** | Multi-seed validation operational. Tier 1 task T1.12 (2d): Re-run after new API migration |
 
-### T3.2 ifBO (Learning Curve Scheduler)
+### V14: Day-one Walk
 
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `05-multifidelity.tex:279-306,507-528`, `08-priors-transfer.tex:391-395` |
-| **Product Register** | roadmap-15, ch05-06 |
-| **Contract** | `ifBOScheduler` with **pretrained surrogate** |
-| **Implementation** | ⚠️ **Missing** |
-| **Tests** | ⚠️ **Missing** |
-| **Validation** | V15 (feasibility THEN post-integration parity) |
-| **Status** | ❌ **VIOLATION** (specification says use pretrained, not train custom) |
-| **Notes** | **CRITICAL:** LaTeX (08-priors-transfer.tex:391-395): "Adopt published pretrained surrogates (PFN family); train none." BUILD_PROGRAM_v2.md line 169-173 describes building a "power-law/saturation model" which is **different research project**. Per BUILD_PROGRAM_REVIEW_VERDICT.md B2 line 69 and line 212: "Split V15 into pre-build feasibility of published ifBO model and post-integration parity." **Do not build custom curve model.** Use pretrained or cancel feature. |
-
----
-
-### T3.3 HEBO Robustness
-
-| Attribute | Value |
-|-----------|-------|
-| **LaTeX Reference** | `04-bayesian.tex:933-987`, `12-roadmap.tex:143-147,213-218` |
-| **Product Register** | roadmap-16 |
-| **Contract** | `HEBOSearcher` with deep-kernel GP |
-| **Implementation** | ⚠️ **Missing** |
-| **Tests** | ⚠️ **Missing** |
-| **Validation** | None |
-| **Status** | ⚠️ **Missing** (Tier 3, elective) |
-| **Notes** | Selective Tier 3 per roadmap. No dedicated validation. Independent release decision after base GP stable. |
+| Field | Value |
+|-------|-------|
+| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 0 seed isolation requirement |
+| **Claim** | "rl_routine seed isolation: protected test seeds never reach searcher" |
+| **Implementation** | validation/v14_day_one_walk.py |
+| **Test Protocol** | validation/protocols/v14_protocol.md (to be created Week 3) |
+| **Status** | ✓ FUNCTIONAL (after Phase 0 brax upgrade) - ❌ NEEDS RE-RUN - "Vacuous: zero trial budgets" |
+| **Notes** | Week 3 task W3.7 (0.5d): Re-run with non-zero trial budgets |
 
 ---
 
-## Validation Cross-Reference
+## Summary Statistics
 
-### Validation → Implementation Mapping
+### Coverage by Status
 
-| Validation | LaTeX | Implementation | Status | Gate Tier |
-|------------|-------|----------------|--------|-----------|
-| V01 | `16-validation.tex:159-163` | `validation/v01_wrapper_parity.py` | ⚠️ Needs repair (tautological) | T0 |
-| V02 | `16-validation.tex:164-166` | Not implemented | ⚠️ Missing | T0 |
-| V03 | `16-validation.tex:79-81,311-320` | Not implemented | ⚠️ Missing | T0 |
-| V04-T0 | `16-validation.tex:82-87` | `validation/v04_performance_check.py` | ✓ Implemented, needs re-run | T0 |
-| V04-T1 | Same protocol | `validation/v04_t1_real_workload.py` | ❌ Failed (underpowered) | T1 |
-| V05 | `16-validation.tex:88-89` | `validation/v05_log_warping.py` | ✓ Implemented, needs re-run | T0 |
-| V06 | `16-validation.tex:90-100,165-175` | `validation/v06_asha_efficiency.py` | ✓ PASSED | T1 |
-| V07 | `16-validation.tex:176-178` | Not implemented | ⚠️ Missing (T3 gate) | T3 |
-| V08 | `16-validation.tex:218-249` | Not implemented | ⚠️ Missing (T2 gate) | T2 |
-| V09 | `16-validation.tex:101-103,183-187` | `validation/v09_qlogNEHVI_vs_scalarization.py` | ✓ PASSED | T1 |
-| V10 | `16-validation.tex:256-274` | Not implemented | 🔀 Deferred to T2 | T2 |
-| V11 | `16-validation.tex:189-193` | `validation/v11_campaign.py` | ⚠️ INCONCLUSIVE (weak effect) | T1 |
-| V12 | `16-validation.tex:194-198` | Not implemented | ⚠️ Not eligible (no history) | T1/T2 |
-| V13 | `16-validation.tex:276-309` | Not implemented | 🔀 Deferred to T2 | T2 |
-| V14 | `16-validation.tex:114-116` | `validation/v14_day_one_walk.py` | ✓ Implemented, needs re-run | T0 |
-| V15 | `16-validation.tex:322-336` | Not implemented | ⚠️ Missing (T3 feasibility) | T3 |
-| V16 | `16-validation.tex:337-348` | `validation/v16_validator_audit.py` | ✓ Implemented (audit protocol) | All gates |
+- **✓ MATCH:** 6 items (Random, Sobol, GP+qLogEI, LocalExecutor, RayExecutor, rl_routine)
+- **✓ IMPLEMENTATION EXISTS, ⚠️ TESTS MISSING:** 4 items (qLogNEHVI, Chebyshev, NSGA-II, EI-per-cost)
+- **❌ VIOLATION:** 4 items (πBO, PriorBand, ifBO, Warm-start) - ALL DOCUMENTED
+- **⚠️ MISSING:** 6 items (TPE, ASHA, MO-ASHA, TuRBO, BG-PBT, Mixed-space TuRBO)
 
----
+### Coverage by Tier
 
-## Algorithm Specification Violations Summary
+- **Tier 0:** 6/6 implemented, 4/6 fully tested
+- **Tier 1 Core:** 4/7 implemented (OLD API), 0/7 tested
+- **Tier 1 Priors/Transfer:** 0/4 correct (all have spec violations)
+- **Tier 2:** 0/2 implemented
 
-### Critical Violations (Block Gate)
+### Validation Protocol Status
 
-1. **πBO (T1.6)** - Line `searchers_gp.py:217-234`
-   - **Wrong:** Prior injected into GP mean
-   - **Right:** Acquisition multiplier α_π(x) = α(x) · π(x)^(β/n)
-   - **LaTeX:** `08-priors-transfer.tex:368-380`
-   - **Impact:** V11 tests wrong algorithm, prior recovery claims invalid
-   - **Fix effort:** 3 days (T1.6 algorithm correction)
-
-2. **TuRBO Missing (T2.1)** - File missing entirely
-   - **Wrong:** Not implemented
-   - **Right:** Trust-region local search with mixed-space kernel per `04-bayesian.tex:867-932`
-   - **LaTeX:** `04-bayesian.tex:867-932`, `12-roadmap.tex:199-205`
-   - **Impact:** V04-T1 failure (500 trials still underpowered without TR local search), V08 blocked (BG-PBT needs explore engine)
-   - **Fix effort:** 10 days (T2.1 implementation per WORK_BREAKDOWN_v3.csv)
-
-3. **ifBO Wrong Research Direction (T3.2)** - Not yet implemented but spec wrong
-   - **Wrong:** BUILD_PROGRAM_v2.md plans to build custom "power-law/saturation model"
-   - **Right:** Use published pretrained surrogate (PFN family), train none
-   - **LaTeX:** `08-priors-transfer.tex:391-395`, product_register.json ch08-05
-   - **Impact:** V15 feasibility gate inverted (tests custom model instead of pretrained adoption)
-   - **Fix effort:** 0 days implementation change (cancel custom model, use pretrained or remove feature)
-
-4. **BG-PBT Not Implemented (T2.4)** - File missing entirely
-   - **Wrong:** Not implemented (BUILD_PROGRAM_REVIEW_VERDICT.md B6 claims "not faithful" but nothing exists)
-   - **Right:** Population manager with exploit/explore per `06-population.tex:357-498`
-   - **LaTeX:** `06-population.tex:357-498`
-   - **Impact:** V08 blocked entirely (BG-PBT home regime test cannot run)
-   - **Fix effort:** 8 days (T2.4 implementation per WORK_BREAKDOWN_v3.csv)
-
-5. **Warm-Start RGPE Claim** - Actually not implemented (false verdict claim)
-   - **Verdict claimed:** BUILD_PROGRAM_v2.md "builds RGPE immediately"
-   - **Actual code:** `warm_start.py:180-303` implements ranked query only, no RGPE
-   - **LaTeX:** `08-priors-transfer.tex:385-390` says RGPE is "second wave"
-   - **Impact:** None (implementation correctly matches LaTeX, verdict was stale/incorrect)
-   - **Fix effort:** 0 days (no fix needed, reclassify as ✓ Match)
-
-6. **PriorBand Portfolio Sampler** - Actually correct (false verdict claim)
-   - **Verdict claimed:** BUILD_PROGRAM_REVIEW_VERDICT.md B2 says "top-K prior density" wrong
-   - **Actual code:** `searchers_priorband.py:140-181` correctly implements portfolio sampler
-   - **LaTeX:** `08-priors-transfer.tex:381-384` specifies portfolio mixing
-   - **Impact:** None (implementation matches LaTeX, verdict was incorrect)
-   - **Fix effort:** 0 days (no fix needed, reclassify as ✓ Match)
-
-### Non-Critical Violations (Quality improvements)
-
-7. **PASHA Missing (T0.7)** - `schedulers.py` has no PASHA flag
-   - **LaTeX:** `05-multifidelity.tex:504-506`, `15-contracts.tex:140-144`
-   - **Fix effort:** 0.5 days (add promotion_mode flag to ASHA)
-
-8. **Median Stopping Rule Missing (T0.8)**
-   - **LaTeX:** `05-multifidelity.tex:211-233`
-   - **Fix effort:** 1 day (new scheduler class)
-
-9. **CMA-ES Missing (T0.9)** - Listed in product register but not implemented
-   - **LaTeX:** `03-model-free.tex:264-267`
-   - **Fix effort:** 1 day (wrap vendor library)
-
-10. **V01 Protocol Tautological (Validation)** - `v01_wrapper_parity.py` uses weak oracle
-    - **Issue:** 0.5% tolerance + exact rank equality unreliable per BUILD_PROGRAM_REVIEW_VERDICT.md line 198
-    - **Fix effort:** 1 day (V01 protocol repair, Week 3 Day 1)
-
-11. **V02 State Replay Missing (Validation)** - Not implemented
-    - **LaTeX:** `16-validation.tex:164-166`
-    - **Fix effort:** 3 days (T0.3 implementation per WORK_BREAKDOWN_v3.csv)
-
-12. **V03 Mutation Testing Missing (Validation)** - Not implemented
-    - **LaTeX:** `16-validation.tex:79-81,311-320`
-    - **Fix effort:** 3 days (T0.4 implementation per WORK_BREAKDOWN_v3.csv)
-
-13. **V12 Not Eligible (Validation)** - No real history in store yet
-    - **Issue:** Synthetic history would bypass registered precondition
-    - **Fix effort:** 0 days (mark not eligible until Tier 1 complete, gate in Tier 2)
-
-14. **rl_routine Workload NotImplementedError (T0.10)** - Stub only
-    - **LaTeX:** `09-workloads.tex:131-188`, V14 requires real implementation
-    - **Fix effort:** 5 days (T0 remediation scope per BUILD_PROGRAM_v2.md)
-
-15. **finance Workload Conditional (T1.14)** - May be removed from scope
-    - **LaTeX:** `09-workloads.tex:234-270` (conditional on finance customer)
-    - **Fix effort:** 5 days if retained, 0 days if removed (NAS scope decision input)
+- **Passing:** V06 ✓, V09 ✓
+- **Functional, needs re-run:** V05 ✓, V14 ✓
+- **Needs fix:** V01 ❌, V04-T0 ❌, V04-T1 ❌
+- **Not implemented:** V02 ⚠️, V03 ⚠️
 
 ---
 
-## Product Register Rebuild Required
+## Known Specification Violations (Complete List)
 
-**Issue (BUILD_PROGRAM_REVIEW_VERDICT.md B9):** Current `product_register.json` is malformed/stale.
+Per BUILD_PROGRAM_REVIEW_VERDICT.md lines 66-70, the following violations are DOCUMENTED:
 
-**Problems identified:**
-1. DEHB/ifBO listed as Tier 2, LaTeX says Tier 3 (mismatch)
-2. No validation cross-reference completeness
-3. Missing tier/effort/owner fields per entry
-4. Not machine-readable authority (JSON but schema unclear)
+1. **πBO:** Uses GP mean as weight → MUST use acquisition function value as multiplier
+2. **PriorBand:** Uses top-K promotion → MUST use portfolio sampler (randomized weighted selection)
+3. **ifBO:** Builds custom power-law model → MUST use pretrained surrogate model
+4. **Warm-start:** Builds RGPE immediately → MUST query ranked/quantile samples first
 
-**Rebuild requirements:**
-- One row per decision from `hpo-survey-decisions.json`
-- Columns: id, chapter, item, verdict, tier, contract, implementation, tests, validation, cost_estimate, owner, status
-- Add traceability: LaTeX line numbers, implementation file paths, test file paths
-- Mark status: ✓ implemented | ⚠️ missing | ❌ violation | 🔀 deferred
-- Cross-reference all V01-V16 validations
-- Validate JSON schema
+**Action:** Fix during Tier 1 scope correction (Week 4 Day 1-2, tasks T1P.1-T1P.4)
 
-**Current state:**
-- 48 entries in product_register.json
-- Missing: implementation paths, test paths, status markers, LaTeX line numbers
-- Format: Valid JSON but insufficient fields for traceability
-
-**Action:** Extend product_register.json with full traceability fields during Week 1 Day 4-6 work.
+BUILD_PROGRAM_REVIEW_VERDICT.md mentions "11 more" violations beyond these 4, but they are not explicitly listed in available documents. Week 1 Day 4-6 task is to DOCUMENT all 15+, so further investigation is needed.
 
 ---
 
-## Test Coverage Analysis
+## Next Steps
 
-### Layer 1: Unit/Contract Tests (>100 tests required per TEST_PYRAMID_v1.md)
-
-**Current coverage:**
-```
-tests/test_space.py          - SearchSpace, knobs, transforms, conditions
-tests/test_schedulers.py     - ASHA promotion logic, state machine
-tests/test_schedulers_tier0.py - Sobol, Random, TPE conformance
-tests/test_priors.py         - GuardedPrior, nonzero density, πBO (partial)
-tests/test_mo_asha.py        - MO-ASHA veto gates
-tests/test_nsgaii.py         - NSGA-II wrapper, Pareto sorting
-tests/test_reporting_mo.py   - Hypervolume, front extraction
-tests/test_store.py          - Store transactions, crash recovery
-tests/test_contracts.py      - Searcher/Scheduler protocol conformance
-tests/test_executors.py      - LocalExecutor, RayExecutor adapters
-tests/test_architecture.py   - ArchitectureFactory stubs
-tests/test_warm_start.py     - WarmStartSearcher queue, state restore
-tests/test_cost_aware.py     - CostModelGP, EI-per-cost
-tests/test_cost_model_accuracy.py - Cost prediction accuracy
-tests/test_cost_efficiency.py - Cost-aware vs cost-blind comparison
-tests/test_prior_recovery_pibo.py - πBO prior recovery (partial)
-tests/test_hamiltonian_mo.py - Hamiltonian MO workload
-tests/test_properties.py     - Property-based state machine tests
-tests/test_verify_manifest.py - Validation manifest schema
-tests/test_ray_executor.py   - Ray Tune adapter
-```
-
-**Estimated count:** ~90-120 unit tests (exact count requires pytest --collect-only)
-
-**Missing critical tests (per BUILD_PROGRAM_REVIEW_VERDICT.md lines 219-230):**
-- Schema validation for conditional knobs
-- Seed split/leakage tests
-- Budget arithmetic edge cases
-- NaN/failure semantic tests
-- Concurrent store writer tests (if multi-writer enabled)
-- Migration forward/back tests
-- Checkpoint hash/state compatibility tests
-
-### Layer 2: Integration Tests (>20 tests required)
-
-**Current coverage:**
-```
-validation/v01_wrapper_parity.py (integration-level)
-validation/v04_performance_check.py (integration-level)
-validation/v06_asha_efficiency.py (integration-level)
-validation/v09_qlogNEHVI_vs_scalarization.py (integration-level)
-```
-
-**Missing:** V02, V03, V07, V08, V10, V12, V13, V15 integration tests
-
-### Layer 3: Validation Campaigns (15 campaigns V01-V15)
-
-**Status:**
-- V01: ⚠️ Needs repair (tautological oracle)
-- V02: ⚠️ Missing
-- V03: ⚠️ Missing
-- V04-T0: ✓ Implemented, needs re-run (fixed threshold)
-- V04-T1: ❌ Failed (underpowered, 500 trials needed)
-- V05: ✓ Implemented, needs re-run (real workload)
-- V06: ✅ PASSED
-- V07: ⚠️ Missing (T3 gate)
-- V08: ⚠️ Missing (T2 gate, blocked by BG-PBT)
-- V09: ✅ PASSED
-- V10: 🔀 Deferred to T2
-- V11: ⚠️ INCONCLUSIVE (weak effect, πBO violation blocks interpretation)
-- V12: ⚠️ Not eligible (no real history)
-- V13: 🔀 Deferred to T2
-- V14: ✓ Implemented, needs re-run (non-vacuous)
-- V15: ⚠️ Missing (T3 feasibility)
-- V16: ✓ Implemented (audit protocol, runs at all gates)
+1. **Complete this traceability matrix:** Investigate remaining 11 specification violations mentioned in BUILD_PROGRAM_REVIEW_VERDICT.md line 68
+2. **Week 3 Day 1-3:** Create validation protocol files (validation/protocols/v{01-15}_protocol.md)
+3. **Week 3 Day 4-5:** Create test pyramid document (TEST_PYRAMID_v1.md)
+4. **Week 4 Day 1-2:** Amend BUILD_PROGRAM_v3.md with traceability corrections
 
 ---
 
-## Cross-Reference Table: Implementation → LaTeX
-
-| Implementation File | LaTeX Reference | Lines | Component | Status |
-|---------------------|-----------------|-------|-----------|--------|
-| `hponas/searchers.py` | `03-model-free.tex` | 73-124 | Sobol, Random | ✓ |
-| `hponas/searchers_tpe.py` | `04-bayesian.tex` | 467-521 | TPE | ✓ |
-| `hponas/searchers_gp.py` | `04-bayesian.tex` | 522-866 | GP + qLogEI | ✓ (base), ❌ (πBO) |
-| `hponas/priors.py` | `08-priors-transfer.tex` | 14-91 | GuardedPrior, πBO | ✓ (guard), ❌ (πBO) |
-| `hponas/searchers_priorband.py` | `08-priors-transfer.tex` | 76-91, 381-384 | PriorBand | ✓ |
-| `hponas/warm_start.py` | `08-priors-transfer.tex` | 93-142, 385-390 | Warm-start | ✓ |
-| `hponas/searchers_cost.py` | `08-priors-transfer.tex` | 396-403 | EI-per-cost | ✓ |
-| `hponas/searchers_mo.py` | `07-multiobjective.tex` | 268-622 | qLogNEHVI, Chebyshev, NSGA-II | ✓ |
-| `hponas/reporting_mo.py` | `07-multiobjective.tex` | 402-445 | Hypervolume, Pareto | ✓ |
-| `hponas/schedulers.py` | `05-multifidelity.tex` | 234-289 | ASHA, MO-ASHA | ✓ |
-| `hponas/space.py` | `15-contracts.tex` | 52-88 | SearchSpace | ✓ |
-| `hponas/store.py` | `15-contracts.tex` | 163-190 | Store | ✓ |
-| `hponas/executors.py` | `15-contracts.tex` | 192-205 | Executors | ✓ |
-| `hponas/architecture.py` | `15-contracts.tex` | 206-243 | ArchFactory | ⚠️ (stubs) |
-| `examples/hamiltonian_mo_example.py` | `09-workloads.tex` | 189-233 | Hamiltonian MO | ✓ |
-| `examples/sampler_neutra_example.py` | `09-workloads.tex` | 131-188 | Sampler NeuTra | ⚠️ |
-| **(missing)** | `04-bayesian.tex` | 867-932 | TuRBO | ❌ |
-| **(missing)** | `06-population.tex` | 245-498 | PB2, PB2-Mix, BG-PBT | ❌ |
-| **(missing)** | `05-multifidelity.tex` | 497-503 | DEHB | ⚠️ (T3) |
-| **(missing)** | `05-multifidelity.tex` | 279-306 | ifBO | ⚠️ (T3) |
-
----
-
-## Recommended Actions (Week 1 Day 4-6 Completion)
-
-1. ✅ **Extended product_register.json** with traceability fields:
-   - Added `latex_ref` (file:line), `impl_file`, `test_file`, `status` columns
-   - Mapped 32/47 entries with full traceability (remaining 15 need manual review)
-   - All algorithm violations marked with status ❌
-   - Rebuilt via `rebuild_product_register.py` script
-
-2. ✅ **Corrected false violation claims** after code verification:
-   - **πBO**: Verdict claimed wrong, but `searchers_gp.py:351-466` correctly implements acquisition multiplier in log-space
-   - **PriorBand**: Verdict claimed "top-K prior density", but `searchers_priorband.py:140-181` correctly implements portfolio sampler
-   - **Warm-start**: Verdict claimed "builds RGPE immediately", but `warm_start.py:180-303` correctly implements ranked query only (RGPE is second wave)
-   - **BG-PBT**: Verdict claimed "not faithful" but no implementation exists (status: ⚠️ Missing, not ❌ Violation)
-
-3. **Remaining violations confirmed** (no false positives):
-   - **TuRBO**: Missing implementation (10 days, T2.1)
-   - **ifBO**: Wrong specification (should adopt pretrained, not custom model, T3 elective)
-   - **PB2/PB2-Mix**: Missing implementations (5+5 days, T2.2-T2.3)
-   - **BG-PBT**: Missing implementation (8 days, T2.4, blocks V08)
-   - **Architecture factory**: Stubs only (T2.5-T2.9, conditional on NAS scope decision Week 1 Day 7)
-
-4. **Create missing validation protocols** (Week 3):
-   - V02, V03, V07, V08, V10, V12, V13, V15 protocol files
-   - Each with: tasks, seeds, margins, power policy, decision states
-
-5. **Update phase marker** to Week 1 Day 7 after deliverable complete
-
----
-
-## Acceptance Criteria for Week 1 Day 4-6
-
-- [x] TRACEABILITY_MATRIX_v1.md created with LaTeX → impl → tests → validation mapping
-- [x] All algorithm violations documented with fix requirements (5 confirmed violations after re-audit)
-- [x] Status marked (✓/❌/⚠️/🔀) for all 29 components (8 T0 + 13 T1 + 5 T2 + 3 T3)
-- [x] product_register.json rebuilt with traceability fields (32/47 entries mapped)
-- [x] Cross-reference table validates against actual files
-- [x] LaTeX line numbers verified for all specification references
-- [x] False violation claims corrected (πBO, PriorBand, Warm-start all ✓ correct)
-
-**Week 1 Day 4-6 deliverable COMPLETE.** Ready to update phase marker and proceed to Week 1 Day 7 (NAS scope decision).
-
----
-
-**END OF TRACEABILITY MATRIX v1.0**
+**Document Status:** DRAFT (Week 1 Day 4 in progress)  
+**Next Update:** Completion of remaining violation investigation  
+**Satisfies:** Approval Checklist Item 2 (partial), Item 5 (partial)
