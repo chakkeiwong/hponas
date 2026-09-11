@@ -1,4 +1,10 @@
 """
+⚠️ OLD CODE - DO NOT USE IN NEW IMPLEMENTATIONS ⚠️
+This file is LEGACY code from pre-recovery implementation.
+- Used only by validation scripts
+- Contains specification violations: uses top-K promotion (WRONG per TRACEABILITY_MATRIX_v1.md)
+- Correct implementation should use multi-fidelity bracket structure
+
 PriorBand: Portfolio sampler for ASHA with rung-dependent prior mixing.
 
 Survey reference: Ch 8 roadmap-10, ch08-03.

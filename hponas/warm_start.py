@@ -1,4 +1,10 @@
 """
+⚠️ OLD CODE - DO NOT USE IN NEW IMPLEMENTATIONS ⚠️
+This file is LEGACY code from pre-recovery implementation.
+- Used only by validation scripts
+- Contains specification violations: builds RGPE immediately (WRONG per TRACEABILITY_MATRIX_v1.md)
+- Correct implementation should defer RGPE until sufficient data
+
 Warm start: seed searchers from prior run-store trials.
 
 Survey reference: Ch 8 sec:warm-start-from-store, validation V12.

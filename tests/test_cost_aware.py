@@ -83,7 +83,7 @@ def test_linear_cooling_schedule():
 
 def test_cost_aware_searcher_accepts_cost():
     """CostAwareGPSearcher accepts cost in observations."""
-    from hponas.searchers import SobolSearcher
+    from hponas.legacy_searchers import SobolSearcher
 
     space = _simple_space()
 
@@ -108,7 +108,7 @@ def test_cost_aware_searcher_accepts_cost():
 
 def test_cost_aware_searcher_capabilities():
     """CostAwareGPSearcher exposes cost_aware capability."""
-    from hponas.searchers import SobolSearcher
+    from hponas.legacy_searchers import SobolSearcher
 
     space = _simple_space()
 
@@ -124,7 +124,7 @@ def test_cost_aware_searcher_capabilities():
 
 def test_cost_aware_warmup_phase():
     """During warmup, temperature is 0 (ignore cost)."""
-    from hponas.searchers import SobolSearcher
+    from hponas.legacy_searchers import SobolSearcher
 
     space = _simple_space()
 
@@ -147,7 +147,7 @@ def test_cost_aware_warmup_phase():
 
 def test_cost_aware_cooldown_phase():
     """During cooldown, temperature increases from 0 to 1."""
-    from hponas.searchers import SobolSearcher
+    from hponas.legacy_searchers import SobolSearcher
 
     space = _simple_space()
 

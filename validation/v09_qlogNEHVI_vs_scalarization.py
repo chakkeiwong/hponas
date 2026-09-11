@@ -41,8 +41,7 @@ from pathlib import Path
 import numpy as np
 from scipy import stats
 
-from hponas import SearchSpace
-from hponas.space import Knob
+from hponas.space import SearchSpace, Knob
 from hponas.searchers_mo import qLogNEHVISearcher, ChebyshevSearcher, NSGAIISearcher
 from hponas.reporting_mo import hypervolume, default_reference_point
 

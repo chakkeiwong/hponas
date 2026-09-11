@@ -1,4 +1,9 @@
 """
+⚠️ OLD CODE - DO NOT USE IN NEW IMPLEMENTATIONS ⚠️
+This file is LEGACY code from pre-recovery implementation.
+- Used only by validation scripts
+- New implementations should use hponas/searchers/ package
+
 TPE (Tree-structured Parzen Estimator) searcher via Optuna wrapper.
 
 Survey reference: Ch 4 roadmap-04, ch04-02.

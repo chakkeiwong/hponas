@@ -9,7 +9,7 @@ import pytest
 import numpy as np
 
 from hponas.space import SearchSpace, Knob
-from hponas.searchers import RandomSearcher, SobolSearcher
+from hponas.legacy_searchers import RandomSearcher, SobolSearcher
 
 
 class TestLargeSearchSpaces:

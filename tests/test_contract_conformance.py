@@ -19,9 +19,9 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from hponas.searchers import RandomSearcher, SobolSearcher
+from hponas.legacy_searchers import RandomSearcher, SobolSearcher
 from hponas.schedulers import ASHAScheduler, ASHAConfig
-from hponas.executors import LocalExecutor
+from hponas.legacy_executors import LocalExecutor
 from hponas.store import Store, Trial, Study
 from hponas.space import SearchSpace, Knob
 

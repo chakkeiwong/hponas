@@ -11,9 +11,9 @@ from pathlib import Path
 import time
 import concurrent.futures
 
-from hponas.executors import LocalExecutor
+from hponas.legacy_executors import LocalExecutor
 from hponas.store import Store, Trial
-from hponas.searchers import RandomSearcher, SobolSearcher
+from hponas.legacy_searchers import RandomSearcher, SobolSearcher
 from hponas.space import SearchSpace, Knob
 
 

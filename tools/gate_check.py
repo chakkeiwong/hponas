@@ -251,16 +251,82 @@ def check_r1_gate() -> GateResult:
 
 
 def check_tier0_gate() -> GateResult:
-    """Tier 0 Foundation exit criteria (placeholder)."""
-    # TODO: implement after Tier 0 scope finalized
+    """Tier 0 Foundation exit criteria."""
+    criteria = []
+
+    # Import validators
+    sys.path.insert(0, str(Path("validation/validators").resolve()))
+
+    try:
+        from v01_validator import V01Validator
+        from v02_validator import V02Validator
+        from v03_validator import V03Validator
+        from v04_validator import V04Validator
+        from v05_validator import V05Validator
+        from v14_validator import V14Validator
+    except ImportError as e:
+        criteria.append(Criterion(
+            name="V16 Audit: Validator import",
+            status="blocked",
+            message=f"Failed to import validators: {e}"
+        ))
+        return GateResult(
+            phase="tier0",
+            verdict="blocked",
+            criteria=criteria,
+            timestamp=datetime.now().isoformat()
+        )
+
+    # Run V16 audit checks for each Tier 0 validator
+    validators = [
+        ("V01", V01Validator, "Vendor Parity"),
+        ("V02", V02Validator, "Deterministic State Replay"),
+        ("V03", V03Validator, "Mutation Testing"),
+        ("V04", V04Validator, "Random Baseline Floor + Sobol vs Random"),
+        ("V05", V05Validator, "Hyperband Scheduling"),
+        ("V14", V14Validator, "Day-One Walk Reproduction"),
+    ]
+
+    for validator_name, validator_class, description in validators:
+        try:
+            validator = validator_class()
+            report = validator.audit()
+
+            if report.passed:
+                criteria.append(Criterion(
+                    name=f"V16 Audit: {validator_name} ({description})",
+                    status="met",
+                    message=f"All 4 V16 checks passed"
+                ))
+            else:
+                failed_checks = [c.name for c in report.checks if not c.passed]
+                criteria.append(Criterion(
+                    name=f"V16 Audit: {validator_name} ({description})",
+                    status="blocked",
+                    message=f"V16 audit failed: {', '.join(failed_checks)}"
+                ))
+        except Exception as e:
+            criteria.append(Criterion(
+                name=f"V16 Audit: {validator_name} ({description})",
+                status="blocked",
+                message=f"V16 audit crashed: {e}"
+            ))
+
+    # Determine verdict
+    blocked = [c for c in criteria if c.status == "blocked"]
+    warnings = [c for c in criteria if c.status == "warning"]
+
+    if blocked:
+        verdict = "blocked"
+    elif warnings:
+        verdict = "hold"
+    else:
+        verdict = "pass"
+
     return GateResult(
         phase="tier0",
-        verdict="blocked",
-        criteria=[Criterion(
-            name="Tier 0 gate",
-            status="blocked",
-            message="Tier 0 not yet started"
-        )],
+        verdict=verdict,
+        criteria=criteria,
         timestamp=datetime.now().isoformat()
     )
 
@@ -353,6 +419,156 @@ def write_report(result: GateResult, output_dir: Path):
     return report_path
 
 
+def check_tier1_gate() -> GateResult:
+    """Tier 1 Advanced Campaigns exit criteria."""
+    criteria = []
+
+    # Import validators
+    sys.path.insert(0, str(Path("validation/validators").resolve()))
+
+    try:
+        from v04_validator import V04Validator
+        from v06_validator import V06Validator
+        from v09_validator import V09Validator
+        from v11_validator import V11Validator
+    except ImportError as e:
+        criteria.append(Criterion(
+            name="V16 Audit: Validator import",
+            status="blocked",
+            message=f"Failed to import validators: {e}"
+        ))
+        return GateResult(
+            phase="tier1",
+            verdict="blocked",
+            criteria=criteria,
+            timestamp=datetime.now().isoformat()
+        )
+
+    # Run V16 audit checks for each Tier 1 validator
+    validators = [
+        ("V04-T1", V04Validator, "Sobol vs Random (real workload)"),
+        ("V06", V06Validator, "GP Kernel Selection"),
+        ("V09", V09Validator, "Multi-Fidelity Correlation"),
+        ("V11", V11Validator, "Prior Recovery"),
+    ]
+
+    for validator_name, validator_class, description in validators:
+        try:
+            validator = validator_class()
+            report = validator.audit()
+
+            if report.passed:
+                criteria.append(Criterion(
+                    name=f"V16 Audit: {validator_name} ({description})",
+                    status="met",
+                    message=f"All 4 V16 checks passed"
+                ))
+            else:
+                failed_checks = [c.name for c in report.checks if not c.passed]
+                criteria.append(Criterion(
+                    name=f"V16 Audit: {validator_name} ({description})",
+                    status="blocked",
+                    message=f"V16 audit failed: {', '.join(failed_checks)}"
+                ))
+        except Exception as e:
+            criteria.append(Criterion(
+                name=f"V16 Audit: {validator_name} ({description})",
+                status="blocked",
+                message=f"V16 audit crashed: {e}"
+            ))
+
+    # Determine verdict
+    blocked = [c for c in criteria if c.status == "blocked"]
+    warnings = [c for c in criteria if c.status == "warning"]
+
+    if blocked:
+        verdict = "blocked"
+    elif warnings:
+        verdict = "hold"
+    else:
+        verdict = "pass"
+
+    return GateResult(
+        phase="tier1",
+        verdict=verdict,
+        criteria=criteria,
+        timestamp=datetime.now().isoformat()
+    )
+
+
+def check_tier2_gate() -> GateResult:
+    """Tier 2 Specialized Topics exit criteria."""
+    criteria = []
+
+    # Import validators
+    sys.path.insert(0, str(Path("validation/validators").resolve()))
+
+    try:
+        from v10_validator import V10Validator
+        from v13_validator import V13Validator
+    except ImportError as e:
+        criteria.append(Criterion(
+            name="V16 Audit: Validator import",
+            status="blocked",
+            message=f"Failed to import validators: {e}"
+        ))
+        return GateResult(
+            phase="tier2",
+            verdict="blocked",
+            criteria=criteria,
+            timestamp=datetime.now().isoformat()
+        )
+
+    # Run V16 audit checks for each Tier 2 validator
+    validators = [
+        ("V10", V10Validator, "MO-ASHA Rung Correlation"),
+        ("V13", V13Validator, "Warm-Start Effectiveness"),
+    ]
+
+    for validator_name, validator_class, description in validators:
+        try:
+            validator = validator_class()
+            report = validator.audit()
+
+            if report.passed:
+                criteria.append(Criterion(
+                    name=f"V16 Audit: {validator_name} ({description})",
+                    status="met",
+                    message=f"All 4 V16 checks passed"
+                ))
+            else:
+                failed_checks = [c.name for c in report.checks if not c.passed]
+                criteria.append(Criterion(
+                    name=f"V16 Audit: {validator_name} ({description})",
+                    status="blocked",
+                    message=f"V16 audit failed: {', '.join(failed_checks)}"
+                ))
+        except Exception as e:
+            criteria.append(Criterion(
+                name=f"V16 Audit: {validator_name} ({description})",
+                status="blocked",
+                message=f"V16 audit crashed: {e}"
+            ))
+
+    # Determine verdict
+    blocked = [c for c in criteria if c.status == "blocked"]
+    warnings = [c for c in criteria if c.status == "warning"]
+
+    if blocked:
+        verdict = "blocked"
+    elif warnings:
+        verdict = "hold"
+    else:
+        verdict = "pass"
+
+    return GateResult(
+        phase="tier2",
+        verdict=verdict,
+        criteria=criteria,
+        timestamp=datetime.now().isoformat()
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Gate check for phase exit criteria")
     parser.add_argument("--phase", required=True, choices=["r1", "tier0", "tier1", "tier2"],
@@ -367,6 +583,10 @@ def main():
         result = check_r1_gate()
     elif args.phase == "tier0":
         result = check_tier0_gate()
+    elif args.phase == "tier1":
+        result = check_tier1_gate()
+    elif args.phase == "tier2":
+        result = check_tier2_gate()
     else:
         print(f"Gate check for {args.phase} not yet implemented")
         sys.exit(1)

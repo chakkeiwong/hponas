@@ -1,4 +1,9 @@
 """
+⚠️ OLD CODE - DO NOT USE IN NEW IMPLEMENTATIONS ⚠️
+This file is LEGACY code from pre-recovery implementation.
+- Used only by validation scripts
+- May contain specification violations related to πBO implementation
+
 Nonzero-guard prior construction for πBO and PriorBand.
 
 Survey reference: Ch 8 roadmap-10, ch08-01, ch08-03.

@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 import time
 
-from hponas.executors import LocalExecutor
+from hponas.legacy_executors import LocalExecutor
 
 
 class TestLocalExecutor:

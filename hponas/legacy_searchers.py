@@ -1,4 +1,22 @@
 """
+⚠️ LEGACY API - DEPRECATED ⚠️
+
+This file has been renamed from searchers.py to legacy_searchers.py to resolve
+namespace collision with hponas/searchers/ package directory.
+
+**Migration Path:**
+- Old code importing from hponas.searchers should update to hponas.legacy_searchers
+- New code should use hponas.searchers package (base.py, random_searcher.py, gp_searcher.py)
+
+**Why deprecated:**
+- Python import resolution prioritizes package directories over module files
+- This old API was completely unreachable when hponas/searchers/ directory existed
+- Renamed to legacy namespace to restore importability
+
+**Timeline:**
+- Phase 0 (2026-09-09): Renamed to legacy_searchers.py
+- Future: Will be removed after all dependent code migrated to new API
+
 Searchers: propose configurations and learn from results.
 
 Survey reference: Ch 15 sec:searcher-interface, Ch 3 (model-free methods).

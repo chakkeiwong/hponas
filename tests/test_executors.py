@@ -8,7 +8,7 @@ R1 spike exit criterion: conformance tests pass.
 import tempfile
 from pathlib import Path
 
-from hponas.executors import LocalExecutor, RayExecutor
+from hponas.legacy_executors import LocalExecutor, RayExecutor
 
 
 def dummy_objective(config: dict) -> float:
