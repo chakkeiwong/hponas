@@ -1,12 +1,29 @@
-# Phase 0: Brax API Blocking Issue
+# Phase 0: Brax API Issue - RESOLVED ✓
 
-**Status:** BLOCKED - Requires environment fix  
+**Status:** RESOLVED - Upgraded brax from source  
 **Date:** 2026-09-09  
-**Impact:** V05, V14 validations cannot run with real RL workload  
+**Resolution:** Install brax from GitHub (post-0.14.2 with JAX 0.11.1 compatibility)
 
 ---
 
-## Issue Summary
+## Resolution Summary
+
+**Problem:** Brax 0.14.2 (PyPI) uses deprecated `jax.device_put_replicated` removed in JAX 0.11.1
+
+**Solution:** Upgrade to brax from source (GitHub main branch)
+```bash
+pip install git+https://github.com/google/brax.git
+```
+
+**API Changes Required:**
+- Policy inference now requires `key_sample` parameter
+- Updated evaluation loop to generate random keys with `jax.random.split()`
+
+**Result:** RL workload (`workloads/rl_routine.py`) now functional with JAX 0.11.1 ✓
+
+---
+
+## Original Issue Summary
 
 **Root Cause:** Brax 0.14.2 uses deprecated JAX APIs that have been removed in JAX 0.11.1
 
