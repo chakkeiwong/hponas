@@ -163,7 +163,8 @@ def rl_routine(
 
         for step in range(episode_length):
             obs = state.obs
-            action, _ = jit_inference_fn(obs)
+            rng, key_sample = jax.random.split(rng)
+            action, _ = jit_inference_fn(obs, key_sample)
             state = eval_env.step(state, action)
             episode_return += state.reward
 
