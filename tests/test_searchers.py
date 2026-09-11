@@ -8,7 +8,7 @@ R1 spike exit criterion: same seed produces same proposals; capabilities declare
 import numpy as np
 import pytest
 
-from hponas.searchers import SobolSearcher
+from hponas.legacy_searchers import SobolSearcher
 from hponas.space import Knob, SearchSpace
 
 

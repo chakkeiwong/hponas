@@ -1,4 +1,22 @@
 """
+⚠️ LEGACY API - DEPRECATED ⚠️
+
+This file has been renamed from executors.py to legacy_executors.py to resolve
+namespace collision with hponas/executors/ package directory.
+
+**Migration Path:**
+- Old code importing from hponas.executors should update to hponas.legacy_executors
+- New code should use hponas.executors package (base.py, local_executor.py, ray_executor.py)
+
+**Why deprecated:**
+- Python import resolution prioritizes package directories over module files
+- This old API was completely unreachable when hponas/executors/ directory existed
+- Renamed to legacy namespace to restore importability
+
+**Timeline:**
+- Phase 0 (2026-09-09): Renamed to legacy_executors.py
+- Future: Will be removed after all dependent code migrated to new API
+
 Executors: trial launch, checkpointing, and metrics reporting.
 
 Survey reference: Ch 15 sec:executor-adapters, Ch 11 (architecture chapter on Ray Tune).

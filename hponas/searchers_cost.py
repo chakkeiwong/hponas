@@ -1,4 +1,9 @@
 """
+⚠️ OLD CODE - DO NOT USE IN NEW IMPLEMENTATIONS ⚠️
+This file is LEGACY code from pre-recovery implementation.
+- Used only by validation scripts
+- New implementations should use hponas/searchers/ package
+
 Cost-aware searchers for HPO-NAS.
 
 Survey: Ch 8 roadmap-12, EI-per-cost with cost cooling.
@@ -24,7 +29,7 @@ from gpytorch.mlls import ExactMarginalLogLikelihood
 from botorch.acquisition import AcquisitionFunction
 from botorch.optim import optimize_acqf
 
-from hponas import SearchSpace
+from hponas.space import SearchSpace
 
 
 class CostModelGP:

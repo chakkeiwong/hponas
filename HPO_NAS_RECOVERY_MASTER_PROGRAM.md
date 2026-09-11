@@ -11,14 +11,74 @@
 
 ## Current Phase Marker
 
-**PHASE:** Week 3 Day 4-5 complete  
-**WEEK:** 3  
-**DAY:** 5  
-**LAST COMPLETED:** Week 3 Day 4-5 - TEST_PYRAMID_v1.md designed and implemented (121 Layer 1 tests, 39 Layer 2 tests, 2026-09-09)  
-**NEXT TASK:** Week 3 Day 6 - Add V16 to Every Gate  
+**PHASE:** Phase 0 - Prerequisite Remediation (namespace collision + brax API)  
+**WEEK:** 0 (prerequisite)  
+**DAY:** 1  
+**LAST COMPLETED:** Investigation complete - namespace collision and brax API issues identified  
+**NEXT TASK:** Execute Phase 0 fixes (migrate old API to legacy, fix brax import)  
 **DATE:** 2026-09-09  
 
 **Update this section after completing each day's work.**
+
+---
+
+## Phase 0: Prerequisite Remediation (1 day)
+
+**Goal:** Fix blocking issues that prevent codebase from functioning
+
+### Issue 1: Namespace Collision (Module Shadowing)
+
+**Root Cause:** Python import resolution prioritizes `hponas/searchers/` (package directory) over `hponas/searchers.py` (module file). Old module files are **completely unreachable** via imports.
+
+**Impact:**
+- **Product code:** 2 files, 1,292 lines UNIMPORTABLE
+  - `hponas/searchers_mo.py` (860 lines) - multi-objective searchers
+  - `hponas/searchers_cost.py` (432 lines) - cost-aware searchers
+- **Validation:** V09 validation script uses searchers_mo (BROKEN)
+- **Tests:** ~16 test files importing old API (some BROKEN)
+- **Git status:**
+  - Old modules: TRACKED (searchers.py modified, executors.py clean)
+  - New packages: UNTRACKED (searchers/, executors/ directories)
+
+**Solution:**
+1. Rename old modules to legacy namespace:
+   - `hponas/searchers.py` → `hponas/legacy_searchers.py`
+   - `hponas/executors.py` → `hponas/legacy_executors.py`
+2. Update dependent files:
+   - Fix imports in `searchers_mo.py`, `searchers_cost.py`
+   - Fix validation script `v09_qlogNEHVI_vs_scalarization.py`
+3. Stage new packages: `git add hponas/searchers/ hponas/executors/`
+4. Document deprecation in legacy files
+
+**Acceptance:**
+- All product modules importable
+- V09 validation runs without ImportError
+- Test suite can import from both legacy and new API
+
+### Issue 2: Brax API Incompatibility
+
+**Root Cause:** Code imports `from brax.training import ppo` but brax 0.14.2 has `from brax.training.agents import ppo`
+
+**Impact:**
+- `workloads/rl_routine.py` JAX_AVAILABLE incorrectly reports False
+- V14 validation cannot run (day-one walk reproduction)
+- V05 validation uses proxy instead of real RL workload
+
+**Solution:**
+1. Fix import in `workloads/rl_routine.py` line 33:
+   - Change: `from brax.training import ppo`
+   - To: `from brax.training.agents import ppo`
+2. Verify workload runs with minimal fidelity test
+
+**Acceptance:**
+- JAX_AVAILABLE returns True
+- `rl_routine()` executes without ImportError
+- Workload returns valid result dict
+
+**Deliverables:**
+- All fixes committed to git
+- Phase marker updated to Week 1 Day 1
+- No ImportError in product code
 
 ---
 

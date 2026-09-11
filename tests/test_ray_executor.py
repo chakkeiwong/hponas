@@ -10,7 +10,7 @@ from pathlib import Path
 
 try:
     import ray
-    from hponas.executors import RayExecutor
+    from hponas.legacy_executors import RayExecutor
     RAY_AVAILABLE = True
 except ImportError:
     RAY_AVAILABLE = False

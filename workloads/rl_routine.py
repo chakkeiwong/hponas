@@ -30,7 +30,8 @@ try:
     import jax.numpy as jnp
     import brax
     from brax import envs
-    from brax.training import ppo
+    from brax.training.agents.ppo import train as ppo_train
+    from brax.training.agents.ppo import networks as ppo_networks
     JAX_AVAILABLE = True
 except ImportError:
     JAX_AVAILABLE = False
@@ -112,14 +113,16 @@ def rl_routine(
     num_updates = num_timesteps // (num_envs * episode_length)
 
     # Network architecture from config
-    network_factory = lambda: ppo.make_ppo_networks(
-        env.observation_size,
-        env.action_size,
-        hidden_layer_sizes=hidden_layer_sizes,
+    network_factory = lambda obs_shape, action_size, preprocess_observations_fn: ppo_networks.make_ppo_networks(
+        obs_shape,
+        action_size,
+        preprocess_observations_fn=preprocess_observations_fn,
+        policy_hidden_layer_sizes=hidden_layer_sizes,
+        value_hidden_layer_sizes=hidden_layer_sizes,
     )
 
     # Train
-    train_fn = ppo.train(
+    train_fn = ppo_train.train(
         environment=env,
         num_timesteps=num_timesteps,
         episode_length=episode_length,

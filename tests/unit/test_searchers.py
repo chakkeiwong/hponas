@@ -7,7 +7,7 @@ Authority: TEST_PYRAMID_v1.md Layer 1
 
 import pytest
 import numpy as np
-from hponas.searchers import RandomSearcher, SobolSearcher
+from hponas.legacy_searchers import RandomSearcher, SobolSearcher
 from hponas.space import SearchSpace, Knob
 
 

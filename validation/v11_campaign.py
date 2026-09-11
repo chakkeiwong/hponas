@@ -542,3 +542,19 @@ def write_artifact(result: CampaignResult, path: Path) -> Path:
     with open(path, "w") as f:
         json.dump(result.to_dict(), f, indent=2, sort_keys=False)
     return path
+
+
+if __name__ == "__main__":
+    """V16 runnable independently: standalone execution."""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="V11 Prior Recovery Campaign")
+    parser.add_argument("--mode", choices=["pilot", "confirmatory"], default="pilot")
+    parser.add_argument("--replicates", type=int, default=None)
+    parser.add_argument("--output", type=Path, default=Path("validation/results/v11_campaign.json"))
+    args = parser.parse_args()
+
+    result = run_campaign(mode=args.mode, n_replicates=args.replicates)
+    output_path = write_artifact(result, args.output)
+    print(f"Campaign completed. Results written to: {output_path}")
+    return path

@@ -1,4 +1,10 @@
 """
+⚠️ OLD CODE - DO NOT USE IN NEW IMPLEMENTATIONS ⚠️
+This file is LEGACY code from pre-recovery implementation.
+- Used only by validation scripts (v11, v16)
+- Contains specification violations (see TRACEABILITY_MATRIX_v1.md)
+- New implementations should use hponas/searchers/gp_searcher.py
+
 GP + qLogEI searcher via BoTorch.
 
 Survey reference: Ch 4 roadmap-05, ch04-01, ch04-05.

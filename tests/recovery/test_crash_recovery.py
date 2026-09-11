@@ -11,7 +11,7 @@ from pathlib import Path
 import os
 import signal
 
-from hponas.executors import LocalExecutor
+from hponas.legacy_executors import LocalExecutor
 from hponas.store import Store, Trial
 
 
@@ -72,7 +72,7 @@ class TestCrashRecovery:
 
     def test_checkpoint_survives_process_kill(self):
         """Checkpoint written before termination is recoverable."""
-        from hponas.searchers import RandomSearcher
+        from hponas.legacy_searchers import RandomSearcher
         from hponas.space import SearchSpace, Knob
         import json
 
@@ -108,7 +108,7 @@ class TestCrashRecovery:
     def test_partial_trial_resume(self):
         """Resume optimization with incomplete trials."""
         from hponas.space import SearchSpace, Knob
-        from hponas.searchers import RandomSearcher
+        from hponas.legacy_searchers import RandomSearcher
 
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = Path(tmpdir) / "study.db"

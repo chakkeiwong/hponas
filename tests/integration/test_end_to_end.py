@@ -10,9 +10,9 @@ import tempfile
 from pathlib import Path
 import numpy as np
 
-from hponas.searchers import RandomSearcher, SobolSearcher
+from hponas.legacy_searchers import RandomSearcher, SobolSearcher
 from hponas.schedulers import ASHAScheduler, ASHAConfig
-from hponas.executors import LocalExecutor
+from hponas.legacy_executors import LocalExecutor
 from hponas.store import Store, Trial
 from hponas.space import SearchSpace, Knob
 

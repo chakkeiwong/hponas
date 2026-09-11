@@ -1,4 +1,9 @@
 """
+⚠️ OLD CODE - DO NOT USE IN NEW IMPLEMENTATIONS ⚠️
+This file is LEGACY code from pre-recovery implementation.
+- Used only by validation scripts
+- New implementations should use hponas/searchers/ package
+
 Multi-objective searchers: qLogNEHVI, Chebyshev scalarization, NSGA-II.
 
 Survey reference: Ch 7 (multi-objective methods), Ch 4 (Bayesian MO).
@@ -18,7 +23,7 @@ import numpy as np
 from typing import Any, Optional
 
 from .space import SearchSpace
-from .searchers import Searcher
+from .legacy_searchers import Searcher
 
 try:
     from botorch.models import SingleTaskGP, ModelListGP

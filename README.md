@@ -1,98 +1,228 @@
-# hponas — Hyperparameter Tuning for Workspace Projects
+# HPO-NAS: Hyperparameter and Neural Architecture Search
 
-A workspace-internal hyperparameter tuning system serving RL (PPO on RLlib), Hamiltonian neural networks, neural-transport samplers, and multi-objective financial models.
+**Version:** 0.1.0  
+**Status:** Development (Tier 0)  
+**License:** MIT  
 
-**Status:** R1 spike complete, Tier 0 ready to start  
-**Survey:** [hpo-survey/main.pdf](hpo-survey/main.pdf) (118 pages, ready for review)  
-**Build program:** [BUILD_PROGRAM_v2.md](BUILD_PROGRAM_v2.md) (v2.0 approved 2026-09-01)  
-**Environment setup:** [setup/INSTALL.md](setup/INSTALL.md)
+---
 
-## Quick links
+## Overview
 
-- **For reviewers:** Read the [survey Chapters 11–15](hpo-survey/main.pdf) (the product proposal) and [BUILD_PROGRAM_v2.md](BUILD_PROGRAM_v2.md)
-- **For builders:** Start with [BUILD_PROGRAM_v2.md](BUILD_PROGRAM_v2.md) Phase 0, then follow the tier breakdowns
-- **For users (post-build):** See `examples/quickstart.py` (will exist after tier 0)
+HPO-NAS is a system for **moderate architecture-coordinate Neural Architecture Search** supporting:
+- Hyperparameter optimization with 2-10 parameters per search space
+- Architectural choices: width, depth, layers, activation
+- Training hyperparameters: optimizer, learning rate, dropout, batch size
+- Multi-fidelity optimization (ASHA, MO-ASHA)
+- Multi-objective optimization (qLogNEHVI, NSGA-II)
 
-## Repository structure
+**Out of scope:** Cell search, weight sharing, supernets, differentiable NAS
+
+---
+
+## Installation
+
+### Requirements
+- Python 3.9+
+- pip 21.0+
+
+### Basic Installation
+```bash
+pip install -e .
+```
+
+### With Development Dependencies
+```bash
+pip install -e ".[dev]"
+```
+
+### With All Optional Dependencies
+```bash
+pip install -e ".[all]"
+```
+
+---
+
+## Quick Start
+
+```python
+from hponas import Study, GPSearcher, LocalExecutor
+from hponas.workloads import rl_routine
+
+# Define search space
+search_space = {
+    "width": [32, 64, 128, 256],
+    "depth": [2, 3, 4],
+    "learning_rate": (1e-5, 1e-2, "log"),
+}
+
+# Create study
+study = Study(
+    searcher=GPSearcher(),
+    executor=LocalExecutor(),
+    workload=rl_routine,
+    search_space=search_space,
+    objective="maximize",
+    budget=100,
+)
+
+# Run optimization
+result = study.run()
+print(f"Best config: {result.best_config}")
+print(f"Best value: {result.best_value}")
+```
+
+---
+
+## Features
+
+### Tier 0 (Current)
+- ✅ GP+qLogEI Bayesian optimization baseline
+- ✅ Random and Sobol baselines
+- ✅ Local and distributed (Ray) executors
+- ✅ RL policy search workload
+
+### Tier 1 (Planned)
+- ASHA multi-fidelity optimization
+- MO-ASHA multi-objective multi-fidelity
+- qLogNEHVI multi-objective acquisition
+- Chebyshev scalarization and NSGA-II baselines
+
+### Tier 2 (Research)
+- TuRBO trust region optimization (conditional)
+- Transfer learning and warm-start
+- Prior-weighted methods (πBO, PriorBand)
+
+---
+
+## Project Structure
 
 ```
 hponas/
-├── src/                     # Main package
-│   ├── contracts/           # Study spec, search space, protocols
-│   ├── searchers/           # Search algorithms (Sobol, TPE, DEHB, TuRBO, ...)
-│   ├── schedulers/          # Early stopping, population (ASHA, MO-ASHA, PBT, ...)
-│   ├── store/               # Run database (trials, lineage, diagnostics)
-│   ├── executors/           # Adapters (RLlib, generic train loop)
-│   └── templates/           # Workload templates (rl_routine, hamiltonian_mo, ...)
-├── tests/
-│   ├── unit/                # Fast isolated tests
-│   ├── integration/         # End-to-end studies
-│   └── validation/          # V01–V15 suite (expensive, gates)
-├── validation/
-│   └── tasks/               # Pinned validation tasks with budgets
-├── examples/                # Usage examples
-├── docs/                    # Build progress, design notes
-├── setup/                   # Environment and install
-├── hpo-survey/              # The 106-page survey and product proposal
-├── BUILD_PROGRAM.md         # Phased build plan with gates
-└── MEMO_TO_CODEX.md         # Review request for build program
+├── hponas/              # Core library
+│   ├── searchers/       # Optimization algorithms
+│   ├── schedulers/      # Multi-fidelity schedulers
+│   ├── executors/       # Trial execution backends
+│   ├── workloads/       # Benchmark workloads
+│   └── study.py         # Main Study API
+├── tests/               # Test suite
+│   ├── unit/            # Layer 1: Fast unit tests
+│   ├── conformance/     # Layer 2: Contract tests
+│   └── integration/     # Layer 2: Integration tests
+├── validation/          # Layer 3: Statistical validation
+│   ├── protocols/       # Preregistered protocols
+│   └── results/         # Validation results
+└── docs/                # Documentation
 ```
 
-## Development status
+---
 
-**Phase 0 (weeks 1–2): Not started**  
-Interface freeze, pinned task sizing, empty harness.
+## Development
 
-**Tier 0 (weeks 3–6): Not started**  
-Wrap Sobol/TPE/DEHB, ASHA/Median, run store, RLlib adapter.  
-**Gate:** V01–V03, V05, V14 pass.
+### Running Tests
+```bash
+# All tests
+pytest
 
-**Tier 1 (weeks 7–12): Blocked on tier-0 gate**  
-Build TuRBO, qLogEI+priors, qLogNEHVI, MO-ASHA, PriorBand, warm-start.  
-**Gate:** V04, V09, V11 pass.
+# Unit tests only (fast)
+pytest tests/unit/
 
-**Tier 2 (weeks 13–30): Blocked on tier-1 gate**  
-Build PB2-Mix, BG-PBT, ifBO curve model, full validation suite.  
-**Gate:** V07, V08, V15 pass.
+# Conformance tests
+pytest tests/conformance/
 
-## How to start building
+# With coverage
+pytest --cov=hponas --cov-report=html
+```
 
-1. **Review the program:** Read [BUILD_PROGRAM_v2.md](BUILD_PROGRAM_v2.md) to understand scope, effort, and gate criteria.
-2. **Set up environment:** `conda env create -f setup/environment.yml && conda activate hponas`
-3. **Phase 0 (weeks 1–2):** Implement `src/contracts/` (study spec, search space schema, protocols), design store schema, write empty harness.
-4. **Checkpoint:** Interface freeze reviewed by stakeholders before tier 0 starts.
-5. **Tier 0 build:** Follow [BUILD_PROGRAM_v2.md](BUILD_PROGRAM_v2.md) tier-0 breakdown (6 weeks, ~65 eng-days).
-6. **Week 6 gate:** Run V01–V03, V05, V14 campaigns, apply demotion rules if any fail.
-7. **Continue or pivot:** Gate pass → tier 1; gate fail → diagnose and replan.
+### Code Quality
+```bash
+# Linting
+ruff check hponas/
 
-## What this is (and isn't)
+# Formatting
+black hponas/ tests/
 
-**IS:**
-- A workspace-internal tuning system for four known workload families
-- Built on Ray Tune (execution) + custom searchers/schedulers
-- Opinionated (only includes methods that survived evidence review)
-- Falsifiable (every method has a demotion rule tied to a validation test)
+# Type checking
+mypy hponas/
+```
 
-**IS NOT:**
-- A general-purpose HPO library (not published to PyPI)
-- A platform (no multi-tenancy, no web UI)
-- A research contribution (wraps and integrates published methods)
-- A zero-touch AutoML (requires workload-specific template selection)
+### Mutation Testing
+```bash
+# Run mutation tests (Layer 1 quality check)
+mutmut run
+mutmut results
+```
 
-## Key design decisions (from survey)
+---
 
-1. **Ray Tune as execution layer:** Yes (Ch10 audit: active maintenance, RLlib integration, checkpoint primitives for population methods)
-2. **Routine-budget default:** ASHA + (TPE or DEHB) — low-cost, evidence-backed floor (Ch3–5)
-3. **Differentiators:** qLogNEHVI for MO (Ch7), priors (Ch8), BG-PBT for large-parallel RL (Ch6)
-4. **Not included:** BOHB (Optuna wraps it), raw EI (dominated by qLogEI), weighted-sum MO (can't reach concave Pareto fronts)
-5. **Validation gates enforce verdicts:** 15 tests (V01–V15), three tiers, demotion rules written before code (Ch14)
+## Validation
 
-## Questions or issues
+All methods undergo statistical validation per preregistered protocols in `validation/protocols/`.
 
-- **Survey questions:** See [hpo-survey/literature-audit.md](hpo-survey/literature-audit.md) for sourcing log
-- **Build program questions:** Raise in [MEMO_TO_CODEX.md](MEMO_TO_CODEX.md) review or file an issue
-- **Environment issues:** See [setup/INSTALL.md](setup/INSTALL.md) troubleshooting section
+**Tier 0 Gate Criteria:**
+- V01: Vendor Parity (GP vs BoTorch, TPE vs Optuna)
+- V02: State Replay (deterministic trajectories)
+- V03: Mutation Testing (≥0.9 kill score)
+- V04-T0: Sobol vs Random equivalence
+- V05: Workload Correctness (rl_routine)
+- V14: Budget Adherence
+- V16: Validator Audit (all validators pass)
 
-## License and usage
+---
 
-Workspace-internal. Not licensed for external distribution.
+## Documentation
+
+- [Build Program](BUILD_PROGRAM_v3.md) - Project roadmap and timeline
+- [Traceability Matrix](TRACEABILITY_MATRIX_v1.md) - LaTeX spec → implementation mapping
+- [Test Pyramid](TEST_PYRAMID_v1.md) - Test organization and coverage
+- [Contract Semantics](CONTRACT_SEMANTICS_v1.md) - Control-plane behavior
+- [NAS Scope](NAS_SCOPE_DECISION.md) - Scope definition
+
+---
+
+## Contributing
+
+This project is under active development. Contributions welcome after Tier 0 gate passes.
+
+### Development Setup
+```bash
+# Clone repository
+git clone <repo-url>
+cd hponas
+
+# Install in development mode with all dependencies
+pip install -e ".[dev,test]"
+
+# Run pre-commit checks
+pre-commit install
+```
+
+---
+
+## Citation
+
+```bibtex
+@software{hponas2026,
+  title={HPO-NAS: Hyperparameter and Neural Architecture Search},
+  author={},
+  year={2026},
+  url={}
+}
+```
+
+---
+
+## License
+
+MIT License - see LICENSE file for details
+
+---
+
+## Status
+
+**Current Phase:** Tier 0 Execution (Day 1/25)  
+**Gate Status:** Not yet run  
+**Last Updated:** 2026-09-10
+
+---
+
+**Project Authority:** BUILD_PROGRAM_v3.md, HPO_NAS_RECOVERY_MASTER_PROGRAM.md

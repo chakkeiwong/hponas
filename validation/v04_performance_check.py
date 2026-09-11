@@ -240,3 +240,22 @@ if __name__ == "__main__":
         if result['p_value'] >= 0.05:
             print(f"p-value {result['p_value']:.4f} not significant (>= 0.05)")
     print("="*70)
+
+    # Save results to JSON
+    import json
+    from pathlib import Path
+
+    output_path = Path(__file__).parent / "results" / "v04_t1_results.json"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(output_path, 'w') as f:
+        # Convert numpy values to native Python types
+        serializable_result = {
+            k: (float(v) if isinstance(v, np.ndarray) or isinstance(v, np.floating) else
+                [float(x) for x in v] if isinstance(v, list) and len(v) > 0 and isinstance(v[0], (np.floating, np.ndarray)) else
+                v)
+            for k, v in result.items()
+        }
+        json.dump(serializable_result, f, indent=2)
+
+    print(f"\nResults saved to: {output_path}")

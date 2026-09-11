@@ -8,7 +8,7 @@ Tier 1: implementation + unit tests (V12 campaign is Tier 2).
 import tempfile
 from pathlib import Path
 
-from hponas.searchers import SobolSearcher
+from hponas.legacy_searchers import SobolSearcher
 from hponas.space import Knob, SearchSpace
 from hponas.store import Store, Study, Trial
 from hponas.warm_start import (
