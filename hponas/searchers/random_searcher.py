@@ -37,13 +37,34 @@ class RandomSearcher(BaseSearcher):
     def get_state(self) -> Dict[str, Any]:
         """Get searcher state for serialization."""
         state = super().get_state()
-        state["rng_state"] = self.rng.get_state()
+
+        # Convert rng_state to JSON-serializable format
+        rng_state = self.rng.get_state()
+        rng_state_serializable = (
+            rng_state[0],  # String
+            rng_state[1].tolist(),  # Convert ndarray to list
+            rng_state[2],  # Int
+            rng_state[3],  # Int
+            rng_state[4],  # Float
+        )
+
+        state["rng_state"] = rng_state_serializable
         return state
 
     def set_state(self, state: Dict[str, Any]) -> None:
         """Restore searcher state from serialization."""
         super().set_state(state)
-        self.rng.set_state(state["rng_state"])
+
+        # Convert rng_state from serializable format back to numpy format
+        rng_state_serializable = state["rng_state"]
+        rng_state = (
+            rng_state_serializable[0],  # String
+            np.array(rng_state_serializable[1]),  # Convert list back to ndarray
+            rng_state_serializable[2],  # Int
+            rng_state_serializable[3],  # Int
+            rng_state_serializable[4],  # Float
+        )
+        self.rng.set_state(rng_state)
 
 
 class SobolSearcher(BaseSearcher):
