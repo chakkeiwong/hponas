@@ -11,11 +11,11 @@
 
 ## Current Phase Marker
 
-**PHASE:** Phase 0 - Prerequisite Remediation (namespace collision + brax API)  
-**WEEK:** 0 (prerequisite)  
+**PHASE:** Week 1 Day 1 - Work Breakdown Spreadsheet  
+**WEEK:** 1  
 **DAY:** 1  
-**LAST COMPLETED:** Investigation complete - namespace collision and brax API issues identified  
-**NEXT TASK:** Execute Phase 0 fixes (migrate old API to legacy, fix brax import)  
+**LAST COMPLETED:** Phase 0 complete - namespace collision fixed, brax issue documented (PHASE0_BRAX_BLOCKING_ISSUE.md)  
+**NEXT TASK:** Begin Work Breakdown Spreadsheet (WORK_BREAKDOWN_v3.xlsx) - reconcile timeline/effort/staffing, include JAX downgrade decision  
 **DATE:** 2026-09-09  
 
 **Update this section after completing each day's work.**
