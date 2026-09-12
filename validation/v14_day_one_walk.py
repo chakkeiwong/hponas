@@ -25,9 +25,6 @@ from pathlib import Path
 import sqlite3
 import os
 
-sys.path.insert(0, str(Path(__file__).parent))
-from validators.base_validator import BaseValidator, AuditCheck, AuditReport
-
 
 def v14_day_one_walk_validation(
     script_path: Path = None,

@@ -37,8 +37,8 @@
 - **Pending**: 11/15 (need implementation or re-execution)
 
 ### Contract Tests
-- **Passing**: 38/69 (55%)
-- **Failing**: 31/69 (need fixes)
+- **Passing**: 54/78 (69%)
+- **Skipped**: 24/78 (pending implementation - scheduler, store)
 
 ### Blocking Issues
 - All Phase 0 blockers resolved ✅
