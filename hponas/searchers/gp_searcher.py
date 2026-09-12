@@ -53,6 +53,7 @@ class GPSearcher(BaseSearcher):
             kernel: GP kernel type (only "matern52" supported)
         """
         super().__init__(search_space, seed)
+        self.seed = seed  # Store seed for torch RNG control
         self.initial_random_samples = initial_random_samples
         self.num_restarts = num_restarts
         self.kernel = kernel
@@ -67,6 +68,11 @@ class GPSearcher(BaseSearcher):
         Returns:
             Next configuration to evaluate
         """
+        # Set torch seed for deterministic BoTorch operations
+        # Seed varies with history length to ensure different suggestions
+        if self.seed is not None:
+            torch.manual_seed(self.seed + len(self.history))
+
         # Initial random phase
         if len(self.history) < self.initial_random_samples:
             return self.search_space.sample_random(seed=self.rng.randint(0, 2**31))

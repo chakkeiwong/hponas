@@ -11,14 +11,16 @@
 
 ## Current Phase Marker
 
-**PHASE:** Week 3 Day 1 - Execute Validation Protocols V01-V06  
+**PHASE:** Week 3 Day 1 - GPSearcher Determinism Remediation  
 **WEEK:** 3  
 **DAY:** 1  
 **LAST COMPLETED:** Week 2 complete - Contract conformance tests + CONTRACT_SEMANTICS_v1.md  
-**NEXT TASK:** Execute V01-V06 validation protocols (Tier 0 foundations)  
+**CURRENT TASK:** Fix GPSearcher determinism (torch seed issue blocking V01)  
 **DATE:** 2026-09-09  
 
 **Update this section after completing each day's work.**
+
+**DEVIATION NOTED:** Recovery Status Audit identified we should be doing Week 3 documentation (Test Pyramid, V16), not validation execution. However, V01 execution uncovered critical GPSearcher determinism bug that blocks validation. Fixing this first, then returning to Week 3 documentation deliverables.
 
 ---
 
@@ -74,6 +76,46 @@
 - JAX_AVAILABLE returns True
 - `rl_routine()` executes without ImportError
 - Workload returns valid result dict
+
+### Issue 3: GPSearcher Non-Determinism (DISCOVERED 2026-09-09)
+
+**Root Cause:** GPSearcher uses BoTorch's `optimize_acqf()` which internally calls `torch.rand()` for random initialization of L-BFGS-B optimization. The global torch random state is not controlled by GPSearcher's seed parameter.
+
+**Impact:**
+- V01 GP wrapper validation FAILS (KS=0.20 > 0.10 threshold)
+- Two runs with same seed produce different suggestions in GP phase
+- Checkpoint resume non-deterministic (violates contract)
+- Debugging optimization issues harder (can't reproduce exact sequences)
+
+**Discovery:**
+- Found during V01 validation execution (Week 3 Day 1)
+- Detailed analysis in `GPSEARCHER_DETERMINISM_ANALYSIS.md`
+
+**Solution:**
+1. Store seed in GPSearcher.__init__()
+2. Set torch.manual_seed(seed + len(history)) before each suggest() call
+3. This ensures deterministic behavior given seed + observation count
+
+**Implementation:**
+```python
+def __init__(self, search_space, seed=None, ...):
+    super().__init__(search_space, seed)
+    self.seed = seed  # Store for later use
+    self.rng = np.random.RandomState(seed)
+
+def suggest(self) -> Config:
+    # Set torch seed for deterministic BoTorch operations
+    if self.seed is not None:
+        torch.manual_seed(self.seed + len(self.history))
+    # ... rest of suggest logic
+```
+
+**Acceptance:**
+- Two GPSearcher instances with same seed produce identical suggestions
+- V01 GP wrapper validation PASSES (KS < 0.10, p > 0.05)
+- test_searcher_contract.py determinism tests pass with tight tolerance
+
+**Time Estimate:** 2 hours (0.5d implement, test, validate)
 
 **Deliverables:**
 - All fixes committed to git
