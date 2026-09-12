@@ -33,8 +33,8 @@
 ## Current Status
 
 ### Validations
-- **Passing**: 3/15 (V01, V06, V09)
-- **Pending**: 12/15 (need implementation or re-execution)
+- **Passing**: 4/15 (V01, V05, V06, V09)
+- **Pending**: 11/15 (need implementation or re-execution)
 
 ### Contract Tests
 - **Passing**: 38/69 (55%)
