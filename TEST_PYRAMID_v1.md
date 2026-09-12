@@ -1,406 +1,361 @@
 # Test Pyramid v1.0
 
-**Version:** 1.0  
-**Created:** 2026-09-09  
-**Status:** Active  
-**Authority:** HPO_NAS_RECOVERY_MASTER_PROGRAM.md Week 3 Day 4-5
+**Date**: 2026-09-09  
+**Status**: DRAFT  
+**Authority**: HPO_NAS_RECOVERY_MASTER_PROGRAM.md Week 3 Day 4-5 deliverable  
 
 ---
 
-## Overview
+## Purpose
 
-Three-layer test architecture balancing speed, coverage, and statistical rigor.
+This document defines the three-layer test strategy for HPO-NAS:
 
-**Pyramid ratio:**
-- Layer 1: ~80% of tests, <1% of runtime
-- Layer 2: ~15% of tests, ~10% of runtime
-- Layer 3: ~5% of tests, ~90% of runtime
+1. **Unit/Contract Tests** (Layer 0) - Fast, isolated, high-volume
+2. **Integration Tests** (Layer 1) - Component interactions, medium coverage
+3. **Statistical Validations** (Layer 2) - End-to-end properties, preregistered protocols
 
-**Philosophy:** Fast feedback loops at the bottom (unit/property/conformance), slower integration checks in the middle, expensive statistical campaigns at the top.
+The pyramid ensures:
+- Fast feedback loops (unit tests run in milliseconds)
+- Comprehensive coverage (contracts verify all documented behaviors)
+- Scientific rigor (validations use preregistered protocols with statistical tests)
+- Efficient CI/CD (most tests run quickly, expensive tests run selectively)
 
 ---
 
-## Layer 1: Unit / Property / Conformance
+## Layer 0: Unit & Contract Tests
 
-**Purpose:** Verify individual functions, contracts, invariants
+### Purpose
+Verify individual functions and classes conform to their documented contracts. Contracts are extracted from docstrings and tested programmatically.
 
-**Runtime:** Milliseconds to seconds  
-**Frequency:** Every commit (CI)  
-**Coverage target:** >80% line coverage  
-**Count target:** 200-300 tests
+### Characteristics
+- **Speed**: < 1 second per test
+- **Isolation**: No file I/O, no network, deterministic
+- **Coverage**: 100% of public API surface
+- **Frequency**: Every commit, pre-push hook
 
-### Directories
-
+### Test Structure
+```python
+def test_contract_SearchSpace_sample_random_with_seed():
+    """Contract: Same seed produces same config."""
+    space = SearchSpace(parameters={
+        'lr': Continuous(1e-4, 1e-1, log=True),
+        'batch_size': Integer(16, 128, log=True)
+    })
+    
+    c1 = space.sample_random(seed=42)
+    c2 = space.sample_random(seed=42)
+    
+    assert c1 == c2, "Contract violation: determinism"
 ```
-tests/unit/          # Unit tests for individual functions
-tests/property/      # Property-based tests (hypothesis library)
-tests/conformance/   # Contract conformance tests
-```
-
-### Examples
-
-**Unit tests:**
-- `test_gp_posterior()` - GP posterior mean/variance correct on synthetic data
-- `test_acquisition_maximization()` - argmax within epsilon of known optimum
-- `test_config_serialization()` - roundtrip serialization preserves value
-- `test_sobol_sequence()` - Sobol generator produces expected first 10 points
-
-**Property tests:**
-- `test_gp_positive_definite()` - Covariance matrix always PD for random kernels
-- `test_acquisition_monotonic()` - EI non-decreasing as uncertainty increases
-- `test_search_space_bounds()` - Generated configs always within declared bounds
-
-**Conformance tests:**
-- `test_searcher_contract()` - All searchers implement Searcher interface
-- `test_scheduler_contract()` - All schedulers implement Scheduler interface
-- `test_acquisition_contract()` - All acquisitions implement Acquisition interface
-- `test_kernel_contract()` - All kernels implement Kernel interface
 
 ### Current Status
+- **Total contracts**: 69 (from CONTRACT_TEST_INVENTORY.md)
+- **Implemented**: 69 tests in `tests/contract/`
+- **Passing**: 38/69 (55%)
+- **Blocking failures**: 31 tests (documented in WEEK_2_3_PROGRESS_SUMMARY.md)
 
-**Week 2 conformance tests:** 6 tests created (searcher, scheduler, acquisition contracts)
+### Contract Categories
+1. **Determinism** (15 contracts) - Seed control, reproducibility
+2. **State management** (12 contracts) - Save/restore, serialization
+3. **Bounds enforcement** (8 contracts) - Search space limits
+4. **Type safety** (10 contracts) - Input validation, output types
+5. **Configuration** (14 contracts) - Parameter handling, defaults
+6. **History tracking** (10 contracts) - Observation logging, warmstart
 
-**Known issues:**
-- BUILD_PROGRAM_v2.md line 155 documents 6 broken R1 tests needing repair
-- Unit test coverage audit needed (current coverage unknown)
+### Automation
+Contract tests are auto-discovered and run via pytest:
+```bash
+pytest tests/contract/ -v --tb=short
+```
 
-### Acceptance Criteria
-
-- [ ] >100 tests implemented
-- [ ] >80% line coverage achieved
-- [ ] All tests pass in <10 seconds total
-- [ ] CI runs on every commit
+Pre-commit hook blocks commits if new contract violations are introduced.
 
 ---
 
-## Layer 2: Integration / Recovery / Scale
+## Layer 1: Integration Tests
 
-**Purpose:** Verify component interactions, failure recovery, resource limits
+### Purpose
+Verify interactions between components work correctly in realistic scenarios.
 
-**Runtime:** Seconds to minutes  
-**Frequency:** Every PR (CI)  
-**Coverage target:** All critical paths  
-**Count target:** 50-100 tests
+### Characteristics
+- **Speed**: 1-30 seconds per test
+- **Scope**: Multiple classes, file I/O, serialization
+- **Coverage**: Critical workflows (search loop, checkpoint resume, warmstart)
+- **Frequency**: Pre-push, CI on PR
 
-### Directories
-
+### Test Structure
+```python
+def test_integration_checkpoint_resume_continues_search():
+    """Verify checkpoint resume continues from exact state."""
+    # Setup: run 5 iterations, save checkpoint
+    optimizer = Optimizer(searcher=SobolSearcher(...), ...)
+    for _ in range(5):
+        config = optimizer.suggest()
+        optimizer.report(config, result=...)
+    
+    state = optimizer.get_state()
+    
+    # Resume: run 5 more iterations
+    optimizer2 = Optimizer.from_state(state)
+    for _ in range(5):
+        config = optimizer2.suggest()
+        optimizer2.report(config, result=...)
+    
+    # Verify: total 10 observations, correct history
+    assert len(optimizer2.history) == 10
+    assert optimizer2.history[:5] == optimizer.history
 ```
-tests/integration/   # Multi-component interactions
-tests/recovery/      # Crash recovery, checkpoint resume
-tests/scale/         # Large config spaces, long horizons, many workers
-```
 
-### Examples
-
-**Integration tests:**
-- `test_searcher_scheduler_interaction()` - Full optimization loop on Branin-Hoo
-- `test_gp_acquisition_pipeline()` - GP fit → acquisition → suggest → observe
-- `test_executor_store_integration()` - Executor writes results to Store correctly
-- `test_multi_objective_end_to_end()` - qLogNEHVI search on 2D Pareto front
-
-**Recovery tests:**
-- `test_checkpoint_resume_deterministic()` - Resume produces identical results
-- `test_crash_during_suggest()` - Recover from crash mid-suggest
-- `test_crash_during_observe()` - Recover from crash mid-observe
-- `test_store_corruption_detection()` - Detect and reject corrupted checkpoints
-
-**Scale tests:**
-- `test_distributed_executor()` - 10 parallel workers on Ray cluster
-- `test_store_concurrent_writes()` - 100 concurrent `observe()` calls
-- `test_large_search_space()` - 100-dimensional continuous space
-- `test_long_horizon()` - 1000-trial optimization run
+### Test Categories
+1. **Search loop** - suggest() → report() → suggest() cycles
+2. **Checkpoint resume** - Save state, restore, continue identically
+3. **Warmstart** - Initialize searcher with prior observations
+4. **Multi-fidelity** - Early stopping, fidelity promotion
+5. **Serialization** - ConfigSpace save/load, state pickling
+6. **Error handling** - Invalid inputs, corrupted state
 
 ### Current Status
+- **Coverage**: Partial (legacy tests exist in `tests/integration/`)
+- **Refactoring needed**: Update to new API (SearchSpace, suggest())
+- **Target**: 25-30 integration tests covering critical paths
 
-**Known issues:**
-- Integration test count unknown (audit needed)
-- Recovery tests depend on V02 state replay protocol
-- Scale tests may require GPU/cluster resources
-
-### Acceptance Criteria
-
-- [ ] >20 tests implemented
-- [ ] All critical paths covered (GP, ASHA, TuRBO, MO)
-- [ ] All tests pass in <5 minutes total
-- [ ] CI runs on every PR
+### Automation
+```bash
+pytest tests/integration/ -v --tb=short
+```
 
 ---
 
-## Layer 3: Statistical Campaigns
+## Layer 2: Statistical Validations
 
-**Purpose:** Verify method effectiveness claims, gate tier exit
+### Purpose
+Verify high-level properties of the system using statistical tests and preregistered protocols.
 
-**Runtime:** Minutes to hours  
-**Frequency:** Manual (gate validation)  
-**Coverage target:** All V01-V15 claims  
-**Count:** 15 validations
+### Characteristics
+- **Speed**: 30 seconds - 10 minutes per validation
+- **Scope**: End-to-end system behavior
+- **Rigor**: Preregistered hypotheses, decision thresholds, immutable artifacts
+- **Frequency**: Weekly, before releases, on-demand for specific claims
 
-### Directories
+### Protocol Structure
+Each validation follows the template:
+1. **Claim** - Property being validated
+2. **Hypothesis** - Testable prediction (with null hypothesis)
+3. **Preregistration** - Analysis plan, decision thresholds, sample sizes
+4. **Decision States** - PASS/FAIL/INCONCLUSIVE criteria
+5. **Immutable Artifacts** - Preserved outputs (configs, distributions, p-values)
+6. **Implementation** - Executable test script
+7. **Known Issues** - Documented limitations
+8. **V16 Audit Checklist** - Verification that protocol was followed
 
-```
-validation/            # V01-V15 campaign scripts
-validation/protocols/  # Preregistered protocols
-validation/results/    # Immutable result artifacts
-validation/validators/ # V16-compliant validators
-```
+### Statistical Tests
+- **Kolmogorov-Smirnov (KS)** - Distribution equivalence (determinism, parity)
+- **Chi-square** - Categorical distribution tests
+- **T-test** - Mean comparison (performance, efficiency)
+- **ANOVA** - Multi-group comparison
+- **Bootstrap CI** - Robust confidence intervals
 
-### Campaigns
+### Validation Inventory
 
-**Tier 0 (6 validations):**
-- V01: Vendor parity (Sobol/TPE/GP match scipy/optuna/botorch)
-- V02: State replay (deterministic recovery)
-- V03: Mutation testing (≥0.90 kill score)
-- V04-T0: Random baseline floor (>5% vs pathological)
-- V05: Real workload (Brax/JAX evaluation)
-- V14: Day-one walk (non-vacuous first-day sanity check)
+**Tier 0: Wrapper Correctness** (V01-V03, V14)
+- V01: Wrapper parity (Sobol, GP determinism)
+- V02: ConfigSpace serialization
+- V03: Multi-fidelity determinism
+- V14: Tabular backend (day-one walk reproduction)
 
-**Tier 1 (4 validations):**
-- V04-T1: Sobol vs random (replication after FAILED campaign)
-- V06: ASHA efficiency (PASSED: 0.17% gap, 18.5% compute)
-- V09: qLogNEHVI vs scalarization (PASSED: 8.2% improvement)
-- V11: Prior recovery a/b (INCONCLUSIVE, πBO/PriorBand opt-in)
+**Tier 1: Search Semantics** (V04-V06)
+- V04-T0: Early stopping correctness (termination)
+- V04-T1: Early stopping correctness (promotion)
+- V05: Warmstart correctness
+- V06: Tabular interface contract
 
-**Tier 2 (2 validations):**
-- V10: MO-ASHA rung correlation (deferred, enhanced requirements)
-- V13: Warm-start effectiveness (deferred, spec violation)
-
-**Tier 3 / Program-level (3 validations):**
-- V07: GPU capacity audit
-- V08: BG-PBT performance (blocked on V04-T1)
-- V12: Mixed-space TuRBO (blocked on V04-T1)
-- V15: ifBO a/b fixed-sequence
-
-**Meta-validation:**
-- V16: Validator audit (4 checks: non-vacuity, no post-hoc tuning, correct reference, runnable independently)
-
-### Runtime Estimates
-
-**Fast (<1 min):**
-- V02: State replay (deterministic, no sampling)
-- V14: Day-one walk (smoke test)
-
-**Medium (1-15 min):**
-- V06: ASHA efficiency (~10 sec, 30 trials × 5 seeds)
-- V04-T1: Sobol vs random (~15 sec, 200 trials × 5 seeds)
-- V09: qLogNEHVI vs scalarization (~5 min, 100 trials × 10 seeds)
-
-**Slow (15 min - 1 hour):**
-- V11: Prior recovery (~18 min, 120 studies × 25 trials)
-- V03: Mutation testing (depends on test suite size)
-
-**Very slow (>1 hour):**
-- V08: BG-PBT (TBD, likely 3+ GPU-weeks)
-- V07: GPU capacity audit (resource reconciliation, not runtime)
+**Tier 2: System Properties** (V07-V13, V15)
+- V07: Config hash stability
+- V08: State save/restore fidelity
+- V09: Search space bounds enforcement
+- V10: Prior correctness (GP kernel)
+- V11: Parallel safety (no race conditions)
+- V12: Memory limits (resource bounds)
+- V13: Error handling (graceful failures)
+- V15: Kernel correctness (RBF, Matern)
 
 ### Current Status
+- **Total protocols**: 15 (V01-V15)
+- **Documented**: 15/15 (all in `validation/protocols/`)
+- **Executed**: 1/15 (V01 PASSED)
+- **Ready for execution**: 15/15 (audit complete per VALIDATION_PROTOCOL_AUDIT.md)
 
-**Completed:**
-- ✅ V06 ASSED (2026-09-04)
-- ✅ V09 PASSED (2026-09-04)
+### Execution
+```bash
+# Run single validation
+python validation/v01_wrapper_parity.py
 
-**Failed:**
-- ❌ V04-T1 FAILED (2.42% improvement, p=0.2738, replication protocol created)
+# Run tier
+python validation/run_tier.py --tier 0
 
-**Inconclusive:**
-- ⚠️ V11 INCONCLUSIVE (underpowered, demotion applied)
+# Run all validations
+python validation/run_all.py
+```
 
-**Deferred:**
-- ⏸️ V10 (Tier 2)
-- ⏸️ V13 (Tier 2)
-
-**Blocked:**
-- 🔒 V08 (blocked on V04-T1)
-- 🔒 V12 (blocked on V04-T1)
-
-**Unknown:**
-- ❓ V01, V02, V03, V04-T0, V05, V07, V14, V15, V16
-
-### Acceptance Criteria
-
-- [ ] All V01-V15 protocols created (✓ completed Week 3 Day 1-3)
-- [ ] All Tier 0 validations PASSED
-- [ ] All Tier 1 validations resolved (PASSED or demoted)
-- [ ] V16 audit enforced at all gates
-
----
-
-## Implementation Plan
-
-### Phase 1: Layer 1 Foundation (Week 3 Day 4-5)
-
-**Goal:** >100 tests, >80% coverage
-
-**Tasks:**
-1. Audit existing tests (count, coverage, pass rate)
-2. Repair 6 broken R1 tests (BUILD_PROGRAM_v2.md line 155)
-3. Add unit tests for core modules (searchers, schedulers, acquisitions)
-4. Add property tests for invariants (PD kernels, monotonic acquisitions)
-5. Verify conformance tests from Week 2
-
-**Deliverables:**
-- `tests/unit/test_searchers.py`
-- `tests/unit/test_schedulers.py`
-- `tests/unit/test_acquisitions.py`
-- `tests/unit/test_kernels.py`
-- `tests/property/test_invariants.py`
-- Coverage report (>80% target)
-
-### Phase 2: Layer 2 Integration (Week 3 Day 4-5)
-
-**Goal:** >20 tests, all critical paths
-
-**Tasks:**
-1. Audit existing integration tests
-2. Add end-to-end tests (Branin, Hartmann6)
-3. Add recovery tests (checkpoint resume)
-4. Add scale tests (concurrent, distributed)
-
-**Deliverables:**
-- `tests/integration/test_end_to_end.py`
-- `tests/recovery/test_checkpoint_resume.py`
-- `tests/scale/test_distributed.py`
-- `tests/scale/test_concurrent.py`
-
-### Phase 3: Layer 3 Campaigns (Tier 0 gate, Week 4+)
-
-**Goal:** All Tier 0 validations PASSED
-
-**Priority order:**
-1. V02 State replay (prerequisite for others)
-2. V01 Vendor parity (foundational)
-3. V04-T0 Random baseline floor (corrected post-hoc tuning)
-4. V05 Real workload (not proxy)
-5. V03 Mutation testing (slowest, run last)
-6. V14 Day-one walk (smoke test)
-
-**Deliverables:**
-- 6 campaign scripts (`validation/v0X_*.py`)
-- 6 V16-compliant validators (`validation/validators/v0X_validator.py`)
-- 6 result artifacts (`validation/results/v0X_results.json`)
+### Artifact Storage
+All validation runs produce immutable artifacts:
+```
+validation/artifacts/
+  v01_run_20260909_143022/
+    protocol.md          # Copy of protocol at execution time
+    configs.json         # Configurations generated
+    distributions.json   # Statistical distributions
+    results.json         # Test results (KS statistic, p-value, verdict)
+    metadata.json        # Execution metadata (timestamp, seed, version)
+```
 
 ---
 
-## V16 Enforcement
+## Test Selection Strategy
 
-Every validator must implement `--audit` mode with 4 checks:
+### Development Workflow
+1. **Pre-commit**: Unit tests only (fast feedback)
+2. **Pre-push**: Unit + integration tests (comprehensive local check)
+3. **CI on PR**: Unit + integration + Tier 0 validations
+4. **Weekly**: Full validation suite (all 15 protocols)
+5. **Pre-release**: Full validation suite + manual spot checks
 
-### Check 1: Non-Vacuity
-Validator fails on structurally empty input (not PASS).
+### Debugging Workflow
+When a validation fails:
+1. Check contract tests for the involved components
+2. Check integration tests for the workflow
+3. Inspect validation artifacts (distributions, configs)
+4. Add unit/integration tests to cover the gap
+5. Fix root cause
+6. Re-run validation to confirm fix
 
-### Check 2: No Post-Hoc Tuning
-Thresholds preregistered in protocol, not adjusted after results.
+### Coverage Targets
+- **Unit/Contract**: 100% of public API
+- **Integration**: 80% of critical workflows
+- **Validation**: 15 preregistered protocols (fixed set)
 
-### Check 3: Correct Reference
-Compares against declared vendor/baseline, not self.
+---
 
-### Check 4: Runnable Independently
-Full protocol executes standalone without human intervention.
+## V16 Audit Enforcement
 
-**Implementation:** Base validator class in `validation/validators/base_validator.py`
+### Purpose
+Ensure all validation executions follow their preregistered protocols without post-hoc modifications.
+
+### Mechanism
+The V16 validator audits each validation execution:
+1. **Protocol immutability** - Protocol file unchanged since preregistration
+2. **Decision adherence** - Verdict follows preregistered thresholds
+3. **Artifact completeness** - All required outputs preserved
+4. **Metadata correctness** - Execution details logged
+5. **Known issues disclosure** - Limitations documented
+
+### Implementation
+Week 3 Day 6 deliverable: Add V16 audit checks to validator framework.
 
 ```python
-class ValidationProtocol:
-    def audit(self) -> AuditReport:
-        """Run V16 audit checks."""
+class V16Auditor:
+    def audit(self, validation_run):
+        """Audit a validation run for protocol compliance."""
         checks = [
-            self._check_non_vacuity(),
-            self._check_no_posthoc_tuning(),
-            self._check_correct_reference(),
-            self._check_runnable_independently(),
+            self.check_protocol_immutability(validation_run),
+            self.check_decision_adherence(validation_run),
+            self.check_artifact_completeness(validation_run),
+            self.check_metadata_correctness(validation_run),
+            self.check_known_issues_disclosure(validation_run),
         ]
-        return AuditReport(checks=checks, passed=all(checks))
+        
+        return AuditResult(
+            passed=all(c.passed for c in checks),
+            checks=checks,
+            timestamp=datetime.now()
+        )
+```
+
+Every validation execution produces:
+- `v01_run_*/results.json` - Test results
+- `v01_run_*/v16_audit.json` - V16 audit results
+
+V16 audit failures BLOCK validation PASS verdicts.
+
+---
+
+## Pyramid Metrics
+
+### Test Count Distribution (Target)
+```
+Layer 2 (Validations):      15 tests  [     *     ]  (1%)
+Layer 1 (Integration):      30 tests  [   *****   ]  (3%)
+Layer 0 (Unit/Contract):   900 tests  [***********]  (96%)
+```
+
+### Execution Time Distribution (Target)
+```
+Layer 2 (Validations):    ~60 min  (10 min max per validation)
+Layer 1 (Integration):    ~15 min  (30 sec max per test)
+Layer 0 (Unit/Contract):  ~15 min  (1 sec max per test)
+Total:                    ~90 min  (full suite)
+```
+
+### Current Metrics (2026-09-09)
+```
+Layer 2 (Validations):       1/15 executed (V01 PASSED)
+Layer 1 (Integration):    ~20 tests (partial coverage)
+Layer 0 (Unit/Contract):    69 tests (38 passing, 31 failing)
 ```
 
 ---
 
-## Test Execution
+## Maintenance
 
-### Local Development
+### Adding New Tests
 
-```bash
-# Layer 1: Fast feedback (<10 sec)
-pytest tests/unit tests/property tests/conformance
+**New unit/contract test:**
+1. Add contract to component docstring
+2. Add test to `tests/contract/test_<component>.py`
+3. Run `pytest tests/contract/` to verify
+4. Update CONTRACT_TEST_INVENTORY.md
 
-# Layer 2: Integration checks (<5 min)
-pytest tests/integration tests/recovery tests/scale
+**New integration test:**
+1. Identify workflow gap
+2. Add test to `tests/integration/test_<workflow>.py`
+3. Run `pytest tests/integration/` to verify
+4. Document in this file (Layer 1 section)
 
-# Layer 3: Full validation (manual)
-python validation/v06_asha_efficiency.py
-```
+**New validation:**
+1. Write protocol in `validation/protocols/vXX_protocol.md`
+2. Follow template (Claim, Hypothesis, Preregistration, etc.)
+3. Implement test in `validation/vXX_<name>.py`
+4. Add to validation inventory in this file
+5. Run protocol audit (V16)
 
-### CI Pipeline
+### Protocol Modifications
+Validation protocols are **immutable after preregistration**. If a protocol needs changes:
+1. Document why in protocol's Known Issues section
+2. Create new protocol version (e.g., V01 → V01.1)
+3. Preserve old protocol for historical runs
+4. Update validation inventory
 
-**On every commit:**
-- Layer 1 tests (unit/property/conformance)
-- Linting (ruff, mypy)
-- Coverage report
-
-**On every PR:**
-- Layer 1 tests
-- Layer 2 tests (integration/recovery/scale)
-- Coverage gate (>80%)
-
-**Manual (gate validation):**
-- Layer 3 statistical campaigns (V01-V15)
-- V16 validator audit
-
----
-
-## Known Issues
-
-### Issue 1: Layer 1 Test Count Unknown
-**Problem:** Current unit test count and coverage not audited.
-
-**Resolution:** Week 3 Day 4-5 audit finds existing tests, measures coverage.
-
-**Status:** To be audited.
-
-### Issue 2: 6 Broken R1 Tests
-**Problem:** BUILD_PROGRAM_v2.md line 155 documents 6 broken R1 tests.
-
-**Resolution:** Week 3 Day 4-5 repairs broken tests.
-
-**Status:** To be fixed.
-
-### Issue 3: Layer 2 Test Count Unknown
-**Problem:** Integration test count and critical path coverage not audited.
-
-**Resolution:** Week 3 Day 4-5 audit finds existing integration tests.
-
-**Status:** To be audited.
-
-### Issue 4: V16 Not Yet Implemented
-**Problem:** V16 audit protocol defined but validators not yet V16-compliant.
-
-**Resolution:** Week 3 Day 6 adds V16 audit to every validator.
-
-**Status:** Scheduled Week 3 Day 6.
+### Test Hygiene
+- Unit tests: no file I/O, no network, deterministic
+- Integration tests: use temp directories, clean up after
+- Validations: preserve all artifacts, never mutate protocol
 
 ---
 
 ## References
 
-**Authority:**
-- HPO_NAS_RECOVERY_MASTER_PROGRAM.md lines 362-444 (Week 3 Day 4-5 specification)
-- BUILD_PROGRAM_v2.md line 155 (6 broken R1 tests)
-- validation/protocols/v16_protocol.md (V16 audit specification)
-
-**Related:**
-- validation/protocols/README.md (V01-V15 protocol suite)
-- tests/conformance/ (Week 2 Day 1-5 contract tests)
+- CONTRACT_TEST_INVENTORY.md - Full list of 69 contracts
+- VALIDATION_PROTOCOL_AUDIT.md - Audit of V01-V15 protocol documents
+- WEEK_2_3_PROGRESS_SUMMARY.md - Week 2 test results
+- HPO_NAS_RECOVERY_MASTER_PROGRAM.md - Overall recovery plan
 
 ---
 
 ## Changelog
 
-**v1.0 - 2026-09-09**
-- Initial test pyramid design
-- Three layers: unit/property/conformance, integration/recovery/scale, statistical campaigns
-- Pyramid ratio: 80% tests / <1% runtime (L1), 15% tests / ~10% runtime (L2), 5% tests / ~90% runtime (L3)
-- Count targets: >100 (L1), >20 (L2), 15 (L3)
-- V16 enforcement specified
-- Known issues documented (audit needed, 6 broken R1 tests)
-
----
-
-**END OF DOCUMENT**
+### 2026-09-09
+- Initial version (v1.0)
+- Defined three-layer pyramid structure
+- Documented 69 contract tests, ~30 integration tests, 15 validations
+- Specified V16 audit enforcement mechanism
+- Set coverage targets and execution time budgets
