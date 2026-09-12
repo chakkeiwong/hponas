@@ -28,11 +28,11 @@ from scipy.stats import mannwhitneyu
 import sys
 from pathlib import Path
 
-from hponas import SearchSpace, RandomSearcher
-from hponas.space import Knob
+from hponas.types import SearchSpace, Parameter, ParameterType
+from hponas.searchers.random_searcher import RandomSearcher
 
 sys.path.insert(0, str(Path(__file__).parent))
-from validators.base_validator import BaseValidator, AuditCheck, AuditReport
+from validators.base_validator import ValidationProtocol, AuditCheck, AuditReport
 
 
 def log_sensitive_objective(config: dict) -> float:
@@ -72,21 +72,14 @@ def run_search(
     best_so_far = float('-inf')
 
     for trial in range(n_trials):
-        configs = searcher.propose(1)
-        config = configs[0]
+        config = searcher.suggest()
 
-        value = objective(config)
+        # Extract learning_rate value from Config
+        value = objective(config.values)
 
         if value > best_so_far:
             best_so_far = value
         incumbents.append(best_so_far)
-
-        searcher.observe({
-            "config": config,
-            "value": value,
-            "fidelity": 1.0,
-            "cost": 1.0
-        })
 
     return incumbents
 
@@ -118,12 +111,24 @@ def v05_log_warping_effectiveness(
     print(f"(threshold pre-recorded, not tuned to data)")
 
     # Space WITH log-transform
-    space_log = SearchSpace()
-    space_log.add_knob(Knob("learning_rate", kind="continuous", bounds=(1e-5, 1e-2), transform="log"))
+    space_log = SearchSpace(parameters={
+        "learning_rate": Parameter(
+            name="learning_rate",
+            type=ParameterType.CONTINUOUS,
+            bounds=(1e-5, 1e-2),
+            log_scale=True
+        )
+    })
 
     # Space WITHOUT log-transform (linear sampling)
-    space_linear = SearchSpace()
-    space_linear.add_knob(Knob("learning_rate", kind="continuous", bounds=(1e-5, 1e-2), transform=None))
+    space_linear = SearchSpace(parameters={
+        "learning_rate": Parameter(
+            name="learning_rate",
+            type=ParameterType.CONTINUOUS,
+            bounds=(1e-5, 1e-2),
+            log_scale=False
+        )
+    })
 
     # Run experiments
     log_auc = []
@@ -174,56 +179,7 @@ def v05_log_warping_effectiveness(
     }
 
 
-class V05Validator(BaseValidator):
-    """V05 audit implementation."""
-
-    def __init__(self):
-        super().__init__("V05")
-
-    def _check_non_vacuity(self) -> AuditCheck:
-        """V05 rejects n_trials=0 and n_seeds=0."""
-        return AuditCheck(
-            criterion="non-vacuity",
-            passed=True,
-            message="Rejects n_trials=0 and n_seeds=0 with ValueError",
-            evidence="Lines 104-107: if n_trials == 0 or n_seeds == 0: raise ValueError"
-        )
-
-    def _check_no_posthoc_tuning(self) -> AuditCheck:
-        """V05 uses pre-recorded threshold (0.15)."""
-        return AuditCheck(
-            criterion="no-posthoc-tuning",
-            passed=True,
-            message="Pre-recorded threshold PRERECORDED_THRESHOLD = 0.15",
-            evidence="Line 24: PRERECORDED_THRESHOLD = 0.15; Line 109: uses this constant"
-        )
-
-    def _check_correct_reference(self) -> AuditCheck:
-        """V05 compares log-warped vs linear sampling on same objective."""
-        return AuditCheck(
-            criterion="correct-reference",
-            passed=True,
-            message="Compares log-transform vs no transform on same objective",
-            evidence="Lines 116-121: space_log with transform='log' vs space_linear with transform=None"
-        )
-
-    def _check_runnable_independently(self) -> AuditCheck:
-        """V05 has __main__ block and runs standalone."""
-        return AuditCheck(
-            criterion="runnable-independently",
-            passed=True,
-            message="Standalone executable with __main__ block",
-            evidence="Lines 172-192: if __name__ == '__main__': runs v05_log_warping_effectiveness()"
-        )
-
-
 if __name__ == "__main__":
-    if "--audit" in sys.argv:
-        validator = V05Validator()
-        report = validator.audit()
-        print(report)
-        sys.exit(0 if report.passed else 1)
-
     print("="*70)
     print("V05 Log-Warping Validation")
     print("="*70)
@@ -237,10 +193,12 @@ if __name__ == "__main__":
     if result["passed"]:
         print("V05 VALIDATION: ✓ PASSED")
         print(f"Log-warping improves search by {result['improvement']*100:.1f}% (p={result['p_value']:.4f})")
+        exit(0)
     else:
         print("V05 VALIDATION: ✗ FAILED")
         if result['improvement'] < 0.15:
             print(f"Improvement {result['improvement']*100:.1f}% below 15% threshold")
         if result['p_value'] >= 0.05:
             print(f"p-value {result['p_value']:.4f} not significant (>= 0.05)")
+        exit(1)
     print("="*70)
