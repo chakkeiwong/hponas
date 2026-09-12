@@ -20,8 +20,8 @@ from __future__ import annotations
 import numpy as np
 from scipy.stats import ks_2samp, qmc
 
-from hponas import SearchSpace, SobolSearcher
-from hponas.space import Knob
+from hponas.searchers.random_searcher import SobolSearcher
+from hponas.types import SearchSpace, Parameter, ParameterType
 
 
 def v01_sobol_parity(n_samples: int = 1000, n_dims: int = 5, seed: int = 42) -> dict[str, any]:
@@ -39,17 +39,25 @@ def v01_sobol_parity(n_samples: int = 1000, n_dims: int = 5, seed: int = 42) -> 
     print(f"\n=== V01: Sobol Implementation Parity ===")
     print(f"Samples: {n_samples}, Dimensions: {n_dims}, Seed: {seed}")
 
-    # Create search space with n_dims continuous knobs
-    space = SearchSpace()
+    # Create search space with n_dims continuous parameters
+    parameters = {}
     for i in range(n_dims):
-        space.add_knob(Knob(f"x{i}", kind="continuous", bounds=(0, 1)))
+        parameters[f"x{i}"] = Parameter(
+            name=f"x{i}",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0.0, 1.0)
+        )
+    space = SearchSpace(parameters=parameters)
 
     # Our implementation
     our_searcher = SobolSearcher(space, seed=seed)
-    our_samples = our_searcher.propose(n_samples)
+    our_samples = []
+    for _ in range(n_samples):
+        config = our_searcher.suggest()
+        our_samples.append(config)
 
     # Extract samples as numpy array
-    our_array = np.array([[config[f"x{i}"] for i in range(n_dims)] for config in our_samples])
+    our_array = np.array([[config.values[f"x{i}"] for i in range(n_dims)] for config in our_samples])
 
     # Reference implementation (scipy)
     ref_sobol = qmc.Sobol(d=n_dims, scramble=True, seed=seed)
@@ -95,7 +103,7 @@ def v01_sobol_parity(n_samples: int = 1000, n_dims: int = 5, seed: int = 42) -> 
 
 if __name__ == "__main__":
     # Run validation
-    result = v01_sobol_parity(n_samples=1000, n_dims=5)
+    result = v01_sobol_parity(n_samples=1000, n_dims=5, seed=42)
 
     print("\n" + "="*60)
     if result["passed"]:
