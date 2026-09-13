@@ -18,36 +18,35 @@ import pytest
 import tempfile
 from pathlib import Path
 
-from hponas import (
-    SearchSpace, SobolSearcher, RandomSearcher,
-    ASHAScheduler, LocalExecutor, Store
-)
-from hponas.space import Knob
-from hponas.schedulers import ASHAConfig
-from hponas.store import Trial, Study
+from hponas.types import SearchSpace, Parameter, ParameterType
+from hponas.searchers import SobolSearcher, RandomSearcher
 
 
 def test_searcher_protocol_sobol():
     """SobolSearcher implements Searcher protocol."""
-    space = SearchSpace()
-    space.add_knob(Knob("x", kind="continuous", bounds=(0, 1)))
+    space = SearchSpace(parameters={
+        "x": Parameter(
+            name="x",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0, 1)
+        )
+    })
 
     searcher = SobolSearcher(space, seed=42)
 
-    # propose() returns list of configs
-    configs = searcher.propose(5)
-    assert isinstance(configs, list)
+    # suggest() returns Config
+    configs = []
+    for _ in range(5):
+        config = searcher.suggest()
+        configs.append(config.values)
+
     assert len(configs) == 5
     assert all(isinstance(c, dict) for c in configs)
     assert all("x" in c for c in configs)
 
-    # observe() accepts trial result
-    searcher.observe({"config": configs[0], "value": 0.5, "fidelity": 1.0, "cost": 1.0})
-
     # state_dict() returns serializable state
     state = searcher.state_dict()
     assert isinstance(state, dict)
-    assert "kind" in state
     assert "seed" in state
 
     # load_state_dict() restores state
@@ -57,32 +56,44 @@ def test_searcher_protocol_sobol():
     # capabilities declares support
     caps = searcher.capabilities
     assert isinstance(caps, dict)
-    assert "knob_kinds" in caps
-    assert "continuous" in caps["knob_kinds"]
+    assert "parameter_types" in caps
+    assert "continuous" in caps["parameter_types"]
 
 
 def test_searcher_protocol_random():
     """RandomSearcher implements Searcher protocol."""
-    space = SearchSpace()
-    space.add_knob(Knob("lr", kind="continuous", bounds=(1e-5, 1e-2), transform="log"))
-    space.add_knob(Knob("n", kind="ordinal", bounds=(1, 10)))
-    space.add_knob(Knob("opt", kind="categorical", bounds=["sgd", "adam"]))
+    space = SearchSpace(parameters={
+        "lr": Parameter(
+            name="lr",
+            type=ParameterType.CONTINUOUS,
+            bounds=(1e-5, 1e-2),
+            log_scale=True
+        ),
+        "n": Parameter(
+            name="n",
+            type=ParameterType.INTEGER,
+            bounds=(1, 10)
+        ),
+        "opt": Parameter(
+            name="opt",
+            type=ParameterType.CATEGORICAL,
+            choices=["sgd", "adam"]
+        )
+    })
 
     searcher = RandomSearcher(space, seed=42)
 
     # Protocol conformance
-    configs = searcher.propose(3)
+    configs = [searcher.suggest().values for _ in range(3)]
     assert len(configs) == 3
 
-    searcher.observe({"config": configs[0], "value": 0.8, "fidelity": 1.0, "cost": 2.0})
-
     state = searcher.state_dict()
-    assert state["kind"] == "random"
+    assert "seed" in state
 
     caps = searcher.capabilities
-    assert "continuous" in caps["knob_kinds"]
-    assert "ordinal" in caps["knob_kinds"]
-    assert "categorical" in caps["knob_kinds"]
+    assert "continuous" in caps["parameter_types"]
+    assert "integer" in caps["parameter_types"]
+    assert "categorical" in caps["parameter_types"]
 
 
 def test_scheduler_protocol_asha():
