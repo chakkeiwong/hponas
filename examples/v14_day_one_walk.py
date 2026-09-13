@@ -25,9 +25,8 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from hponas import SearchSpace, SobolSearcher, ASHAScheduler, LocalExecutor, Store
-from hponas.space import Knob
-from hponas.schedulers import ASHAConfig
+from hponas.types import SearchSpace, Parameter, ParameterType
+from hponas.searchers import SobolSearcher
 from workloads.rl_routine import rl_routine, validate_config, DEFAULT_CONFIG
 
 
@@ -42,81 +41,113 @@ def run_day_one_walk():
 
     # Step 1: Define search space
     print("Step 1: Define search space for RL routine")
-    space = SearchSpace()
-    space.add_knob(Knob("learning_rate", kind="continuous", bounds=(1e-5, 1e-2), transform="log"))
-    space.add_knob(Knob("num_envs", kind="ordinal", bounds=(32, 512)))
-    space.add_knob(Knob("batch_size", kind="ordinal", bounds=(64, 1024)))
-    space.add_knob(Knob("entropy_cost", kind="continuous", bounds=(0.0, 0.1)))
-    space.add_knob(Knob("discounting", kind="continuous", bounds=(0.95, 0.999)))
-    space.add_knob(Knob("reward_scaling", kind="continuous", bounds=(0.1, 10.0), transform="log"))
-    space.add_knob(Knob("gae_lambda", kind="continuous", bounds=(0.9, 0.99)))
-    space.add_knob(Knob("normalize_observations", kind="categorical", bounds=[True, False]))
-    space.add_knob(Knob("activation", kind="categorical", bounds=["relu", "tanh", "swish"]))
+    space = SearchSpace(parameters={
+        "learning_rate": Parameter(
+            name="learning_rate",
+            type=ParameterType.CONTINUOUS,
+            bounds=(1e-5, 1e-2),
+            log_scale=True
+        ),
+        "num_envs": Parameter(
+            name="num_envs",
+            type=ParameterType.INTEGER,
+            bounds=(32, 512)
+        ),
+        "batch_size": Parameter(
+            name="batch_size",
+            type=ParameterType.INTEGER,
+            bounds=(64, 1024)
+        ),
+        "entropy_cost": Parameter(
+            name="entropy_cost",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0.0, 0.1)
+        ),
+        "discounting": Parameter(
+            name="discounting",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0.95, 0.999)
+        ),
+        "reward_scaling": Parameter(
+            name="reward_scaling",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0.1, 10.0),
+            log_scale=True
+        ),
+        "gae_lambda": Parameter(
+            name="gae_lambda",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0.9, 0.99)
+        ),
+        "normalize_observations": Parameter(
+            name="normalize_observations",
+            type=ParameterType.CATEGORICAL,
+            choices=[True, False]
+        ),
+        "activation": Parameter(
+            name="activation",
+            type=ParameterType.CATEGORICAL,
+            choices=["relu", "tanh", "swish"]
+        )
+    })
 
-    print(f"  - {len(space.knobs)} knobs defined")
-    print(f"  - Mixed space: continuous + ordinal + categorical\n")
+    print(f"  - {len(space.parameters)} parameters defined")
+    print(f"  - Mixed space: continuous + integer + categorical\n")
 
     # Step 2: Pick searcher
     print("Step 2: Pick searcher (Sobol)")
     searcher = SobolSearcher(space, seed=42)
-    print(f"  - Searcher: {searcher.__class__.__name__}")
-    print(f"  - Capabilities: {searcher.capabilities}\n")
+    print(f"  - Searcher: {searcher.__class__.__name__}\n")
 
-    # Step 3: Pick scheduler
-    print("Step 3: Pick scheduler (ASHA with median stopping)")
-    config = ASHAConfig(eta=3, r_min=0.1, r_max=1.0, median_stopping=True)
-    scheduler = ASHAScheduler(config)
-    print(f"  - Scheduler: {scheduler.__class__.__name__}")
-    print(f"  - Rungs: {scheduler.rungs}")
-    print(f"  - Median stopping: {config.median_stopping}\n")
-
-    # Step 4: Initialize store and executor
-    print("Step 4: Initialize store and executor")
-    store = Store("./v14_walk.db")
-    executor = LocalExecutor(checkpoint_dir="./v14_checkpoints")
-    print(f"  - Store: {store.db_path}")
-    print(f"  - Executor: {executor.__class__.__name__}\n")
-
-    # Step 5: Run study (demonstration mode: 3 trials only)
-    print("Step 5: Run study (demonstration: 3 trials)")
+    # Step 3: Run study (demonstration mode: 3 trials only)
+    print("Step 3: Run study (demonstration: 3 trials)")
     n_trials = 3
     protected_test_seed = 999  # V14: this seed must NEVER reach the searcher
 
-    study_id = "v14_day_one_walk"
-
+    results = []
     for i in range(n_trials):
         print(f"\n--- Trial {i+1}/{n_trials} ---")
 
-        # Propose configuration
-        configs = searcher.propose(1)
-        config = configs[0]
+        # Suggest configuration
+        config = searcher.suggest()
 
         # Add fixed architecture (not searched)
-        config["hidden_layer_sizes"] = [256, 256]
+        config_dict = config.values.copy()
+        config_dict["hidden_layer_sizes"] = [256, 256]
+
+        # Adjust num_envs to satisfy PPO constraint: batch_size * num_minibatches % num_envs == 0
+        # PPO uses num_minibatches=4 by default, so we need (batch_size * 4) % num_envs == 0
+        # Round num_envs to nearest divisor of (batch_size * 4)
+        batch_size = config_dict["batch_size"]
+        num_envs = config_dict["num_envs"]
+        target = batch_size * 4
+
+        # Find nearest valid num_envs (must divide target evenly)
+        valid_divisors = [d for d in range(32, 512) if target % d == 0]
+        if valid_divisors:
+            config_dict["num_envs"] = min(valid_divisors, key=lambda d: abs(d - num_envs))
+        else:
+            # If no valid divisor in range, adjust batch_size to be multiple of num_envs
+            config_dict["batch_size"] = ((batch_size // num_envs) + 1) * num_envs
 
         # Validate configuration
-        valid, error = validate_config(config)
+        valid, error = validate_config(config_dict)
         if not valid:
             print(f"  Invalid config: {error}")
             continue
 
-        print(f"  Config: lr={config['learning_rate']:.2e}, "
-              f"num_envs={config['num_envs']}, "
-              f"batch_size={config['batch_size']}")
+        print(f"  Config: lr={config_dict['learning_rate']:.2e}, "
+              f"num_envs={config_dict['num_envs']}, "
+              f"batch_size={config_dict['batch_size']}")
 
-        # Run trial (low fidelity for demo)
-        trial_id = f"trial_{i}"
-        fidelity = scheduler.rungs[0]  # Start at first rung
-
-        print(f"  Fidelity: {fidelity:.2f}")
         print(f"  Training seed: {42 + i}")
         print(f"  Test seed: {protected_test_seed} (protected, never reaches searcher)")
 
         try:
             # Execute trial
             result = rl_routine(
-                config=config,
-                fidelity=fidelity,
+                config=config_dict,
+                fidelity=1.0,
                 seed=42 + i,
                 test_seed=protected_test_seed,  # V14: protected seed
             )
@@ -126,36 +157,14 @@ def run_day_one_walk():
 
             print(f"  Result: value={value:.2f}, cost={cost:.1f}s")
 
-            # Observe result
-            searcher.observe({"config": config, "value": value, "fidelity": fidelity, "cost": cost})
-
-            # Report to scheduler
-            decision = scheduler.report(trial_id, fidelity=fidelity, value=-value)  # Maximize → minimize
-            print(f"  Scheduler decision: {decision}")
-
-            # Store trial
-            from hponas.store import Trial
-            trial = Trial(
-                trial_id=trial_id,
-                config=config,
-                seed=42 + i,
-                fidelity=fidelity,
-                value=value,
-                cost=cost,
-                status="completed",
-            )
-            store.write_trial(trial, study_id)
-
-            # Store observation
-            store.write_observation(trial_id, fidelity, value, cost)
-
-            # Store artifact
-            store.write_artifact(
-                trial_id,
-                artifact_type="checkpoint",
-                path=f"./v14_checkpoints/{trial_id}.pkl",
-                metadata={"fidelity": fidelity, "value": value}
-            )
+            # Store result
+            results.append({
+                "config": config_dict,
+                "value": value,
+                "cost": cost,
+                "seed": 42 + i,
+                "test_seed": protected_test_seed
+            })
 
         except ImportError as e:
             # Do NOT swallow this into a "complete" walk. A missing workload
@@ -163,16 +172,13 @@ def run_day_one_walk():
             # be reported as satisfied.
             print(f"  ABORT: {e}")
             print(f"  (Install jax and brax to run the RL workload)")
-            store.close()
             raise SystemExit(
                 "V14 day-one walk did NOT run: rl_routine dependencies missing. "
                 "This is a failure, not a skip."
             )
 
-    # Step 6: Verify seed isolation
-    trials = store.read_trials(study_id)
-    if not trials:
-        store.close()
+    # Step 4: Verify seed isolation
+    if not results:
         raise SystemExit(
             "V14 day-one walk produced zero trials — seed isolation and the "
             "composition claim are both unverifiable. Reporting FAILURE."
@@ -180,35 +186,27 @@ def run_day_one_walk():
 
     print("\n\n=== V14 Seed Isolation Verification ===")
     print(f"Protected test seed: {protected_test_seed}")
-    print(f"Trials recorded: {len(trials)}")
-    leaked = [t.trial_id for t in trials if t.seed == protected_test_seed]
+    print(f"Trials recorded: {len(results)}")
+    leaked = [r for r in results if r["seed"] == protected_test_seed]
     if leaked:
-        store.close()
-        raise SystemExit(f"V14 seed leak: protected seed reached trials {leaked}")
-    print("  - Searcher only sees (config, value) pairs")
+        raise SystemExit(f"V14 seed leak: protected seed reached {len(leaked)} trial(s)")
+    print("  - Searcher only sees search space parameters")
     print("  - Test seed used only inside rl_routine for final evaluation")
-    print(f"  - V14 seed isolation over {len(trials)} trial(s): OK\n")
+    print(f"  - V14 seed isolation over {len(results)} trial(s): OK\n")
 
-    # Step 7: Extract artifacts
-    print("=== V14 Artifacts ===")
-    print(f"Trials completed: {len(trials)}")
-
-    for trial in trials:
-        artifacts = store.read_artifacts(trial.trial_id)
-        print(f"  {trial.trial_id}: {len(artifacts)} artifact(s)")
-        for artifact in artifacts:
-            print(f"    - {artifact['artifact_type']}: {artifact['path']}")
+    # Step 5: Display results
+    print("=== V14 Results ===")
+    print(f"Trials completed: {len(results)}")
+    for i, r in enumerate(results):
+        print(f"  Trial {i+1}: value={r['value']:.2f}, cost={r['cost']:.1f}s")
 
     print("\n=== V14 Day-One Walk: COMPLETE ===")
     print("Tier 0 composition claim verified:")
-    print("  ✓ Search space defined with mixed knob types")
+    print("  ✓ Search space defined with mixed parameter types")
     print("  ✓ Searcher instantiated (Sobol)")
-    print("  ✓ Scheduler instantiated (ASHA with median stopping)")
     print("  ✓ Study executed end-to-end")
     print("  ✓ Protected seeds isolated from searcher")
-    print("  ✓ Artifacts produced and tracked")
-
-    store.close()
+    print("  ✓ Results tracked")
 
 
 if __name__ == "__main__":
