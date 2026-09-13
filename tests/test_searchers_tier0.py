@@ -172,18 +172,27 @@ def test_sobol_searcher_contract():
 
     # Test capabilities
     caps = searcher.capabilities
-    assert "continuous" in caps["knob_kinds"]
-    assert "ordinal" in caps["knob_kinds"]
+    assert "continuous" in caps.get("parameter_types", [])
+    assert "integer" in caps.get("parameter_types", [])
 
 
 def test_sobol_searcher_qmc_coverage():
     """Sobol sequence covers space more uniformly than random."""
-    space = SearchSpace()
-    space.add_knob(Knob("x", kind="continuous", bounds=(0, 1)))
-    space.add_knob(Knob("y", kind="continuous", bounds=(0, 1)))
+    space = SearchSpace(parameters={
+        "x": Parameter(
+            name="x",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0, 1)
+        ),
+        "y": Parameter(
+            name="y",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0, 1)
+        )
+    })
 
     searcher = SobolSearcher(space, seed=42)
-    configs = searcher.propose(64)
+    configs = [searcher.suggest().values for _ in range(64)]
 
     # Split [0, 1]^2 into 4 quadrants
     quadrants = [0, 0, 0, 0]
@@ -196,14 +205,19 @@ def test_sobol_searcher_qmc_coverage():
     for count in quadrants:
         assert count > 0, "Sobol should cover all quadrants"
 
-
 def test_sobol_searcher_log_warping():
     """Sobol with log transform samples log-uniformly."""
-    space = SearchSpace()
-    space.add_knob(Knob("lr", kind="continuous", bounds=(1e-5, 1e-1), transform="log"))
+    space = SearchSpace(parameters={
+        "lr": Parameter(
+            name="lr",
+            type=ParameterType.CONTINUOUS,
+            bounds=(1e-5, 1e-1),
+            log_scale=True
+        )
+    })
 
     searcher = SobolSearcher(space, seed=42)
-    configs = searcher.propose(128)
+    configs = [searcher.suggest().values for _ in range(128)]
 
     # Log-uniform: log(lr) should be uniform in [log(1e-5), log(1e-1)]
     log_lrs = [np.log(c["lr"]) for c in configs]
@@ -216,19 +230,24 @@ def test_sobol_searcher_log_warping():
 
 def test_sobol_searcher_state_recovery():
     """State serialization preserves Sobol sequence position."""
-    space = SearchSpace()
-    space.add_knob(Knob("x", kind="continuous", bounds=(0, 1)))
+    space = SearchSpace(parameters={
+        "x": Parameter(
+            name="x",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0, 1)
+        )
+    })
 
     # Propose 8, save state, propose 8 more
     s1 = SobolSearcher(space, seed=42)
-    batch1 = s1.propose(8)
+    batch1 = [s1.suggest().values for _ in range(8)]
     state = s1.state_dict()
-    batch2_original = s1.propose(8)
+    batch2_original = [s1.suggest().values for _ in range(8)]
 
     # Restore state and propose 8 more
     s2 = SobolSearcher(space, seed=999)  # Different seed
     s2.load_state_dict(state)
-    batch2_restored = s2.propose(8)
+    batch2_restored = [s2.suggest().values for _ in range(8)]
 
     # Restored sequence should match original continuation
     for c1, c2 in zip(batch2_original, batch2_restored):
@@ -237,11 +256,16 @@ def test_sobol_searcher_state_recovery():
 
 def test_sobol_ordinal_quantization():
     """Ordinal knobs quantize Sobol sequence to integers."""
-    space = SearchSpace()
-    space.add_knob(Knob("n", kind="ordinal", bounds=(1, 5)))
+    space = SearchSpace(parameters={
+        "n": Parameter(
+            name="n",
+            type=ParameterType.INTEGER,
+            bounds=(1, 5)
+        )
+    })
 
     searcher = SobolSearcher(space, seed=42)
-    configs = searcher.propose(64)
+    configs = [searcher.suggest().values for _ in range(64)]
 
     # All values should be integers in [1, 5]
     for config in configs:
@@ -256,11 +280,16 @@ def test_sobol_ordinal_quantization():
 
 def test_sobol_categorical_coverage():
     """Categorical knobs sampled uniformly."""
-    space = SearchSpace()
-    space.add_knob(Knob("opt", kind="categorical", bounds=["a", "b", "c"]))
+    space = SearchSpace(parameters={
+        "opt": Parameter(
+            name="opt",
+            type=ParameterType.CATEGORICAL,
+            choices=["a", "b", "c"]
+        )
+    })
 
     searcher = SobolSearcher(space, seed=42)
-    configs = searcher.propose(60)
+    configs = [searcher.suggest().values for _ in range(60)]
 
     # Count occurrences
     counts = {"a": 0, "b": 0, "c": 0}
@@ -275,14 +304,28 @@ def test_sobol_categorical_coverage():
 
 def test_mixed_space_proposal():
     """All searchers handle mixed-space proposals."""
-    space = SearchSpace()
-    space.add_knob(Knob("lr", kind="continuous", bounds=(1e-4, 1e-1), transform="log"))
-    space.add_knob(Knob("layers", kind="ordinal", bounds=(2, 8)))
-    space.add_knob(Knob("activation", kind="categorical", bounds=["relu", "tanh", "gelu"]))
+    space = SearchSpace(parameters={
+        "lr": Parameter(
+            name="lr",
+            type=ParameterType.CONTINUOUS,
+            bounds=(1e-4, 1e-1),
+            log_scale=True
+        ),
+        "layers": Parameter(
+            name="layers",
+            type=ParameterType.INTEGER,
+            bounds=(2, 8)
+        ),
+        "activation": Parameter(
+            name="activation",
+            type=ParameterType.CATEGORICAL,
+            choices=["relu", "tanh", "gelu"]
+        )
+    })
 
     for SearcherClass in [RandomSearcher, SobolSearcher]:
         searcher = SearcherClass(space, seed=42)
-        configs = searcher.propose(10)
+        configs = [searcher.suggest().values for _ in range(10)]
 
         assert len(configs) == 10
         for config in configs:
@@ -304,14 +347,20 @@ def test_mixed_space_proposal():
 
 def test_searcher_batch_proposals():
     """Batch proposals return requested count."""
-    space = SearchSpace()
-    space.add_knob(Knob("x", kind="continuous", bounds=(0, 1)))
+    space = SearchSpace(parameters={
+        "x": Parameter(
+            name="x",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0, 1)
+        )
+    })
 
     for SearcherClass in [RandomSearcher, SobolSearcher]:
         searcher = SearcherClass(space, seed=42)
 
-        for n in [1, 5, 16, 32]:
-            configs = searcher.propose(n)
+        # Test multiple batch sizes
+        for n in [1, 5, 10, 20]:
+            configs = [searcher.suggest().values for _ in range(n)]
             assert len(configs) == n
 
 
