@@ -7,8 +7,7 @@ Tier 1: MO fallback method, no BoTorch dependency.
 import pytest
 import numpy as np
 
-from hponas import SearchSpace
-from hponas.space import Knob
+from hponas.space import SearchSpace, Knob
 from hponas.searchers_mo import ChebyshevSearcher
 
 
