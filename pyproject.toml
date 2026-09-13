@@ -186,7 +186,6 @@ module = [
 ignore_missing_imports = true
 
 [tool.mutmut]
-paths_to_mutate = "hponas/"
+source_paths = ["hponas/"]
 backup = false
 runner = "pytest -x tests/unit/"
-tests_dir = "tests/unit/"
