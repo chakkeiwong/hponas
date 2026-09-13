@@ -27,6 +27,24 @@ class BaseSearcher(ABC):
         self.history: List[Result] = []
         self.trials: Dict[str, Config] = {}  # Maps trial_id to config
 
+    @property
+    def capabilities(self) -> Dict[str, Any]:
+        """Get searcher capabilities.
+
+        Returns:
+            Dict describing what the searcher supports
+        """
+        # Infer from search space what parameter types are supported
+        param_types = set()
+        for param in self.search_space.parameters.values():
+            param_types.add(param.type.value)
+
+        return {
+            "parameter_types": list(param_types),
+            "supports_fidelity": False,
+            "supports_constraints": False,
+        }
+
     @abstractmethod
     def suggest(self) -> Config:
         """Suggest next configuration to evaluate.
@@ -69,6 +87,22 @@ class BaseSearcher(ABC):
         self.trials = {
             tid: Config(**cfg) for tid, cfg in state.get("trials", {}).items()
         }
+
+    def state_dict(self) -> Dict[str, Any]:
+        """Get searcher state (alias for get_state).
+
+        Returns:
+            Dict containing searcher state
+        """
+        return self.get_state()
+
+    def load_state_dict(self, state: Dict[str, Any]) -> None:
+        """Restore searcher state (alias for set_state).
+
+        Args:
+            state: Searcher state dictionary
+        """
+        self.set_state(state)
 
     def get_best(self, maximize: bool = True) -> Optional[Result]:
         """Get best result seen so far.

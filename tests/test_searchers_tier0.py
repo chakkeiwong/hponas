@@ -63,7 +63,7 @@ def test_random_searcher_contract():
 
     # Test capabilities
     caps = searcher.capabilities
-    assert "continuous" in caps or "CONTINUOUS" in str(caps)
+    assert "continuous" in caps.get("parameter_types", []) or "CONTINUOUS" in str(caps.get("parameter_types", []))
 
 
 def test_random_searcher_reproducibility():
