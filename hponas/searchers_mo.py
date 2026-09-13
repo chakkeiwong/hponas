@@ -364,7 +364,9 @@ class ChebyshevSearcher(Searcher):
     def _init_base_searcher(self):
         """Initialize base single-objective searcher."""
         if self.base_searcher_type == "random":
-            from .searchers import RandomSearcher
+            # Legacy propose()-based interface: must come from legacy_searchers,
+            # not the new hponas.searchers package (which is suggest()-based).
+            from .legacy_searchers import RandomSearcher
             self.base_searcher = RandomSearcher(self.space, seed=self.seed)
         elif self.base_searcher_type == "gp":
             from .searchers_gp import GPqLogEISearcher
