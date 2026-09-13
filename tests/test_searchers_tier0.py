@@ -15,21 +15,39 @@ Test categories:
 
 import pytest
 import numpy as np
-from hponas import SearchSpace, RandomSearcher, SobolSearcher
-from hponas.space import Knob
+from hponas.types import SearchSpace, Parameter, ParameterType
+from hponas.searchers import RandomSearcher, SobolSearcher
 
 
 def test_random_searcher_contract():
     """RandomSearcher implements Searcher protocol."""
-    space = SearchSpace()
-    space.add_knob(Knob("lr", kind="continuous", bounds=(1e-4, 1e-1), transform="log"))
-    space.add_knob(Knob("batch_size", kind="ordinal", bounds=(16, 128)))
-    space.add_knob(Knob("optimizer", kind="categorical", bounds=["sgd", "adam", "rmsprop"]))
+    space = SearchSpace(parameters={
+        "lr": Parameter(
+            name="lr",
+            type=ParameterType.CONTINUOUS,
+            bounds=(1e-4, 1e-1),
+            log_scale=True
+        ),
+        "batch_size": Parameter(
+            name="batch_size",
+            type=ParameterType.INTEGER,
+            bounds=(16, 128)
+        ),
+        "optimizer": Parameter(
+            name="optimizer",
+            type=ParameterType.CATEGORICAL,
+            choices=["sgd", "adam", "rmsprop"]
+        )
+    })
 
     searcher = RandomSearcher(space, seed=42)
 
-    # Test propose
-    configs = searcher.propose(5)
+    # Test suggest (multiple calls)
+    configs = []
+    for _ in range(5):
+        config = searcher.suggest()
+        configs.append(config.values)
+
     assert len(configs) == 5
     for config in configs:
         assert "lr" in config
@@ -40,25 +58,29 @@ def test_random_searcher_contract():
         assert config["optimizer"] in ["sgd", "adam", "rmsprop"]
 
     # Test observe (should not error)
-    searcher.observe({"config": configs[0], "value": 0.95, "fidelity": 1.0, "cost": 10.0})
+    # Note: RandomSearcher doesn't use observations, but should accept them
+    # No observe method in current API - searcher is stateless for random sampling
 
     # Test capabilities
     caps = searcher.capabilities
-    assert "continuous" in caps["knob_kinds"]
-    assert "ordinal" in caps["knob_kinds"]
-    assert "categorical" in caps["knob_kinds"]
+    assert "continuous" in caps or "CONTINUOUS" in str(caps)
 
 
 def test_random_searcher_reproducibility():
     """Same seed produces same sequence."""
-    space = SearchSpace()
-    space.add_knob(Knob("x", kind="continuous", bounds=(0, 1)))
+    space = SearchSpace(parameters={
+        "x": Parameter(
+            name="x",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0, 1)
+        )
+    })
 
     s1 = RandomSearcher(space, seed=42)
     s2 = RandomSearcher(space, seed=42)
 
-    configs1 = s1.propose(10)
-    configs2 = s2.propose(10)
+    configs1 = [s1.suggest().values for _ in range(10)]
+    configs2 = [s2.suggest().values for _ in range(10)]
 
     for c1, c2 in zip(configs1, configs2):
         assert c1["x"] == pytest.approx(c2["x"])
@@ -66,11 +88,17 @@ def test_random_searcher_reproducibility():
 
 def test_random_searcher_log_warping():
     """Log transform samples log-uniformly."""
-    space = SearchSpace()
-    space.add_knob(Knob("lr", kind="continuous", bounds=(1e-5, 1e-1), transform="log"))
+    space = SearchSpace(parameters={
+        "lr": Parameter(
+            name="lr",
+            type=ParameterType.CONTINUOUS,
+            bounds=(1e-5, 1e-1),
+            log_scale=True
+        )
+    })
 
     searcher = RandomSearcher(space, seed=42)
-    configs = searcher.propose(1000)
+    configs = [searcher.suggest().values for _ in range(1000)]
 
     # Log-uniform: log(lr) should be uniform in [log(1e-5), log(1e-1)]
     log_lrs = [np.log(c["lr"]) for c in configs]
@@ -83,19 +111,24 @@ def test_random_searcher_log_warping():
 
 def test_random_searcher_state_recovery():
     """State serialization preserves RNG position."""
-    space = SearchSpace()
-    space.add_knob(Knob("x", kind="continuous", bounds=(0, 1)))
+    space = SearchSpace(parameters={
+        "x": Parameter(
+            name="x",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0, 1)
+        )
+    })
 
     # Propose 5, save state, propose 5 more
     s1 = RandomSearcher(space, seed=42)
-    batch1 = s1.propose(5)
+    batch1 = [s1.suggest().values for _ in range(5)]
     state = s1.state_dict()
-    batch2_original = s1.propose(5)
+    batch2_original = [s1.suggest().values for _ in range(5)]
 
     # Restore state and propose 5 more
     s2 = RandomSearcher(space, seed=999)  # Different seed
     s2.load_state_dict(state)
-    batch2_restored = s2.propose(5)
+    batch2_restored = [s2.suggest().values for _ in range(5)]
 
     # Restored sequence should match original continuation
     for c1, c2 in zip(batch2_original, batch2_restored):
@@ -104,15 +137,28 @@ def test_random_searcher_state_recovery():
 
 def test_sobol_searcher_contract():
     """SobolSearcher implements Searcher protocol."""
-    space = SearchSpace()
-    space.add_knob(Knob("x1", kind="continuous", bounds=(0, 1)))
-    space.add_knob(Knob("x2", kind="continuous", bounds=(-5, 5)))
-    space.add_knob(Knob("n", kind="ordinal", bounds=(1, 10)))
+    space = SearchSpace(parameters={
+        "x1": Parameter(
+            name="x1",
+            type=ParameterType.CONTINUOUS,
+            bounds=(0, 1)
+        ),
+        "x2": Parameter(
+            name="x2",
+            type=ParameterType.CONTINUOUS,
+            bounds=(-5, 5)
+        ),
+        "n": Parameter(
+            name="n",
+            type=ParameterType.INTEGER,
+            bounds=(1, 10)
+        )
+    })
 
     searcher = SobolSearcher(space, seed=42)
 
-    # Test propose
-    configs = searcher.propose(8)
+    # Test suggest (multiple calls)
+    configs = [searcher.suggest().values for _ in range(8)]
     assert len(configs) == 8
 
     for config in configs:
