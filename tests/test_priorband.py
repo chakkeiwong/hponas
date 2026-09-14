@@ -8,8 +8,7 @@ Validation: V11 (prior-aware methods beat baseline when prior is good).
 import pytest
 import numpy as np
 
-from hponas import SearchSpace
-from hponas.space import Knob
+from hponas.space import SearchSpace, Knob
 from hponas.searchers_priorband import PriorBandSampler
 
 

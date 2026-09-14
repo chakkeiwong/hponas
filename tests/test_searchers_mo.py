@@ -7,8 +7,7 @@ Tier 1 validation: MO stack operational for 2-3 objectives.
 import pytest
 import numpy as np
 
-from hponas import SearchSpace
-from hponas.space import Knob
+from hponas.space import SearchSpace, Knob
 
 try:
     from hponas.searchers_mo import qLogNEHVISearcher
