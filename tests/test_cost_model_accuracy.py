@@ -5,8 +5,7 @@ Tests that CostModelGP accurately predicts trial costs and generalizes to unseen
 
 import numpy as np
 import pytest
-from hponas import SearchSpace
-from hponas.space import Knob
+from hponas.space import SearchSpace, Knob
 from hponas.searchers_cost import CostModelGP
 
 

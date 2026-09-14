@@ -5,8 +5,7 @@ Tests that EI-per-cost acquisition achieves better cost-efficiency than cost-agn
 
 import numpy as np
 import pytest
-from hponas import SearchSpace
-from hponas.space import Knob
+from hponas.space import SearchSpace, Knob
 from hponas.searchers_cost import CostAwareGPSearcher
 from hponas.searchers_gp import GPqLogEISearcher
 

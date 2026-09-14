@@ -7,8 +7,7 @@ Survey: Ch 8 roadmap-12
 import numpy as np
 import pytest
 
-from hponas import SearchSpace
-from hponas.space import Knob
+from hponas.space import SearchSpace, Knob
 from hponas.searchers_cost import (
     CostModelGP,
     linear_cooling_schedule,
