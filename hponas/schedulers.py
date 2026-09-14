@@ -170,6 +170,28 @@ class ASHAScheduler:
 
         return to_promote
 
+    def state_dict(self) -> dict[str, Any]:
+        """Serialize scheduler state for checkpointing."""
+        import copy
+        return {
+            "config": {
+                "eta": self.config.eta,
+                "r_min": self.config.r_min,
+                "r_max": self.config.r_max,
+            },
+            "rungs": copy.deepcopy(self.rungs),
+            "trial_state": copy.deepcopy(self._trial_state),
+            "rung_populations": copy.deepcopy(self._rung_populations),
+            "fidelity_history": copy.deepcopy(self._fidelity_history),
+        }
+
+    def load_state_dict(self, state: dict[str, Any]) -> None:
+        """Restore scheduler state from checkpoint."""
+        self.rungs = state["rungs"]
+        self._trial_state = state["trial_state"]
+        self._rung_populations = state["rung_populations"]
+        self._fidelity_history = state["fidelity_history"]
+
     def _fidelity_to_rung(self, fidelity: float) -> Optional[int]:
         """Map a fidelity value to its rung index (or None if not at a boundary)."""
         for i, r in enumerate(self.rungs):

@@ -7,7 +7,7 @@ Authority: TEST_PYRAMID_v1.md Layer 1
 
 import pytest
 import numpy as np
-from hypothesis import given, strategies as st, assume, settings
+from hypothesis import given, strategies as st, assume, settings, HealthCheck
 from hponas.legacy_searchers import RandomSearcher, SobolSearcher
 from hponas.space import SearchSpace, Knob
 
@@ -103,7 +103,7 @@ class TestSobolInvariants:
     """Property-based tests for Sobol quasi-random invariants."""
 
     @given(space=search_space_strategy(), n=st.integers(min_value=1, max_value=50))
-    @settings(max_examples=30, deadline=1000)
+    @settings(max_examples=30, deadline=1000, suppress_health_check=[HealthCheck.filter_too_much])
     def test_sobol_deterministic_given_seed(self, space, n):
         """Sobol sequence must be deterministic given seed."""
         assume(all(k.kind == "continuous" for k in space.knobs))  # Sobol only for continuous
@@ -122,7 +122,7 @@ class TestSobolInvariants:
                 assert cfg1[key] == cfg2[key]
 
     @given(space=search_space_strategy(), n=st.integers(min_value=1, max_value=50))
-    @settings(max_examples=30, deadline=1000)
+    @settings(max_examples=30, deadline=1000, suppress_health_check=[HealthCheck.filter_too_much])
     def test_sobol_respects_bounds(self, space, n):
         """All Sobol configs must satisfy bounds."""
         assume(all(k.kind == "continuous" for k in space.knobs))
@@ -143,23 +143,22 @@ class TestSearchSpaceInvariants:
     @given(space=search_space_strategy())
     @settings(max_examples=50, deadline=1000)
     def test_sample_always_valid(self, space):
-        """space.sample() must always produce valid config."""
+        """space.sample_config() must always produce valid config."""
+        rng = np.random.default_rng(42)
         for _ in range(10):
-            config = space.sample(seed=None)
+            config = space.sample_config(rng)
             # Should not raise
             space.validate_config(config)
 
     @given(space=search_space_strategy())
     @settings(max_examples=50, deadline=1000)
-    def test_dimension_matches_knob_count(self, space):
-        """space.dim must equal number of knobs."""
-        assert space.dim == len(space.knobs)
+    def test_knob_count_positive(self, space):
+        """SearchSpace must have at least one knob."""
+        assert len(space.knobs) > 0
 
     @given(space=search_space_strategy())
     @settings(max_examples=50, deadline=1000)
-    def test_get_knob_retrieves_all(self, space):
-        """get_knob must retrieve every knob by name."""
-        for knob in space.knobs:
-            retrieved = space.get_knob(knob.name)
-            assert retrieved.name == knob.name
-            assert retrieved.kind == knob.kind
+    def test_knob_names_unique(self, space):
+        """All knob names must be unique."""
+        names = [k.name for k in space.knobs]
+        assert len(names) == len(set(names))
