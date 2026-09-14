@@ -32,6 +32,7 @@ import pickle
 import time
 from pathlib import Path
 from typing import Any, Callable, Protocol, Optional
+from concurrent.futures import ThreadPoolExecutor, Future
 
 try:
     import ray
@@ -80,10 +81,16 @@ class LocalExecutor:
     Tier 0: real subprocess isolation with pickle serialization.
     """
 
-    def __init__(self, checkpoint_dir: str | Path):
+    def __init__(self, checkpoint_dir: str | Path, max_workers: int = 1):
         self.checkpoint_dir = Path(checkpoint_dir)
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        self.max_workers = max_workers
         self._running_trials: dict[str, dict[str, Any]] = {}
+        self._futures: dict[str, Future] = {}
+        self._executor: Optional[ThreadPoolExecutor] = None
+
+        if max_workers > 1:
+            self._executor = ThreadPoolExecutor(max_workers=max_workers)
 
     def launch(
         self,
@@ -97,22 +104,54 @@ class LocalExecutor:
 
         Returns the trial_id.
         """
-        # Spike: synchronous execution
-        start = time.time()
-        value = objective_fn(config)
-        cost = time.time() - start
+        def _run_trial():
+            start = time.time()
+            try:
+                value = objective_fn(config)
+                cost = time.time() - start
+                return {
+                    "config": config,
+                    "value": value,
+                    "cost": cost,
+                    "fidelity": fidelity,
+                    "status": "completed",
+                }
+            except Exception as e:
+                cost = time.time() - start
+                return {
+                    "config": config,
+                    "cost": cost,
+                    "fidelity": fidelity,
+                    "status": "failed",
+                    "error": f"{type(e).__name__}: {str(e)}",
+                }
 
-        self._running_trials[trial_id] = {
-            "config": config,
-            "value": value,
-            "cost": cost,
-            "fidelity": fidelity,
-            "status": "completed",
-        }
+        if self._executor is not None:
+            # Async execution with ThreadPoolExecutor
+            future = self._executor.submit(_run_trial)
+            self._futures[trial_id] = future
+            self._running_trials[trial_id] = {
+                "config": config,
+                "fidelity": fidelity,
+                "status": "running",
+            }
+        else:
+            # Synchronous execution
+            result = _run_trial()
+            self._running_trials[trial_id] = result
+
         return trial_id
 
     def get_result(self, trial_id: str) -> dict[str, Any]:
-        """Get trial result."""
+        """Get trial result. Blocks if trial is still running."""
+        # Check if trial has a pending future
+        if trial_id in self._futures:
+            future = self._futures[trial_id]
+            # Block until future completes
+            result = future.result()
+            self._running_trials[trial_id] = result
+            del self._futures[trial_id]
+
         return self._running_trials.get(trial_id, {})
 
     def checkpoint(self, trial_id: str, path: Path) -> None:

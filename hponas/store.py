@@ -89,7 +89,7 @@ class Store:
                 seed INTEGER NOT NULL,
                 fidelity REAL NOT NULL,
                 value REAL,
-                cost REAL NOT NULL,
+                cost REAL,
                 parent_trial_id TEXT,
                 status TEXT NOT NULL,
                 FOREIGN KEY(study_id) REFERENCES studies(study_id)
@@ -148,6 +148,9 @@ class Store:
 
     def write_trial(self, trial: Trial, study_id: str) -> None:
         """Write a trial record (upsert)."""
+        if trial.trial_id is None or trial.trial_id == "":
+            raise ValueError("trial_id cannot be None or empty")
+
         self._conn.execute("""
             INSERT OR REPLACE INTO trials
             (trial_id, study_id, config_json, seed, fidelity, value, cost, parent_trial_id, status)
