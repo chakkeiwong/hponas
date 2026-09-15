@@ -21,7 +21,7 @@ class TestLocalExecutor:
         with tempfile.TemporaryDirectory() as tmpdir:
             executor = LocalExecutor(checkpoint_dir=tmpdir)
 
-            assert executor.checkpoint_dir == tmpdir
+            assert executor.checkpoint_dir == Path(tmpdir)
 
     def test_launch_runs_objective(self):
         """launch() executes objective function."""
