@@ -78,3 +78,4 @@ hpo-survey/.localresources/
 # Claude session state (local only, never commit)
 .claude/
 
+mutants/
