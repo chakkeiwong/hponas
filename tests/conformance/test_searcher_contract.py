@@ -17,28 +17,26 @@ import pytest
 
 from hponas.searchers.gp_searcher import GPSearcher
 from hponas.searchers.random_searcher import RandomSearcher
-from hponas.types import Config, Trial, Result, SearchSpace, Parameter, ParameterType
+from hponas.types import Config, Trial, Result, Parameter, ParameterType
+from hponas.types import SearchSpace as TypedSearchSpace
+from hponas.space import SearchSpace, Knob
 
 
 def _simple_space():
     """2D search space for conformance testing."""
-    return SearchSpace(
-        parameters={
-            "x": Parameter(name="x", type=ParameterType.CONTINUOUS, bounds=(0.0, 1.0)),
-            "y": Parameter(name="y", type=ParameterType.CONTINUOUS, bounds=(0.0, 1.0)),
-        }
-    )
+    space = SearchSpace()
+    space.add_knob(Knob(name="x", kind="continuous", bounds=(0.0, 1.0)))
+    space.add_knob(Knob(name="y", kind="continuous", bounds=(0.0, 1.0)))
+    return space
 
 
 def _mixed_space():
     """Mixed search space with continuous, discrete, categorical."""
-    return SearchSpace(
-        parameters={
-            "lr": Parameter(name="lr", type=ParameterType.CONTINUOUS, bounds=(1e-5, 1e-1), log_scale=True),
-            "batch_size": Parameter(name="batch_size", type=ParameterType.DISCRETE, choices=[32, 64, 128]),
-            "optimizer": Parameter(name="optimizer", type=ParameterType.CATEGORICAL, choices=["adam", "sgd"]),
-        }
-    )
+    space = SearchSpace()
+    space.add_knob(Knob(name="lr", kind="continuous", bounds=(1e-5, 1e-1), transform="log"))
+    space.add_knob(Knob(name="batch_size", kind="categorical", bounds=[32, 64, 128]))
+    space.add_knob(Knob(name="optimizer", kind="categorical", bounds=["adam", "sgd"]))
+    return space
 
 
 class TestSearcherContractSuggest:
@@ -414,7 +412,7 @@ class TestSearcherContractEdgeCases:
 
     def test_single_knob_space(self):
         """Test behavior with single-parameter space."""
-        space = SearchSpace(
+        space = TypedSearchSpace(
             parameters={
                 "x": Parameter(name="x", type=ParameterType.CONTINUOUS, bounds=(0.0, 1.0))
             }

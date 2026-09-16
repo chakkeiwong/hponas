@@ -75,12 +75,12 @@ class GPSearcher(BaseSearcher):
 
         # Initial random phase
         if len(self.history) < self.initial_random_samples:
-            return self.search_space.sample_random(seed=self.rng.randint(0, 2**31))
+            return self._sample_random()
 
         # Get valid observations
         valid_results = [r for r in self.history if r.is_valid()]
         if len(valid_results) < self.initial_random_samples:
-            return self.search_space.sample_random(seed=self.rng.randint(0, 2**31))
+            return self._sample_random()
 
         # Convert to tensors
         X_train, Y_train = self._prepare_training_data(valid_results)
@@ -106,6 +106,23 @@ class GPSearcher(BaseSearcher):
         # Convert back to config
         config = self._tensor_to_config(candidate[0])
         return config
+
+    def _sample_random(self) -> Config:
+        """Sample random configuration, supporting both SearchSpace APIs.
+
+        Returns:
+            Random configuration from search space
+        """
+        # Support both hponas.types.SearchSpace and hponas.space.SearchSpace
+        if hasattr(self.search_space, 'sample_random'):
+            # Old API: hponas.types.SearchSpace
+            return self.search_space.sample_random(seed=self.rng.randint(0, 2**31))
+        elif hasattr(self.search_space, 'sample_config'):
+            # New API: hponas.space.SearchSpace
+            config_dict = self.search_space.sample_config(rng=self.rng)
+            return Config(values=config_dict)
+        else:
+            raise TypeError(f"SearchSpace must have either sample_random() or sample_config() method")
 
     def _prepare_training_data(self, results: list) -> tuple:
         """Convert results to training tensors.
@@ -149,19 +166,38 @@ class GPSearcher(BaseSearcher):
             Tensor of shape (d,)
         """
         values = []
-        for name, param in self.search_space.parameters.items():
-            value = config[name]
-            # Normalize to [0, 1]
-            if param.type.value in ["continuous", "integer"]:
-                low, high = param.bounds
-                if param.log_scale:
-                    normalized = (np.log(value) - np.log(low)) / (np.log(high) - np.log(low))
+
+        # Support both APIs
+        if hasattr(self.search_space, 'parameters'):
+            # Old API: hponas.types.SearchSpace
+            for name, param in self.search_space.parameters.items():
+                value = config[name]
+                # Normalize to [0, 1]
+                if param.type.value in ["continuous", "integer"]:
+                    low, high = param.bounds
+                    if param.log_scale:
+                        normalized = (np.log(value) - np.log(low)) / (np.log(high) - np.log(low))
+                    else:
+                        normalized = (value - low) / (high - low)
                 else:
-                    normalized = (value - low) / (high - low)
-            else:
-                # Categorical: one-hot encoding (simplified for now)
-                normalized = param.choices.index(value) / len(param.choices)
-            values.append(normalized)
+                    # Categorical: one-hot encoding (simplified for now)
+                    normalized = param.choices.index(value) / len(param.choices)
+                values.append(normalized)
+        else:
+            # New API: hponas.space.SearchSpace
+            for knob in self.search_space.knobs:
+                value = config[knob.name]
+                # Normalize to [0, 1]
+                if knob.kind in ["continuous", "integer"]:
+                    low, high = knob.bounds
+                    if knob.transform == "log":
+                        normalized = (np.log(value) - np.log(low)) / (np.log(high) - np.log(low))
+                    else:
+                        normalized = (value - low) / (high - low)
+                else:
+                    # Categorical: one-hot encoding (simplified for now)
+                    normalized = knob.bounds.index(value) / len(knob.bounds)
+                values.append(normalized)
 
         return torch.tensor(values, dtype=torch.float64)
 
@@ -177,25 +213,49 @@ class GPSearcher(BaseSearcher):
         values = {}
         tensor_np = tensor.detach().cpu().numpy()
 
-        for i, (name, param) in enumerate(self.search_space.parameters.items()):
-            normalized = tensor_np[i]
+        # Support both APIs
+        if hasattr(self.search_space, 'parameters'):
+            # Old API: hponas.types.SearchSpace
+            for i, (name, param) in enumerate(self.search_space.parameters.items()):
+                normalized = tensor_np[i]
 
-            if param.type.value in ["continuous", "integer"]:
-                low, high = param.bounds
-                if param.log_scale:
-                    value = np.exp(np.log(low) + normalized * (np.log(high) - np.log(low)))
+                if param.type.value in ["continuous", "integer"]:
+                    low, high = param.bounds
+                    if param.log_scale:
+                        value = np.exp(np.log(low) + normalized * (np.log(high) - np.log(low)))
+                    else:
+                        value = low + normalized * (high - low)
+
+                    if param.type.value == "integer":
+                        value = int(np.round(value))
                 else:
-                    value = low + normalized * (high - low)
+                    # Categorical: decode from normalized value
+                    idx = int(np.round(normalized * len(param.choices)))
+                    idx = np.clip(idx, 0, len(param.choices) - 1)
+                    value = param.choices[idx]
 
-                if param.type.value == "integer":
-                    value = int(np.round(value))
-            else:
-                # Categorical: decode from normalized value
-                idx = int(np.round(normalized * len(param.choices)))
-                idx = np.clip(idx, 0, len(param.choices) - 1)
-                value = param.choices[idx]
+                values[name] = value
+        else:
+            # New API: hponas.space.SearchSpace
+            for i, knob in enumerate(self.search_space.knobs):
+                normalized = tensor_np[i]
 
-            values[name] = value
+                if knob.kind in ["continuous", "integer"]:
+                    low, high = knob.bounds
+                    if knob.transform == "log":
+                        value = np.exp(np.log(low) + normalized * (np.log(high) - np.log(low)))
+                    else:
+                        value = low + normalized * (high - low)
+
+                    if knob.kind == "integer":
+                        value = int(np.round(value))
+                else:
+                    # Categorical: decode from normalized value
+                    idx = int(np.round(normalized * len(knob.bounds)))
+                    idx = np.clip(idx, 0, len(knob.bounds) - 1)
+                    value = knob.bounds[idx]
+
+                values[knob.name] = value
 
         return Config(values=values)
 
@@ -205,7 +265,14 @@ class GPSearcher(BaseSearcher):
         Returns:
             Bounds tensor of shape (2, d)
         """
-        d = self.search_space.dim()
+        # Support both APIs
+        if hasattr(self.search_space, 'dim'):
+            # Old API: hponas.types.SearchSpace
+            d = self.search_space.dim()
+        else:
+            # New API: hponas.space.SearchSpace
+            d = len(self.search_space.knobs)
+
         return torch.tensor([[0.0] * d, [1.0] * d], dtype=torch.float64)
 
     def get_state(self) -> Dict[str, Any]:

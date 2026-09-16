@@ -58,7 +58,7 @@ markers = [
 ]
 
 [tool.mutmut]
-paths = [
+source_paths = [
     "hponas/searchers/",
     "hponas/executors/",
     "hponas/legacy_searchers.py",
