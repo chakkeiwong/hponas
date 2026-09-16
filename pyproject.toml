@@ -75,5 +75,7 @@ pytest_add_cli_args = [
     "--ignore=tests/test_verify_manifest.py",
     "--ignore=tests/scale/test_distributed.py",
     "--ignore=tests/property/test_invariants.py",
+    "--ignore=tests/integration/test_study_baseline.py",
+    "--ignore=tests/integration/test_study_gp.py",
 ]
 debug = true

@@ -16,7 +16,7 @@ import numpy as np
 import pytest
 
 from hponas.searchers.gp_searcher import GPSearcher
-from hponas.searchers.random_searcher import RandomSearcher
+from hponas.searchers.random_searcher import RandomSearcher, SobolSearcher
 from hponas.types import Config, Trial, Result, Parameter, ParameterType
 from hponas.types import SearchSpace as TypedSearchSpace
 from hponas.space import SearchSpace, Knob
@@ -466,6 +466,141 @@ class TestSearcherContractRandomBaseline:
         # Should be JSON-serializable
         json.dumps(state)
 
+    def test_random_state_deserialization_produces_identical_sequence(self):
+        """Test that deserializing state produces identical subsequent suggestions."""
+        space = _simple_space()
+
+        # Original sequence
+        searcher1 = RandomSearcher(space, seed=42)
+        _ = [searcher1.suggest() for _ in range(3)]  # Generate 3 configs
+        state = searcher1.get_state()
+        next_configs_1 = [searcher1.suggest() for _ in range(5)]  # Next 5
+
+        # Restored sequence
+        searcher2 = RandomSearcher(space, seed=999)  # Different seed initially
+        searcher2.set_state(state)
+        next_configs_2 = [searcher2.suggest() for _ in range(5)]  # Next 5 after restore
+
+        # Verify identical sequences after restoration
+        for c1, c2 in zip(next_configs_1, next_configs_2):
+            assert abs(c1.values["x"] - c2.values["x"]) < 1e-9
+            assert abs(c1.values["y"] - c2.values["y"]) < 1e-9
+
+
+class TestSearcherContractSobolBaseline:
+    """Test SobolSearcher satisfies contract (quasi-random baseline)."""
+
+    def test_sobol_suggest_valid(self):
+        """Test SobolSearcher suggest() returns valid configs."""
+        space = _simple_space()
+        searcher = SobolSearcher(space, seed=42)
+
+        config = searcher.suggest()
+
+        assert isinstance(config, Config)
+        assert 0.0 <= config.values["x"] <= 1.0
+        assert 0.0 <= config.values["y"] <= 1.0
+
+    def test_sobol_deterministic(self):
+        """Test SobolSearcher is deterministic with seed."""
+        space = _simple_space()
+
+        searcher1 = SobolSearcher(space, seed=42, scramble=True)
+        searcher2 = SobolSearcher(space, seed=42, scramble=True)
+
+        configs1 = [searcher1.suggest() for _ in range(5)]
+        configs2 = [searcher2.suggest() for _ in range(5)]
+
+        for c1, c2 in zip(configs1, configs2):
+            assert abs(c1.values["x"] - c2.values["x"]) < 1e-9
+            assert abs(c1.values["y"] - c2.values["y"]) < 1e-9
+
+    def test_sobol_bounds_continuous(self):
+        """Test SobolSearcher respects continuous bounds strictly."""
+        space = _simple_space()
+        searcher = SobolSearcher(space, seed=42)
+
+        # Sample many configs to test edge cases
+        for _ in range(100):
+            config = searcher.suggest()
+            assert 0.0 <= config.values["x"] <= 1.0, f"x={config.values['x']} out of bounds"
+            assert 0.0 <= config.values["y"] <= 1.0, f"y={config.values['y']} out of bounds"
+
+    def test_sobol_bounds_log_scale(self):
+        """Test SobolSearcher respects log-scale bounds."""
+        space = SearchSpace()
+        space.add_knob(Knob(name="lr", kind="continuous", bounds=(1e-5, 1e-1), transform="log"))
+        searcher = SobolSearcher(space, seed=42)
+
+        for _ in range(50):
+            config = searcher.suggest()
+            assert 1e-5 <= config.values["lr"] <= 1e-1, f"lr={config.values['lr']} out of bounds"
+
+    def test_sobol_categorical_edge_case(self):
+        """Test SobolSearcher handles u=1.0 edge case for categorical."""
+        space = SearchSpace()
+        space.add_knob(Knob(name="opt", kind="categorical", bounds=["adam", "sgd", "rmsprop"]))
+        searcher = SobolSearcher(space, seed=42)
+
+        # Generate many samples to hit edge cases
+        for _ in range(100):
+            config = searcher.suggest()
+            assert config.values["opt"] in ["adam", "sgd", "rmsprop"]
+
+    def test_sobol_state_serialization(self):
+        """Test SobolSearcher state is JSON-serializable."""
+        space = _simple_space()
+        searcher = SobolSearcher(space, seed=42)
+
+        for _ in range(3):
+            searcher.suggest()
+
+        state = searcher.get_state()
+        json.dumps(state)  # Should not raise
+
+    def test_sobol_state_deserialization_produces_identical_sequence(self):
+        """Test that deserializing SobolSearcher state produces identical suggestions."""
+        space = _simple_space()
+
+        # Original sequence
+        searcher1 = SobolSearcher(space, seed=42)
+        _ = [searcher1.suggest() for _ in range(3)]
+        state = searcher1.get_state()
+        next_configs_1 = [searcher1.suggest() for _ in range(5)]
+
+        # Restored sequence
+        searcher2 = SobolSearcher(space, seed=999)
+        searcher2.set_state(state)
+        next_configs_2 = [searcher2.suggest() for _ in range(5)]
+
+        # Verify identical sequences
+        for c1, c2 in zip(next_configs_1, next_configs_2):
+            assert abs(c1.values["x"] - c2.values["x"]) < 1e-9
+            assert abs(c1.values["y"] - c2.values["y"]) < 1e-9
+
+    def test_sobol_integer_bounds(self):
+        """Test SobolSearcher respects integer bounds."""
+        space = SearchSpace()
+        space.add_knob(Knob(name="batch_size", kind="integer", bounds=(32, 256)))
+        searcher = SobolSearcher(space, seed=42)
+
+        for _ in range(50):
+            config = searcher.suggest()
+            batch_size = config.values["batch_size"]
+            assert isinstance(batch_size, (int, np.integer))
+            assert 32 <= batch_size <= 256
+
+    def test_sobol_mixed_space(self):
+        """Test SobolSearcher handles mixed space correctly."""
+        space = _mixed_space()
+        searcher = SobolSearcher(space, seed=42)
+
+        for _ in range(30):
+            config = searcher.suggest()
+            assert 1e-5 <= config.values["lr"] <= 1e-1
+            assert config.values["batch_size"] in [32, 64, 128]
+            assert config.values["optimizer"] in ["adam", "sgd"]
+
 
 # Mutation testing targets (for Week 3 V03 validation)
 # These tests are designed to kill common mutations:
@@ -474,3 +609,5 @@ class TestSearcherContractRandomBaseline:
 # - Missing NaN/inf checks
 # - Incorrect seed handling
 # - State corruption on load_state_dict
+# - Arithmetic mutations in _sobol_to_config (* vs /, + vs -)
+# - Index errors in categorical selection

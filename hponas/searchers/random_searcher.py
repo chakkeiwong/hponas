@@ -105,7 +105,16 @@ class SobolSearcher(BaseSearcher):
         """
         super().__init__(search_space, seed)
         self.scramble = scramble
-        self.d = search_space.dim()
+
+        # Support both hponas.types.SearchSpace and hponas.space.SearchSpace
+        if hasattr(search_space, 'dim'):
+            # Old API: hponas.types.SearchSpace
+            self.d = search_space.dim()
+        elif hasattr(search_space, 'knobs'):
+            # New API: hponas.space.SearchSpace
+            self.d = len(search_space.knobs)
+        else:
+            raise TypeError("SearchSpace must have either dim() method or knobs attribute")
 
         # Initialize Sobol sampler
         self.sampler = qmc.Sobol(d=self.d, scramble=scramble, seed=seed)
@@ -137,30 +146,63 @@ class SobolSearcher(BaseSearcher):
         """
         values = {}
 
-        for i, (name, param) in enumerate(self.search_space.parameters.items()):
-            u = sobol_sample[i]  # Uniform in [0, 1]
+        # Support both hponas.types.SearchSpace and hponas.space.SearchSpace
+        if hasattr(self.search_space, 'parameters'):
+            # Old API: hponas.types.SearchSpace
+            for i, (name, param) in enumerate(self.search_space.parameters.items()):
+                u = sobol_sample[i]  # Uniform in [0, 1]
 
-            if param.type.value == "continuous":
-                low, high = param.bounds
-                if param.log_scale:
-                    value = np.exp(np.log(low) + u * (np.log(high) - np.log(low)))
-                else:
-                    value = low + u * (high - low)
+                if param.type.value == "continuous":
+                    low, high = param.bounds
+                    if param.log_scale:
+                        value = np.exp(np.log(low) + u * (np.log(high) - np.log(low)))
+                    else:
+                        value = low + u * (high - low)
 
-            elif param.type.value == "integer":
-                low, high = param.bounds
-                if param.log_scale:
-                    log_val = np.log(low) + u * (np.log(high) - np.log(low))
-                    value = int(np.exp(log_val))
-                else:
-                    value = int(low + u * (high - low + 1))
+                elif param.type.value == "integer":
+                    low, high = param.bounds
+                    if param.log_scale:
+                        log_val = np.log(low) + u * (np.log(high) - np.log(low))
+                        value = int(np.exp(log_val))
+                    else:
+                        value = int(low + u * (high - low + 1))
 
-            elif param.type.value in ["discrete", "categorical"]:
-                idx = int(u * len(param.choices))
-                idx = min(idx, len(param.choices) - 1)  # Handle u=1.0 edge case
-                value = param.choices[idx]
+                elif param.type.value in ["discrete", "categorical"]:
+                    idx = int(u * len(param.choices))
+                    idx = min(idx, len(param.choices) - 1)  # Handle u=1.0 edge case
+                    value = param.choices[idx]
 
-            values[name] = value
+                values[name] = value
+
+        elif hasattr(self.search_space, 'knobs'):
+            # New API: hponas.space.SearchSpace
+            for i, knob in enumerate(self.search_space.knobs):
+                u = sobol_sample[i]  # Uniform in [0, 1]
+
+                if knob.kind == "continuous":
+                    low, high = knob.bounds
+                    if knob.transform == "log":
+                        value = np.exp(np.log(low) + u * (np.log(high) - np.log(low)))
+                    else:
+                        value = low + u * (high - low)
+
+                elif knob.kind == "integer":
+                    low, high = knob.bounds
+                    if knob.transform == "log":
+                        log_val = np.log(low) + u * (np.log(high) - np.log(low))
+                        value = int(np.exp(log_val))
+                    else:
+                        value = int(low + u * (high - low + 1))
+
+                elif knob.kind == "categorical":
+                    idx = int(u * len(knob.bounds))
+                    idx = min(idx, len(knob.bounds) - 1)  # Handle u=1.0 edge case
+                    value = knob.bounds[idx]
+
+                values[knob.name] = value
+
+        else:
+            raise TypeError("SearchSpace must have either parameters or knobs attribute")
 
         return Config(values=values)
 
