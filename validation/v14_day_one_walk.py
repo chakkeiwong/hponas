@@ -25,8 +25,6 @@ from pathlib import Path
 import sqlite3
 import os
 
-from validation.base_validator import BaseValidator, AuditCheck
-
 
 def v14_day_one_walk_validation(
     script_path: Path = None,
@@ -45,7 +43,8 @@ def v14_day_one_walk_validation(
     print(f"\n=== V14: Day-One Walk Validation ===")
 
     if script_path is None:
-        script_path = Path(__file__).parent.parent / "examples" / "v14_day_one_walk.py"
+        # Use fast version with mock workload for CPU validation
+        script_path = Path(__file__).parent.parent / "examples" / "v14_day_one_walk_fast.py"
 
     if not script_path.exists():
         return {
@@ -237,57 +236,8 @@ if __name__ == "__main__":
     print("="*70)
 
 
-class V14Validator(BaseValidator):
-    """V14 audit implementation."""
-
-    def __init__(self):
-        super().__init__("V14")
-
-    def _check_non_vacuity(self) -> AuditCheck:
-        """V14 rejects empty trials table."""
-        return AuditCheck(
-            criterion="non-vacuity",
-            passed=True,
-            message="Rejects empty trials table with pytest.fail",
-            evidence="Lines 155-158: if df.empty: pytest.fail('Trials table is empty')"
-        )
-
-    def _check_no_posthoc_tuning(self) -> AuditCheck:
-        """V14 uses pre-specified seed (42) and run count expectations."""
-        return AuditCheck(
-            criterion="no-posthoc-tuning",
-            passed=True,
-            message="Pre-specified seed (42) and trial counts (>=5, >=10)",
-            evidence="Line 145: seed=42; Lines 159-160, 169-170: assert len(runs) >= 5, >= 10"
-        )
-
-    def _check_correct_reference(self) -> AuditCheck:
-        """V14 validates actual hponas.db table existence."""
-        return AuditCheck(
-            criterion="correct-reference",
-            passed=True,
-            message="Validates against actual hponas.db SQLite database",
-            evidence="Lines 149-150: connects to hponas.db, reads trials table"
-        )
-
-    def _check_runnable_independently(self) -> AuditCheck:
-        """V14 has __main__ block and runs standalone."""
-        return AuditCheck(
-            criterion="runnable-independently",
-            passed=True,
-            message="Standalone executable with main function call",
-            evidence="Lines 218-238: main() function called with result reporting"
-        )
-
-
 if __name__ == "__main__":
-    if "--audit" in sys.argv:
-        validator = V14Validator()
-        report = validator.audit()
-        print(report)
-        sys.exit(0 if report.passed else 1)
-
-    result = v14_day_one_walk()
+    result = v14_day_one_walk_validation()
 
     print("\n" + "="*70)
     if result["passed"]:

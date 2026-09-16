@@ -60,7 +60,11 @@ class Trial:
     """Trial (single evaluation)."""
     config: Config
     trial_id: str
+    seed: Optional[int] = None
     fidelity: float = 1.0
+    value: Optional[float] = None
+    cost: float = 1.0
+    parent_trial_id: Optional[str] = None
     status: str = "pending"  # pending, running, completed, failed
 
     def to_dict(self) -> Dict[str, Any]:
@@ -68,7 +72,11 @@ class Trial:
         return {
             "config": self.config.to_dict(),
             "trial_id": self.trial_id,
+            "seed": self.seed,
             "fidelity": self.fidelity,
+            "value": self.value,
+            "cost": self.cost,
+            "parent_trial_id": self.parent_trial_id,
             "status": self.status,
         }
 
