@@ -5,8 +5,7 @@ import numpy as np
 from scipy.stats import qmc
 
 from hponas.searchers.base import BaseSearcher
-from hponas.types import Config
-from hponas.space import SearchSpace
+from hponas.types import Config, SearchSpace
 
 
 class RandomSearcher(BaseSearcher):
@@ -33,8 +32,16 @@ class RandomSearcher(BaseSearcher):
         Returns:
             Random configuration from search space
         """
-        config_dict = self.search_space.sample_config(rng=self.rng)
-        return Config(values=config_dict)
+        # Support both hponas.types.SearchSpace and hponas.space.SearchSpace
+        if hasattr(self.search_space, 'sample_random'):
+            # Old API: hponas.types.SearchSpace
+            return self.search_space.sample_random(seed=self.rng.randint(0, 2**31))
+        elif hasattr(self.search_space, 'sample_config'):
+            # New API: hponas.space.SearchSpace
+            config_dict = self.search_space.sample_config(rng=self.rng)
+            return Config(values=config_dict)
+        else:
+            raise TypeError(f"SearchSpace must have either sample_random() or sample_config() method")
 
     def get_state(self) -> Dict[str, Any]:
         """Get searcher state for serialization."""
