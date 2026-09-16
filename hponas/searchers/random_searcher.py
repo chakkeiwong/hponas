@@ -32,7 +32,8 @@ class RandomSearcher(BaseSearcher):
         Returns:
             Random configuration from search space
         """
-        return self.search_space.sample_random(seed=self.rng.randint(0, 2**31))
+        config_dict = self.search_space.sample_config(rng=self.rng)
+        return Config(values=config_dict)
 
     def get_state(self) -> Dict[str, Any]:
         """Get searcher state for serialization."""
