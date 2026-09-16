@@ -5,7 +5,8 @@ import numpy as np
 from scipy.stats import qmc
 
 from hponas.searchers.base import BaseSearcher
-from hponas.types import Config, SearchSpace
+from hponas.types import Config
+from hponas.space import SearchSpace
 
 
 class RandomSearcher(BaseSearcher):
