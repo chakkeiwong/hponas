@@ -188,8 +188,27 @@ class ASHAScheduler:
     def load_state_dict(self, state: dict[str, Any]) -> None:
         """Restore scheduler state from checkpoint."""
         self.rungs = state["rungs"]
-        self._trial_state = state["trial_state"]
-        self._rung_populations = state["rung_populations"]
+
+        # Convert trial_state: JSON converts tuples to lists, so convert back
+        self._trial_state = {}
+        for trial_id, trial_data in state["trial_state"].items():
+            # trial_data might be list or tuple depending on source
+            if isinstance(trial_data, list):
+                self._trial_state[trial_id] = tuple(trial_data)
+            else:
+                self._trial_state[trial_id] = trial_data
+
+        # Convert rung_populations: JSON converts int keys to strings and tuples to lists
+        self._rung_populations = {}
+        for rung_key, pop_list in state["rung_populations"].items():
+            # Convert string key back to int
+            rung_idx = int(rung_key) if isinstance(rung_key, str) else rung_key
+            # Convert lists back to tuples
+            self._rung_populations[rung_idx] = [
+                tuple(item) if isinstance(item, list) else item
+                for item in pop_list
+            ]
+
         self._fidelity_history = state["fidelity_history"]
 
     def _fidelity_to_rung(self, fidelity: float) -> Optional[int]:
