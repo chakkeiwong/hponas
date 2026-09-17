@@ -8,24 +8,54 @@
 
 ## Current State
 
-### Latest Full Run (2026-09-17, post-report() surgical fixes)
-- **Kill score:** TBD (running full validation)
-- **Report methods:** ASHAScheduler, PASHAScheduler, MOASHAScheduler all at full kill
-- **Known equivalent mutants:** 1 documented (MOASHAScheduler report line 470: `and` → `or`)
+### Full Mutation Run (2026-09-17, post-dead-code fixes)
+- **Total mutants:** 2243
+- **Killed:** 1356 (60.5% of total)
+- **Skipped:** 226 (10.1%)
+- **Timeout:** 373 (16.6%)
+- **Survived:** 288 (12.8%)
+- **Eligible (non-skipped, non-timeout):** 1644
+- **Kill score:** 1356 / 1644 = **82.48%**
+- **Status:** ❌ FAIL (need ≥90%, gap = 124 kills)
+
+**Progress:** +36 kills from baseline (79.76% → 82.48%)
+
+### Survivor Distribution (Top Files)
+1. SobolSearcher: 75 survivors
+2. MOASHAScheduler: 52 survivors  
+3. RandomSearcher: 44 survivors
+4. LocalExecutor: 37 survivors
+5. PASHAScheduler: 24 survivors
+6. ASHAScheduler: 23 survivors
+7. Knob: 22 survivors
+8. SearchSpace: 11 survivors
+
+### V03-R.2 Audit Results (Dead Code Search)
+**Conclusion:** No additional dead code patterns found beyond the three scheduler bugs.
+
+**288 survivors categorized:**
+1. **Error message strings** (~40): Unkillable without asserting message text (brittle)
+2. **Untested init parameters** (~60): Default values, seed propagation
+3. **Arithmetic in formulas** (~50): Sobol mapping, hypervolume calculations
+4. **Edge case logic** (~80): Boundary conditions, small populations
+5. **Equivalent mutants** (~58): Should document and skip
+
+**Strategic pivot:** Dead code audit complete. Remaining 124-kill gap requires targeted testing of arithmetic/edge cases, not more code review.
 
 ### Method-Level Results (Surgical Targeting)
 
 #### ASHAScheduler.report() — ✅ COMPLETE
-- 20 mutants → 18 killed, 2 equivalent/documented
-- Equivalent: mutation 5 (`n_promote = None` same as `n_promote = n_pop` in slice), mutation 18 (return literal swap equivalent)
+- 41 mutants → 41/41 killed (100%)
+- Previously: 35/41 survivors; fixed by removing dead code at lines 108-112, 125
 
 #### PASHAScheduler.report() — ✅ COMPLETE  
-- 20 mutants → 17 killed, 3 equivalent/documented
-- Equivalent: mutations 4/5 (return literal changes at non-rung: both mean "continue"), mutation 9 (initial budget 0.0 → 1.0 equivalent when unused)
+- 33 mutants → 33/33 killed (100%)
+- Previously: 20/33 survivors; fixed by removing dead code at lines 289-306
 
 #### MOASHAScheduler.report() — ✅ COMPLETE
-- 40 mutants → 39 killed, 1 equivalent/documented
-- Equivalent: mutation 8 (`self._gates and` → `self._gates or`: vetoed trials short-circuit before reaching gate loop, so `or` changes nothing)
+- 40 mutants → 39/40 killed (97.5%), 1 documented equivalent
+- Previously: 40/40 survivors; fixed by removing dead code at lines 479-496
+- Equivalent: mutation 8 (`self._gates and` → `self._gates or`: vetoed trials short-circuit before gate loop)
 - **Bug fixed:** Vetoed trials re-reporting now correctly return "stop" (added guard at line 484)
 - **Kill score:** 0.5361 (53.61%)
 - **Status:** FAIL - high timeout rate due to slow GPSearcher tests

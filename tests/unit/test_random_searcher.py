@@ -361,3 +361,138 @@ class TestSobolVsRandom:
         # Sobol should have larger minimum distance (less clustering)
         # Note: This is a probabilistic property, may occasionally fail
         # but should pass most of the time
+
+
+class TestSobolArithmeticFormulas:
+    """Tests for Sobol _sobol_to_config arithmetic correctness."""
+
+    def test_continuous_linear_interpolation_formula(self):
+        """Verify continuous linear params use: value = low + u * (high - low)."""
+        params = {
+            "x": Parameter(name="x", type=ParameterType.CONTINUOUS, bounds=(10.0, 50.0)),
+        }
+        space = SearchSpace(parameters=params)
+        searcher = SobolSearcher(space, seed=42)
+
+        # Collect many samples
+        configs = [searcher.suggest() for _ in range(64)]
+        values = [c["x"] for c in configs]
+
+        # All must be in bounds
+        assert all(10.0 <= v <= 50.0 for v in values)
+
+        # Linear interpolation: spread should approach (high - low) = 40.0
+        spread = max(values) - min(values)
+        assert spread > 35.0, f"Spread {spread:.2f} too small, wrong formula"
+
+        # Mean should be near midpoint (30.0)
+        mean = sum(values) / len(values)
+        assert 27.0 <= mean <= 33.0, f"Mean {mean:.2f} far from 30.0, biased"
+
+    def test_continuous_log_interpolation_formula(self):
+        """Verify log-scale continuous uses: exp(log(low) + u * (log(high) - log(low)))."""
+        params = {
+            "lr": Parameter(
+                name="lr",
+                type=ParameterType.CONTINUOUS,
+                bounds=(1e-4, 1e-1),
+                log_scale=True,
+            ),
+        }
+        space = SearchSpace(parameters=params)
+        searcher = SobolSearcher(space, seed=7)
+
+        configs = [searcher.suggest() for _ in range(64)]
+        values = [c["lr"] for c in configs]
+
+        # All must be in bounds
+        assert all(1e-4 <= v <= 1e-1 for v in values)
+
+        # Log-scale: geometric mean at u=0.5 is sqrt(1e-4 * 1e-1) ≈ 0.00316
+        # Check samples cluster around geometric middle
+        log_values = [np.log10(v) for v in values]
+        log_mean = sum(log_values) / len(log_values)
+        expected_log_mean = (np.log10(1e-4) + np.log10(1e-1)) / 2  # -2.5
+
+        assert abs(log_mean - expected_log_mean) < 0.5, f"Log mean {log_mean:.2f} far from {expected_log_mean:.2f}"
+
+    def test_integer_linear_interpolation_formula(self):
+        """Verify integer linear params use: int(low + u * (high - low + 1))."""
+        params = {
+            "layers": Parameter(
+                name="layers", type=ParameterType.INTEGER, bounds=(1, 10)
+            ),
+        }
+        space = SearchSpace(parameters=params)
+        searcher = SobolSearcher(space, seed=13)
+
+        configs = [searcher.suggest() for _ in range(128)]
+        values = [c["layers"] for c in configs]
+
+        # All must be in bounds
+        assert all(1 <= v <= 10 for v in values)
+
+        # Should cover full range
+        unique = set(values)
+        assert len(unique) >= 9, f"Only {len(unique)} unique values, should cover range"
+
+        # Mean should be near midpoint (5.5)
+        mean = sum(values) / len(values)
+        assert 4.5 <= mean <= 6.5, f"Mean {mean:.2f} far from 5.5"
+
+    def test_integer_log_interpolation_formula(self):
+        """Verify log-scale integer uses: int(exp(log(low) + u * (log(high) - log(low))))."""
+        params = {
+            "batch": Parameter(
+                name="batch",
+                type=ParameterType.INTEGER,
+                bounds=(1, 1024),
+                log_scale=True,
+            ),
+        }
+        space = SearchSpace(parameters=params)
+        searcher = SobolSearcher(space, seed=19)
+
+        configs = [searcher.suggest() for _ in range(64)]
+        values = [c["batch"] for c in configs]
+
+        # All must be in bounds
+        assert all(1 <= v <= 1024 for v in values)
+
+        # Log-scale should have more small values than large
+        small = [v for v in values if v <= 32]
+        large = [v for v in values if v >= 512]
+
+        assert len(small) > 0 and len(large) > 0, "Should sample across log scale"
+
+        # Geometric mean should be near sqrt(1 * 1024) = 32
+        geometric_mean = np.exp(sum(np.log(v) for v in values) / len(values))
+        assert 20.0 <= geometric_mean <= 80.0, f"Geometric mean {geometric_mean:.1f} far from 32"
+
+    def test_categorical_index_formula(self):
+        """Verify categorical uses: idx = int(u * len(choices)), clamped to len-1."""
+        params = {
+            "act": Parameter(
+                name="act",
+                type=ParameterType.CATEGORICAL,
+                choices=["relu", "gelu", "tanh", "sigmoid"],
+            ),
+        }
+        space = SearchSpace(parameters=params)
+        searcher = SobolSearcher(space, seed=23)
+
+        configs = [searcher.suggest() for _ in range(128)]
+        values = [c["act"] for c in configs]
+
+        # All must be valid choices
+        assert all(v in ["relu", "gelu", "tanh", "sigmoid"] for v in values)
+
+        # All choices should appear (uniform)
+        unique = set(values)
+        assert len(unique) == 4, f"Only {len(unique)} choices appeared, should be all 4"
+
+        # Roughly uniform distribution
+        counts = [values.count(choice) for choice in ["relu", "gelu", "tanh", "sigmoid"]]
+        min_count = min(counts)
+        max_count = max(counts)
+        assert max_count - min_count < 20, f"Counts {counts} not uniform"

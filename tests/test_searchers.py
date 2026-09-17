@@ -49,6 +49,101 @@ def test_proposal_differs_across_seeds():
     assert a != b
 
 
+def test_sobol_continuous_linear_interpolation():
+    """Sobol continuous params use linear interpolation: v = low + u * (high - low)."""
+    space = SearchSpace()
+    space.add_knob(Knob(name="x", kind="continuous", bounds=(10.0, 20.0)))
+
+    searcher = SobolSearcher(space, seed=42)
+    configs = searcher.propose(50)
+    values = [c["x"] for c in configs]
+
+    # All values must be in bounds [10.0, 20.0]
+    assert all(10.0 <= v <= 20.0 for v in values), f"Out of bounds: {[v for v in values if not (10.0 <= v <= 20.0)]}"
+
+    # Linear interpolation means range should be exactly (high - low) = 10.0
+    # Check spread: max - min should approach 10.0 with enough samples
+    spread = max(values) - min(values)
+    assert spread > 8.0, f"Spread too small ({spread:.2f}), suggests wrong interpolation formula"
+
+    # Mean should be near midpoint (15.0) for uniform Sobol coverage
+    mean = sum(values) / len(values)
+    assert 13.5 <= mean <= 16.5, f"Mean {mean:.2f} far from midpoint 15.0, suggests biased sampling"
+
+
+def test_sobol_continuous_log_interpolation():
+    """Sobol log-scale params use geometric interpolation."""
+    space = SearchSpace()
+    space.add_knob(Knob(name="lr", kind="continuous", bounds=(1e-4, 1e-1), transform="log"))
+
+    searcher = SobolSearcher(space, seed=7)
+    configs = searcher.propose(100)
+    values = [c["lr"] for c in configs]
+
+    # All values should be in bounds
+    assert all(1e-4 <= v <= 1e-1 for v in values)
+
+    # Log-scale: geometric mean at u=0.5 is sqrt(1e-4 * 1e-1) = sqrt(1e-5) ≈ 0.00316
+    # Check that middle region is sampled
+    mid_region = [v for v in values if 0.002 <= v <= 0.005]
+    assert len(mid_region) > 0, "Sobol should sample geometric middle"
+
+
+def test_sobol_ordinal_linear_mapping():
+    """Sobol ordinal params map uniformly across range."""
+    space = SearchSpace()
+    space.add_knob(Knob(name="layers", kind="ordinal", bounds=(1, 10)))
+
+    searcher = SobolSearcher(space, seed=13)
+    configs = searcher.propose(200)
+    values = [c["layers"] for c in configs]
+
+    # All values should be in bounds
+    assert all(1 <= v <= 10 for v in values)
+
+    # Should cover the full range (most integers 1-10 should appear)
+    unique_values = set(values)
+    assert len(unique_values) >= 8, "Sobol should cover most ordinal values in 200 samples"
+
+
+def test_sobol_ordinal_log_mapping():
+    """Sobol log-scale ordinals use geometric interpolation."""
+    space = SearchSpace()
+    space.add_knob(Knob(name="batch", kind="ordinal", bounds=(1, 1024), transform="log"))
+
+    searcher = SobolSearcher(space, seed=19)
+    configs = searcher.propose(100)
+    values = [c["batch"] for c in configs]
+
+    # All values should be in bounds
+    assert all(1 <= v <= 1024 for v in values)
+
+    # Log-scale ordinals should sample lower values more frequently
+    # than high values (geometric distribution)
+    low_values = [v for v in values if v <= 32]
+    high_values = [v for v in values if v >= 512]
+
+    # Should have representation across log scale
+    assert len(low_values) > 0 and len(high_values) > 0
+
+
+def test_sobol_categorical_uniform():
+    """Sobol categorical params map uniformly to choices."""
+    space = SearchSpace()
+    space.add_knob(Knob(name="act", kind="categorical", bounds=["relu", "tanh", "sigmoid", "elu"]))
+
+    searcher = SobolSearcher(space, seed=23)
+    configs = searcher.propose(200)
+    values = [c["act"] for c in configs]
+
+    # All choices should be valid
+    assert all(v in ["relu", "tanh", "sigmoid", "elu"] for v in values)
+
+    # All choices should appear (uniform coverage)
+    unique_choices = set(values)
+    assert len(unique_choices) == 4, "Sobol should cover all categorical choices"
+
+
 def test_sequence_advances_between_calls():
     """Successive propose() calls continue the sequence rather than restarting it."""
     searcher = SobolSearcher(_two_axis_space(), seed=7)
