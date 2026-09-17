@@ -79,3 +79,4 @@ hpo-survey/.localresources/
 .claude/
 
 mutants/
+mutmut_junit.xml
