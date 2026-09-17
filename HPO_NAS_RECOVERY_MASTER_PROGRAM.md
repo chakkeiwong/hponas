@@ -11,12 +11,12 @@
 
 ## Current Phase Marker
 
-**PHASE:** Execution Phase - Tier 0 Gate Assessment Complete  
+**PHASE:** Phase V03-R - V03 Mutation Testing Remediation  
 **WEEK:** Execution Week 1  
-**DAY:** 3  
-**LAST COMPLETED:** Tier 0 gate status updated - 6/7 PASSED (86%), V14 now PASSED with fast workload  
-**CURRENT TASK:** Begin Tier 1 execution per BUILD_PROGRAM_v3.md (pending creation)  
-**DATE:** 2026-09-16  
+**DAY:** 4  
+**LAST COMPLETED:** V03 baseline established (79.76%, 1320/1655); ASHA best_value dead code bug found and documented as Phase 0 Issue 4  
+**CURRENT TASK:** V03-R.1 - fix ASHA best_value bug, add regression tests, verify mutations 18/22/23/24/25/30 killed  
+**DATE:** 2026-09-17  
 
 **Update this section after completing each day's work.**
 
@@ -148,6 +148,56 @@ def suggest(self) -> Config:
 - test_searcher_contract.py determinism tests pass with tight tolerance
 
 **Time Estimate:** 2 hours (0.5d implement, test, validate)
+
+### Issue 4: ASHA best_value Dead Code Bug (DISCOVERED 2026-09-17)
+
+**Root Cause:** `schedulers.py` lines 108-112 compute and assign `best_value_so_far` but line 125 unconditionally overwrites the state tuple with raw `value`, making all prior assignments dead code. The third tuple slot in `_trial_state` is documented as "best_value_so_far" but actually stores the latest value, not the minimum.
+
+**Impact:**
+- **Behavioral:** `promote()` at line 166 sorts trials by the third tuple slot. Currently ranks by latest value instead of best value. Promotes trials that regressed after one good epoch; fails to promote gradually-improving trials.
+- **Mutation testing:** ~6 unkillable mutants (mutations 18, 22, 23, 24, 25, 30) in dead code region
+- **Documentation:** Code comment promises `best_value_so_far`, delivers `latest_value`
+- **V03 validation:** Blocks 90% kill score gate (current 79.76%, need +10.24pp = 169 kills)
+
+**Discovery:**
+- Found during V03 mutation testing analysis (Execution Week 1 Day 3)
+- Tests written for mutations 18, 22-25 passed even with mutations applied
+- Manual verification with `mutmut apply` revealed dead code pattern
+- Detailed analysis in `/home/ubuntu/.claude/projects/-home-ubuntu-workspace-hponas/plans/v03_fix_best_value_bug.md`
+
+**Solution:**
+1. Remove dead code (lines 108-112)
+2. Fix line 125 to track best_val:
+   ```python
+   if trial_id not in self._trial_state:
+       best_val = value
+   else:
+       _, _, prev_best, _ = self._trial_state[trial_id]
+       best_val = min(value, prev_best)
+   self._trial_state[trial_id] = (rung_idx, fidelity, best_val, "paused")
+   ```
+3. Add regression tests:
+   - `test_asha_tracks_best_value_not_latest()` - verifies min tracking, not latest
+   - `test_asha_promote_ranks_by_best_value()` - verifies promote() uses best for ranking
+4. Verify mutations 18, 22, 23, 24, 25, 30 are killed
+
+**Acceptance:**
+- Dead code removed from schedulers.py
+- `_trial_state` third slot tracks min(values), not latest value
+- 2+ regression tests added and passing
+- Mutations 18, 22, 23, 24, 25, 30 killed (verified with `mutmut apply`)
+- All existing tests still pass
+- Kill score improvement measured (expect +6 kills minimum)
+
+**Time Estimate:** 2-3 hours (0.5d implement, test, verify mutations)
+
+**Audit Scope:** This bug pattern may exist elsewhere. After fixing ASHA:
+1. Audit all files with high mutation survivors for similar patterns:
+   - Variable assigned but overwritten before use
+   - Conditional initialization followed by unconditional overwrite
+   - State dict assignment followed by another to same key
+2. Focus on: `schedulers.py` (146 survivors), `searchers/*.py` (60 survivors), `executors.py` (37 survivors), `space.py` (27 survivors)
+3. Prioritize fixes by mutation kill potential
 
 **Deliverables:**
 - All fixes committed to git
@@ -812,6 +862,72 @@ class ValidationProtocol:
 
 ---
 
+## Phase V03-R: V03 Mutation Testing Remediation (2-4 days)
+
+**Goal:** Raise mutation kill score from 79.76% to ≥90% to close the last Tier 0 gate item
+
+**Trigger:** Tier 0 gate assessment complete (6/7 PASSED, V03 the only open item)
+
+**Baseline (2026-09-17):** 1320 killed / 1655 eligible = 79.76%. Timeout rate 16.55% (≤20% ✅).
+Target: +169 kills. Survivor concentration: `schedulers.py` 146, `searchers/*.py` 60, `executors.py` 37, `space.py` 27, `types.py` 6.
+
+**Method discipline (learned the hard way):** A test that passes is not a test that kills. Every
+new test claimed against a mutant must be verified with `mutmut apply <id>`, run the test, confirm
+it FAILS, then `git checkout` the file. Seven tests were added in the first attempt with zero kill
+score movement because they exercised dead code or equivalent mutants.
+
+### V03-R.1: Fix ASHA best_value Bug (2-3 hours)
+
+See Phase 0 Issue 4 for root cause, solution, and acceptance criteria.
+
+Expected yield: 6 kills (mutations 18, 22, 23, 24, 25, 30).
+
+### V03-R.2: Dead Code Audit (2-3 hours)
+
+The ASHA bug is a symptom of a pattern, not a one-off. Audit for:
+1. Variable assigned in if/else then unconditionally reassigned
+2. State dict key assigned twice in one function
+3. Computed value never read
+4. Docstring/comment promising behavior the code does not implement
+
+Deliverable: audit document listing every instance found, with behavioral impact and estimated
+mutation yield. Fixes prioritized by kill potential.
+
+**Acceptance:** every high-survivor file reviewed; findings documented even where no fix is warranted.
+
+### V03-R.3: Fix Audit Findings (4-8 hours, scope depends on V03-R.2)
+
+Per issue: assess behavioral impact → write failing test → fix → verify test passes → run
+mutation testing on that file. Behavior changes documented in the commit and in this program.
+
+### V03-R.4: Targeted Test Expansion (8-16 hours)
+
+For each high-survivor file, in descending survivor order:
+1. Sample 10-15 survivors with `mutmut show`
+2. Categorize: equivalent mutant (unkillable) vs undertested (killable)
+3. Write tests for the killable ones; verify each with `mutmut apply`
+4. Record equivalent mutants in `V03_STATUS.md` with justification
+
+Equivalent mutants are legitimate — an unkillable mutant documented with reasoning is a finding,
+not a failure. If the equivalent-mutant population is large enough that 90% is unreachable without
+excluding them, that becomes a protocol amendment request, not a silent `--skip`.
+
+### V03-R Gate
+
+- [ ] Kill score ≥ 0.90
+- [ ] Timeout rate ≤ 0.20
+- [ ] ≥100 mutants evaluated
+- [ ] `validation/v03_mutation_testing.py` PASSES
+- [ ] `V03_STATUS.md` updated with final numbers and equivalent-mutant register
+- [ ] Every claimed kill verified via `mutmut apply`
+- [ ] Full test suite green
+
+**On gate pass:** Tier 0 becomes 7/7, V03 moves from DEFERRED to PASSED, proceed to Tier 1.
+
+**Time Estimate:** 15-30 hours (2-4 working days), front-loaded with high-impact fixes.
+
+---
+
 ## Post-Approval Execution (Not Part of Recovery)
 
 ### Tier 0 Remediation (17 days)
@@ -860,8 +976,8 @@ If V04-T1 unfixable: remove TuRBO/BG-PBT line
 
 **Claim:** Test suite detects real bugs  
 **Protocol:** mutmut or cosmic-ray, achieve ≥0.9 kill score  
-**Issue:** Not implemented  
-**Fix:** Week 2 Day 1-5 + Week 3 protocol  
+**Issue:** Kill score 79.76% (1320/1655), need 90%  
+**Fix:** Phase V03-R (V03-R.1: ASHA bug fix, V03-R.2: audit, V03-R.3: fix findings, V03-R.4: targeted tests)  
 **Gate:** Tier 0
 
 ### V04-T0: Random Baseline Floor

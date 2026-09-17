@@ -103,26 +103,25 @@ class ASHAScheduler:
             return "continue"
 
         # At a rung boundary
-        # Update trial state
+        # Update trial state with best value so far
         if trial_id not in self._trial_state:
-            self._trial_state[trial_id] = (rung_idx, fidelity, value, "active")
+            best_val = value
         else:
-            prev_rung, _, prev_val, status = self._trial_state[trial_id]
-            best_val = value if prev_val is None else min(value, prev_val)  # assume minimize
-            self._trial_state[trial_id] = (rung_idx, fidelity, best_val, "active")
+            _, _, prev_best, _ = self._trial_state[trial_id]
+            best_val = value if prev_best is None else min(value, prev_best)
 
         # Record at rung (allow duplicates - same trial can report multiple times)
         self._rung_populations[rung_idx].append((trial_id, value))
 
         # At final rung, stop
         if rung_idx == len(self.rungs) - 1:
-            self._trial_state[trial_id] = (rung_idx, fidelity, value, "stopped")
+            self._trial_state[trial_id] = (rung_idx, fidelity, best_val, "stopped")
             return "stop"
 
         # In async ASHA, we can't make stop/pause decisions at report time because
         # we don't know the final population. Mark everything as paused; promote()
         # will select the top k trials when called.
-        self._trial_state[trial_id] = (rung_idx, fidelity, value, "paused")
+        self._trial_state[trial_id] = (rung_idx, fidelity, best_val, "paused")
         return "pause"
 
     def promote(self) -> list[tuple[str, float]]:
@@ -286,25 +285,25 @@ class PASHAScheduler:
         if rung_idx is None:
             return "continue"
 
-        # Update trial state
+        # Update trial state: track best value seen so far
         if trial_id not in self._trial_state:
-            self._trial_state[trial_id] = (rung_idx, fidelity, value, 0.0, "active")
+            best_val = value
+            budget = 0.0
         else:
-            prev_rung, _, prev_val, budget, status = self._trial_state[trial_id]
-            best_val = value if prev_val is None else min(value, prev_val)
-            self._trial_state[trial_id] = (rung_idx, fidelity, best_val, budget, "active")
+            _, _, prev_best, budget, _ = self._trial_state[trial_id]
+            best_val = value if prev_best is None else min(value, prev_best)
 
         # Record at rung
         self._rung_populations[rung_idx].append((trial_id, value))
 
         # At final rung, stop
         if rung_idx == len(self.rungs) - 1:
-            self._trial_state[trial_id] = (rung_idx, fidelity, value, self._trial_state[trial_id][3], "stopped")
+            self._trial_state[trial_id] = (rung_idx, fidelity, best_val, budget, "stopped")
             return "stop"
 
         # In async PASHA, mark everything as paused; promote() will select based on
         # ranking and budget availability.
-        self._trial_state[trial_id] = (rung_idx, fidelity, value, self._trial_state[trial_id][3], "paused")
+        self._trial_state[trial_id] = (rung_idx, fidelity, best_val, budget, "paused")
         return "pause"
 
     def promote(self) -> list[tuple[str, float]]:
@@ -476,25 +475,22 @@ class MOASHAScheduler:
                     self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "vetoed", True)
                     return "stop"
 
-        # Update trial state
+        # Carry forward the veto flag; a trial vetoed earlier stays vetoed.
         if trial_id not in self._trial_state:
-            self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "active", False)
+            vetoed = False
         else:
-            prev_rung, _, prev_objs, status, vetoed = self._trial_state[trial_id]
-            self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "active", vetoed)
+            vetoed = self._trial_state[trial_id][4]
 
         # Record at rung
         self._rung_populations[rung_idx].append((trial_id, obj_values))
 
         # At final rung, stop
         if rung_idx == len(self.rungs) - 1:
-            trial_rung, trial_fid, trial_obj, _, vetoed = self._trial_state[trial_id]
-            self._trial_state[trial_id] = (trial_rung, trial_fid, trial_obj, "stopped", vetoed)
+            self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "stopped", vetoed)
             return "stop"
 
         # Pause and wait for promotion decision
-        trial_rung, trial_fid, trial_obj, _, vetoed = self._trial_state[trial_id]
-        self._trial_state[trial_id] = (trial_rung, trial_fid, trial_obj, "paused", vetoed)
+        self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "paused", vetoed)
         return "pause"
 
     def promote(self) -> list[tuple[str, float]]:
