@@ -87,7 +87,7 @@ class TestASHAScheduler:
         # Promote to r=3.0
         promoted = scheduler.promote()
         if promoted:
-            assert "trial_1" in promoted
+            assert any(trial_id == "trial_1" for trial_id, _ in promoted)
 
             # Report at r=3.0
             decision = scheduler.report("trial_1", fidelity=3.0, value=0.15)

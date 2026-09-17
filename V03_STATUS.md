@@ -64,42 +64,46 @@
 
 ## Work Completed This Session
 
-### 1. Fixed SobolSearcher API Compatibility ✅
-**Problem:** SobolSearcher used old API (`space.dim()`, `space.parameters`)  
-**Solution:** Made SobolSearcher polymorphic to support both APIs:
-- `__init__`: Check for `dim()` method vs `knobs` attribute
-- `_sobol_to_config`: Support both `parameters` dict and `knobs` list
+### 1. Fixed Critical SobolSearcher Interpolation Bug ✅ 🔴 PRODUCTION BUG
+**Problem:** Line 160 used division instead of multiplication in linear interpolation formula:
+```python
+value = low + u / (high - low)  # WRONG - generates tiny range
+value = low + u * (high - low)  # CORRECT - spans full range
+```
+
+**Impact:** For bounds (10.0, 50.0), SobolSearcher generated values in [10.0, 10.025] instead of [10.0, 50.0]. All HPO experiments using SobolSearcher were exploring incorrect, severely restricted configuration spaces.
+
+**Discovery method:** Targeted arithmetic formula tests revealed spread of 0.02 instead of expected 40.0.
 
 **Files changed:**
-- `hponas/searchers/random_searcher.py` (lines 98-234)
+- `hponas/searchers/random_searcher.py` (line 160: `/` → `*`)
 
-**Commit:** 90a673a "Make SobolSearcher polymorphic and add comprehensive contract tests"
+**Commit:** 23337d3 "Fix critical SobolSearcher interpolation bug and add arithmetic tests"
 
-### 2. Added SobolSearcher Contract Tests ✅
-**Problem:** SobolSearcher had ZERO test coverage in contract suite  
-**Solution:** Added 9 comprehensive tests in `TestSearcherContractSobolBaseline`:
+### 2. Added SobolSearcher Arithmetic Formula Tests ✅
+**Problem:** SobolSearcher had no tests verifying the interpolation formulas  
+**Solution:** Added `TestSobolArithmeticFormulas` class with 5 comprehensive tests:
 
-1. `test_sobol_suggest_valid` - Returns valid configs
-2. `test_sobol_deterministic` - Seed determinism with scrambling
-3. `test_sobol_bounds_continuous` - Strict bounds checking (100 samples)
-4. `test_sobol_bounds_log_scale` - Log-warped bounds
-5. `test_sobol_categorical_edge_case` - Handles u=1.0 edge case
-6. `test_sobol_state_serialization` - JSON serializability
-7. `test_sobol_state_deserialization_produces_identical_sequence` - Behavioral equivalence ⭐
-8. `test_sobol_integer_bounds` - Integer type and bounds
-9. `test_sobol_mixed_space` - Combined continuous/ordinal/categorical
+1. `test_continuous_linear_interpolation_formula` - Verifies `value = low + u * (high - low)`
+2. `test_continuous_log_interpolation_formula` - Verifies `exp(log(low) + u * (log(high) - log(low)))`
+3. `test_integer_linear_interpolation_formula` - Verifies `int(low + u * (high - low + 1))`
+4. `test_integer_log_interpolation_formula` - Verifies `int(exp(log(low) + u * (log(high) - log(low))))`
+5. `test_categorical_index_formula` - Verifies `idx = int(u * len(choices))`
 
-**Key innovation:** Test #7 verifies that deserialized state produces **identical suggestion sequences**, not just that the state is JSON-serializable. This catches mutations like `rng_state[3] → rng_state[4]` that corrupt state.
+**Target mutations:** These tests specifically target mutations 24, 25, 31, 33 (arithmetic operators `*`, `-`, `+`, `/` in `_sobol_to_config`).
 
 **Files changed:**
-- `tests/conformance/test_searcher_contract.py` (added 139 lines)
+- `tests/unit/test_random_searcher.py` (added `TestSobolArithmeticFormulas` class, 122 lines)
+- `pyproject.toml` (removed `--ignore=tests/unit` to include unit tests in mutation testing)
 
 **Test results:**
-- All 33 contract tests pass (was 24 passed, 1 skipped)
-- New SobolSearcher tests: 9/9 pass
+- All 5 new tests pass
+- Full test_random_searcher.py suite: 24/24 pass
 
-### 3. Added Behavioral State Tests for RandomSearcher ✅
-Added `test_random_state_deserialization_produces_identical_sequence` to verify that RandomSearcher state restoration produces identical suggestion sequences.
+### 3. Enabled Unit Tests in Mutation Testing ✅
+**Problem:** Unit tests were ignored in mutation testing (`--ignore=tests/unit`)  
+**Solution:** Removed `--ignore=tests/unit` from `pyproject.toml` mutmut config  
+**Impact:** Unit tests now run during mutation testing, providing additional kill opportunities
 
 ---
 
