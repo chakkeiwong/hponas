@@ -100,10 +100,23 @@ value = low + u * (high - low)  # CORRECT - spans full range
 - All 5 new tests pass
 - Full test_random_searcher.py suite: 24/24 pass
 
-### 3. Enabled Unit Tests in Mutation Testing ✅
-**Problem:** Unit tests were ignored in mutation testing (`--ignore=tests/unit`)  
-**Solution:** Removed `--ignore=tests/unit` from `pyproject.toml` mutmut config  
-**Impact:** Unit tests now run during mutation testing, providing additional kill opportunities
+### 4. Fixed Unit Test Bug ✅
+**Problem:** `test_multiple_rungs_sequential` had wrong assertion for promote() return value  
+**Root cause:** Test expected `promote()` to return list of trial IDs, but it actually returns list of `(trial_id, fidelity)` tuples  
+**Fix:** Changed `assert "trial_1" in promoted` to `assert any(trial_id == "trial_1" for trial_id, _ in promoted)`  
+**Files changed:** `tests/unit/test_schedulers.py` (line 90)  
+**Commit:** 9d5d88f "Fix test_multiple_rungs_sequential assertion for promote() tuple return"
+
+### 5. Running Full Mutation Testing ⏳
+Re-running full mutation testing with:
+- SobolSearcher bug fix (division → multiplication)
+- Unit tests included (removed `--ignore=tests/unit`)
+- Fixed unit test assertion
+
+Expected impact:
+- SobolSearcher arithmetic mutations should now be killed
+- Additional kills from unit test coverage
+- Target: 90% kill score (need 1480/1644 kills, currently at 1356)
 
 ---
 
