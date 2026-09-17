@@ -17,6 +17,7 @@ Tests written to match actual BaseExecutor interface.
 import json
 import time
 import pytest
+import numpy as np
 
 from hponas.executors.local_executor import LocalExecutor
 from hponas.types import Config, Trial, Result, SearchSpace, Parameter, ParameterType
@@ -390,3 +391,276 @@ class TestExecutorContractCost:
 # - Mode validation (sync vs async enforcement)
 # - Metadata capture (error message vs traceback)
 # - Cost tracking (start_time initialization, failure paths)
+
+
+class TestExecutorContractMutationTargets:
+    """Tests specifically designed to kill common mutations in local_executor.py."""
+
+    def test_mode_check_uses_not_equal_async(self):
+        """Test that async mode check uses mode != 'async', not mode == 'sync'.
+
+        Mutation: mode != "async" -> mode == "sync"
+        """
+        executor = LocalExecutor(mode="async", max_workers=2)
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        # Should allow execute_async in async mode
+        future = executor.execute_async(trial, _dummy_objective)
+        result = future.result(timeout=2.0)
+        assert result.status == "completed"
+
+        executor.shutdown()
+
+    def test_mode_check_uses_equal_async_not_not_equal_sync(self):
+        """Test that sync mode check uses mode == 'async', not mode != 'sync'.
+
+        Mutation: mode == "async" -> mode != "sync"
+        """
+        executor = LocalExecutor(mode="sync")
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        # Should reject execute_async in sync mode
+        with pytest.raises(ValueError, match="Async execution requires mode='async'"):
+            executor.execute_async(trial, _dummy_objective)
+
+    def test_isfinite_catches_both_nan_and_inf(self):
+        """Test that np.isfinite catches both NaN and inf.
+
+        Mutation: np.isfinite -> not np.isnan
+        """
+        executor = LocalExecutor(mode="sync")
+
+        def inf_objective(config_values):
+            return float("inf")
+
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        result = executor.execute(trial, inf_objective)
+
+        # np.isfinite should catch inf (not just NaN)
+        assert result.status == "inf"
+
+    def test_status_nan_when_isnan_true(self):
+        """Test that status is 'nan' when np.isnan is True, not 'inf'.
+
+        Mutation: "nan" if np.isnan(...) else "inf" -> "inf" if ...
+        """
+        executor = LocalExecutor(mode="sync")
+
+        def nan_objective(config_values):
+            return float("nan")
+
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        result = executor.execute(trial, nan_objective)
+
+        # Should be "nan", not "inf"
+        assert result.status == "nan"
+
+    def test_status_inf_when_isnan_false(self):
+        """Test that status is 'inf' when np.isnan is False (but not finite).
+
+        Mutation: "nan" if np.isnan(...) else "inf" -> "nan" if ... else "nan"
+        """
+        executor = LocalExecutor(mode="sync")
+
+        def inf_objective(config_values):
+            return float("inf")
+
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        result = executor.execute(trial, inf_objective)
+
+        # Should be "inf", not "nan"
+        assert result.status == "inf"
+
+    def test_cost_uses_time_minus_start_time(self):
+        """Test that cost is computed as time.time() - start_time.
+
+        Mutation: time.time() - start_time -> start_time
+        """
+        executor = LocalExecutor(mode="sync")
+
+        def slow_objective(config_values):
+            time.sleep(0.1)
+            return -1.0
+
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        result = executor.execute(trial, slow_objective)
+
+        # Cost should be ≥0.1, not near 0
+        assert result.cost >= 0.1
+
+    def test_exception_status_is_failed_not_timeout(self):
+        """Test that general exceptions get status 'failed', not 'timeout'.
+
+        Mutation: status="failed" -> status="timeout"
+        """
+        executor = LocalExecutor(mode="sync")
+
+        def failing_objective(config_values):
+            raise ValueError("Test error")
+
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        result = executor.execute(trial, failing_objective)
+
+        assert result.status == "failed"
+
+    def test_timeout_status_is_timeout_not_failed(self):
+        """Test that TimeoutError gets status 'timeout', not 'failed'.
+
+        Mutation: status="timeout" -> status="failed"
+        """
+        executor = LocalExecutor(mode="sync")
+
+        def timeout_objective(config_values):
+            raise TimeoutError("Timed out")
+
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        result = executor.execute(trial, timeout_objective)
+
+        assert result.status == "timeout"
+
+    def test_metadata_contains_error_key_not_message(self):
+        """Test that metadata uses 'error' key, not 'message'.
+
+        Mutation: "error" -> "message"
+        """
+        executor = LocalExecutor(mode="sync")
+
+        def failing_objective(config_values):
+            raise ValueError("Custom error")
+
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        result = executor.execute(trial, failing_objective)
+
+        assert "error" in result.metadata
+        assert "Custom error" in result.metadata["error"]
+
+    def test_metadata_contains_traceback_key(self):
+        """Test that metadata contains 'traceback' key with full traceback.
+
+        Mutation: "traceback" -> "stack_trace"
+        """
+        executor = LocalExecutor(mode="sync")
+
+        def failing_objective(config_values):
+            raise RuntimeError("Traceback test")
+
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        result = executor.execute(trial, failing_objective)
+
+        assert "traceback" in result.metadata
+        assert "RuntimeError" in result.metadata["traceback"]
+
+    def test_shutdown_waits_true_not_false(self):
+        """Test that shutdown uses wait=True, not wait=False.
+
+        Mutation: wait=True -> wait=False
+        """
+        executor = LocalExecutor(mode="async", max_workers=1)
+
+        def slow_objective(config_values):
+            time.sleep(0.15)
+            return -1.0
+
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        # Submit work
+        future = executor.execute_async(trial, slow_objective)
+
+        # Shutdown should wait
+        start = time.time()
+        executor.shutdown()
+        elapsed = time.time() - start
+
+        # Should have waited for completion (≥0.15s), not returned immediately
+        assert elapsed >= 0.1
+
+        # Work should be done
+        result = future.result(timeout=0.1)
+        assert result.status == "completed"
+
+    def test_executor_none_check_after_shutdown(self):
+        """Test that executor is set to None after shutdown.
+
+        Mutation: self._executor = None -> (delete this line)
+        """
+        executor = LocalExecutor(mode="async", max_workers=2)
+        assert executor._executor is not None
+
+        executor.shutdown()
+
+        # Should be None after shutdown
+        assert executor._executor is None
+
+    def test_nan_objective_value_preserved_in_result(self):
+        """Test that NaN objective_value is preserved in Result.
+
+        Mutation: objective_value=float(objective_value) -> objective_value=0.0
+        """
+        executor = LocalExecutor(mode="sync")
+
+        def nan_objective(config_values):
+            return float("nan")
+
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        result = executor.execute(trial, nan_objective)
+
+        # objective_value should be NaN, not 0.0
+        assert np.isnan(result.objective_value)
+
+    def test_inf_objective_value_preserved_in_result(self):
+        """Test that inf objective_value is preserved in Result.
+
+        Mutation: objective_value=float(objective_value) -> objective_value=float('nan')
+        """
+        executor = LocalExecutor(mode="sync")
+
+        def inf_objective(config_values):
+            return float("inf")
+
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        result = executor.execute(trial, inf_objective)
+
+        # objective_value should be inf, not NaN
+        assert np.isinf(result.objective_value)
+        assert result.objective_value > 0
+
+    def test_exception_objective_value_is_nan_not_zero(self):
+        """Test that failed trials have objective_value=nan, not 0.0.
+
+        Mutation: objective_value=float('nan') -> objective_value=0.0
+        """
+        executor = LocalExecutor(mode="sync")
+
+        def failing_objective(config_values):
+            raise ValueError("Test error")
+
+        config = Config(values={"x": 0.5, "y": 0.5})
+        trial = Trial(config=config, trial_id="trial_0", fidelity=1.0)
+
+        result = executor.execute(trial, failing_objective)
+
+        assert result.status == "failed"
+        assert np.isnan(result.objective_value)

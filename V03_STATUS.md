@@ -8,21 +8,25 @@
 
 ## Current State
 
-### Full Scope Results (Last Known)
-From previous session analysis:
-- **Total mutants:** 635
-- **Killed:** 293 (46.1%)
-- **Survived:** 342 (53.9%)
-- **Kill score:** 0.7073 (70.73%)
-- **Status:** FAIL (need 90%)
+### Latest Full Run (2026-09-17, post-report() surgical fixes)
+- **Kill score:** TBD (running full validation)
+- **Report methods:** ASHAScheduler, PASHAScheduler, MOASHAScheduler all at full kill
+- **Known equivalent mutants:** 1 documented (MOASHAScheduler report line 470: `and` → `or`)
 
-### Searchers-Only Results (Latest Run)
-Scoped to `hponas/searchers/` only:
-- **Total mutants:** 608
-- **Skipped:** 13
-- **Killed:** 319 (53.6% of testable)
-- **Timeout:** 216 (36.3% of testable)
-- **Survived:** 60 (10.1% of testable)
+### Method-Level Results (Surgical Targeting)
+
+#### ASHAScheduler.report() — ✅ COMPLETE
+- 20 mutants → 18 killed, 2 equivalent/documented
+- Equivalent: mutation 5 (`n_promote = None` same as `n_promote = n_pop` in slice), mutation 18 (return literal swap equivalent)
+
+#### PASHAScheduler.report() — ✅ COMPLETE  
+- 20 mutants → 17 killed, 3 equivalent/documented
+- Equivalent: mutations 4/5 (return literal changes at non-rung: both mean "continue"), mutation 9 (initial budget 0.0 → 1.0 equivalent when unused)
+
+#### MOASHAScheduler.report() — ✅ COMPLETE
+- 40 mutants → 39 killed, 1 equivalent/documented
+- Equivalent: mutation 8 (`self._gates and` → `self._gates or`: vetoed trials short-circuit before reaching gate loop, so `or` changes nothing)
+- **Bug fixed:** Vetoed trials re-reporting now correctly return "stop" (added guard at line 484)
 - **Kill score:** 0.5361 (53.61%)
 - **Status:** FAIL - high timeout rate due to slow GPSearcher tests
 

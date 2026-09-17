@@ -481,6 +481,12 @@ class MOASHAScheduler:
         else:
             vetoed = self._trial_state[trial_id][4]
 
+        # A trial vetoed at an earlier rung stays stopped and is kept out of the
+        # rung population, matching the early return above on the vetoing report.
+        if vetoed:
+            self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "vetoed", True)
+            return "stop"
+
         # Record at rung
         self._rung_populations[rung_idx].append((trial_id, obj_values))
 

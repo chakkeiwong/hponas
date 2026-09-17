@@ -528,3 +528,129 @@ def test_mo_asha_gate_with_nan_objectives():
     assert decision == "stop"
     assert "trial_1" in scheduler.get_vetoed_trials()
 
+
+
+# Mutation-targeted tests for report() trial-state bookkeeping.
+# The veto flag and status literals in _trial_state were unverified: mutmut
+# survived flipping "vetoed"/"stopped" casing, the vetoed=True flag, the
+# `self._gates and ...` conjunction, and the flag carry-forward index.
+
+
+def _veto_config():
+    return MOASHAConfig(r_min=1.0, r_max=9.0, eta=3.0, objectives=["f1", "f2"])
+
+
+def test_mo_asha_vetoed_state_uses_exact_lowercase_literal():
+    """A vetoed trial's status is exactly 'vetoed' and its flag is True."""
+    scheduler = MOASHAScheduler(_veto_config())
+    scheduler.gate(lambda tid, objs: objs["f1"] < 5.0)
+
+    assert scheduler.report("bad", 1.0, {"f1": 9.0, "f2": 1.0}) == "stop"
+
+    rung_idx, fidelity, _, status, vetoed = scheduler._trial_state["bad"]
+    assert status == "vetoed"
+    assert vetoed is True
+    assert rung_idx == 0
+    assert abs(fidelity - 1.0) < 1e-9
+
+
+def test_mo_asha_no_gates_does_not_veto():
+    """With no gates registered, the veto branch is skipped entirely.
+
+    Kills the `self._gates and ...` -> `self._gates or ...` mutation: with an
+    empty gate list, `or` would let an unvetoed trial enter the loop body.
+    """
+    scheduler = MOASHAScheduler(_veto_config())
+    assert scheduler._gates == []
+
+    assert scheduler.report("trial_1", 1.0, {"f1": 9.0, "f2": 9.0}) == "pause"
+    assert len(scheduler.get_vetoed_trials()) == 0
+    assert scheduler._trial_state["trial_1"][3] == "paused"
+
+
+def test_mo_asha_veto_flag_carries_forward_to_later_rungs():
+    """Once vetoed, the flag stays True in state across subsequent reports.
+
+    Kills mutations that reset the carried flag to None/False or read the
+    wrong tuple index when carrying it forward.
+    """
+    scheduler = MOASHAScheduler(_veto_config())
+    # Gate passes only on the first observation, so the trial is vetoed later.
+    seen: list[str] = []
+
+    def gate(trial_id: str, objectives: dict[str, float]) -> bool:
+        seen.append(trial_id)
+        return len(seen) <= 1
+
+    scheduler.gate(gate)
+
+    assert scheduler.report("trial_1", 1.0, {"f1": 0.1, "f2": 0.1}) == "pause"
+    assert scheduler._trial_state["trial_1"][4] is False
+
+    # Second report fails the gate -> vetoed
+    assert scheduler.report("trial_1", 1.0, {"f1": 0.2, "f2": 0.2}) == "stop"
+    assert scheduler._trial_state["trial_1"][4] is True
+
+    # A further report must keep the flag True, not reset it.
+    scheduler.report("trial_1", 1.0, {"f1": 0.3, "f2": 0.3})
+    assert scheduler._trial_state["trial_1"][4] is True
+
+
+def test_mo_asha_unvetoed_trial_flag_is_false_not_none():
+    """A fresh trial's veto flag is exactly False, not None."""
+    scheduler = MOASHAScheduler(_veto_config())
+    scheduler.report("trial_1", 1.0, {"f1": 0.5, "f2": 0.5})
+
+    vetoed = scheduler._trial_state["trial_1"][4]
+    assert vetoed is False
+    assert vetoed is not None
+
+
+def test_mo_asha_final_rung_state_is_stopped_tuple():
+    """The final-rung write stores a full 5-tuple with status 'stopped'."""
+    scheduler = MOASHAScheduler(_veto_config())
+
+    assert scheduler.report("trial_1", 9.0, {"f1": 0.4, "f2": 0.6}) == "stop"
+
+    state = scheduler._trial_state["trial_1"]
+    assert state is not None, "final-rung write must not clear trial state"
+    assert len(state) == 5
+    rung_idx, fidelity, obj_values, status, vetoed = state
+    assert status == "stopped"
+    assert vetoed is False
+    assert rung_idx == len(scheduler.rungs) - 1
+    assert abs(fidelity - 9.0) < 1e-9
+    assert np.allclose(obj_values, [0.4, 0.6])
+
+
+def test_mo_asha_vetoed_trial_re_report_returns_stop():
+    """A trial vetoed earlier always returns 'stop' on subsequent reports.
+
+    Kills the `self._gates and ...` -> `self._gates or ...` mutation: without
+    the `and`, a vetoed trial (in `_vetoed_trials`) would enter the gate loop
+    when `self._gates` is empty or would skip the veto check entirely.
+    
+    Also requires a guard to short-circuit vetoed trials before line 493.
+    """
+    scheduler = MOASHAScheduler(_veto_config())
+    scheduler.gate(lambda tid, objs: objs["f1"] < 5.0)
+
+    # Veto on first report
+    assert scheduler.report("bad", 1.0, {"f1": 9.0, "f2": 1.0}) == "stop"
+    assert "bad" in scheduler.get_vetoed_trials()
+
+    # Re-report at same rung (shouldn't happen, but must return "stop")
+    assert scheduler.report("bad", 1.0, {"f1": 0.1, "f2": 0.1}) == "stop"
+    assert scheduler._trial_state["bad"][3] == "vetoed"
+    assert scheduler._trial_state["bad"][4] is True
+
+    # Re-report at next rung (scheduler promoted it by mistake)
+    assert scheduler.report("bad", 3.0, {"f1": 0.1, "f2": 0.1}) == "stop"
+    assert scheduler._trial_state["bad"][3] == "vetoed"
+    assert scheduler._trial_state["bad"][4] is True
+
+    # A vetoed trial must never enter a rung population, so it can never be
+    # promoted even if its objectives look good on the re-report.
+    for rung_pop in scheduler._rung_populations.values():
+        assert "bad" not in [tid for tid, _ in rung_pop]
+    assert scheduler.promote() == []
