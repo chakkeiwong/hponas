@@ -289,10 +289,14 @@ class GPSearcher(BaseSearcher):
         """
         # Support both APIs
         if hasattr(self.search_space, 'dim'):
-            # Old API: hponas.types.SearchSpace
-            d = self.search_space.dim()
+            # Check if dim is a property or method
+            dim_attr = getattr(self.search_space, 'dim')
+            if callable(dim_attr):
+                d = dim_attr()  # Old API: method
+            else:
+                d = dim_attr  # New API: property
         else:
-            # New API: hponas.space.SearchSpace
+            # Fallback: use knobs list directly
             d = len(self.search_space.knobs)
 
         return torch.tensor([[0.0] * d, [1.0] * d], dtype=torch.float64)
