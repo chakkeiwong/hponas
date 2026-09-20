@@ -107,14 +107,14 @@ class SobolSearcher(BaseSearcher):
         self.scramble = scramble
 
         # Support both hponas.types.SearchSpace and hponas.space.SearchSpace
-        if hasattr(search_space, 'dim'):
-            # Old API: hponas.types.SearchSpace
+        if hasattr(search_space, 'parameters'):
+            # Old API: hponas.types.SearchSpace (dim is a method)
             self.d = search_space.dim()
         elif hasattr(search_space, 'knobs'):
-            # New API: hponas.space.SearchSpace
-            self.d = len(search_space.knobs)
+            # New API: hponas.space.SearchSpace (dim is a property)
+            self.d = search_space.dim
         else:
-            raise TypeError("SearchSpace must have either dim() method or knobs attribute")
+            raise TypeError("SearchSpace must have either parameters or knobs attribute")
 
         # Initialize Sobol sampler
         self.sampler = qmc.Sobol(d=self.d, scramble=scramble, seed=seed)

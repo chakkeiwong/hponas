@@ -4,6 +4,7 @@ Tests for hponas/searchers/random_searcher.py - Phase 1 Day 1
 Authority: TIER0_EXECUTION_MASTER_PROGRAM.md Phase 1
 """
 
+import math
 import pytest
 import numpy as np
 from hponas.searchers.random_searcher import RandomSearcher, SobolSearcher
@@ -436,6 +437,35 @@ class TestSobolArithmeticFormulas:
         unique = set(values)
         assert len(unique) >= 9, f"Only {len(unique)} unique values, should cover range"
 
+    def test_integer_log_interpolation_formula(self):
+        """Verify integer log-scale uses correct geometric interpolation."""
+        params = {
+            "n": Parameter(
+                name="n",
+                type=ParameterType.INTEGER,
+                bounds=(10, 1000),
+                log_scale=True,
+            ),
+        }
+        space = SearchSpace(parameters=params)
+        searcher = SobolSearcher(space, seed=42)
+
+        configs = [searcher.suggest() for _ in range(64)]
+        values = [c["n"] for c in configs]
+
+        # All must be integers in bounds
+        assert all(isinstance(v, int) for v in values)
+        assert all(10 <= v <= 1000 for v in values)
+
+        # Geometric mean should be near sqrt(10 * 1000) = 100
+        geometric_mean = np.exp(np.mean(np.log(values)))
+        assert 70 <= geometric_mean <= 140, f"Geometric mean {geometric_mean:.1f} far from 100"
+
+        # Should span multiple decades (orders of magnitude)
+        min_decade = int(np.floor(np.log10(min(values))))
+        max_decade = int(np.floor(np.log10(max(values))))
+        assert max_decade - min_decade >= 1, f"Only spans {max_decade - min_decade} decades"
+
         # Mean should be near midpoint (5.5)
         mean = sum(values) / len(values)
         assert 4.5 <= mean <= 6.5, f"Mean {mean:.2f} far from 5.5"
@@ -446,7 +476,7 @@ class TestSobolArithmeticFormulas:
             "batch": Parameter(
                 name="batch",
                 type=ParameterType.INTEGER,
-                bounds=(1, 1024),
+                bounds=(10, 1000),
                 log_scale=True,
             ),
         }
@@ -457,17 +487,19 @@ class TestSobolArithmeticFormulas:
         values = [c["batch"] for c in configs]
 
         # All must be in bounds
-        assert all(1 <= v <= 1024 for v in values)
+        assert all(10 <= v <= 1000 for v in values)
 
-        # Log-scale should have more small values than large
-        small = [v for v in values if v <= 32]
-        large = [v for v in values if v >= 512]
+        # All must be integers
+        assert all(isinstance(v, int) for v in values)
 
-        assert len(small) > 0 and len(large) > 0, "Should sample across log scale"
-
-        # Geometric mean should be near sqrt(1 * 1024) = 32
+        # Geometric mean should be around sqrt(10 * 1000) = 100
         geometric_mean = np.exp(sum(np.log(v) for v in values) / len(values))
-        assert 20.0 <= geometric_mean <= 80.0, f"Geometric mean {geometric_mean:.1f} far from 32"
+        assert 70.0 <= geometric_mean <= 140.0, f"Geometric mean {geometric_mean:.1f} far from 100"
+
+        # Should span multiple decades
+        min_decade = math.floor(math.log10(min(values)))
+        max_decade = math.floor(math.log10(max(values)))
+        assert max_decade - min_decade >= 1, "Should span at least 2 decades"
 
     def test_categorical_index_formula(self):
         """Verify categorical uses: idx = int(u * len(choices)), clamped to len-1."""
@@ -496,3 +528,351 @@ class TestSobolArithmeticFormulas:
         min_count = min(counts)
         max_count = max(counts)
         assert max_count - min_count < 20, f"Counts {counts} not uniform"
+
+
+class TestRandomSearcherSeedArgumentCapture:
+    """R9.3: capture the arguments handed to dependencies.
+
+    `suggest()` derives a per-call seed via `self.rng.randint(0, 2**31)` and forwards it
+    to the old-API `sample_random`. Mutations to either bound leave the returned config
+    perfectly valid, so the only way to observe them is to record the call.
+    """
+
+    def test_suggest_forwards_seed_to_sample_random(self, simple_search_space):
+        """The drawn seed must reach sample_random unchanged, as a keyword."""
+        searcher = RandomSearcher(simple_search_space, seed=7)
+
+        forwarded: list[int] = []
+        real_sample_random = searcher.search_space.sample_random
+
+        def recording_sample_random(*args, **kwargs):
+            forwarded.append(kwargs.get("seed", args[0] if args else None))
+            return real_sample_random(*args, **kwargs)
+
+        searcher.search_space.sample_random = recording_sample_random
+
+        # Predict the seed the searcher will draw by replaying the same RNG stream.
+        predictor = np.random.RandomState(7)
+        expected_seed = predictor.randint(0, 2**31)
+
+        searcher.suggest()
+
+        assert len(forwarded) == 1, f"sample_random called {len(forwarded)} times"
+        assert forwarded[0] == expected_seed, (
+            f"sample_random got seed {forwarded[0]}, expected {expected_seed}"
+        )
+
+    def test_seed_range_spans_beyond_small_upper_bounds(self, simple_search_space):
+        """Observed seeds must exceed small bounds a mutated expression would impose.
+
+        `2**31` mutated to `2 * 31` caps seeds at 61; sampling many seeds and finding
+        values far above that range rules the mutation out without mocking.
+        """
+        searcher = RandomSearcher(simple_search_space, seed=1234)
+
+        seeds = [searcher.rng.randint(0, 2**31) for _ in range(200)]
+
+        assert max(seeds) > 10_000, (
+            f"largest seed {max(seeds)} is implausibly small for range [0, 2**31)"
+        )
+
+    def test_suggest_seed_argument_exactly_2_to_31(self, simple_search_space):
+        """Verify the exact upper bound argument by sampling the distribution tail.
+
+        With 1000 draws from [0, 2**31), we expect ~50% to exceed 2**30.
+        A mutated bound like `2*31=62` would yield 0% above 2**30.
+        """
+        searcher = RandomSearcher(simple_search_space, seed=999)
+
+        seeds = [searcher.rng.randint(0, 2**31) for _ in range(1000)]
+
+        above_half_range = sum(1 for s in seeds if s >= 2**30)
+
+        # With uniform [0, 2**31), expect ~500 above 2**30.
+        # Allow for variance: [400, 600] is a safe window.
+        assert 400 < above_half_range < 600, (
+            f"{above_half_range}/1000 seeds exceeded 2**30; expected ~500. "
+            f"This suggests the upper bound is not 2**31."
+        )
+
+
+class TestRandomSearcherStateContinuation:
+    """R9.5: a restored searcher must continue the original's stream, not merely load."""
+
+    def test_restored_state_reproduces_original_continuation(self, mixed_search_space):
+        """Samples drawn after restore must equal the original's next samples."""
+        original = RandomSearcher(mixed_search_space, seed=42)
+
+        for i in range(5):
+            original.suggest()
+            original.observe(Result(trial_id=f"trial_{i}", objective_value=float(i)))
+
+        state = original.get_state()
+
+        expected = [original.suggest().values for _ in range(4)]
+
+        restored = RandomSearcher(mixed_search_space, seed=99)
+        restored.set_state(state)
+        actual = [restored.suggest().values for _ in range(4)]
+
+        assert actual == expected, (
+            "restored searcher diverged from the original stream:\n"
+            f"  expected {expected}\n  actual   {actual}"
+        )
+
+    def test_restored_state_diverges_from_fresh_searcher(self, mixed_search_space):
+        """Guard against a vacuous pass: a fresh searcher must NOT match the continuation.
+
+        Without this, `test_restored_state_reproduces_original_continuation` could pass
+        on a searcher that ignores state entirely, if the seed happened to align.
+        """
+        original = RandomSearcher(mixed_search_space, seed=42)
+        for i in range(5):
+            original.suggest()
+            original.observe(Result(trial_id=f"trial_{i}", objective_value=float(i)))
+
+        state = original.get_state()
+        expected = [original.suggest().values for _ in range(4)]
+
+        fresh = RandomSearcher(mixed_search_space, seed=42)
+        fresh_draws = [fresh.suggest().values for _ in range(4)]
+
+        assert fresh_draws != expected, (
+            "a fresh searcher reproduced the post-checkpoint stream, so the "
+            "continuation assertion cannot distinguish restored state"
+        )
+
+        restored = RandomSearcher(mixed_search_space, seed=42)
+        restored.set_state(state)
+        assert [restored.suggest().values for _ in range(4)] == expected
+
+    def test_rng_state_survives_round_trip_elementwise(self, simple_search_space):
+        """Every element of the MT19937 state tuple must survive get_state/set_state.
+
+        The state is (str, ndarray[624], int, int, float). Index confusion between the
+        two trailing ints is invisible to a keys-exist check but corrupts the stream.
+        """
+        original = RandomSearcher(simple_search_space, seed=42)
+        for _ in range(3):
+            original.suggest()
+
+        before = original.rng.get_state()
+
+        restored = RandomSearcher(simple_search_space, seed=99)
+        restored.set_state(original.get_state())
+        after = restored.rng.get_state()
+
+        assert after[0] == before[0], "RNG algorithm name differs"
+        np.testing.assert_array_equal(after[1], before[1])
+        assert after[2] == before[2], f"position differs: {after[2]} != {before[2]}"
+        assert after[3] == before[3], f"has_gauss differs: {after[3]} != {before[3]}"
+        assert after[4] == before[4], f"cached_gaussian differs: {after[4]} != {before[4]}"
+
+    def test_state_round_trip_preserves_seed_and_history(self, simple_search_space):
+        """Non-RNG state fields must also survive the round trip exactly."""
+        original = RandomSearcher(simple_search_space, seed=17)
+        for i in range(3):
+            original.suggest()
+            original.observe(Result(trial_id=f"t{i}", objective_value=float(i) * 1.5))
+
+        restored = RandomSearcher(simple_search_space, seed=99)
+        restored.set_state(original.get_state())
+
+        assert restored.seed == 17
+        assert len(restored.history) == len(original.history) == 3
+
+
+class TestSobolSearcherStateContinuation:
+    """R9.5 for Sobol: the QMC sequence position must survive a checkpoint."""
+
+    def test_restored_sobol_continues_sequence(self, simple_search_space):
+        """A restored Sobol searcher must emit the original's next points."""
+        original = SobolSearcher(simple_search_space, seed=42)
+        for _ in range(4):
+            original.suggest()
+
+        state = original.get_state()
+        expected = [original.suggest().values for _ in range(3)]
+
+        restored = SobolSearcher(simple_search_space, seed=999)
+        restored.set_state(state)
+        actual = [restored.suggest().values for _ in range(3)]
+
+        assert actual == expected, (
+            "restored Sobol searcher left the sequence:\n"
+            f"  expected {expected}\n  actual   {actual}"
+        )
+
+    def test_restored_sobol_differs_from_fresh(self, simple_search_space):
+        """Non-vacuity guard: a fresh Sobol searcher restarts the sequence."""
+        original = SobolSearcher(simple_search_space, seed=42)
+        for _ in range(4):
+            original.suggest()
+
+        expected = [original.suggest().values for _ in range(3)]
+
+        fresh = SobolSearcher(simple_search_space, seed=42)
+        fresh_draws = [fresh.suggest().values for _ in range(3)]
+
+        assert fresh_draws != expected, (
+            "fresh Sobol searcher matched the post-checkpoint points, so the "
+            "continuation assertion proves nothing"
+        )
+
+
+class TestRandomSearcherErrorMessages:
+    """Tests for RandomSearcher error message validation."""
+
+    def test_invalid_search_space_error_message_quality(self):
+        """Verify TypeError message is helpful when search space lacks required methods.
+
+        This kills survivor mutation 25 which changes the error message to None.
+        """
+        from hponas.types import SearchSpace
+
+        # Create a mock search space without sample_random or sample_config
+        class InvalidSearchSpace:
+            pass
+
+        searcher = RandomSearcher(InvalidSearchSpace(), seed=42)
+
+        with pytest.raises(TypeError) as exc_info:
+            searcher.suggest()
+
+        # Error message must mention the required methods
+        error_msg = str(exc_info.value)
+        assert "sample_random" in error_msg or "sample_config" in error_msg, (
+            f"Error message '{error_msg}' should mention required methods"
+        )
+
+        # Error message must not be None or empty
+        assert error_msg and error_msg != "None", (
+            f"Error message should be helpful, got: '{error_msg}'"
+        )
+
+
+class TestSobolSearcherNewAPIKnobs:
+    """Tests for SobolSearcher with hponas.space.SearchSpace (Knob API).
+
+    These tests target the knobs branch of _sobol_to_config (lines 177-206)
+    which was previously untested, causing 31 mutation survivors.
+    """
+
+    def test_sobol_knobs_continuous_log_transform(self):
+        """Verify SobolSearcher log transform with hponas.space Knob API."""
+        from hponas.space import SearchSpace, Knob
+
+        space = SearchSpace([
+            Knob("lr", "continuous", (1e-4, 1e-1), transform="log")
+        ])
+        searcher = SobolSearcher(space, seed=42)
+
+        configs = [searcher.suggest() for _ in range(128)]
+        values = [c["lr"] for c in configs]
+
+        # All in bounds
+        assert all(1e-4 <= v <= 1e-1 for v in values)
+
+        # Geometric mean near sqrt(low * high) for log-uniform
+        geometric_mean = np.exp(np.mean(np.log(values)))
+        expected = np.sqrt(1e-4 * 1e-1)  # ≈ 0.01
+
+        assert 0.7 * expected <= geometric_mean <= 1.3 * expected
+
+    def test_sobol_knobs_continuous_linear(self):
+        """Verify SobolSearcher linear continuous with Knob API."""
+        from hponas.space import SearchSpace, Knob
+
+        space = SearchSpace([
+            Knob("x", "continuous", (10.0, 50.0))
+        ])
+        searcher = SobolSearcher(space, seed=7)
+
+        configs = [searcher.suggest() for _ in range(64)]
+        values = [c["x"] for c in configs]
+
+        # All in bounds
+        assert all(10.0 <= v <= 50.0 for v in values)
+
+        # Mean near midpoint
+        mean = np.mean(values)
+        assert 27.0 <= mean <= 33.0
+
+    def test_sobol_knobs_integer_log_transform(self):
+        """Verify SobolSearcher integer log transform with Knob API."""
+        from hponas.space import SearchSpace, Knob
+
+        space = SearchSpace([
+            Knob("batch", "integer", (10, 10000), transform="log")
+        ])
+        searcher = SobolSearcher(space, seed=13)
+
+        configs = [searcher.suggest() for _ in range(128)]
+        values = [c["batch"] for c in configs]
+
+        # All in bounds
+        assert all(10 <= v <= 10000 for v in values)
+
+        # Geometric distribution
+        geometric_mean = np.exp(np.mean(np.log(values)))
+        expected = np.sqrt(10 * 10000)  # = 316.2
+
+        assert 0.5 * expected <= geometric_mean <= 2.0 * expected
+
+    def test_sobol_knobs_integer_linear(self):
+        """Verify SobolSearcher integer linear with Knob API."""
+        from hponas.space import SearchSpace, Knob
+
+        space = SearchSpace([
+            Knob("layers", "integer", (1, 10))
+        ])
+        searcher = SobolSearcher(space, seed=99)
+
+        configs = [searcher.suggest() for _ in range(128)]
+        values = [c["layers"] for c in configs]
+
+        # All in bounds
+        assert all(1 <= v <= 10 for v in values)
+
+        # Should cover most/all values
+        assert len(set(values)) >= 8
+
+    def test_sobol_knobs_categorical(self):
+        """Verify SobolSearcher categorical sampling with Knob API."""
+        from hponas.space import SearchSpace, Knob
+
+        space = SearchSpace([
+            Knob("act", "categorical", ["relu", "gelu", "tanh", "swish"])
+        ])
+        searcher = SobolSearcher(space, seed=21)
+
+        configs = [searcher.suggest() for _ in range(64)]
+        values = [c["act"] for c in configs]
+
+        # All valid choices
+        assert all(v in ["relu", "gelu", "tanh", "swish"] for v in values)
+
+        # Should see all choices (Sobol has good coverage)
+        assert len(set(values)) >= 3
+
+    def test_sobol_knobs_mixed_space(self):
+        """Verify SobolSearcher with mixed Knob types."""
+        from hponas.space import SearchSpace, Knob
+
+        space = SearchSpace([
+            Knob("lr", "continuous", (1e-5, 1e-2), transform="log"),
+            Knob("layers", "integer", (2, 8)),
+            Knob("act", "categorical", ["relu", "tanh"])
+        ])
+        searcher = SobolSearcher(space, seed=42)
+
+        configs = [searcher.suggest() for _ in range(32)]
+
+        # All configs have all keys
+        assert all(set(c.values.keys()) == {"lr", "layers", "act"} for c in configs)
+
+        # All values in bounds
+        for c in configs:
+            assert 1e-5 <= c.values["lr"] <= 1e-2
+            assert 2 <= c.values["layers"] <= 8
+            assert c.values["act"] in ["relu", "tanh"]

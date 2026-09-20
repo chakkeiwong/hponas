@@ -43,6 +43,7 @@ class BaseSearcher(ABC):
             "parameter_types": list(param_types),
             "supports_fidelity": False,
             "supports_constraints": False,
+            "max_dim": None,  # no dimension limit by default
         }
 
     @abstractmethod

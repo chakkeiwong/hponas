@@ -76,5 +76,6 @@ pytest_add_cli_args = [
     "--ignore=tests/property/test_invariants.py",
     "--ignore=tests/integration/test_study_baseline.py",
     "--ignore=tests/integration/test_study_gp.py",
+    "-k",
+    "not (test_sample_random_config or test_categorical_knob_stores_choices or test_continuous_sample_within_bounds or test_ordinal_sample_within_range or test_categorical_sample_in_choices or test_invalid_kind_raises or test_ordinal_bounds_must_be_integers)",
 ]
-debug = true

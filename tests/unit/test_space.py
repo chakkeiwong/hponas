@@ -78,7 +78,7 @@ class TestSearchSpace:
         ])
         config = {"opt": "rmsprop"}  # not in choices
 
-        with pytest.raises(ValueError, match="invalid choice"):
+        with pytest.raises(ValueError, match="not in"):
             space.validate_config(config)
 
     def test_sample_random_config(self):
@@ -162,3 +162,195 @@ class TestKnob:
         """Categorical choices must be a list."""
         with pytest.raises(ValueError):
             Knob("opt", "categorical", "adam")  # not a list
+
+
+class TestKnobSerialization:
+    """Tests for Knob serialization (R9.4: full-field round-trips)."""
+
+    def test_knob_serialization_continuous_all_fields(self):
+        """Verify all continuous knob fields survive to_dict → from_dict."""
+        knob = Knob(
+            name="learning_rate",
+            kind="continuous",
+            bounds=(1e-5, 1e-1),
+            transform="log",
+            condition=None,
+            prior={"type": "normal", "mu": -3.0, "sigma": 1.0},
+            note="Adam learning rate in log-space"
+        )
+
+        serialized = knob.to_dict()
+        restored = Knob.from_dict(serialized)
+
+        assert restored.name == knob.name
+        assert restored.kind == knob.kind
+        assert restored.bounds == knob.bounds
+        assert restored.transform == knob.transform
+        assert restored.condition == knob.condition
+        assert restored.prior == knob.prior
+        assert restored.note == knob.note
+
+    def test_knob_serialization_ordinal_all_fields(self):
+        """Verify all ordinal knob fields survive to_dict → from_dict."""
+        knob = Knob(
+            name="num_layers",
+            kind="ordinal",
+            bounds=(2, 10),
+            transform="none",
+            condition=("architecture", "deep"),
+            prior={"type": "uniform", "low": 4, "high": 8},
+            note="Number of hidden layers (conditional on deep architecture)"
+        )
+
+        serialized = knob.to_dict()
+        restored = Knob.from_dict(serialized)
+
+        assert restored.name == knob.name
+        assert restored.kind == knob.kind
+        assert restored.bounds == knob.bounds
+        assert restored.transform == knob.transform
+        assert restored.condition == knob.condition
+        assert restored.prior == knob.prior
+        assert restored.note == knob.note
+
+    def test_knob_serialization_categorical_all_fields(self):
+        """Verify all categorical knob fields survive to_dict → from_dict."""
+        knob = Knob(
+            name="optimizer",
+            kind="categorical",
+            bounds=["adam", "sgd", "rmsprop", "adamw"],
+            transform="none",
+            condition=None,
+            prior={"type": "categorical", "probs": [0.5, 0.2, 0.1, 0.2]},
+            note="Optimization algorithm (Adam preferred per Ch 7)"
+        )
+
+        serialized = knob.to_dict()
+        restored = Knob.from_dict(serialized)
+
+        assert restored.name == knob.name
+        assert restored.kind == knob.kind
+        assert restored.bounds == knob.bounds
+        assert restored.transform == knob.transform
+        assert restored.condition == knob.condition
+        assert restored.prior == knob.prior
+        assert restored.note == knob.note
+
+    def test_knob_serialization_with_logit_transform(self):
+        """Verify logit transform survives serialization."""
+        knob = Knob(
+            name="dropout",
+            kind="continuous",
+            bounds=(0.0, 0.5),
+            transform="logit",
+            note="Dropout rate with logit warping"
+        )
+
+        serialized = knob.to_dict()
+        restored = Knob.from_dict(serialized)
+
+        assert restored.transform == "logit"
+        assert restored.bounds == knob.bounds
+
+    def test_knob_serialization_preserves_condition_tuple(self):
+        """Verify condition (parent_name, parent_value) tuple survives."""
+        knob = Knob(
+            name="hidden_size",
+            kind="ordinal",
+            bounds=(64, 512),
+            condition=("use_hidden_layer", True)
+        )
+
+        serialized = knob.to_dict()
+        restored = Knob.from_dict(serialized)
+
+        assert restored.condition == ("use_hidden_layer", True)
+        assert isinstance(restored.condition, tuple)
+
+    def test_knob_serialization_none_condition(self):
+        """Verify None condition survives serialization."""
+        knob = Knob(
+            name="batch_size",
+            kind="ordinal",
+            bounds=(16, 128),
+            condition=None
+        )
+
+        serialized = knob.to_dict()
+        restored = Knob.from_dict(serialized)
+
+        assert restored.condition is None
+
+    def test_knob_serialization_none_prior(self):
+        """Verify None prior survives serialization."""
+        knob = Knob(
+            name="momentum",
+            kind="continuous",
+            bounds=(0.0, 1.0),
+            prior=None
+        )
+
+        serialized = knob.to_dict()
+        restored = Knob.from_dict(serialized)
+
+        assert restored.prior is None
+
+    def test_knob_serialization_empty_note(self):
+        """Verify empty note string survives serialization."""
+        knob = Knob(
+            name="weight_decay",
+            kind="continuous",
+            bounds=(0.0, 0.1),
+            note=""
+        )
+
+        serialized = knob.to_dict()
+        restored = Knob.from_dict(serialized)
+
+        assert restored.note == ""
+
+
+class TestSpaceSerialization:
+    """Tests for SearchSpace serialization (R9.4)."""
+
+    def test_space_serialization_mixed_knobs(self):
+        """Verify SearchSpace with mixed knob types survives serialization."""
+        knobs = [
+            Knob("lr", "continuous", (1e-5, 1e-1), transform="log",
+                 prior={"type": "lognormal", "mu": -4, "sigma": 1}),
+            Knob("batch_size", "ordinal", (16, 128), transform="log"),
+            Knob("optimizer", "categorical", ["adam", "sgd", "rmsprop"]),
+            Knob("dropout", "continuous", (0.0, 0.5), transform="logit"),
+            Knob("num_layers", "ordinal", (2, 8),
+                 condition=("architecture", "deep"),
+                 note="Conditional on deep architecture")
+        ]
+
+        space = SearchSpace(knobs)
+        serialized = space.to_dict()
+        restored = SearchSpace.from_dict(serialized)
+
+        assert len(restored.knobs) == len(space.knobs)
+
+        # Verify each knob survived
+        for original, restored_knob in zip(knobs, restored.knobs):
+            assert restored_knob.name == original.name
+            assert restored_knob.kind == original.kind
+            assert restored_knob.bounds == original.bounds
+            assert restored_knob.transform == original.transform
+            assert restored_knob.condition == original.condition
+            assert restored_knob.prior == original.prior
+            assert restored_knob.note == original.note
+
+    def test_space_serialization_preserves_dimensionality(self):
+        """Verify SearchSpace.dim survives serialization."""
+        space = SearchSpace([
+            Knob("x", "continuous", (0.0, 1.0)),
+            Knob("y", "continuous", (-1.0, 1.0)),
+            Knob("z", "ordinal", (1, 10)),
+        ])
+
+        serialized = space.to_dict()
+        restored = SearchSpace.from_dict(serialized)
+
+        assert restored.dim == space.dim == 3

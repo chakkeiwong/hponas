@@ -52,15 +52,28 @@ class GPSearcher(BaseSearcher):
             num_restarts: Number of acquisition optimization restarts
             kernel: GP kernel type (only "matern52" supported)
         """
+        # Input validation BEFORE calling parent or external libraries
+        if seed is not None:
+            if not isinstance(seed, int):
+                raise TypeError(f"seed must be int or None, got {type(seed).__name__}")
+            if seed < 0:
+                raise ValueError(f"seed must be non-negative, got {seed}")
+
+        if not isinstance(initial_random_samples, int) or initial_random_samples < 1:
+            raise ValueError(f"initial_random_samples must be positive int, got {initial_random_samples}")
+
+        if not isinstance(num_restarts, int) or num_restarts < 1:
+            raise ValueError(f"num_restarts must be positive int, got {num_restarts}")
+
+        if kernel != "matern52":
+            raise ValueError(f"Only matern52 kernel supported, got {kernel}")
+
         super().__init__(search_space, seed)
         self.seed = seed  # Store seed for torch RNG control
         self.initial_random_samples = initial_random_samples
         self.num_restarts = num_restarts
         self.kernel = kernel
         self.rng = np.random.RandomState(seed)
-
-        if kernel != "matern52":
-            raise ValueError(f"Only matern52 kernel supported, got {kernel}")
 
     def suggest(self) -> Config:
         """Suggest next configuration using GP+qLogEI.
@@ -71,6 +84,9 @@ class GPSearcher(BaseSearcher):
         # Set torch seed for deterministic BoTorch operations
         # Seed varies with history length to ensure different suggestions
         if self.seed is not None:
+            # Defensive check: validate seed state before arithmetic
+            if not isinstance(self.seed, int) or self.seed < 0:
+                raise RuntimeError(f"Invalid seed state: {self.seed}")
             torch.manual_seed(self.seed + len(self.history))
 
         # Initial random phase
@@ -133,6 +149,12 @@ class GPSearcher(BaseSearcher):
         Returns:
             (X_train, Y_train) tensors
         """
+        # Input validation
+        if not results:
+            raise ValueError("Cannot prepare training data from empty results list")
+        if not all(r.is_valid() for r in results):
+            raise ValueError("All results must be valid for GP training")
+
         X_list = []
         Y_list = []
 

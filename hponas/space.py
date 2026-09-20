@@ -123,6 +123,18 @@ class SearchSpace:
                 )
         self.knobs.append(knob)
 
+    def get_knob(self, name: str) -> Knob:
+        """Retrieve knob by name."""
+        for knob in self.knobs:
+            if knob.name == name:
+                return knob
+        raise KeyError(f"Knob not found: {name}")
+
+    @property
+    def dim(self) -> int:
+        """Return number of knobs (dimensionality)."""
+        return len(self.knobs)
+
     def sample_config(self, rng: np.random.Generator) -> dict[str, Any]:
         """
         Sample one configuration from the space (unconditional uniform/log-uniform).

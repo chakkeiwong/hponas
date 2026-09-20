@@ -49,6 +49,30 @@ class TestConfig:
         d = config.to_dict()
         assert d == {"values": {"lr": 0.01}, "config_id": "test"}
 
+    def test_config_round_trip_preserves_all_fields(self):
+        """R9.4: to_dict → from_dict must preserve every populated field.
+
+        Mutation: `"config_id"` → `"CONFIG_ID"` in to_dict survives unless a test
+        explicitly checks that the dict key is correct and that from_dict reads it.
+        """
+        original = Config(values={"lr": 0.01, "dropout": 0.5}, config_id="cfg_42")
+
+        serialized = original.to_dict()
+        restored = Config(**serialized)
+
+        assert restored.values == original.values
+        assert restored.config_id == original.config_id
+
+    def test_config_round_trip_with_none_config_id(self):
+        """R9.4: round-trip must handle None config_id without dropping it."""
+        original = Config(values={"x": 1.0}, config_id=None)
+
+        serialized = original.to_dict()
+        restored = Config(**serialized)
+
+        assert restored.values == {"x": 1.0}
+        assert restored.config_id is None
+
 
 class TestTrial:
     """Tests for Trial dataclass."""
@@ -76,6 +100,77 @@ class TestTrial:
         assert d["trial_id"] == "trial_0"
         assert d["fidelity"] == 0.5
         assert d["config"]["values"] == {"lr": 0.01}
+
+    def test_trial_round_trip_preserves_all_fields(self):
+        """R9.4: to_dict must emit correct keys so reconstruction succeeds.
+
+        A `"seed"` → `"SEED"` mutation in to_dict breaks reconstruction unless
+        a test explicitly checks the dict structure and round-trips through it.
+        """
+        config = Config(values={"lr": 0.01, "batch_size": 32}, config_id="cfg_1")
+        original = Trial(
+            config=config,
+            trial_id="trial_42",
+            seed=999,
+            fidelity=0.75,
+            value=0.85,
+            cost=3.5,
+            parent_trial_id="trial_7",
+            status="completed",
+        )
+
+        serialized = original.to_dict()
+
+        # Reconstruct: Config from nested dict, Trial from top level
+        restored_config = Config(**serialized["config"])
+        restored = Trial(
+            config=restored_config,
+            trial_id=serialized["trial_id"],
+            seed=serialized["seed"],
+            fidelity=serialized["fidelity"],
+            value=serialized["value"],
+            cost=serialized["cost"],
+            parent_trial_id=serialized["parent_trial_id"],
+            status=serialized["status"],
+        )
+
+        assert restored.trial_id == original.trial_id
+        assert restored.seed == original.seed
+        assert restored.fidelity == original.fidelity
+        assert restored.value == original.value
+        assert restored.cost == original.cost
+        assert restored.parent_trial_id == original.parent_trial_id
+        assert restored.status == original.status
+        assert restored.config.values == original.config.values
+        assert restored.config.config_id == original.config.config_id
+
+    def test_trial_round_trip_with_none_fields(self):
+        """R9.4: round-trip must handle None-valued optional fields."""
+        config = Config(values={"x": 1.0})
+        original = Trial(
+            config=config,
+            trial_id="trial_0",
+            seed=None,
+            value=None,
+            parent_trial_id=None,
+        )
+
+        serialized = original.to_dict()
+        restored_config = Config(**serialized["config"])
+        restored = Trial(
+            config=restored_config,
+            trial_id=serialized["trial_id"],
+            seed=serialized["seed"],
+            fidelity=serialized["fidelity"],
+            value=serialized["value"],
+            cost=serialized["cost"],
+            parent_trial_id=serialized["parent_trial_id"],
+            status=serialized["status"],
+        )
+
+        assert restored.seed is None
+        assert restored.value is None
+        assert restored.parent_trial_id is None
 
 
 class TestResult:
@@ -117,6 +212,41 @@ class TestResult:
         assert d["trial_id"] == "trial_0"
         assert d["objective_value"] == 0.95
         assert d["cost"] == 2.5
+
+    def test_result_round_trip_preserves_all_fields(self):
+        """R9.4: to_dict keys must match constructor params for reconstruction.
+
+        `"fidelity"` → `"FIDELITY"` or `"metadata"` → `"meta"` breaks unless
+        a test round-trips and asserts field equality.
+        """
+        original = Result(
+            trial_id="trial_99",
+            objective_value=0.87,
+            cost=4.2,
+            fidelity=0.5,
+            metadata={"gpu_time": 120, "batch_id": 7},
+            status="completed",
+        )
+
+        serialized = original.to_dict()
+        restored = Result(**serialized)
+
+        assert restored.trial_id == original.trial_id
+        assert restored.objective_value == original.objective_value
+        assert restored.cost == original.cost
+        assert restored.fidelity == original.fidelity
+        assert restored.metadata == original.metadata
+        assert restored.status == original.status
+
+    def test_result_round_trip_with_empty_metadata(self):
+        """R9.4: round-trip with default metadata (empty dict)."""
+        original = Result(trial_id="trial_1", objective_value=0.5)
+
+        serialized = original.to_dict()
+        restored = Result(**serialized)
+
+        assert restored.metadata == {}
+        assert restored.status == "completed"
 
 
 class TestParameter:
