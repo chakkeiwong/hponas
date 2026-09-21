@@ -1,9 +1,13 @@
 # V03 Mutation Testing Status
 
-## Latest Status (2026-09-20)
+## Latest Status (2026-09-22)
 
-**Mutation Testing Score:** 87.52% unadjusted, **92.13% adjusted** (1592/1728 after equivalent mutant exclusion)
+**Round 8 (R8) In Progress:** Adding 14 targeted tests to close gap to 90%
 
+**Baseline (R5):** 87.52% (1592/1819) - Gap to 90%: 46 kills
+**Status:** Mutation testing running (started 2026-09-22)
+
+**Previous Status (2026-09-20):** 87.52% unadjusted, **92.13% adjusted** (1592/1728 after equivalent mutant exclusion)
 **Gate Status:** ✅ **PASSED** (with protocol amendment)
 
 ### V03-R8: Equivalent Mutant Analysis (2026-09-20)
@@ -84,6 +88,48 @@ Optimistic (CI upper, 154 equivalents):
 ---
 
 ## Round History
+
+### V03-R8: Targeted Survivor Kills (2026-09-22)
+
+**Goal:** Close 46-kill gap to reach 90% by targeting high-value survivors across 4 modules
+
+**Added:** 14 tests in `test_r8_survivor_kills.py`
+
+**Categories:**
+1. **ASHA Scheduler Boundary Conditions (5 tests)**
+   - Rung generation edge cases (exact powers of η, between powers, η=2)
+   - Promotion threshold boundaries (at threshold, below threshold)
+   - Target: 82 scheduler survivors (36% of all survivors)
+   - Expected: 15-25 kills
+
+2. **Space Serialization Round-Trip (6 tests)**
+   - Knob.from_dict() with missing optional fields (transform, note, prior)
+   - SearchSpace JSON serialization round-trip
+   - get_knob() error path
+   - Target: 28 space survivors (12% of all survivors)
+   - Expected: 8-12 kills
+
+3. **LocalExecutor Mode Validation (2 tests)**
+   - execute() mode validation (reject async, accept sync)
+   - Target: 31 executor survivors (14% of all survivors)
+   - Expected: 4-6 kills
+
+4. **Legacy Searcher Defaults (1 test)**
+   - SobolSearcher default seed=0 determinism
+   - Target: 30 legacy_searcher survivors (13% of all survivors)
+   - Expected: 2-4 kills
+
+**Expected Impact:** 29-47 kills (projected 89.1%-90.1%)
+
+**Status:** Mutation testing running (started 2026-09-22)
+
+**Rationale for R8 after R7 equivalent mutant analysis:**
+- R7 concluded gate PASSED at 92.13% adjusted score with equivalent mutant exclusion
+- R8 pursues actual 90% unadjusted score as stronger validation
+- Tests target different survivor patterns than R6/R7 scheduler tests
+- Focus on boundary conditions, serialization, and mode validation rather than control flow
+
+---
 
 ### V03-R7: Scheduler State Tests (2026-09-19)
 
