@@ -9,6 +9,7 @@ import pytest
 import numpy as np
 from hponas.schedulers import ASHAScheduler, ASHAConfig
 from hponas.space import Knob, SearchSpace
+from hponas.searchers.random_searcher import RandomSearcher
 
 
 class TestASHASchedulerBoundaryConditions:
@@ -218,3 +219,45 @@ class TestLocalExecutorModeValidation:
         # Result has trial_id and objective_value fields
         assert result.trial_id == "t1"
         assert result.objective_value == 1.0
+
+
+class TestRandomSearcherStateRoundTrip:
+    """Test RandomSearcher state serialization round-trip integrity."""
+
+    def test_rng_state_tuple_integrity(self):
+        """get_state/set_state must preserve all 5 RNG state tuple elements."""
+        # Kills mutmut_7 (get_state) and mutmut_10 (set_state):
+        # These mutants skip index 3 and duplicate index 4 in the rng_state tuple
+        space = SearchSpace(
+            knobs=[Knob(name="x", kind="real", bounds=(0.0, 1.0))]
+        )
+        searcher = RandomSearcher(search_space=space, seed=42)
+
+        # Generate some samples to advance RNG state
+        for _ in range(5):
+            searcher.suggest()
+
+        # Capture state
+        state = searcher.get_state()
+
+        # The bug is in the rng_state tuple serialization
+        rng_state = state["rng_state"]
+        assert len(rng_state) == 5, f"Expected 5-tuple for rng_state, got {len(rng_state)}"
+
+        # Verify all 5 elements are distinct (mutations duplicate index 4)
+        # Elements: (str, list, int, int, float)
+        assert isinstance(rng_state[0], str)  # MT19937
+        assert isinstance(rng_state[1], list)  # state array
+        assert isinstance(rng_state[2], int)  # pos
+        assert isinstance(rng_state[3], int)  # has_gauss
+        assert isinstance(rng_state[4], float)  # cached_gaussian
+
+        # Create new searcher and restore state
+        searcher2 = RandomSearcher(search_space=space, seed=999)
+        searcher2.set_state(state)
+
+        # Both should generate identical sequences after restoration
+        for _ in range(10):
+            config1 = searcher.suggest()
+            config2 = searcher2.suggest()
+            assert config1 == config2, "State restoration failed: RNG sequences diverged"
