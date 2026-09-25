@@ -1,4 +1,0 @@
-Usage: python -m mutmut [OPTIONS] COMMAND [ARGS]...
-Try 'python -m mutmut --help' for help.
-
-Error: No such command 'junitxml'.

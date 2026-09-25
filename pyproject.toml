@@ -67,6 +67,7 @@ source_paths = [
     "hponas/space.py",
     "hponas/types.py",
 ]
+timeout = 120.0
 pytest_add_cli_args = [
     "--ignore=tests/test_cost_efficiency.py",
     "--ignore=tests/test_prior_recovery_pibo.py",
@@ -78,4 +79,7 @@ pytest_add_cli_args = [
     "--ignore=tests/integration/test_study_gp.py",
     "-k",
     "not (test_sample_random_config or test_categorical_knob_stores_choices or test_continuous_sample_within_bounds or test_ordinal_sample_within_range or test_categorical_sample_in_choices or test_invalid_kind_raises or test_ordinal_bounds_must_be_integers)",
+    "--tb=no",
+    "--no-header",
+    "-q",
 ]
