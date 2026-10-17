@@ -1,465 +1,119 @@
-# Traceability Matrix v1.0
-
-**Date:** 2026-09-09  
-**Authority:** HPO_NAS_RECOVERY_MASTER_PROGRAM.md Week 1 Day 4-6  
-**Purpose:** Map LaTeX specifications → implementation → tests → validations  
-
----
-
-## Matrix Structure
-
-Each entry maps:
-- **LaTeX Reference:** Section, equation, algorithm line in hpo-survey/
-- **Claim/Requirement:** Exact text or mathematical specification
-- **Implementation:** File:line in hponas/
-- **Unit Test:** File:line in tests/unit/
-- **Integration Test:** File:line in tests/integration/
-- **Validation:** V01-V15 campaign ID
-- **Status:** ✓ match / ❌ violation / ⚠️ missing
-- **Notes:** Additional context, known issues
-
----
-
-## Tier 0: Baseline Methods
-
-### Random Search
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/03-model-free.tex:73-88 |
-| **Claim** | "Uniform random sampling from search space, seed-deterministic" |
-| **Implementation** | hponas/searchers/random_searcher.py:11-46 (RandomSearcher class) |
-| **Unit Test** | tests/unit/test_random_searcher.py:50-70 (test_random_deterministic_with_seed) |
-| **Integration Test** | tests/integration/test_study_baseline.py:15-30 (test_random_study) |
-| **Validation** | V04-T0 (Random vs Sobol baseline floor) |
-| **Status** | ✓ MATCH |
-| **Notes** | Implementation verified Phase 1 Day 1, 19 unit tests passing, 97% coverage |
-
-### Sobol Quasi-Random
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/03-model-free.tex:51-72 |
-| **Claim** | "Quasi-random low-discrepancy sequence using scipy.stats.qmc.Sobol" |
-| **Implementation** | hponas/searchers/random_searcher.py:49-159 (SobolSearcher class) |
-| **Unit Test** | tests/unit/test_random_searcher.py:135-160 (test_sobol_better_coverage) |
-| **Integration Test** | tests/integration/test_study_baseline.py:50-75 (test_sobol_study) |
-| **Validation** | V04-T0 (Sobol beats Random on benchmark) |
-| **Status** | ✓ MATCH |
-| **Notes** | Implementation verified Phase 1 Day 1, log-scale supported, gap variance test passing |
-
-### GP+qLogEI Baseline
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/04-bayesian.tex:Section 3.1 "Baseline Methods" |
-| **Claim** | "Gaussian Process with Matérn 5/2 kernel, q-Expected Improvement with log transform" |
-| **Implementation** | hponas/searchers/gp_searcher.py:1-205 (GPSearcher class) |
-| **Unit Test** | tests/unit/test_gp_searcher.py:1-366 (20 tests, 99% coverage) |
-| **Integration Test** | tests/integration/test_study_gp.py:1-197 (8 tests) |
-| **Validation** | V01 (Vendor parity vs BoTorch) |
-| **Status** | ✓ MATCH (after Phase 0 fixes) |
-| **Notes** | Phase 0 recovery: fixed NotImplementedError, trial mapping, Y_train shape. FIXED: _prepare_training_data() implemented, RNG serialization fixed |
-
----
-
-## Tier 0: Executors
-
-### LocalExecutor
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | BUILD_PROGRAM_v3.md:98-122 (interface contract) |
-| **Claim** | "Synchronous/async local execution with error handling: NaN, inf, exceptions, timeouts" |
-| **Implementation** | hponas/executors/local_executor.py:1-149 (LocalExecutor class) |
-| **Unit Test** | tests/unit/test_local_executor.py:1-366 (23 tests, 95% coverage) |
-| **Integration Test** | tests/integration/test_study_baseline.py (uses LocalExecutor) |
-| **Validation** | Contract tests (W2.3) |
-| **Status** | ✓ MATCH |
-| **Notes** | Phase 1 Day 2 verified, sync/async modes operational, error capture working |
-
-### RayExecutor
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | BUILD_PROGRAM_v3.md:124-147 (distributed execution contract) |
-| **Claim** | "Distributed Ray execution with fault tolerance: retry failed trials, handle worker crashes" |
-| **Implementation** | hponas/executors/ray_executor.py:1-255 (RayExecutor class) |
-| **Unit Test** | tests/unit/test_ray_executor_tier0.py:1-366 (24 tests, 84% coverage) |
-| **Integration Test** | ⚠️ MISSING (Study-level Ray integration test) |
-| **Validation** | Contract tests (W2.3) |
-| **Status** | ✓ MATCH (after Phase 1 Day 3 fixes) |
-| **Notes** | Phase 1 Day 3 fixes: contract violation (dict→Result), retry logic implemented, dead code removed. Uncovered: import guard (64-65), remote worker body (211-230), shutdown exception (252-253) |
-
----
-
-## Tier 0: Workloads
-
-### rl_routine (Brax Ant)
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/09-workloads.tex + BUILD_PROGRAM_v3.md:149-179 |
-| **Claim** | "9-knob RL policy search space on Brax Ant: width, depth, activation, optimizer, lr, batch_size, dropout, weight_decay, lr_schedule" |
-| **Implementation** | workloads/rl_routine.py:1-250 (rl_routine function) |
-| **Unit Test** | ⚠️ MISSING (unit test for rl_routine interface) |
-| **Integration Test** | ⚠️ MISSING (Study + rl_routine end-to-end) |
-| **Validation** | V05 (workload correctness), V14 (day-one walk seed isolation) |
-| **Status** | ✓ MATCH (after Phase 0 brax upgrade) |
-| **Notes** | Phase 0 fix: upgraded brax from GitHub source for JAX 0.11.1 compat, fixed inference API to provide key_sample. JAX_AVAILABLE=True, workload functional |
-
----
-
-## Tier 1: Core Methods
-
-### TPE (Tree-structured Parzen Estimator)
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/04-bayesian.tex (TPE section) |
-| **Claim** | "Tree-structured Parzen Estimator using Optuna backend" |
-| **Implementation** | hponas/legacy_searchers.py:150-245 (TPESearcher class, OLD API) |
-| **Unit Test** | ⚠️ MISSING (no Tier 0 TPE tests) |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | V01 (Vendor parity: hponas.TPE vs Optuna.TPE) |
-| **Status** | ⚠️ MISSING (Tier 1 task T1.1, not yet implemented in new API) |
-| **Notes** | OLD API exists in legacy_searchers.py, needs migration to hponas/searchers/ package for Tier 1 |
-
-### ASHA (Asynchronous Successive Halving)
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/05-multifidelity.tex (ASHA algorithm) |
-| **Claim** | "Asynchronous successive halving with geometric rung spacing, promotion on top-K" |
-| **Implementation** | ⚠️ NOT IMPLEMENTED (Tier 1 task T1.2) |
-| **Unit Test** | ⚠️ MISSING |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | V06 (ASHA vs median stopping) |
-| **Status** | ⚠️ MISSING (Tier 1 core, 3 eng-days) |
-| **Notes** | Scheduler interface needs definition, ASHA is Tier 1 dependency for MO-ASHA |
-
-### MO-ASHA (Multi-objective ASHA)
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/07-multiobjective.tex + 05-multifidelity.tex |
-| **Claim** | "Multi-objective variant of ASHA with hypervolume-based promotion" |
-| **Implementation** | ⚠️ NOT IMPLEMENTED (Tier 1 task T1.3) |
-| **Unit Test** | ⚠️ MISSING |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | V07 (MO-ASHA early stopping quality) |
-| **Status** | ⚠️ MISSING (Tier 1 core, 2 eng-days, depends on T1.2) |
-| **Notes** | Requires ASHA base + multi-objective promotion logic |
-
-### qLogNEHVI (Multi-objective Bayesian Optimization)
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/07-multiobjective.tex (qLogNEHVI algorithm) |
-| **Claim** | "BoTorch-based multi-objective BO with log expected hypervolume improvement" |
-| **Implementation** | hponas/searchers_mo.py:60-350 (qLogNEHVISearcher class, OLD API) |
-| **Unit Test** | ⚠️ MISSING (no unit tests for qLogNEHVI) |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | V09 (qLogNEHVI vs Chebyshev vs NSGA-II) |
-| **Status** | ✓ IMPLEMENTATION EXISTS (Phase 0 import fix), ⚠️ TESTS MISSING |
-| **Notes** | OLD API in searchers_mo.py functional (V09 validation passing), needs migration to new API + unit tests for Tier 1 |
-
----
-
-## Tier 1: Priors & Transfer Learning
-
-### πBO (Prior-weighted Bayesian Optimization)
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/08-priors-transfer.tex (πBO algorithm) |
-| **Claim** | "Prior-guided BO: multiply acquisition function by prior weight, NOT GP mean" |
-| **Implementation** | hponas/legacy_searchers.py or similar (location TBD) |
-| **Unit Test** | ⚠️ MISSING |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | V15 (Prior encoding validation) |
-| **Status** | ❌ VIOLATION - "Uses GP mean as weight instead of acquisition function value" |
-| **Notes** | **KNOWN SPECIFICATION VIOLATION** per BUILD_PROGRAM_REVIEW_VERDICT.md line 66. Must fix: change from GP mean → acquisition multiplier. Tier 1 task T1P.1 (3d) |
-
-### PriorBand (Prior-aware Successive Halving)
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/08-priors-transfer.tex (PriorBand algorithm) |
-| **Claim** | "Prior-guided ASHA: use portfolio sampler (randomized weighted selection), NOT top-K" |
-| **Implementation** | hponas/searchers_priorband.py (location TBD) |
-| **Unit Test** | ⚠️ MISSING |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | V11 (PriorBand effectiveness) |
-| **Status** | ❌ VIOLATION - "Uses top-K promotion instead of portfolio sampler" |
-| **Notes** | **KNOWN SPECIFICATION VIOLATION** per BUILD_PROGRAM_REVIEW_VERDICT.md line 67. Must fix: change from top-K → randomized weighted selection. Tier 1 task T1P.2 (3d) |
-
-### ifBO (Iterative Feature Bayesian Optimization)
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/08-priors-transfer.tex (ifBO section) |
-| **Claim** | "Transfer learning with pretrained surrogate model, NOT custom power-law" |
-| **Implementation** | ⚠️ NOT IMPLEMENTED or WRONG (location TBD) |
-| **Unit Test** | ⚠️ MISSING |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | ⚠️ TBD (no validation defined yet) |
-| **Status** | ❌ VIOLATION - "Builds custom power-law model instead of using pretrained surrogate" |
-| **Notes** | **KNOWN SPECIFICATION VIOLATION** per BUILD_PROGRAM_REVIEW_VERDICT.md line 68. Must fix: use pretrained surrogate. Tier 1 task T1P.3 (4d) |
-
-### Warm-start Transfer Learning
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/08-priors-transfer.tex (RGPE section) |
-| **Claim** | "Query ranked/quantile samples FIRST, build RGPE only AFTER query" |
-| **Implementation** | hponas/warm_start.py (location TBD) |
-| **Unit Test** | ⚠️ MISSING |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | V13 (Warm-start effectiveness) |
-| **Status** | ❌ VIOLATION - "Builds RGPE immediately instead of querying first" |
-| **Notes** | **KNOWN SPECIFICATION VIOLATION** per BUILD_PROGRAM_REVIEW_VERDICT.md line 69. Must fix: ranked query → RGPE build. Tier 1 task T1P.4 (3d) |
-
----
-
-## Tier 1: Advanced Methods
-
-### TuRBO (Trust Region Bayesian Optimization)
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/04-bayesian.tex (TuRBO local modeling) |
-| **Claim** | "Trust region BO with local GP models, adaptive trust region sizing" |
-| **Implementation** | ⚠️ NOT IMPLEMENTED (Tier 1 task T1.5) |
-| **Unit Test** | ⚠️ MISSING |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | V11 (TuRBO local trust region behavior) |
-| **Status** | ⚠️ MISSING (Tier 1 core, 5 eng-days) |
-| **Notes** | Requires local GP + trust region logic, GPU validation planned |
-
-### Chebyshev Scalarization
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/07-multiobjective.tex (scalarization baseline) |
-| **Claim** | "Multi-objective scalarization using Chebyshev distance with random weights" |
-| **Implementation** | hponas/searchers_mo.py:400-550 (ChebyshevSearcher, OLD API) |
-| **Unit Test** | ⚠️ MISSING |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | V09 (Chebyshev vs qLogNEHVI comparison) |
-| **Status** | ✓ IMPLEMENTATION EXISTS (Phase 0 import fix), ⚠️ TESTS MISSING |
-| **Notes** | Used in V09 validation (passing), needs migration + unit tests for Tier 1 task T1.6 (2d) |
-
-### NSGA-II
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/07-multiobjective.tex (evolutionary MO baseline) |
-| **Claim** | "Non-dominated Sorting Genetic Algorithm II for multi-objective optimization" |
-| **Implementation** | hponas/searchers_mo.py:600-860 (NSGAIISearcher, OLD API) |
-| **Unit Test** | ⚠️ MISSING |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | V09 (NSGA-II vs qLogNEHVI comparison) |
-| **Status** | ✓ IMPLEMENTATION EXISTS (Phase 0 import fix), ⚠️ TESTS MISSING |
-| **Notes** | Used in V09 validation (passing), needs migration + unit tests for Tier 1 task T1.7 (2d) |
-
-### EI-per-cost
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/08-priors-transfer.tex roadmap-12 (cost-aware BO) |
-| **Claim** | "Cost-aware BO: divide acquisition by predicted cost^T with temperature annealing" |
-| **Implementation** | hponas/searchers_cost.py:1-432 (CostAwareSearcher, OLD API) |
-| **Unit Test** | ⚠️ MISSING |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | V12 (EI-per-cost efficiency validation) |
-| **Status** | ✓ IMPLEMENTATION EXISTS (Phase 0 import fix), ⚠️ TESTS MISSING |
-| **Notes** | OLD API functional, needs migration + unit tests for Tier 1 task T1.8 (3d) |
-
----
-
-## Tier 2: Population & Advanced
-
-### BG-PBT (Population-based Training)
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | hpo-survey/sections/06-population.tex (PBT algorithm) |
-| **Claim** | "Population-based training with exploit/explore dynamics" |
-| **Implementation** | ⚠️ NOT IMPLEMENTED (Tier 2 task T2.1) |
-| **Unit Test** | ⚠️ MISSING |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | V04-T1 (CONDITIONAL - PBT effectiveness) |
-| **Status** | ⚠️ MISSING (Tier 2, 8 eng-days, CONDITIONAL on V04-T1 resolution) |
-| **Notes** | Depends on V04-T1 passing, population line demotion triggered by V04-T1 failure |
-
-### Mixed-space TuRBO
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 2 scope |
-| **Claim** | "TuRBO extended to categorical + continuous hyperparameters" |
-| **Implementation** | ⚠️ NOT IMPLEMENTED (Tier 2 task T2.2) |
-| **Unit Test** | ⚠️ MISSING |
-| **Integration Test** | ⚠️ MISSING |
-| **Validation** | ⚠️ TBD |
-| **Status** | ⚠️ MISSING (Tier 2, 5 eng-days) |
-| **Notes** | Extension of T1.5 TuRBO to mixed search spaces |
-
----
-
-## Validation Protocol Traceability
-
-### V01: Vendor Parity
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 0 remediation |
-| **Claim** | "hponas.GP matches BoTorch.GP, hponas.TPE matches Optuna.TPE" |
-| **Implementation** | validation/v01_wrapper_parity.py |
-| **Test Protocol** | validation/protocols/v01_protocol.md (to be created Week 3) |
-| **Status** | ❌ NEEDS FIX - "Current V01 compares two internal implementations, not vendor" |
-| **Notes** | Week 3 task W3.2 (1d): Fix to compare against declared vendors, not internal |
-
-### V02: State Replay
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 0 remediation |
-| **Claim** | "Deterministic save/load/replay: resume from checkpoint produces identical results" |
-| **Implementation** | validation/v02_state_replay.py |
-| **Test Protocol** | validation/protocols/v02_protocol.md (to be created Week 3) |
-| **Status** | ⚠️ MISSING - "Not implemented" |
-| **Notes** | Week 3 task W3.3 (3d): Implement deterministic replay test |
-
-### V03: Mutation Testing
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 0 remediation + Approval Checklist Item 8 |
-| **Claim** | "Mutation score ≥0.9 on searcher/scheduler core logic" |
-| **Implementation** | validation/v03_mutation_testing.py |
-| **Test Protocol** | validation/protocols/v03_protocol.md (to be created Week 3) |
-| **Status** | ⚠️ MISSING - "No mutation tests exist" |
-| **Notes** | Week 3 task W3.4 (3d): Implement mutmut-based mutation testing |
-
-### V04-T0: Baseline Floor
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 0 gate criterion |
-| **Claim** | "GP+qLogEI beats Sobol by ≥5% on Branin (preregistered threshold)" |
-| **Implementation** | validation/v04_t0_baseline_floor.py |
-| **Test Protocol** | validation/protocols/v04_t0_protocol.md (to be created Week 3) |
-| **Status** | ❌ NEEDS RE-RUN - "Post-hoc tuned threshold, needs preregistration" |
-| **Notes** | Week 3 task W3.5 (2d): Re-run with preregistered 5% threshold + correct impl |
-
-### V04-T1: Population Line
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 1 gate criterion |
-| **Claim** | "BG-PBT effectiveness validation" |
-| **Implementation** | validation/v04_performance_check.py (existing, FAILED) |
-| **Test Protocol** | validation/protocols/v04_t1_protocol.md (needs power analysis) |
-| **Status** | ❌ FAILED - "Underpowered, demotion rule triggered" |
-| **Notes** | Week 2 task W2.6 (2d): Investigate failure (GP floor violation or test bug). Tier 2 CONDITIONAL on resolution |
-
-### V05: Workload Correctness
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 0 rl_routine requirement |
-| **Claim** | "Real rl_routine workload (Brax Ant) produces valid results" |
-| **Implementation** | validation/v05_log_warping.py |
-| **Test Protocol** | validation/protocols/v05_protocol.md (to be created Week 3) |
-| **Status** | ✓ FUNCTIONAL (after Phase 0 brax upgrade) - ⚠️ NEEDS RE-RUN |
-| **Notes** | Week 3 task W3.6 (1d): Re-run V05 with real rl_routine (not proxy). Phase 0: upgraded brax, workload operational |
-
-### V06: ASHA vs Median Stopping
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 1 ASHA validation |
-| **Claim** | "ASHA early stopping quality vs median stopping baseline" |
-| **Implementation** | validation/v06_asha_vs_median.py (passing per TIER1_GATE_STATUS.md) |
-| **Test Protocol** | validation/protocols/v06_protocol.md (to be created Week 3) |
-| **Status** | ✓ PASSED (per prior gate report) |
-| **Notes** | Tier 1 task T1.9 (2d): Re-run after ASHA implementation (T1.2). GPU: A100 x1 x3d |
-
-### V09: qLogNEHVI vs Scalarization
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 1 MO validation |
-| **Claim** | "qLogNEHVI beats Chebyshev and NSGA-II on hypervolume" |
-| **Implementation** | validation/v09_qlogNEHVI_vs_scalarization.py (passing after Phase 0 fix) |
-| **Test Protocol** | validation/protocols/v09_protocol.md (to be created Week 3) |
-| **Status** | ✓ PASSED (Phase 0 verification: qLogNEHVI beats both baselines, p<0.05) |
-| **Notes** | Multi-seed validation operational. Tier 1 task T1.12 (2d): Re-run after new API migration |
-
-### V14: Day-one Walk
-
-| Field | Value |
-|-------|-------|
-| **LaTeX Reference** | BUILD_PROGRAM_v3.md Tier 0 seed isolation requirement |
-| **Claim** | "rl_routine seed isolation: protected test seeds never reach searcher" |
-| **Implementation** | validation/v14_day_one_walk.py |
-| **Test Protocol** | validation/protocols/v14_protocol.md (to be created Week 3) |
-| **Status** | ✓ FUNCTIONAL (after Phase 0 brax upgrade) - ❌ NEEDS RE-RUN - "Vacuous: zero trial budgets" |
-| **Notes** | Week 3 task W3.7 (0.5d): Re-run with non-zero trial budgets |
-
----
-
-## Summary Statistics
-
-### Coverage by Status
-
-- **✓ MATCH:** 6 items (Random, Sobol, GP+qLogEI, LocalExecutor, RayExecutor, rl_routine)
-- **✓ IMPLEMENTATION EXISTS, ⚠️ TESTS MISSING:** 4 items (qLogNEHVI, Chebyshev, NSGA-II, EI-per-cost)
-- **❌ VIOLATION:** 4 items (πBO, PriorBand, ifBO, Warm-start) - ALL DOCUMENTED
-- **⚠️ MISSING:** 6 items (TPE, ASHA, MO-ASHA, TuRBO, BG-PBT, Mixed-space TuRBO)
-
-### Coverage by Tier
-
-- **Tier 0:** 6/6 implemented, 4/6 fully tested
-- **Tier 1 Core:** 4/7 implemented (OLD API), 0/7 tested
-- **Tier 1 Priors/Transfer:** 0/4 correct (all have spec violations)
-- **Tier 2:** 0/2 implemented
-
-### Validation Protocol Status
-
-- **Passing:** V06 ✓, V09 ✓
-- **Functional, needs re-run:** V05 ✓, V14 ✓
-- **Needs fix:** V01 ❌, V04-T0 ❌, V04-T1 ❌
-- **Not implemented:** V02 ⚠️, V03 ⚠️
-
----
-
-## Known Specification Violations (Complete List)
-
-Per BUILD_PROGRAM_REVIEW_VERDICT.md lines 66-70, the following violations are DOCUMENTED:
-
-1. **πBO:** Uses GP mean as weight → MUST use acquisition function value as multiplier
-2. **PriorBand:** Uses top-K promotion → MUST use portfolio sampler (randomized weighted selection)
-3. **ifBO:** Builds custom power-law model → MUST use pretrained surrogate model
-4. **Warm-start:** Builds RGPE immediately → MUST query ranked/quantile samples first
-
-**Action:** Fix during Tier 1 scope correction (Week 4 Day 1-2, tasks T1P.1-T1P.4)
-
-BUILD_PROGRAM_REVIEW_VERDICT.md mentions "11 more" violations beyond these 4, but they are not explicitly listed in available documents. Week 1 Day 4-6 task is to DOCUMENT all 15+, so further investigation is needed.
-
----
-
-## Next Steps
-
-1. **Complete this traceability matrix:** Investigate remaining 11 specification violations mentioned in BUILD_PROGRAM_REVIEW_VERDICT.md line 68
-2. **Week 3 Day 1-3:** Create validation protocol files (validation/protocols/v{01-15}_protocol.md)
-3. **Week 3 Day 4-5:** Create test pyramid document (TEST_PYRAMID_v1.md)
-4. **Week 4 Day 1-2:** Amend BUILD_PROGRAM_v3.md with traceability corrections
-
----
-
-**Document Status:** DRAFT (Week 1 Day 4 in progress)  
-**Next Update:** Completion of remaining violation investigation  
-**Satisfies:** Approval Checklist Item 2 (partial), Item 5 (partial)
+# Program requirement traceability
+
+Generated by `python tools/update_progress.py` from `docs/program/program.json`. Historical v1 is archived. A disposition is not a validation PASS.
+
+| Requirement | Scope / source decisions | Disposition | Work items | Reason |
+|---|---|---|---|---|
+| REQ-roadmap-01 | Sobol + log sampling (roadmap-01) | required | RPR-01 | Source requirement retained; implementation evidence does not imply performance acceptance. |
+| REQ-roadmap-02 | Random-search baseline (roadmap-02) | required | RPR-01 | Source requirement retained; implementation evidence does not imply performance acceptance. |
+| REQ-roadmap-03 | ASHA + median rule (roadmap-03) | required | SPEC-02A, SPEC-02, REL-01, T1-MF | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-roadmap-04 | TPE (wrap Optuna) (roadmap-04) | required | RPR-01 | Source requirement retained; implementation evidence does not imply performance acceptance. |
+| REQ-roadmap-05 | GP + qLogEI (BoTorch) (roadmap-05) | required | RPR-01 | Source requirement retained; implementation evidence does not imply performance acceptance. |
+| REQ-roadmap-06 | Dimension-scaled priors (roadmap-06) | required | SPEC-01 | Implementation repaired and behavior verified in SPEC-01; scientific/vendor campaign acceptance remains separately gated. |
+| REQ-roadmap-07 | qLogNEHVI (roadmap-07) | required | T1-MO | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-roadmap-08 | Chebyshev scalarization (roadmap-08) | required | T1-MO | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-roadmap-09 | MO-ASHA + veto gates (roadmap-09) | required | T1-MO | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-roadmap-10 | πBO + PriorBand (roadmap-10) | optional | PRI-01 | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-roadmap-11 | Warm start from run store (roadmap-11) | required | T1-WARM | Eligible Tier-1 ranked initialization implementation; performance acceptance remains V12. |
+| REQ-roadmap-12 | EI-per-cost + cooling (roadmap-12) | required | T1-COST | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-roadmap-13 | PB2-Mix, then BG-PBT (roadmap-13) | deferred | T2-POP | Retained implementation obligation; acceptance narrowed prospectively to explicit local finite conformance. Historical empirical/default/worker-regime claims are not accepted. |
+| REQ-roadmap-14 | DEHB (roadmap-14) | deferred | T3-01 | Owned serial method retained; finite conformance only, historical RL ranking/default claims retired prospectively. |
+| REQ-roadmap-15 | ifBO scheduler (roadmap-15) | deferred | T3-01 | Retained roadmap/guidance obligation; not eligible during Tier 0 repair. |
+| REQ-roadmap-16 | HEBO-style robustness (roadmap-16) | deferred | T3-01 | Selective bounded continuous GP input/output warping and noisy acquisition ensemble verified mathematically; broader HEBO/performance claims unestablished. |
+| REQ-roadmap-17 | CARBS cost frontier (roadmap-17) | deferred | SCOPE-01 | Retained roadmap/guidance obligation; not eligible during Tier 0 repair. |
+| REQ-roadmap-18 | One-shot / zero-cost / grammar NAS (roadmap-18) | excluded | SCOPE-01 | Preserve source exclusion; reopening requires a recorded scope decision. |
+| REQ-ch03-01 | Log-scale and Sobol sampling (ch03-01) | required | RPR-01 | Source requirement retained; implementation evidence does not imply performance acceptance. |
+| REQ-ch03-02 | Random search (ch03-02) | required | RPR-01 | Source requirement retained; implementation evidence does not imply performance acceptance. |
+| REQ-ch03-03 | Grid search (ch03-03) | excluded | SCOPE-01 | Preserve source exclusion; reopening requires a recorded scope decision. |
+| REQ-ch03-04 | CMA-ES (ch03-04) | required | SPEC-01 | Implementation repaired and behavior verified in SPEC-01; scientific/vendor campaign acceptance remains separately gated. |
+| REQ-ch03-05 | Differential evolution (ch03-05) | deferred | T3-01 | Owned serial method retained; finite conformance only, historical RL ranking/default claims retired prospectively. |
+| REQ-ch04-01 | GP searcher with qLogEI on BoTorch (ch04-01) | required | RPR-01 | Source requirement retained; implementation evidence does not imply performance acceptance. |
+| REQ-ch04-02 | TPE by wrapping Optuna (ch04-02) | required | RPR-01 | Source requirement retained; implementation evidence does not imply performance acceptance. |
+| REQ-ch04-03 | Raw EI, anywhere (ch04-03) | excluded | SCOPE-01 | Preserve source exclusion; reopening requires a recorded scope decision. |
+| REQ-ch04-04 | Entropy-search acquisitions (ch04-04) | excluded | SCOPE-01 | Preserve source exclusion; reopening requires a recorded scope decision. |
+| REQ-ch04-05 | Dimension-scaled lengthscale priors (ch04-05) | required | SPEC-01 | Implementation repaired and behavior verified in SPEC-01; scientific/vendor campaign acceptance remains separately gated. |
+| REQ-ch04-06 | Trust-region searcher with mixed-space kernels (ch04-06) | required | T1-TRUST, T2-POP | Retained implementation obligation; acceptance narrowed prospectively to explicit local finite conformance. Historical empirical/default/worker-regime claims are not accepted. |
+| REQ-ch04-07 | SAASBO (ch04-07) | deferred | SCOPE-01 | Retained roadmap/guidance obligation; not eligible during Tier 0 repair. |
+| REQ-ch04-08 | SMAC (ch04-08) | deferred | SCOPE-01 | Retained roadmap/guidance obligation; not eligible during Tier 0 repair. |
+| REQ-ch05-01 | ASHA plus the median stopping rule (ch05-01) | required | SPEC-02A, SPEC-02, REL-01, T1-MF | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-ch05-02 | Hyperband as a distinct feature (ch05-02) | excluded | SCOPE-01 | Preserve source exclusion; reopening requires a recorded scope decision. |
+| REQ-ch05-03 | BOHB (ch05-03) | excluded | SCOPE-01 | Preserve source exclusion; reopening requires a recorded scope decision. |
+| REQ-ch05-04 | DEHB, implemented against our interfaces (ch05-04) | deferred | T3-01 | Owned serial method retained; finite conformance only, historical RL ranking/default claims retired prospectively. |
+| REQ-ch05-05 | PASHA (ch05-05) | required | SPEC-01, SPEC-03 | D-V01-REFERENCE-SCOPE and D-V01-COVERAGE-SCOPE settle the explicitly corrected finite PASHA reference/corpus; retained PASS is source-specific and requires freshness revalidation. No general vendor equivalence is claimed. |
+| REQ-ch05-06 | Learning-curve scheduling, specifically ifBO (ch05-06) | deferred | T3-01 | Retained roadmap/guidance obligation; not eligible during Tier 0 repair. |
+| REQ-ch06-01 | PBT (ch06-01) | deferred | T2-POP | Retained implementation obligation; acceptance narrowed prospectively to explicit local finite conformance. Historical empirical/default/worker-regime claims are not accepted. |
+| REQ-ch06-02 | PB2 extended to mixed spaces (ch06-02) | deferred | T2-POP | Retained implementation obligation; acceptance narrowed prospectively to explicit local finite conformance. Historical empirical/default/worker-regime claims are not accepted. |
+| REQ-ch06-03 | BG-PBT (ch06-03) | deferred | T2-POP | Retained implementation obligation; acceptance narrowed prospectively to explicit local finite conformance. Historical empirical/default/worker-regime claims are not accepted. |
+| REQ-ch06-04 | FIRE-PBT, MF-PBT, IPBT, SEARL (ch06-04) | deferred | SCOPE-01 | Retained roadmap/guidance obligation; not eligible during Tier 0 repair. |
+| REQ-ch07-01 | qLogNEHVI on BoTorch (ch07-01) | required | T1-MO | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-ch07-02 | Chebyshev scalarization with random weights (ch07-02) | required | T1-MO | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-ch07-03 | Plain weighted sums as a product default (ch07-03) | excluded | SCOPE-01 | Preserve source exclusion; reopening requires a recorded scope decision. |
+| REQ-ch07-04 | NSGA-II by wrapping Optuna (ch07-04) | required | T1-MO | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-ch07-05 | MO-ASHA with veto gates (ch07-05) | required | T1-MO | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-ch07-06 | MORBO and the hypervolume knowledge gradient (ch07-06) | deferred | SCOPE-01 | Retained roadmap/guidance obligation; not eligible during Tier 0 repair. |
+| REQ-ch08-01 | πBO's prior-weighted acquisition (ch08-01) | optional | PRI-01 | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-ch08-02 | PriorBand (ch08-02) | optional | PRI-01 | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-ch08-03 | Warm starts from the run store (ch08-03) | required | T1-WARM | Eligible Tier-1 ranked initialization implementation; performance acceptance remains V12. |
+| REQ-ch08-04 | RGPE-style surrogate ensembles (ch08-04) | deferred | T1-WARM | RGPE surrogate transfer is evidence-dependent later work; ranked initialization is implemented separately and cannot close this obligation. |
+| REQ-ch08-05 | Pre-trained surrogates (PFN family) (ch08-05) | deferred | T3-01 | Retained roadmap/guidance obligation; not eligible during Tier 0 repair. |
+| REQ-ch08-06 | EI-per-cost with cost cooling (ch08-06) | required | T1-COST | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-ch08-07 | CARBS-style cost frontier (ch08-07) | deferred | SCOPE-01 | Retained roadmap/guidance obligation; not eligible during Tier 0 repair. |
+| REQ-ch08-08 | μP and the scaling-law literature (ch08-08) | deferred | SCOPE-01 | Retained roadmap/guidance obligation; not eligible during Tier 0 repair. |
+| REQ-ch09-01 | RL, routine budgets (ch09-01) | required | WL-00, WL-01, T3-01 | Tier-0 real RL and architecture-axis substrate is required now. DEHB/population and broader workload acceptance retain their later gates; one bounded V14 demo is not blanket acceptance. |
+| REQ-ch09-02 | RL, large parallelism (ch09-02) | deferred | WL-01, T2-POP | Retained implementation obligation; acceptance narrowed prospectively to explicit local finite conformance. Historical empirical/default/worker-regime claims are not accepted. |
+| REQ-ch09-03 | Neural-transport samplers (ch09-03) | deferred | WL-01 | Retained roadmap/guidance obligation; not eligible during Tier 0 repair. |
+| REQ-ch09-04 | Hamiltonian networks (ch09-04) | required | WL-01, T1-MO | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| REQ-ch09-05 | Architecture search: width, depth, flags (ch09-05) | required | WL-00, WL-01, T2-POP | Retained implementation obligation; acceptance narrowed prospectively to explicit local finite conformance. Historical empirical/default/worker-regime claims are not accepted. |
+| REQ-ch09-06 | One-shot supernets (ch09-06) | excluded | SCOPE-01 | Preserve source exclusion; reopening requires a recorded scope decision. |
+| REQ-ch09-07 | Zero-cost proxy subsystem (ch09-07) | excluded | SCOPE-01 | Preserve source exclusion; reopening requires a recorded scope decision. |
+| REQ-ch09-08 | Grammar-based spaces (ch09-08) | excluded | SCOPE-01 | Preserve source exclusion; reopening requires a recorded scope decision. |
+| AUD-A01 | Close and retain regression for audit A01 | required | RPR-01, GOV-01, V03-02 |  |
+| AUD-A02 | Close and retain regression for audit A02 | required | RPR-01 |  |
+| AUD-A03 | Close and retain regression for audit A03 | required | RPR-01 |  |
+| AUD-A04 | Close and retain regression for audit A04 | required | RPR-01 |  |
+| AUD-A05 | Close and retain regression for audit A05 | required | RPR-01 |  |
+| AUD-A06 | Close and retain regression for audit A06 | required | RPR-01 |  |
+| AUD-A07 | Close and retain regression for audit A07 | required | RPR-01 |  |
+| AUD-A08 | Close and retain regression for audit A08 | required | RPR-01 |  |
+| AUD-A09 | Close and retain regression for audit A09 | required | RPR-01 |  |
+| AUD-A10 | Close and retain regression for audit A10 | required | RPR-01 |  |
+| AUD-A11 | Close and retain regression for audit A11 | required | RPR-01, PRI-01 | The declared implementation remains required. Tier-1 acceptance is finite known-answer conformance; historical superiority and automatic defaults are retired prospectively. Unsupported broader envelopes remain unaccepted. |
+| AUD-T01 | Close and retain regression for audit T01 | required | RPR-01 |  |
+| AUD-T02 | Close and retain regression for audit T02 | required | RPR-01 |  |
+| AUD-T03 | Close and retain regression for audit T03 | required | RPR-01 |  |
+| AUD-T04 | Close and retain regression for audit T04 | required | RPR-01 |  |
+| AUD-T05 | Close and retain regression for audit T05 | required | RPR-01 |  |
+| AUD-T06 | Close and retain regression for audit T06 | required | RPR-01 |  |
+| AUD-V03-accounting | Close and retain regression for audit V03-accounting | required | RPR-01, GOV-01, V03-02 |  |
+| APP-01 | Moderate architecture-coordinate NAS scope | required | SCOPE-01 | Evidence-based review; no blanket approval asserted. |
+| APP-02 | One consistent tier/validation mapping | required | GOV-01, STAT-01, GOV-02, REL-02 | Evidence-based review; no blanket approval asserted. |
+| APP-03 | Feasible effort, staffing and campaign capacity | required | CAP-01 | Evidence-based review; no blanket approval asserted. |
+| APP-04 | Complete Tier 0 foundations and defaults | required | RPR-01, SPEC-01, SPEC-02, SPEC-03 | Evidence-based review; no blanket approval asserted. |
+| APP-05 | Faithful algorithms and scope dispositions | required | SPEC-01, PRI-01, T2-POP, T3-01, SPEC-02, SPEC-03 | Retained implementation obligation; acceptance narrowed prospectively to explicit local finite conformance. Historical empirical/default/worker-regime claims are not accepted. |
+| APP-06 | Registered tasks, seeds, power, stopping rules and artifacts | required | STAT-01, STAT-02, VAL-01, PILOT-01, CAP-01, STAT-03, STAT-03P | V04-T0/V05 now use finite deterministic conformance with fixed tasks/seeds/artifacts/stopping. Power, equivalence/noninferiority and confirmation apply only to later claims that require statistical inference. See E-R191-REVIEW; old rules preserved. |
+| APP-07 | Valid equivalence/non-inferiority and decision rules | required | STAT-01, STAT-02, VAL-01, PILOT-01, CAP-01, STAT-03, STAT-03P | V04-T0/V05 now use finite deterministic conformance with fixed tasks/seeds/artifacts/stopping. Power, equivalence/noninferiority and confirmation apply only to later claims that require statistical inference. See E-R191-REVIEW; old rules preserved. |
+| APP-08 | Deterministic tests and meaningful conformance | required | TST-01, V03-02 | Evidence-based review; no blanket approval asserted. |
+| APP-09 | Packaging, environment reproducibility and CI | required | PKG-01, GOV-01, GOV-02, REL-02 | Evidence-based review; no blanket approval asserted. |
+| APP-10 | Store/control-plane duplicate, concurrency and restart semantics | required | RPR-01, TST-01 | Evidence-based review; no blanket approval asserted. |
+| APP-11 | Local concurrent execution, recovery, monitoring, security and hard budgets | required | OPS-01 | Explicit user scope amendment: separate-machine test waived, not passed. Trusted supervised local PostgreSQL/Ray qualification remains required; remote/independent-host and unattended production claims are excluded from this release. |
+| APP-12 | Supported workload templates and held-out acceptance | required | WL-00, WL-01, PPO-01 | Known-answer finite conformance does not discharge later held-out workload performance or nonlinear-training claims. WL-00/WL-01 retain their scoped obligations. |
+| PRD-DECL | Explicit persisted objective and evaluation declaration | required | PRD-01 | Observed gap: general Study lacks mandatory objective identity/evaluation semantics; retain them and reject incompatible resume. |
+| PRD-SEEDS | General tuning-seed aggregation and disjoint final evaluation | required | PRD-01 | Observed gap: per-suggestion seeds and the V14-specific evaluation path do not implement the general default protocol and recorded opt-out. |
+| PRD-BUDGET | Budget units, worker capacity and method eligibility | required | PRD-01 | Reconcile configuration-count/seconds budgets and local finite opt-in methods with full-run equivalents and the original worker-regime contract; no unsupported default promotion. |
+| PRD-BATCH | Joint GP proposals and pending-trial treatment | required | PRD-01 | Observed gap: public GP q=1 acquisition and repeated Study suggestions do not satisfy joint batch and pending-fantasy promises. |
+| PRD-CAPABILITIES | Static capability declarations and uniform early refusals | required | PRD-01 | Observed gap: base capabilities infer support from input space; method-specific refusals do not establish the full kinds/conditions/objectives/priors/fidelity/architecture contract. |
+| PRD-DIAGNOSTICS | Automatic rung/final study diagnostics | required | PRD-01 | Observed gap: store comments and retained curves do not calculate rank correlation; specify paired samples, ties, censoring and insufficient-data outcomes. |
+| PRD-ADAPTER | Explicit executor architecture reconciliation | required | PRD-01 | Public Ray Core and legacy Ray Tune implementations need a documented supported-contract disposition and local checkpoint/lineage evidence; no remote test is reinstated. |
+| PRD-CONFIG | Configured self-contained studies through the full public workflow | required | PRD-01 | Qualified small workload models remain valid; verify declaration, selection, evaluation, resume and reporting as configured public studies without sibling dependencies. |
+| PRD-OUTPUTS | Complete study records and queryable outputs | required | PRD-01 | Reconcile full declarations, curves, veto outcomes, schedules, fronts and cost queries against public paths; reuse specific evidence and repair demonstrated omissions. |
+| PRD-TRACE | Semantic requirement coverage and current documentation | required | PRD-01 | Map every normative clause and legacy build group to evidence, remaining work or an explicit authorized disposition; counting known decision IDs cannot prove product completion. |
+| PRD-OPS | Itemized local operational guarantees and deployment limitations | required | PRD-01 | Reconcile original schema/backup/monitoring/scale/security/quota clauses to supported local behavior and explicit unqualified deployment capabilities; repair inaccurate guarantees. |
+| BANK-PROFILES | Universal-bank model-family contract and independent adapters | required | BANK-01 | Explicit prediction, causal, inference, solver, valuation/allocation and coordinate NAS profiles with no sibling imports or data prerequisites. |
+| BANK-EVALUATION | Leakage-safe declared evaluation beyond seed repetition | required | PRD-01, BANK-01 | Persist target/data/model identity, time/group/fold roles, fold-local preprocessing, frozen selection, separate final evaluation and failure/opt-out semantics. |
+| BANK-PREDICTION | Customer prediction, censoring and temporal forecasting workflows | required | BANK-01 | Configured ridge, finite probability/censoring and AR/filter profiles with proper target loss, known references and leakage counterexamples. |
+| BANK-CAUSAL | Identified causal and policy tuning contracts | required | BANK-01 | Preserve estimands, cross-fitting, overlap and identification/bounds; known structural-model examples cannot promote predictive fit into causal evidence. |
+| BANK-INFERENCE | Target-preserving inference and native-tuner handoffs | required | BANK-01 | Separate numerical candidate verification from posterior diagnostics; preserve density/correction and BayesFilter-specific candidate-set semantics. |
+| BANK-SOLVERS | Constrained neural-solver HPO and feasibility | required | BANK-01 | Real model/training knobs with per-task residual/derivative/domain checks; scalar loss cannot override a violated task. |
+| BANK-DECISIONS | Valuation, latent-wallet and allocation semantics | required | BANK-01 | Preserve target sign, units, censoring and uncertainty/bounds; retain exact tractable decision references instead of forcing HPO into solved optimization. |
+| BANK-NAS | Coordinate NAS across model families and portable artifacts | required | BANK-01 | Actual model changes, measured work/size, compatible reload/transfer and independent installed examples across prediction and constrained solvers. |
+| BANK-CLOSURE | Objective profile evidence and whole-product completion | required | BANK-01 | Every admitted family has a public end-to-end example, independent reference, negative cases, budgets and explicit support state; empirical application claims remain separate. |

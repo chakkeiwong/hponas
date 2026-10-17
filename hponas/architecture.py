@@ -3,69 +3,101 @@ Architecture factory: build/measure/compatible/transfer for Option A moderate co
 
 Survey reference: Ch 9 sec:architecture-search-in-moderation, Ch 15 sec:archfactory, Ch 6 (distillation).
 
-R1 spike: stubs only (build returns mock, measure returns fake counts, transfer=RESTART).
+Dense models are constructed from width/depth/activation/normalization coordinates.
 Tier 0: real build for simple MLP (width/depth/activation).
 Tier 2: real measure (count params/FLOPs), distillation transfer policy.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Literal
+import torch
+from torch import nn
 
 TransferPolicy = Literal["RESTART", "DISTILL"]
 
 
-@dataclass
-class ModelStub:
-    """
-    Stub model object for spike.
-    Tier 0: replace with real Flax/Haiku/PyTorch model construction.
-    """
-    width: int
-    depth: int
-    activation: str
-    normalization: str
+class CoordinateMLP(nn.Sequential):
+    """An actual dense network; attributes retain the architecture coordinates."""
+
+    def __init__(
+        self,
+        width=64,
+        depth=2,
+        activation="relu",
+        normalization="none",
+        input_dim=4,
+        output_dim=1,
+    ):
+        activations = {
+            "relu": nn.ReLU,
+            "tanh": nn.Tanh,
+            "elu": nn.ELU,
+            "gelu": nn.GELU,
+            "swish": nn.SiLU,
+        }
+        if activation not in activations:
+            raise ValueError("Unsupported activation")
+        if normalization not in ("none", "layer_norm", "spectral_norm"):
+            raise ValueError("Unsupported normalization")
+        if any(
+            not isinstance(v, int) or v < 1
+            for v in (width, depth, input_dim, output_dim)
+        ):
+            raise ValueError("Network dimensions must be positive integers")
+        layers = []
+        previous = input_dim
+        for _ in range(depth):
+            linear = nn.Linear(previous, width)
+            if normalization == "spectral_norm":
+                linear = nn.utils.parametrizations.spectral_norm(linear)
+            layers.append(linear)
+            if normalization == "layer_norm":
+                layers.append(nn.LayerNorm(width))
+            layers.append(activations[activation]())
+            previous = width
+        layers.append(nn.Linear(previous, output_dim))
+        super().__init__(*layers)
+        self.width, self.depth, self.activation, self.normalization = (
+            width,
+            depth,
+            activation,
+            normalization,
+        )
+        self.input_dim, self.output_dim = input_dim, output_dim
 
 
-def build(config: dict[str, Any]) -> ModelStub:
-    """
-    Build a model from architecture coordinates (Ch 15 archfactory contract).
-
-    Survey: the workload supplies this; the product never constructs architectures itself.
-    The factory is what makes excluded methods excluded by construction: a coordinates→model
-    map has no place to put a supernet.
-
-    Spike: returns a stub with typed coordinates.
-    Tier 0: real model construction for rl_routine MLP.
-    """
-    width = config.get("width", 64)
-    depth = config.get("depth", 2)
-    activation = config.get("activation", "relu")
-    normalization = config.get("normalization", "none")
-    return ModelStub(
-        width=width,
-        depth=depth,
-        activation=activation,
-        normalization=normalization,
+def build(config: dict[str, Any]) -> CoordinateMLP:
+    return CoordinateMLP(
+        **{
+            k: config[k]
+            for k in (
+                "width",
+                "depth",
+                "activation",
+                "normalization",
+                "input_dim",
+                "output_dim",
+            )
+            if k in config
+        }
     )
 
 
-def measure(model: ModelStub) -> tuple[int, int]:
-    """
-    Return (parameter_count, flops_per_forward) for a built model (Ch 15 contract).
+def measure(model: CoordinateMLP) -> tuple[int, int]:
+    """Actual trainable parameters and dense-layer multiply/add FLOPs per example.
 
-    Survey: measured on the constructed model rather than predicted from coordinates, which
-    is the reason Ch 9 was willing to treat size as an objective and unwilling to treat
-    proxies as a substitute for training.
-
-    Spike: simple mock calculation.
-    Tier 0: real param count (sum of parameter tensors).
-    Tier 2: real FLOPs (via torch.profiler or manual accounting).
+    FLOPs exclude activation, normalization and spectral parametrization overhead;
+    they are an explicitly scoped operation count, not measured device latency.
     """
-    params = model.width * model.depth * 100  # mock: ~width*depth*100 parameters
-    flops = model.width * model.depth * 1_000_000  # mock: ~width*depth*1e6 FLOPs
-    return (params, flops)
+    params = sum(p.numel() for p in model.parameters())
+    flops = sum(
+        2 * m.in_features * m.out_features
+        + (m.out_features if m.bias is not None else 0)
+        for m in model.modules()
+        if isinstance(m, nn.Linear)
+    )
+    return params, flops
 
 
 def compatible(config_a: dict[str, Any], config_b: dict[str, Any]) -> bool:
@@ -79,10 +111,14 @@ def compatible(config_a: dict[str, Any], config_b: dict[str, Any]) -> bool:
     Spike: width and depth must match; activation and normalization can differ.
     Tier 0: same rule with real architecture coordinates.
     """
-    return (
-        config_a.get("width") == config_b.get("width")
-        and config_a.get("depth") == config_b.get("depth")
-    )
+    defaults = {
+        "width": 64,
+        "depth": 2,
+        "input_dim": 4,
+        "output_dim": 1,
+        "normalization": "none",
+    }
+    return all(config_a.get(k, v) == config_b.get(k, v) for k, v in defaults.items())
 
 
 def transfer_policy(parent: dict[str, Any], child: dict[str, Any]) -> TransferPolicy:

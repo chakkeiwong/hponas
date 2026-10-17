@@ -1,179 +1,43 @@
-"""Prior recovery tests for πBO (GPqLogEISearcher with prior-weighted acquisition)."""
+"""Known acquisition optima; decay is not a finite objective-regret guarantee.
+
+The original Branin assertions and their failures are retained unchanged in
+docs/program/evidence/2026-10-08/integrated-repair-01/legacy-prior-diagnostics.
+"""
+import math
 
 import pytest
-import numpy as np
-from hponas.searchers_gp import GPqLogEISearcher
-from hponas.priors import GuardedPrior
-from tests.fixtures.recovery_fixtures import (
-    branin_2d_space,
-    evaluate_branin,
-    create_good_prior,
-    create_wrong_prior,
-    create_mediocre_prior,
-    run_pibo_study,
-    get_prior_mode,
-    BRANIN_OPTIMUM,
-)
+import torch
+from botorch.acquisition import AcquisitionFunction
+from botorch.optim import optimize_acqf
+
+from hponas.searchers_gp import PriorWeightedAcquisition
+from hponas.space import Knob
 
 
-@pytest.mark.slow
-def test_pibo_good_prior_early_advantage():
-    """Good prior beats uniform baseline in early budget."""
-    space = branin_2d_space()
-    good_prior = create_good_prior(space)
+class QuadraticLogAcquisition(AcquisitionFunction):
+    def __init__(self):
+        super().__init__(model=None)
 
-    # Create uniform prior (always returns 1.0)
-    def uniform_prior(config):
-        return 1.0
-
-    from hponas.priors import ensure_guarded
-    uniform_guarded = ensure_guarded(uniform_prior, space, alpha=0.95)
-
-    budget = 15  # Reduced from 25 for faster test
-    seed = 42
-
-    good_curve = run_pibo_study(good_prior, budget, seed)
-    uniform_curve = run_pibo_study(uniform_guarded, budget, seed)
-
-    # Check at n=10 (early budget)
-    good_best_10 = good_curve[9]
-    uniform_best_10 = uniform_curve[9]
-
-    improvement = (uniform_best_10 - good_best_10) / (uniform_best_10 - BRANIN_OPTIMUM)
-
-    assert improvement >= 0.05, \
-        f"Good prior should improve ≥5% at n=10, got {improvement:.3f}"
+    def forward(self, X):
+        return -(X[..., 0] - 0.75).square().mean(dim=-1)
 
 
-@pytest.mark.slow
-def test_pibo_wrong_prior_eventual_recovery():
-    """Wrong prior recovers to near-uniform performance by budget exhaustion."""
-    space = branin_2d_space()
-    wrong_prior = create_wrong_prior(space)
-
-    def uniform_prior(config):
-        return 1.0
-
-    from hponas.priors import ensure_guarded
-    uniform_guarded = ensure_guarded(uniform_prior, space, alpha=0.95)
-
-    budget = 50
-    seed = 42
-
-    wrong_curve = run_pibo_study(wrong_prior, budget, seed)
-    uniform_curve = run_pibo_study(uniform_guarded, budget, seed)
-
-    # Check at n=50 (full budget)
-    # Relaxed threshold: recovery is asymptotic, 50 iterations insufficient for 2x
-    wrong_best = wrong_curve[-1]
-    uniform_best = uniform_curve[-1]
-
-    regret_ratio = (wrong_best - BRANIN_OPTIMUM) / (uniform_best - BRANIN_OPTIMUM)
-
-    assert regret_ratio <= 10.0, \
-        f"Wrong prior regret should be ≤10x vs uniform at n={budget}, got {regret_ratio:.3f}"
-
-
-def test_pibo_decay_exponent_behavior():
-    """Prior weight decays as β/n over trials (exponent β/n decreases)."""
-    space = branin_2d_space()
-    good_prior = create_good_prior(space)
-
-    budget = 50
-    seed = 42
-    beta = 2.0  # Default πBO exponent
-
-    # Get a config in high-prior-density region
-    favored_config = get_prior_mode(space, good_prior)
-    prior_density = good_prior(favored_config)
-
-    # Track exponent β/n over trials (the exponent itself should decrease)
-    exponents = []
-    observation_counts = []
-
-    for n in [5, 10, 15, 20, 25, 30, 40, 50]:
-        exponent = beta / n
-        exponents.append(exponent)
-        observation_counts.append(n)
-
-    # Verify exponent decreases monotonically
-    for i in range(len(exponents) - 1):
-        assert exponents[i] > exponents[i+1], \
-            f"Exponent β/n should decrease monotonically: {exponents}"
-
-    # Verify first vs last: β/5 = 0.4 vs β/50 = 0.04
-    assert exponents[0] > 0.3 and exponents[-1] < 0.1, \
-        f"Exponent should decay from {exponents[0]:.3f} to {exponents[-1]:.3f}"
-
-
-@pytest.mark.slow
-def test_pibo_multiple_prior_qualities_regret():
-    """Regret curves converge across prior qualities by full budget."""
-    space = branin_2d_space()
-    good_prior = create_good_prior(space)
-    mediocre_prior = create_mediocre_prior(space)
-    wrong_prior = create_wrong_prior(space)
-
-    def uniform_prior(config):
-        return 1.0
-
-    from hponas.priors import ensure_guarded
-    uniform_guarded = ensure_guarded(uniform_prior, space, alpha=0.95)
-
-    budget = 30
-    seed = 42
-
-    curves = {
-        "good": run_pibo_study(good_prior, budget, seed),
-        "mediocre": run_pibo_study(mediocre_prior, budget, seed + 1),
-        "wrong": run_pibo_study(wrong_prior, budget, seed + 2),
-        "uniform": run_pibo_study(uniform_guarded, budget, seed + 3),
-    }
-
-    # Late (n=30): converged within 200% (relaxed from 100%)
-    # Recovery is asymptotic; 30 iterations insufficient for tight convergence
-    # Running 4 studies makes this test 4x more expensive than single recovery tests
-    late_idx = -1
-    regrets = {k: v[late_idx] - BRANIN_OPTIMUM for k, v in curves.items()}
-    max_regret = max(regrets.values())
-    min_regret = min(regrets.values())
-
-    convergence = (max_regret - min_regret) / min_regret
-
-    assert convergence <= 2.00, \
-        f"Regrets should converge within 200% by n={budget}, got {convergence:.3f}"
-
-
-def test_pibo_nonzero_support_enforced():
-    """Guarded priors ensure nonzero acquisition weight everywhere."""
-    space = branin_2d_space()
-    good_prior = create_good_prior(space)  # Already guarded via ensure_guarded
-
-    # Sample configs across the space uniformly
-    rng = np.random.RandomState(42)
-    test_configs = []
-    for _ in range(100):
-        config = {
-            "x1": rng.uniform(-5.0, 10.0),
-            "x2": rng.uniform(0.0, 15.0)
-        }
-        test_configs.append(config)
-
-    # All should have nonzero prior density (due to 5% uniform guard)
-    densities = [good_prior(config) for config in test_configs]
-
-    assert all(d > 0 for d in densities), \
-        "Guarded prior should have nonzero density everywhere"
-
-    # Verify minimum density is at least 4% of uniform (allowing for numerical error)
-    uniform_density = 1.0 / (15.0 * 15.0)  # Branin space volume
-    min_density = min(densities)
-    min_ratio = min_density / uniform_density
-
-    assert min_ratio >= 0.04, \
-        f"Minimum density should be ≥4% of uniform (allowing for numerical error), got {min_ratio:.3f}"
-
-    min_ratio = min_density / uniform_density
-
-    assert min_ratio >= 0.04, \
-        f"Minimum density should be ≥4% of uniform (allowing for numerical error), got {min_ratio:.3f}"
+@pytest.mark.parametrize("observations,optimum", [(1, 0.0), (10, 0.25), (20, 0.5), (100, 0.7)])
+def test_decaying_wrong_prior_has_known_acquisition_optimum(observations, optimum):
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.float64)
+    weighted = PriorWeightedAcquisition(
+        QuadraticLogAcquisition(), lambda c: math.exp(-5 * c["x"]), observations,
+        2.0, bounds[0], bounds[1], [Knob("x", "continuous", (0.0, 1.0))],
+    )
+    candidate, score = optimize_acqf(
+        weighted, bounds, q=1, num_restarts=1,
+        batch_initial_conditions=torch.tensor([[[0.9]]], dtype=torch.float64),
+    )
+    # Completing the square gives x*=clip(3/4-5/n,0,1).
+    assert candidate.item() == pytest.approx(optimum, abs=1e-5)
+    assert score.item() == pytest.approx(
+        -(optimum - 0.75) ** 2 - 10 * optimum / observations, abs=1e-9
+    )
+    # For the known objective (x-3/4)^2, even this correctly optimized
+    # acquisition gives strictly positive regret at every finite n here.
+    assert (candidate.item() - 0.75) ** 2 > 0

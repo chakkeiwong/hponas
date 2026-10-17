@@ -21,6 +21,7 @@ from pathlib import Path
 from hponas.types import SearchSpace, Parameter, ParameterType
 from hponas.searchers import SobolSearcher, RandomSearcher
 from hponas.legacy_executors import LocalExecutor
+from hponas.schedulers import ASHAConfig, ASHAScheduler
 from hponas.store import Store, Study, Trial
 
 
@@ -94,13 +95,22 @@ def test_searcher_protocol_random():
 
     caps = searcher.capabilities
     assert "continuous" in caps["parameter_types"]
-    assert "integer" in caps["parameter_types"]
+    assert "ordinal" in caps["parameter_types"]
     assert "categorical" in caps["parameter_types"]
 
 
 def test_scheduler_protocol_asha():
     """ASHAScheduler implements Scheduler protocol."""
-    pytest.skip("ASHAScheduler not yet implemented in new API")
+    scheduler = ASHAScheduler(ASHAConfig(r_max=3.))
+    assert scheduler.report("a", 1., 2.) == "pause"
+    assert scheduler.promote() == []  # A cutoff requires two observations.
+    assert scheduler.report("b", 1., 3.) == "pause"
+    assert scheduler.promote() == [("a", 3.)]
+    state = scheduler.state_dict()
+    restored = ASHAScheduler(ASHAConfig())
+    restored.load_state_dict(state)
+    assert restored.report("a", 3., 1.) == "stop"
+    assert restored.promote() == []
 
 
 def test_executor_protocol_local():

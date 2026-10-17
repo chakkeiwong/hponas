@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "exact_state": {
+    "dispatch_enabled": true,
+    "allocations": [
+      {
+        "allocation": "quadratic-verification-02-updates",
+        "capacity": 24,
+        "charged_units": 24,
+        "uncertain_units": 0
+      }
+    ],
+    "status": "ok",
+    "studies": 1,
+    "trials": 6
+  },
+  "additional_gradient_updates": 0,
+  "historical_restore_stays_fenced": true
+}

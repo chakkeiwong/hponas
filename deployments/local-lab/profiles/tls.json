@@ -1,0 +1,6 @@
+{
+  "host": "localhost",
+  "address": "127.0.0.1",
+  "sslmode": "verify-full",
+  "certificate": "/home/ubuntu/workspace/hponas/.hponas-runtime/deployments/local-lab/tls/server.crt"
+}

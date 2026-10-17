@@ -405,10 +405,10 @@ class TestSearcherContractEdgeCases:
         assert len_after_second >= len_after_first
 
     def test_empty_search_space(self):
-        """Test behavior with empty search space."""
-        # Skip test - empty space behavior is implementation-defined
-        # Some implementations may raise at init, others at suggest
-        pytest.skip("Empty search space behavior is implementation-defined")
+        """Unsupported zero-dimensional GP optimization fails explicitly."""
+        for space in (SearchSpace(), TypedSearchSpace(parameters={})):
+            with pytest.raises(ValueError, match="nonempty"):
+                GPSearcher(space)
 
     def test_single_knob_space(self):
         """Test behavior with single-parameter space."""

@@ -1,442 +1,224 @@
-# CONSOLIDATED MASTER AUTHORITY - HPO-NAS Project
-**Version:** 1.2  
-**Date:** 2026-09-22  
-**Status:** SINGLE SOURCE OF TRUTH  
-**Authority:** This document supersedes all other master programs and status documents
-
----
-
-## AUTHORITY HIERARCHY
-
-**Level 1 - Constitutional Authority:**
-- **BUILD_PROGRAM_REVIEW_VERDICT.md** (lines 331-336)
-  - Authorizes corrective specification and architecture-spike phase
-  - Sets approval checklist (12 items)
-  - Governs all recovery work until CONDITIONAL APPROVAL achieved
-
-**Level 2 - Strategic Plan:**
-- **THIS DOCUMENT** (CONSOLIDATED_MASTER_AUTHORITY.md)
-  - Single source of truth for current status
-  - Updated daily at end of work session
-  - All agents must read this FIRST on session start
-
-**Level 3 - Reference Documents:**
-- **BUILD_PROGRAM_v3.md** - Detailed gate specifications, timelines, validation protocols
-- Archive only: TIER0_EXECUTION_MASTER_PROGRAM.md, HPO_NAS_RECOVERY_MASTER_PROGRAM.md (deprecated)
-
----
-
-## CURRENT PHASE MARKER (SINGLE SOURCE OF TRUTH)
-
-**PHASE:** V03 COMPLETED ✅  
-**WEEK:** Execution Week 2  
-**DAY:** 6 (2026-09-22)  
-**STATUS:** V03 GATE PASSED - 90.88% kill score achieved
-
-### What Just Happened (2026-09-22 Session - V03 GATE PASSED)
-
-**Problem Discovered:**
-1. ❌ R7 mutation run status unknown (expected completion 2026-09-21 06:30 UTC, no results)
-2. ❌ Mutation cache corrupted (603 mutations, 0 killed - impossible state)
-3. ❌ Master program 1.5 days out of date
-4. ❌ Cannot verify actual current mutation score
-
-**User Decision:**
-- ✅ **Option A selected:** Clean slate verification + timeout killing strategy
-- ✅ Update master program first, then execute
-- ✅ Incorporate timeout-killing insight from user questions
-
-**R8 Clean Slate Execution:**
-1. ✅ Deleted corrupted cache
-2. ✅ Run fresh full mutation test (started 17:17 UTC, completed ~19:45 UTC)
-3. ✅ Verified actual score: **90.88%** (exceeded 90% target)
-4. ✅ **V03 GATE PASSED** - No additional tests needed
-
-**R8 Final Results:**
-- **Kill Score: 90.88%** (1685/1854 kills)
-- **Total Mutations:** 2287
-- **Killed:** 1685 🎉
-- **Survived:** 169 🙁
-- **Timeout:** 414 ⏰ (18.1%, below 20% threshold ✓)
-- **No tests:** 19 🫥
-- **Suspicious:** 0 🤔
-
-**Improvement from R5:**
-- +93 kills (+3.36 percentage points)
-- Exceeded 90% target by 0.88 percentage points
-- Timeout-killing strategy not needed
-
-### User Decisions (2026-09-21 + 2026-09-22)
-
-**Decision 1: V03 Gate Pass Criteria**
-✅ **CONTINUE to 90%** (stretch goal, not pass at 87.52%)
-
-**Decision 2: Validation System Scope**
-✅ **TIER 0 WORK** (include in V03 gate)
-
-**Decision 3: Master Program Authority**
-✅ **CONSOLIDATE to single authority** (this document)
-
-**Decision 4: R8 Recovery Strategy (2026-09-22)**
-✅ **OPTION A: Clean Slate Verification**
-- Delete corrupted cache
-- Run fresh mutation test
-- Establish verified baseline
-- Then execute timeout-killing strategy
-
-### Next Actions (Immediate)
-
-**P0 - V03 Completion (DONE):**
-1. ✅ Delete corrupted mutation cache
-2. ✅ Run fresh full mutation test (started 17:17 UTC, completed ~19:45 UTC)
-3. ✅ Verify and document actual current score (90.88%)
-4. ✅ Update master program with V03 PASSED status
-5. ⏳ Document equivalent mutants in remaining 169 survivors
-6. ⏳ Commit V03 artifacts and results
-7. ⏳ Update BUILD_PROGRAM checklist
-
-**P1 - Next Phase (Awaiting Direction):**
-- Consult BUILD_PROGRAM_v3.md for next gate
-- Options: Validation system expansion, Tier 1 modules, or other gates
-
----
-
-## V03 GATE STATUS
-
-### ✅ GATE PASSED (2026-09-22)
-
-**Final Score: 90.88%** (1685/1854 kills)
-
-### Current Metrics (R8 Final)
-- **Kill Score:** 90.88% (1685/1854 kills) ✅
-- **Total Mutations:** 2287
-- **Killed:** 1685 🎉
-- **Survived:** 169 🙁
-- **Timeout:** 414 ⏰ (18.1%, below 20% threshold ✅)
-- **No tests:** 19 🫥
-- **Suspicious:** 0 🤔
+# HPO-NAS master program
 
-### Requirements (BUILD_PROGRAM_v3.md)
+**Revision:** 2.397 — Scoped master complete; repository publication reconciled
 
-**Minimum (85%) - MET:**
-- [x] ≥85% kill score (current: 90.88%) ✅
-- [x] <5% suspicious (current: 0%) ✅
-- [ ] Document equivalent mutants (P0 remaining task)
+**Reconciliation date:** 2026-10-17 (Asia/Shanghai)
 
-**User-Directed Target (90%) - EXCEEDED:**
-- [x] 90% kill score (target: 1668 kills, achieved: 1685 kills, +17 over) ✅
+**Purpose:** A reusable HPO and moderate architecture-coordinate NAS tool for a universal retail bank and the model families represented under `~/workspace`: prediction/forecasting, causal and policy models, financial inference, constrained neural solvers, valuation and allocation. The [product contract](docs/program/BANK_HPO_NAS_PRODUCT_CONTRACT.md) defines evaluation, reuse and completion; universal reuse is not a universal-optimizer claim. This document is the execution authority; mutation and Tier 0 are milestones within the full program.
 
-### Survivor Breakdown (169 total, down from R5's 227)
-- schedulers: 80 (47.3%)
-- executors.local_executor: 31 (18.3%)
-- legacy_searchers: 31 (18.3%)
-- searchers.random_searcher: 21 (12.4%)
-- space: 5 (3.0%)
-- searchers.base: 1 (0.6%)
+## Authority, scope and result rules
 
-### Timeout Breakdown (414 total)
-- searchers.gp_searcher: 161 (38.9%) - compute-intensive operations
-- legacy_executors: 122 (29.5%) - Ray/BoTorch initialization
-- executors.ray_executor: 93 (22.5%) - distributed compute overhead
-- Other modules: 38 (9.2%)
-
-### Validation Coverage (NEW - Tier 0 Work)
-
-**Completed (1/21 classes):**
-- [x] GPSearcher (12 tests, constructor + suggest + training validation)
+The user's continuing authorization covers repair, review, bounded local verification and phase-plan refresh. [NAS scope](NAS_SCOPE_DECISION.md), the [survey roadmap](hpo-survey/sections/12-roadmap.tex), [build requirements](BUILD_PROGRAM_v3.md) and [review verdict](BUILD_PROGRAM_REVIEW_VERDICT.md) retain the product obligations. The [structured register](docs/program/program.json) owns work, dependencies, decisions and exact evidence bindings; [traceability](TRACEABILITY_MATRIX_v1.md) maps 113 registered requirements, including the restored product contracts, explicit local-operations reconciliation and nine bank-product obligations.
 
-**Remaining (20/21 classes):**
-- [ ] RandomSearcher (2 tests needed)
-- [ ] SobolSearcher (3 tests needed)
-- [ ] ASHAScheduler (5 tests needed)
-- [ ] HyperbandScheduler (5 tests needed)
-- [ ] LocalExecutor (3 tests needed)
-- [ ] RayExecutor (3 tests needed)
-- [ ] SearchSpace (4 tests needed)
-- [ ] Knob subclasses (15 tests needed)
-- [ ] Result (2 tests needed)
-- [ ] EventLog (3 tests needed)
-- [ ] (11 more classes - see INPUT_VALIDATION_POLICY.md)
+General cell/topology search, supernets, weight sharing and differentiable NAS remain excluded. Optional priors have finite opt-in acceptance on the retained Tier-1 source; broader effectiveness remains unestablished. Later-tier capabilities and local concurrent operations remain in the master; Tier-0 completion cannot imply their completion. The user explicitly waived separate-machine testing under D-LOCAL-OPERATIONS-SCOPE. Supported operations are trusted, supervised local research; remote host loss/partition and unattended production readiness are unqualified.
 
-**Total validation work:** ~65 tests needed across 20 classes
-
----
+Scientific results follow frozen rules and raw evidence under explicit assumptions. Tests, labels, reviewer identities and human acceptance cannot establish or override a scientific result. V16 can correctly audit a FAIL or INCONCLUSIVE result without accepting the campaign. Exact resource allocation and release authorization are separate administrative requirements. Neither a queued step nor the current repair authorization permits unallocated pilot or confirmation spending.
 
-## TIMELINE STATUS
-
-### Original Schedule (BUILD_PROGRAM_v3.md)
-- Week 1: Tier 0 remediation
-- Week 2 Day 1-2: V03 iterations
-- Week 2 Day 3: V03 gate decision
-- Week 2 Day 4-5: Start Tier 1 work
+## Current execution
 
-### Actual Progress
-- Week 1: ✅ Complete
-- Week 2 Day 1-2: ✅ V03 iterations (R5: 87.52%)
-- Week 2 Day 3-4: ❌ Investigation + R6 (not gate decision)
-- Week 2 Day 5: ❌ V03 continues (not Tier 1)
-
-**Timeline Drift:** 2-3 days behind schedule
-
-### Revised Schedule (User-Approved)
-
-**Week 2 Day 5-7 (2026-09-21 to 2026-09-23):**
-- Day 5 PM: Run R7 mutation testing + survivor analysis
-- Day 6 AM: R7 results, write R8 tests if needed
-- Day 6 PM: R8 mutation testing or validation tests
-- Day 7: V03 completion + validation system tests
-
-**Week 3 (Tier 1 start delayed to 2026-09-24):**
-- Acknowledge 2-3 day slip
-- Continue Tier 1 work as planned
-- Validation system completes in parallel with Tier 1
-
----
-
-## OTHER TIER 0 GATES STATUS
-
-### Completed Gates ✅
-- ✅ V05 validation: PASSED (46.4% improvement, p=0.0014)
-- ✅ V16 audit framework: Implemented
-- ✅ V14 validation: PASSED (fast workload variant)
-- ✅ V04-T0 validation: PASSED (93.45% improvement, p=0.0040)
-- ✅ V02 state replay: PASSED (all 6 scenarios)
-- ✅ Executor contract tests: 9/11 passing
-- ✅ Contract tests: 7/8 passing
-
-### In Progress Gates ⏸️
-- ⏸️ **V03 mutation testing:** 87.52%, targeting 90%, validation system added
+**Current action:** The [final qualified package](docs/program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json) binds 17 fresh passing entries, final independent gates, exact installed source and local operations. All 196 master stages and 113 requirement dispositions are complete for the adopted finite local product scope. Foundation interfaces and standalone prediction, causal, inference, solver, decision and coordinate NAS workflows have current evidence; empirical application usefulness remains unestablished. ifBO failure and cancellation remain terminal; separate-machine testing was waived, not passed. Optional methods remain opt-in, no superiority or unattended production claim is made, and no external release is performed. The execution stops because this scoped master is complete.
 
-### Deferred Gates ⏹️
-- ⏹️ V01 validation: Deferred to Tier 1 (pre-existing, not critical)
-
----
-
-## WORK DELIVERABLES
+Earlier preparation records and superseded operational prose are preserved in the [revision 1.51 archive](archive/program-2026-10-04/before-master-review-refresh-01/manifest.json) and [revision 1.52 archive](archive/program-2026-10-04/before-semantic-review-02/manifest.json). Attempt08 remains INCONCLUSIVE: 7,034 kills, 470 survivors, 14 timeouts and 1,026 unchecked. The original reset memo's zero-kill interpretation was disproved by the [independent audit](docs/audits/2026-09-25-codebase-gap-audit.md); no reset is indicated.
 
-**Session 2026-09-21 Session 2 Deliverables**
+## Whole-program review and repair
 
-**Code Changes:**
-1. `hponas/searchers/gp_searcher.py:293` - Fixed _get_bounds() callable check
-2. `tests/unit/test_space.py` - Fixed 5 test failures (API mismatch, missing import)
-3. Unit test suite: 291/292 passing (only validation coverage enforcement fails as expected)
+The [lineage review](docs/program/MASTER_PROGRAM_LINEAGE_REVIEW_2026_10_12.md) found that the former 93-row register omitted normative product interfaces. Its 35 completed work items and 177 completed stages retain their qualified finite local results; those counts did not prove whole-product completion. Revision 2.251 added PRD-01, ten requirements and nine stages, including the completed lineage review. Revision 2.252 completed the contract design and added explicit banking profiles. At that revision implementation and integrated product reviews remained open. All PRD foundation and BANK profile implementation stages subsequently completed; the current execution section records final product qualification. ifBO remains failed/cancelled; local operations and known-answer scope amendments remain in force.
 
-**Documentation Created:**
-1. CONSOLIDATED_MASTER_AUTHORITY.md - Single source of truth (this document)
-2. AUDIT_REPORT_2026_09_21.md - Comprehensive audit findings
-3. CRITICAL_STATUS_UPDATE_2026_09_21.md - Bug identification and fix plan
-4. R7_MUTATION_RUN_STATUS.md - R7 tracking document
-
-**Bug Fixes:**
-1. GPSearcher._get_bounds() TypeError (int not callable)
-2. test_space.py sample() method calls (non-existent API)
-3. test_space.py missing numpy import
-
-**Test Results:**
-- Unit tests: 291/292 passing ✓
-- Validation coverage: 1/21 classes (expected failure showing 20 remaining)
-- All functional tests passing ✓
-
-**Mutation Testing:**
-- R7 launched: task bmmocisat
-- Estimated completion: ~2 hours
-- Previous baseline: 87.52% (1592/1819)
-
----
-
-## IMMEDIATE NEXT STEPS
-
-### Priority 0 (In Progress - Next 2 Hours)
-
-1. **✅ Bug fixes applied**
-   - GPSearcher._get_bounds() callable check
-   - test_space.py API fixes
-   - Unit tests: 291/292 passing
-
-2. **⏸️ R7 mutation testing running**
-   - Task ID: bmmocisat
-   - Started: ~04:30 UTC
-   - Expected completion: ~06:30 UTC (2 hours)
-   - Output: /tmp/claude-1000/.../bmmocisat.output
-   - Also teed to: mutation_run_r7.txt
-
-3. **⏸️ Wait for R7 completion notification**
-   - System will notify when background task completes
-   - DO NOT poll the task repeatedly
-   - DO NOT try to parse partial results
-
-### Priority 1 (After R7 Completes - Next 2 Hours)
-
-4. **Analyze R7 results**
-```bash
-cd /home/ubuntu/workspace/hponas
-python -m mutmut results | grep -E "🎉|🙁|⏰" | tail -1
-# Parse final statistics line
-```
-
-5. **Compare to R5 baseline**
-   - R5: 87.52% (1592/1819 kills)
-   - R7: ? (calculate from results)
-   - Improvement from bug fixes: ?
-
-6. **If R7 < 90%: Plan R8 tests**
-   - Use analyze_survivors.py to identify targets
-   - Focus on schedulers (82 survivors, highest ROI)
-   - Write 10-15 focused tests
-   - Run pytest to verify
-   - Launch R8 mutation testing
-
-7. **If R7 ≥ 90%: Proceed to validation system**
-   - Begin expanding validation tests (20 classes remain)
-   - Update V03 gate status to PASSED
-   - Move to next gate or Tier 1 work
-
-### Priority 2 (This Week)
-
-7. **Run R8 mutation testing** (if needed)
-8. **Begin validation system expansion** (20 classes remain)
-9. **Document equivalent mutants** (V03 requirement)
-10. **Update all status documents** to point here
-
----
-
-## DEPRECATED DOCUMENTS
-
-**The following documents are DEPRECATED and should NOT be used as authority:**
-
-1. HPO_NAS_RECOVERY_MASTER_PROGRAM.md - Phase marker was wrong (claimed R9)
-2. TIER0_EXECUTION_MASTER_PROGRAM.md - Superseded by this document
-3. V03_R9_RECOVERY_MEMO.md - R9 never existed
-4. V03_RECOVERY_MEMO_2026_09_20.md - Outdated status
-5. EXECUTION_STATUS.md - If exists, superseded
-6. Any document claiming to be "master program" except this one
-
-**These documents are archived as historical reference only.**
-
----
-
-## STATUS RECONCILIATION
-
-### What We Thought vs Reality
-
-**Old Master Program Claimed:**
-- Phase: V03-R9
-- Status: R9 mutation testing running
-- Expected: 89-92% score
-- Date: 2026-09-20
-
-**Reality Discovered (2026-09-21):**
-- Phase: V03-R6 (investigation)
-- Status: R6 never ran (failed silently)
-- Actual: 87.52% (unchanged from R5)
-- Date: 2026-09-21
-
-**Root Cause:**
-- R6 background task launched but never executed
-- Old zombie process from Sept 17 still running
-- Gateway instability caused context loss
-- Agent assumed R6 was running but didn't verify
-
-**Corrective Actions Taken:**
-1. ✅ Full audit conducted
-2. ✅ Reality documented in this authority file
-3. ✅ User decisions obtained
-4. ✅ Deprecated documents marked
-5. ⏸️ Fresh mutation run queued (R7)
-
----
-
-## ENFORCEMENT
-
-### For All Agents (Including Future Sessions)
-
-**ON SESSION START:**
-1. Read CONSOLIDATED_MASTER_AUTHORITY.md FIRST
-2. Check "Current Phase Marker" section
-3. Follow "Immediate Next Steps"
-4. Do NOT read deprecated documents for current status
-
-**BEFORE MAKING DECISIONS:**
-1. Verify against this document (not other docs)
-2. Update this document after completing work
-3. Commit changes with clear message
-
-**WHEN UPDATING:**
-1. Update "Current Phase Marker" section
-2. Update relevant status sections
-3. Add to "Work Deliverables" section
-4. Update "Immediate Next Steps"
-5. Keep "Authority Hierarchy" intact
-
-### Update Frequency
-
-**Daily:** Current Phase Marker, Immediate Next Steps  
-**Per Gate:** V03 Gate Status, Timeline Status  
-**Per Session:** Work Deliverables  
-**On Major Changes:** Timeline Status, Authority Hierarchy
-
----
-
-## CRITICAL REMINDERS
-
-### For Context Recovery (Memory System)
-
-**If session loses context:**
-1. Read `/home/ubuntu/.claude/projects/-home-ubuntu-workspace-hponas/memory/MEMORY.md`
-2. Read THIS document (CONSOLIDATED_MASTER_AUTHORITY.md)
-3. Check git status for uncommitted changes
-4. Continue from "Current Phase Marker"
-
-**Key Files:**
-- Authority: CONSOLIDATED_MASTER_AUTHORITY.md (this file)
-- Memory index: ~/.claude/projects/-home-ubuntu-workspace-hponas/memory/MEMORY.md
-- Detailed specs: BUILD_PROGRAM_v3.md
-- Constitutional: BUILD_PROGRAM_REVIEW_VERDICT.md
-
-### For Tool Thrashing Prevention
-
-**DON'T:**
-- Parse mutation results 10 different ways
-- Poll background tasks immediately after starting
-- Look for `.mutmut-cache` in wrong directory (it's in `mutants/`)
-- Assume background tasks are running without verification
-
-**DO:**
-- Use `python -m mutmut results` once to get all results
-- Wait for background task notifications
-- Verify processes with `ps aux | grep mutmut`
-- Check output file size before assuming completion
-
----
-
-## SUCCESS CRITERIA
-
-### V03 Gate (Current Focus)
-- [ ] 90% mutation kill score achieved
-- [ ] Validation system complete (21/21 classes)
-- [ ] Equivalent mutants documented
-- [ ] All status documents updated
-- [ ] Master program phase marker updated
-
-### Overall Tier 0 (Week 2-3)
-- [ ] All Tier 0 gates PASSED
-- [ ] Validation system operational
-- [ ] Timeline reconciled with actual progress
-- [ ] Ready to begin Tier 1 work
-
-### Recovery Program (Week 4)
-- [ ] Move from RED to CONDITIONAL APPROVAL
-- [ ] Satisfy 12-item approval checklist
-- [ ] Documentation complete
-- [ ] Gates auditable
-
----
-
-**Last Updated:** 2026-09-22 19:50 UTC (V03 GATE PASSED at 90.88%)  
-**Updated By:** Claude (R8 clean slate verification completed)  
-**Next Update:** After next phase begins (pending BUILD_PROGRAM consultation)  
-**Authority:** This document is the single source of truth for HPO-NAS project status
-
----
-
-**READ THIS FIRST ON EVERY SESSION START**
+Final allocation 10 completed all 9,439 mutants with 96.1304% adjusted kills,
+all modules above 90%, and 31 timeouts. It remains FAIL because twelve critical
+survivors were unproved. Its full inventory and explicit worker returns remain
+preserved. The [repair review](docs/program/evidence/2026-10-12/critical-survivor-repair-01/repair-review.json)
+binds 526 passing affected tests and rejection of all eleven metadata mutants.
+The redundant checkpoint predicate was removed under an exact semantic review;
+no equivalence rule, scientific criterion, test-selection policy or resource
+limit changed. That repair passed offline Python 3.12/3.13 installations, complete
+calibration and reconstructed process/guard/scheduler controls on its retained source. The changed
+executor dependency is explicitly reviewed; remaining local dependencies retain
+their exact bindings.
+
+The [final execution plan](docs/program/evidence/2026-10-12/final-qualification-11/plan.md)
+completed at 13:11:58 Shanghai time on 12 October 2026. All 25 controller jobs,
+17 fresh campaigns and five final gates passed. The complete 9,437-mutant
+population achieved a 96.1879% adjusted kill score, every declared module
+exceeded 90%, and zero unproved critical survivors remained. The exact source
+is retained in its accepted package; allocation 11 is consumed. Its
+completion is a historical baseline, not the status of successor BANK runs. Separate-machine testing remains waived.
+
+The generated phase label records the earlier Tier-0-to-Tier-1 adoption boundary. The active work, current action and continuation status identify current whole-product execution or scoped completion. REL-02 closes the declared qualification baseline; PRD-01 and BANK-01 prevent that milestone from being mistaken for whole-product completion.
+
+## Banking product execution
+
+The [bank product contract](docs/program/BANK_HPO_NAS_PRODUCT_CONTRACT.md) is the current interpretation of the user’s goal. The [repair design](docs/program/PRODUCT_REPAIR_CONTRACT_2026_10_12.md) closed declaration/evaluation, capability/budget, joint GP batching, diagnostics, adapter/output and local-operations engineering contracts. BANK-01 implemented prediction, causal, inference, constrained-solver, valuation/allocation and cross-profile NAS examples with independent finite references. Its final integrated stage owns exact-source scientific qualification. They use synthetic data and caller-owned adapters; sibling code and real bank data are not prerequisites.
+
+At every boundary, retain outcomes, repair observed defects, refresh the next bounded phase and continue. A next action must name its master stage; a scope change must explain its connection to the goal. The [operations manifest](docs/PROGRAM_OPERATIONS.md) supplies fixed commands and scoped rules. Permission to run a command does not allocate a scientific campaign. Current scientific acceptance remains attached to its exact source; new profile implementations need their own relevant evidence.
+
+The generated V03 freshness check also compares the visible dependency manifest. The fixed operations helper adds the PostgreSQL client packages `psycopg` and `psycopg-binary` to that namespace, so its table labels V03 STALE for the operations runtime. The [terminal readback](docs/program/evidence/2026-10-17/bank-terminal-master-reconciliation-01/final-verification.json) verifies that V03 is fresh in the qualified scientific runtime, with unchanged static fixtures, source and accepted package. The completed product qualification remains bound to that exact source and frozen runtime; it does not qualify the additional operations dependencies.
+
+The [repository publication plan](docs/program/evidence/2026-10-17/git-publication-01/plan.md) preserves the complete source, program lineage and retained evidence. Large objects use Git LFS, evidence-consuming CI checks retrieve their contents, and full mutation execution requires an explicit manual input and separate allocation. The [operational reconciliation](docs/program/evidence/2026-10-17/git-publication-01/reconciliation.json) preserves the prior authority and refreshes workflow bindings; it does not change scientific source, product scope or master completion.
+
+<!-- BEGIN GENERATED PROGRAM STATUS -->
+
+## Current execution status
+
+Program revision: **2.397**. Current phase: **Tier 1 development**.
+
+**Release status: LOCAL BASELINE ACCEPTED.** Tier-0 acceptance applies to the retained source. Current development and later phases require their own acceptance. No external release is recorded.
+
+Executable source fingerprint: `de68ddcd7998344333c3349b0d36accf5096f618c81ab12ce6a314bd7c0a6b2c`.
+
+These are stored evidence verdicts. CURRENT means source and protocol match; STALE requires revalidation. A new audit cannot make a HISTORICAL DIAGNOSTIC into fresh mutation execution. Full gate recomputation is required for acceptance.
+
+| Campaign | Recorded verdict | V16 receipt | Freshness | Run |
+|---|---|---|---|---|
+| V01 | PASS | PASS | CURRENT | `validation/artifacts/V01/20261016_bank_final_08` |
+| V02 | PASS | PASS | CURRENT | `validation/artifacts/V02/20261016_bank_final_08` |
+| V03 | PASS | PASS | STALE | `validation/artifacts/V03/20261016_bank_final_08` |
+| V04-T0 | PASS | PASS | CURRENT | `validation/artifacts/V04-T0/20261016_bank_final_08` |
+| V05 | PASS | PASS | CURRENT | `validation/artifacts/V05/20261016_bank_final_08` |
+| V14 | PASS | PASS | CURRENT | `validation/artifacts/V14/20261016_bank_final_08` |
+
+Active work item: **none**.
+
+Continuation: **COMPLETE**. Stop eligible: **true**.
+
+## Work breakdown
+
+Execution and implementation states are separate from campaign acceptance. Completing a repair does not close its performance gate.
+
+| ID | Work | Execution | Implementation | Dependencies | Next action |
+|---|---|---|---|---|---|
+| GOV-01 | Reconcile master and enforce drift detection | complete | verified | — | Retain complete current-source reconciliation and rerun all program checks after each material amendment. |
+| GOV-02 | Enforce master prerequisites in the Tier 0 release command | complete | verified | GOV-01 | Retain release-prerequisite regressions as scoped repair and campaign dependencies advance; consistency and acceptance remain separate. |
+| RPR-01 | Audited implementation repair pass | complete | verified | — | Retain regressions and rerun affected evidence when source changes. |
+| V03-01 | Cover Ray controller without cluster startup | complete | verified | GOV-01 | Retain controller conformance and the complete accepted Attempt12 mutation evidence; refresh after relevant source changes. |
+| V03-02 | Close remaining mutation coverage and survivor gaps | complete | verified | V03-01 | Retain the covered contracts, survivor proofs and accepted full mutation result; repair and revalidate only when new evidence warrants it. |
+| V03-03 | Frozen full mutation acceptance | complete | verified | V03-02, TST-01, SPEC-01, PKG-01, STAT-01, SPEC-02, VAL-01, SPEC-03, D-V03-PHASE | Retain the complete passing final-source V03 population in E-FINAL11-20261012-PACKAGE; refresh after relevant source changes. |
+| SPEC-01 | Verify dimension-scaled GP priors, progressive PASHA and CMA-ES | complete | verified | GOV-01 | Retain verified dimension-prior, PASHA and CMA-ES contracts plus current engineering acceptance; refresh after relevant source changes. |
+| SPEC-02 | Close ASHA and median reference and streaming conformance | complete | verified | GOV-01, SPEC-01, SPEC-02A, D-SCHEDULER | Retain archived scheduler conformance; current Tier-1 V06 checks finite decisions/work and cannot activate ASHA/median defaults. |
+| SPEC-03 | Correct reference scheduler promotion and PASHA recovery | complete | verified | SPEC-01, SPEC-02 | Retain verified scheduler promotion and recovery contracts plus current engineering acceptance; refresh after relevant source changes. |
+| SPEC-02A | Prepare the scheduler contract and independent counterexamples | complete | verified | GOV-01 | Retain archived scheduler conformance; current Tier-1 V06 checks finite decisions/work and cannot activate ASHA/median defaults. |
+| VAL-01 | Align Tier 0 validators with the agreed claims | complete | verified | STAT-02, SPEC-02, STAT-03, SPEC-03, D-T0-CLAIMS, D-T0-OUTCOME-SCOPE, D-OBJECTIVE-EVIDENCE | Retain accepted self-contained V04-T0/V05 known-answer contracts and independent reconstruction; native-project diagnostics remain historical. |
+| PILOT-01 | Retire the obsolete PPO pilot with explicit evidence disposition | complete | verified | STAT-02, STAT-03P, D-PILOT-ORDER, D-T0-OUTCOME-SCOPE, D-OBJECTIVE-EVIDENCE | Retain E-R191-REVIEW disposition; refresh affected source evidence at phase boundaries. |
+| STAT-01 | Reconcile protocol identity and gate mappings | complete | verified | GOV-01 | Retain all 20 exact protocol ownership/identity dispositions; later phase protocols remain separately gated. |
+| STAT-02 | Prepare Tier 0 study design and sizing procedure | complete | verified | STAT-01, D-T0-CLAIMS | Retain the completed historical statistical framework. The PPO pilot and sizing obligations for V04-T0/V05 were prospectively retired; current finite acceptance is complete and later protocols retain separate design and resource stages. |
+| STAT-03 | Derive and freeze the scientific design and resource envelope | complete | verified | STAT-02, D-T0-DESIGN, D-OBJECTIVE-EVIDENCE | Retain the completed historical statistical framework. The PPO pilot and sizing obligations for V04-T0/V05 were prospectively retired; current finite acceptance is complete and later protocols retain separate design and resource stages. |
+| PPO-01 | Execute finite known-answer Tier-0 acceptance (legacy PPO-01 ID) | complete | verified | STAT-02, CAP-01, VAL-01, STAT-03, D-PROTOCOL, D-SELF-CONTAINED-VALIDATION | Current-source V04-T0/V05 finite conformance passes; retain per-case regret without superiority/default claims. Refresh only after source change or failure. |
+| TST-01 | Resolve skipped and incomplete conformance checks | complete | verified | GOV-01 | Retain final-source recovery, conformance, finite streaming/resume and local operations evidence; broader deployment claims require a prospective amendment. |
+| PKG-01 | Dependency-resolved installation and support envelope | complete | verified | GOV-01 | Repaired source verified offline on Python 3.12/3.13; retain bound baseline and installation evidence. |
+| CAP-01 | Bind finite Tier-0 capacity and retain later phase resource ownership | complete | verified | STAT-02, PILOT-01 | Retain E-R191-REVIEW disposition; refresh affected source evidence at phase boundaries. |
+| REL-01 | Tier 0 release decision | complete | verified | V03-03, PPO-01, SPEC-01, PKG-01, GOV-02, SPEC-02, SPEC-03, WL-00, D-PROTOCOL, D-TIERS, D-MEDIAN-DEFAULT | Retain the accepted Tier-0 baseline and completed later-phase qualification under E-FINAL11-20261012-PACKAGE. |
+| PRI-01 | Optional prior recovery and V11 conformance | complete | verified | GOV-01, D-PROTOCOL, D-TIERS, D-PROTOCOL-T1 | Retain finite opt-in results; refresh after relevant source or contract changes. |
+| T1-TRUST | Trust-region finite conformance acceptance | complete | verified | REL-01, D-TIERS, D-PROTOCOL-T1 | Retain finite opt-in results; refresh after relevant source or contract changes. |
+| T1-MF | Multifidelity finite work and decision conformance | complete | verified | REL-01, D-TIERS, D-PROTOCOL-T1 | Retain finite opt-in results; refresh after relevant source or contract changes. |
+| T1-MO | Multi-objective orchestration and acceptance | complete | verified | REL-01, D-TIERS, D-PROTOCOL-T1 | Retain finite opt-in results; refresh after relevant source or contract changes. |
+| T1-COST | Predictive censored cost and cooling acceptance | complete | verified | REL-01, D-PROTOCOL-T1 | Retain finite opt-in results; refresh after relevant source or contract changes. |
+| T1-WARM | Ranked warm starts and store eligibility | complete | verified | REL-01, D-TIERS | Retain exact finite warm-start acceptance; refresh on source changes and preserve adverse outcomes and empirical claim limits. |
+| T2-POP | Local PBT/PB2-Mix/BG-PBT finite conformance | complete | verified | REL-01, T1-GATE, T1-TRUST, D-TIERS, D-PROTOCOL-T2 | Retain finite local V08 acceptance and exact source; require fresh qualification for changed code and separate protocols for broader claims. |
+| WL-01 | Held-out workload templates and finance disposition | complete | verified | REL-01, D-WORKLOADS, D-PROTOCOL-T1 | Retain qualified finite workload identities and final integrated source; require prospective contracts for broader applications. |
+| OPS-01 | Local concurrent operations, backup, monitoring, security and budgets | complete | implemented | REL-01, T1-GATE, D-LOCAL-OPERATIONS-SCOPE | Retain qualified local operations and final integrated-source package; separate-machine and unattended production claims remain outside acceptance. |
+| T3-01 | Selective DEHB, pretrained ifBO and GP robustness | complete | verified | REL-01, T1-GATE, D-TIERS | Retain final-source finite DEHB and robust-GP qualification, the failed ifBO result and cancelled V15b. |
+| SCOPE-01 | Maintain exclusions and unresolved scope dispositions | complete | not_applicable | — | Require a recorded scope decision before reopening excluded features. |
+| STAT-03P | Adopt self-contained finite tuning validation | complete | verified | STAT-02, SPEC-02, SPEC-03, D-T0-CLAIMS, D-T0-OUTCOME-SCOPE, D-OBJECTIVE-EVIDENCE, D-WORKSPACE-VALIDATION, D-SELF-CONTAINED-VALIDATION | Retain E-R191-REVIEW disposition; refresh affected source evidence at phase boundaries. |
+| WL-00 | Tier-0 real RL and architecture-coordinate workload contract | complete | verified | RPR-01, PKG-01 | Retain the qualified bounded workload contract, current V14 and finite T1-MF streaming conformance within their stated claim limits. |
+| T1-GATE | Tier-1 finite capability reconciliation | complete | verified | REL-01 | Retain the finite Tier-1 package and completed final integrated-source qualification in E-FINAL11-20261012-PACKAGE. |
+| REL-02 | Integrated-source qualification and release disposition | complete | verified | REL-01, T1-GATE | Preserve the qualified finite local baseline; PRD-01 owns omitted original product contracts and subsequent changed-source qualification. |
+| PRD-01 | Recover and repair the complete public product contract | complete | verified | REL-02, D-PRODUCT-CONTRACT-RECOVERY, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Retain engineering readiness; BANK-01 owns all final-source foundation and profile scientific qualification. |
+| BANK-01 | Reusable universal-bank model-family HPO/NAS workflows | complete | verified | PRD-01, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Master complete for the qualified finite local scope; preserve exact source package and require a prospective amendment for new claims. |
+
+## Decisions and unresolved conflicts
+
+| ID | State | Decision / issue | Consequence |
+|---|---|---|---|
+| D-EXECUTION | accepted | Consolidate existing master and continue repairs | Single current master; preserve scope, thresholds and historical evidence. |
+| D-PROTOCOL | accepted | Verify and freeze complete phase protocols from objective evidence | Retain completed finite phase protocols and source-qualified results; PRD-01 specifies verification for restored product contracts before later qualification. |
+| D-TIERS | accepted | Reconcile source obligations and later-tier gate ownership | Do not waive omitted Tier 0 requirements or execute mislabeled later-tier campaigns. |
+| D-WORKLOADS | accepted | Confirm supported workload and finance release scope | Finite finance and actual learned tanh-coupling templates are supported under D-WORKLOAD-FINITE; no market-performance, general posterior-calibration or distributed-production claim. |
+| D-CONTINUATION | accepted | Continue eligible master-program work at task boundaries | Continue eligible master-program work after each deliverable; task completion alone is not a stop. Blocked campaigns do not block unrelated eligible repairs. |
+| D-ACCEPTANCE-ORDER | accepted | Freeze acceptance after all Tier 0 source repairs | V03-03 waits for all Tier 0 source repairs including SPEC-02 and VAL-01, packaging, conformance and objective protocol validation. |
+| D-CAPACITY-ORDER | accepted | Size capacity after the registered design is fixed | STAT-02 prepares the design and pilot envelope; PILOT-01 owns authorized measurements; CAP-01 derives final power, sample sizes and measured capacity. |
+| D-PRIOR-ORDER | accepted | Separate prior correctness repairs from method/design acceptance | PRI-01 remaining method/design work depends on D-PROTOCOL and D-TIERS; historical and current optional recovery failures remain visible. |
+| D-RELEASE-GUARD | accepted | Make the release command enforce the master prerequisites | GOV-02 is part of the existing governance repair work and a prerequisite of REL-01. Passing campaign audits alone cannot authorize phase closure. |
+| D-SCHEDULER-ORDER | accepted | Expose remaining scheduler repair before mutation freeze | SPEC-02A prepares the focused contract; SPEC-02 repairs it after D-SCHEDULER; both V03-03 and REL-01 still wait for scheduler closure. |
+| D-SCHEDULER | accepted | Choose the ASHA/median runtime contract | Retain independent promotion/runtime/median conformance and completed phase decisions; ASHA/median remains opt-in under finite V06. |
+| D-T0-CLAIMS | accepted | Choose the exact Tier 0 validation claims | Historical adopted PPO design only; its V04-T0/V05 requirements are prospectively superseded by D-SELF-CONTAINED-VALIDATION and E-R191-REVIEW. Preserve rules and results without claiming execution or success. |
+| D-PILOT-ORDER | accepted | Adopt the external-pilot and confirmation sequence | Historical adopted PPO design only; its V04-T0/V05 requirements are prospectively superseded by D-SELF-CONTAINED-VALIDATION and E-R191-REVIEW. Preserve rules and results without claiming execution or success. |
+| D-SEQUENTIAL-REPAIR | accepted | Re-plan by problem, separating preparation, repair and scientific acceptance | Prepare focused decisions before requesting them, work through scheduler/design/validator/pilot/acceptance stages, preserve existing scope and numerical criteria, and continue authorized preparation without waiting for campaign certification. |
+| D-MEDIAN-DEFAULT | accepted | Resolve the survey median shipping default | ASHA/median remains opt-in under every finite V06 verdict. Any future automatic default needs a separate prospectively justified claim and evidence. |
+| D-T0-DESIGN | accepted | Assign scientific derivation and design preparation to the implementation agent | Retain the completed design preparation and calibration repairs. The former PPO spending design was prospectively retired; adopted finite execution and qualification are complete. |
+| D-ANALYTIC-FIRST | accepted | Compute feasibility before allocating expensive experiments | Retain analytical feasibility screening before expensive experiments. Historical sizing work is complete; future statistical claims require justified inputs, measurements and allocation. |
+| D-T0-OUTCOME-SCOPE | accepted | Review the explicit Tier 0 outcome and finite-suite amendment | Historical adopted PPO design only; its V04-T0/V05 requirements are prospectively superseded by D-SELF-CONTAINED-VALIDATION and E-R191-REVIEW. Preserve rules and results without claiming execution or success. |
+| D-OBJECTIVE-EVIDENCE | accepted | Scientific results follow objective proof and reproducible evidence; no human acceptance override | Supersede D5 human scientific certification and withdraw the reviewer appointment request. Continue STAT-03/F / VAL-01 objective evidence repairs. Preserve adopted claims/error/power criteria; keep missing facts and incomplete evidence verifiers unresolved. Resource/release authority remains separate. |
+| D-CONTINUOUS-EXECUTION | accepted | Repair, refresh and advance between phases without routine stops | At each boundary review evidence, repair eligible defects, refresh the structured queue and continue. Stop only for completion, explicit pause or concrete external dependencies after other eligible work is exhausted. |
+| D-V01-REFERENCE-SCOPE | accepted | Authorize explicit finite-corpus V01 claim and corrected reference envelope | Implement the exact approved finite-corpus conformance claim and named reference envelope; independently reconstruct every planned case; keep missing evidence INCONCLUSIVE. |
+| D-V01-COVERAGE-SCOPE | accepted | Adopt retained original missing-data checks and complete-domain V01 supplement | Complete canonical contract, verification and fresh frozen evidence; no scientific PASS follows from authorization. |
+| D-T0-PROSPECTIVE-SCOPE | accepted | Adopt prospective named exposed suite under disclosed local trust assumptions | Historical adopted PPO design only; its V04-T0/V05 requirements are prospectively superseded by D-SELF-CONTAINED-VALIDATION and E-R191-REVIEW. Preserve rules and results without claiming execution or success. |
+| D-PILOT-JOINT-SIZING | accepted | Use one prospectively frozen joint-event pilot sizing rule | Historical adopted PPO design only; its V04-T0/V05 requirements are prospectively superseded by D-SELF-CONTAINED-VALIDATION and E-R191-REVIEW. Preserve rules and results without claiming execution or success. |
+| D-PILOT-SEARCH-FUTILITY | accepted | Stop pilot spending after mathematically conclusive search-loss futility | Historical adopted PPO design only; its V04-T0/V05 requirements are prospectively superseded by D-SELF-CONTAINED-VALIDATION and E-R191-REVIEW. Preserve rules and results without claiming execution or success. |
+| D-V03-PHASE | accepted | Reconcile the exact full-population deterministic mutation phase | REL-02 uses prospective V03 2.17: all original scientific criteria, 24 CPU slots and resource caps remain; verified guard/descendant controls, installation and fresh calibration replace the duplicate timing census before one exact final allocation. |
+| D-PROTOCOL-T1 | accepted | Objectively close the exact tier1 protocols before execution | Execute only allocated Tier-1 finite campaigns; PASS remains opt-in and cannot release the integrated source. |
+| D-PROTOCOL-T2 | accepted | Objectively close the exact tier2 protocols before execution | Execute only the allocated finite V08; no default or integrated release follows. |
+| D-PROTOCOL-DIST | accepted | Freeze the finite V12 warm-start source and allocation before execution | Execute once and retain objective finite disposition; no empirical speedup/default/service inference. |
+| D-PROTOCOL-T3-FEASIBILITY | accepted | Objectively close the exact tier3-feasibility protocols before execution | Execute only allocated V15a; FAIL/INCONCLUSIVE cancels ifBO integration and V15b. |
+| D-PROTOCOL-T3-ACCEPTANCE | accepted | Objectively close the exact tier3-acceptance protocols before execution | Execute V07 once and apply its retained finite result; no default, GP or integrated release claim. |
+| D-INDEPENDENT-CONTRACT-PREPARATION | accepted | Prepare later-phase contracts independently while preserving implementation and campaign gates | Retain completed independent contract preparation and its implementation, source, protocol and allocation prerequisites; the finite T1-COST contract and all adopted later phases are resolved. |
+| D-WORKSPACE-VALIDATION | accepted | Align validation with actual FinMarketing, MacroFinance and neural economic research workflows | Hold the old Brax/PPO spending path; prepare and implement relevant mathematical, native integration and separately scoped performance tests. Preserve old evidence and blocked release until explicit protocol and requirement migration; no superiority or PASS follows from this direction. |
+| D-SELF-CONTAINED-VALIDATION | accepted | Use self-contained stylized models with known tuning answers | Supersede sibling-project adapters with local fixtures and independent analytic or finite-domain references. Keep both model solutions and the specified outer tuning optima explicit. Preserve native diagnostic history and all old results; no prototype supplies release acceptance. |
+| D-TIER0-LOCAL-ADOPTION | accepted | Adopt the objectively accepted Tier-0 baseline and continue local Tier-1 development | REL-01 closes for the retained baseline. Tier-1 development proceeds with separate source freshness, protocol and objective acceptance obligations. |
+| D-TIER1-KNOWN-ANSWER | accepted | Adopt finite Tier-1 known-answer scope prospectively | Adopt eight finite opt-in entries including V-COST; retire the old six-entry statistical family prospectively; preserve original outcomes. No scientific result is declared. |
+| D-POPULATION-KNOWN-ANSWER | accepted | Adopt finite local population claim prospectively | Retire historical V08 comparisons prospectively; require source-frozen finite conformance; opt-in only. |
+| D-WORKLOAD-FINITE | accepted | Retain finance and learned transport as explicit finite known-answer models | Support the explicit small finance, Hamiltonian, Gaussian and learned-tanh-transform contracts. Broad application/calibration claims remain unaccepted and require a future prospective expansion. |
+| D-IFBO-FINITE | accepted | Finite pretrained reference feasibility with cancellation before integration | No model fitting; pointwise no-worse finite feasibility precedes owned integration. FAIL/INCONCLUSIVE cancels V15b. No general performance or default claim. |
+| D-DEHB-FINITE | accepted | Finite native DEHB acceptance | Require owned method, mathematical reference, exact freeze and audit; opt-in only, no defaults. |
+| D-WARM-FINITE | accepted | Adopt finite self-contained ranked warm-start conformance | Retain actual synthetic-training and independent finite-reconstruction evidence; opt-in only. Local APP-11 operations are separately qualified under D-LOCAL-OPERATIONS-SCOPE; REL-02 retains final integrated-source qualification. |
+| D-LOCAL-OPERATIONS-SCOPE | accepted | Qualify trusted local operations; waive separate-machine testing | Retain qualified local APP-11 and completed REL-02; separate-host/partition and unattended production claims remain unqualified. |
+| D-PRODUCT-CONTRACT-RECOVERY | accepted | Restore omitted original product contracts without discarding qualified results | Retain REL-02 as the qualified finite local baseline; continue PRD-01 for restored original obligations under the existing known-answer/local scope. No new scientific campaign allocation or scope expansion. |
+| D-BANK-PRODUCT-SCOPE | accepted | Make the universal-retail-bank HPO/NAS vision executable | Preserve the finite baseline, exclusions, failed ifBO disposition and local scope; complete PRD-01 then BANK-01 with self-contained model profiles. Initial 2–10 dimensions is a qualified envelope, not a universal support bound. No large campaign or production deployment is allocated. |
+| D-SCOPED-PROGRAM-OPERATIONS | accepted | Stable exact local commands and grouped scoped approvals | Use the reviewed bounded operations manifest; preserve managed approvals and unrelated rules. Rule matching/installation does not itself prove host live reload or grant scientific acceptance. |
+| D-PRODUCT-FINAL-QUALIFICATION-ORDER | accepted | Qualify the complete product after all planned foundation and bank source repairs | PRD closes engineering readiness; BANK final review owns unchanged complete scientific obligations and exact final-source acceptance. No campaign is allocated here. |
+
+<!-- END GENERATED PROGRAM STATUS -->
+
+REL-02 qualified the finite multi-objective method, metric references and vector orchestration on its retained baseline source. The current execution section and final BANK package own successor-source acceptance; no broader performance or default claim follows.
+
+## Product-contract repair sequence
+
+This continues the original master goal. PRD-01 first reconciles the source clauses and scope amendments, then repairs the general objective/seed workflow, capability and budget contracts, joint GP batching and pending trials, automatic diagnostics, and adapter/configured-workload outputs. Documentation and semantic traceability closure precede integrated product review and affected-source qualification. Each stage retains evidence and refreshes the next stage before continuing. The [lineage report](docs/program/MASTER_PROGRAM_LINEAGE_REVIEW_2026_10_12.md) and structured register specify concrete exit criteria.
+
+The final-qualification-11 baseline remains accepted for its exact finite local claims. No additional mutation or broad comparative campaign is allocated by this correction; future implementation changes require appropriate prospective qualification. Original watchlists, cancelled ifBO integration and waived separate-machine testing are not reopened.
+
+## Scientific and resource constraints
+
+V01 retains its adopted finite corpus: 36 complete trajectories, nine exact original-missing-cell refusals and the complete 187-configuration seed-0 HalfCheetah supplement. It does not claim general equality in law. V04-T0/V05 v4 have independent mathematical model/tuning references, fixed cases and seeds, complete raw traces and an engineering floating-point envelope. No stochastic performance threshold, alpha, pilot or power sizing applies to this deterministic finite claim. Comparative results are reported per fixture without generalization or performance-backed default promotion.
+
+Generation is capped at 300 seconds for V04-T0 and 180 seconds for V05; each of two decision reconstructions has the same cap. The bounded local verification budget is 1,440 phase-seconds plus orchestration overhead, one CPU thread, no GPU. Measured costs and all failures remain retained. Standing user authorization covers this local repair/verification. All previous mutation allocations are consumed. Allocation 06's 24 unconstrained
+workers exceeded the unchanged 64-GiB guard; its projected 49.52-GiB bound is
+disproved. The earlier sandbox diagnostics remain infrastructure evidence and cannot
+justify host execution or timing. The retained host census is also incomplete;
+its passed 976.641-second calibration belongs to the old source. Its 44 complete
+function populations may inform timing only after exact input comparison.
+Never use partial favorable subsets or old verdicts as fresh acceptance.
+
+Candidate admission reserves 6.5 GiB per high-memory job and 2.25 GiB otherwise,
+caps high-memory concurrency at eight and child reservations at 52 GiB, and
+reserves eight GiB for scaffolding. These empirical reservations cannot bound
+an unbounded corrupted computation. The independent 64-GiB guard remains
+mandatory. V03 2.17 prospectively replaces the duplicate timing census with
+verified descendant/guard controls, current installation, complete calibration
+and program checks before one bounded official allocation. All previous timing
+projections retain their original limits; completion time is not guaranteed.
+The 1,500-second calibration cap, selected-test rule, timeout formula and
+scientific criteria remain unchanged. Final allocation 11 completed under verified guarded admission and prospective V03 2.17. Its storage guard required 32 GiB free and interruption below 16 GiB. Historical mutation allocations are consumed and immutable. Foundation engineering and BANK profile implementation are complete. Successor qualification follows its own prospectively frozen envelope and recorded terminal disposition.
+
+The old PPO .95 planning-confidence rule, 46-vector ideal pilot minimum, .80 power requirement, 892.4-hour successful-sizing lower bound and 1,899.8-hour scenario are preserved in the [pre-migration archive](archive/program-2026-10-05/before-stylized-protocol-migration/manifest.json). Those apply to a retired comparison design and are not active resource requests. Later statistical claims retain their own justified error/power and allocation requirements until explicitly reviewed; the finite fixtures cannot certify them.
+
+The scientific interpreter is `/home/ubuntu/miniforge3/bin/python`, with the persistent overlay `.hponas-runtime/spec-deps`. Installed environments live under `.hponas-runtime/installation`; the restored CUDA environment is `.hponas-runtime/jax-cuda13` with `/tmp/hponas-jax-cuda13` alias. After the readiness repair, all 90 prospective dependency pins, the frozen backend/device and a compiled GPU arithmetic check pass; the base scientific environment is unchanged. A complete historical CUDA dependency manifest does not exist. These checks do not establish current workload timing or optimizer effects. Host Ray/GPU checks need host access; a sandbox denial is infrastructure evidence.
+
+The historical [continuity review](docs/program/evidence/2026-10-04/execution-review-04/review.md) corrected the V12/V13 completion-text mismatch and bound the then-active follow-on controller. That controller has since closed, as recorded in the [Attempt12 closure](docs/program/ATTEMPT12_CLOSURE_REVIEW_2026_10_05.md). Broader sequential pilot futility is not implemented savings.
+
+## Required checks and stopping rule
+
+Run `/home/ubuntu/workspace/hponas/program_operations/hponas_ops.py checks` exactly after each material amendment. This fixed operation regenerates the views and runs all six required program checks with retained logs and a receipt. The prior `master-refresh-02/verify_review.py --final-boundary` checks the archived revision-1.88 allocation boundary and is not a current stopping test: its fixed no-internal-work premise was superseded by the user's testing-scope correction. Preserve that verifier and its evidence. Run affected fixed behavioral operations for source repairs. Consistency can pass while acceptance is blocked.
+
+The Tier-0 gate independently recomputes scientific results and release prerequisites. Its execution environment must include the scientific overlay and single-thread numerical settings. Preserve gate reports before repeating a command that writes the same date path. No live log is registered as immutable evidence until copied or closed.
+
+Stop only when the whole master is complete, the user explicitly pauses, or every remaining eligible branch depends on a concrete external blocker after independent internal work is exhausted. A running campaign, unresolved software, draft plan or completed review is not such a blocker. The adopted finite local product master is complete: PRD-01 foundation engineering, all BANK model profiles and BANK-01/INTEGRATED-REVIEW have closed on the exact source in the [final product package](docs/program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json). The package binds 17 fresh passing entries, five final gates, installation and local operations; all 196 stages and 113 requirement dispositions are accounted for, including explicit deferred and excluded scope. Mutation qualification is one gate within this product result. Historical failures, cancelled ifBO integration and the separate-machine waiver remain preserved. Empirical application usefulness, remote fault tolerance and unattended production readiness remain unestablished. Changed source or additional claims require a prospective master amendment and appropriate evidence.

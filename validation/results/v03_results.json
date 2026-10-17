@@ -1,0 +1,42 @@
+{
+  "validation_id": "v03",
+  "timestamp": "2026-09-21T18:27:25Z",
+  "tool": "mutmut",
+  "tool_version": "3.8.0",
+  "overall": {
+    "total_mutants": 0,
+    "killed": 0,
+    "survived": 0,
+    "timeout": 0,
+    "suspicious": 0,
+    "equivalent": 0,
+    "kill_score": 0.0,
+    "passed": false
+  },
+  "per_module": [],
+  "critical_survivors": [],
+  "equivalent_mutants": [],
+  "v16_audit": {
+    "passed": false,
+    "checks": [
+      {
+        "check": "non_vacuity",
+        "passed": false
+      },
+      {
+        "check": "no_post_hoc_tuning",
+        "passed": true
+      },
+      {
+        "check": "runnable_independently",
+        "passed": true
+      }
+    ]
+  },
+  "protocol": {
+    "target_kill_score": 0.9,
+    "equivalent_allowance": 0.05,
+    "min_mutants": 100,
+    "max_timeout_rate": 0.2
+  }
+}

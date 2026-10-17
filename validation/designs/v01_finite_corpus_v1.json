@@ -1,0 +1,95 @@
+{
+  "kind": "v01_finite_corpus",
+  "schema_version": 1,
+  "scope": "finite_reference_trace_conformance_v1",
+  "components": [
+    "Random",
+    "Sobol",
+    "TPE",
+    "CMA-ES",
+    "GP",
+    "LegacyGP",
+    "ASHA",
+    "Median",
+    "PASHA"
+  ],
+  "references": {
+    "Random": "numpy.RandomState_uniform",
+    "Sobol": "scipy.stats.qmc.Sobol_scrambled",
+    "TPE": "optuna.samplers.TPESampler",
+    "CMA-ES": "optuna.samplers.CmaEsSampler",
+    "GP": "botorch_dim_scaled_matern52_qLogEI",
+    "LegacyGP": "botorch_gamma_prior_matern52_seeded_qLogEI",
+    "ASHA": "syne_tune_0_13_0_verbatim_promotion",
+    "Median": "independent_completed_reference_running_mean",
+    "PASHA": "syne_tune_0_13_0_sorted_set_pair_adapter"
+  },
+  "rule": {
+    "pass": "all_planned_cases_complete_and_exact_observable_traces_equal",
+    "fail": "any_reconstructed_observable_discrepancy",
+    "inconclusive": "missing_input_execution_or_source_cell_without_observed_discrepancy",
+    "priority": "fail_before_inconclusive_before_pass",
+    "no_imputation_replacement_or_post_outcome_subsets": true,
+    "distributional_equivalence": false,
+    "scientific_performance_claim": false
+  },
+  "tables": [
+    {
+      "id": "ant",
+      "source": {
+        "path": "docs/program/evidence/2026-09-29/stat-03/task-sources/arlbench_landscape_ant_ppo.csv",
+        "sha256": "66fee35a7cd2e37c46f6aaedc42c22876f8c8efcb7a937ba1bbe77f6150c7835"
+      },
+      "table_seed": 0
+    },
+    {
+      "id": "halfcheetah",
+      "source": {
+        "path": "docs/program/evidence/2026-09-29/stat-03/task-sources/arlbench_landscape_halfcheetah_ppo.csv",
+        "sha256": "d29ba69d2c745cb81eda4566d79849887a87b30812833d63f46302b72432b3c9"
+      },
+      "table_seed": 0
+    },
+    {
+      "id": "hopper",
+      "source": {
+        "path": "docs/program/evidence/2026-09-29/stat-03/task-sources/arlbench_landscape_hopper_ppo.csv",
+        "sha256": "d217dfba744c3394e1e811fbf2a1f4d5b2ec8e64bf77402b996973787dd93755"
+      },
+      "table_seed": 0
+    },
+    {
+      "id": "humanoid",
+      "source": {
+        "path": "docs/program/evidence/2026-09-29/stat-03/task-sources/arlbench_landscape_humanoid_ppo.csv",
+        "sha256": "60d411ddf568dab656f150ebcee6c10fce89ac77c30da57ffb47824f16662a10"
+      },
+      "table_seed": 0
+    }
+  ],
+  "optimizer_seeds": [
+    23
+  ],
+  "searcher_counts": {
+    "Random": 12,
+    "Sobol": 12,
+    "TPE": 12,
+    "CMA-ES": 12,
+    "GP": 6,
+    "LegacyGP": 3
+  },
+  "scheduler_root_count": 30,
+  "log_columns": [
+    "hp_config.learning_rate"
+  ],
+  "resource": {
+    "maximum_elapsed_seconds": 600,
+    "threads": 1,
+    "device": "cpu",
+    "scope": "finite-table CPU conformance only; no PPO training"
+  },
+  "sampling": "Deterministic regression corpus, no random-sampling or holdout inference.",
+  "selection_basis": "Retain all four previously pinned tables and the original uniform recipe; known missing cells and exposed development history stay included. No outcome-based replacement/subset.",
+  "numerical_observables": "Exact projected configuration cell, recorded score, earliest-tie incumbent, dispatch/report decision, resource milestone, PASHA cap/epsilon. Continuous proposal differences are retained diagnostics.",
+  "event_scope": "The three schedulers generate their own dispatch/report event streams on all recorded fidelities; no universal asynchronous-schedule claim."
+}

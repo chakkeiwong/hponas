@@ -1,0 +1,21 @@
+{
+  "deployment_name": "hponas-local-lab",
+  "source_digest": "bc131050672ad7a77e17535358400a22940ec35f09e54ab88f197242572d8c19",
+  "installed_python": "/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-08/service-repair-01/integrated-repair-installation-01/py313/bin/python",
+  "scope": "trusted_single_host_development",
+  "operator": "Current authorized execution session; no unattended operations",
+  "profiles": {
+    "postgres-runtime": "/home/ubuntu/workspace/hponas/deployments/local-lab/profiles/postgres-runtime.json",
+    "postgres-monitor": "/home/ubuntu/workspace/hponas/deployments/local-lab/profiles/postgres-monitor.json",
+    "postgres-maintenance": "/home/ubuntu/workspace/hponas/deployments/local-lab/profiles/postgres-maintenance.json",
+    "tls": "/home/ubuntu/workspace/hponas/deployments/local-lab/profiles/tls.json",
+    "ray": "/home/ubuntu/workspace/hponas/deployments/local-lab/profiles/ray.json",
+    "artifacts": "/home/ubuntu/workspace/hponas/deployments/local-lab/profiles/artifacts.json",
+    "hosts": "/home/ubuntu/workspace/hponas/deployments/local-lab/profiles/hosts.json",
+    "fault-cleanup": "/home/ubuntu/workspace/hponas/deployments/local-lab/profiles/fault-cleanup.json",
+    "monitor": "/home/ubuntu/workspace/hponas/deployments/local-lab/profiles/monitor.json",
+    "retention": "/home/ubuntu/workspace/hponas/deployments/local-lab/profiles/retention.json"
+  },
+  "physical_hosts": 1,
+  "distributed_service_accepted": false
+}

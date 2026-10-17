@@ -43,137 +43,169 @@ def check_r1_gate() -> GateResult:
     # Deliverable: spike examples exist
     for f in ["examples/spike_branin.py", "examples/spike_crash_recovery.py"]:
         if Path(f).exists():
-            criteria.append(Criterion(
-                name=f"Deliverable: {f}",
-                status="met",
-                message=f"File exists"
-            ))
+            criteria.append(
+                Criterion(
+                    name=f"Deliverable: {f}", status="met", message=f"File exists"
+                )
+            )
         else:
-            criteria.append(Criterion(
-                name=f"Deliverable: {f}",
-                status="blocked",
-                message=f"Missing required file"
-            ))
+            criteria.append(
+                Criterion(
+                    name=f"Deliverable: {f}",
+                    status="blocked",
+                    message=f"Missing required file",
+                )
+            )
 
     # Deliverable: architecture factory
     if Path("hponas/architecture.py").exists():
-        criteria.append(Criterion(
-            name="Deliverable: architecture.py",
-            status="met",
-            message="Architecture factory implemented"
-        ))
+        criteria.append(
+            Criterion(
+                name="Deliverable: architecture.py",
+                status="met",
+                message="Architecture factory implemented",
+            )
+        )
     else:
-        criteria.append(Criterion(
-            name="Deliverable: architecture.py",
-            status="blocked",
-            message="Missing architecture factory"
-        ))
+        criteria.append(
+            Criterion(
+                name="Deliverable: architecture.py",
+                status="blocked",
+                message="Missing architecture factory",
+            )
+        )
 
     # Deliverable: SPIKE_REVIEW.md
     if Path("docs/SPIKE_REVIEW.md").exists():
-        criteria.append(Criterion(
-            name="Deliverable: SPIKE_REVIEW.md",
-            status="met",
-            message="Interface review signed off"
-        ))
+        criteria.append(
+            Criterion(
+                name="Deliverable: SPIKE_REVIEW.md",
+                status="met",
+                message="Interface review signed off",
+            )
+        )
     else:
-        criteria.append(Criterion(
-            name="Deliverable: SPIKE_REVIEW.md",
-            status="blocked",
-            message="Missing stakeholder review document"
-        ))
+        criteria.append(
+            Criterion(
+                name="Deliverable: SPIKE_REVIEW.md",
+                status="blocked",
+                message="Missing stakeholder review document",
+            )
+        )
 
     # Functional: spike_branin runs and passes determinism
     try:
         result = subprocess.run(
-            ["python3", "examples/spike_branin.py"],
+            [sys.executable, "-m", "examples.spike_branin"],
             capture_output=True,
             timeout=120,
-            text=True
+            text=True,
         )
         if result.returncode == 0 and "DETERMINISM TEST PASSED" in result.stdout:
-            criteria.append(Criterion(
-                name="Functional: spike_branin determinism",
-                status="met",
-                message="Branin example runs and passes determinism check"
-            ))
+            criteria.append(
+                Criterion(
+                    name="Functional: spike_branin determinism",
+                    status="met",
+                    message="Branin example runs and passes determinism check",
+                )
+            )
         else:
-            criteria.append(Criterion(
+            criteria.append(
+                Criterion(
+                    name="Functional: spike_branin determinism",
+                    status="blocked",
+                    message=f"Example failed or determinism check missing (rc={result.returncode})",
+                )
+            )
+    except subprocess.TimeoutExpired:
+        criteria.append(
+            Criterion(
                 name="Functional: spike_branin determinism",
                 status="blocked",
-                message=f"Example failed or determinism check missing (rc={result.returncode})"
-            ))
-    except subprocess.TimeoutExpired:
-        criteria.append(Criterion(
-            name="Functional: spike_branin determinism",
-            status="blocked",
-            message="Example timed out after 120s"
-        ))
+                message="Example timed out after 120s",
+            )
+        )
     except Exception as e:
-        criteria.append(Criterion(
-            name="Functional: spike_branin determinism",
-            status="blocked",
-            message=f"Example crashed: {e}"
-        ))
+        criteria.append(
+            Criterion(
+                name="Functional: spike_branin determinism",
+                status="blocked",
+                message=f"Example crashed: {e}",
+            )
+        )
 
     # Functional: crash recovery produces unique configs (STRICT check)
     try:
-        # Start from a clean store: the example takes the "restart" path if one exists,
-        # so a stale store would make this check report the previous run's state.
-        import shutil
-        crash_dir = Path("/tmp/hponas_crash")
-        if crash_dir.exists():
-            shutil.rmtree(crash_dir)
+        # Each invocation retains a unique directory; never delete a user's store.
+        import tempfile
+
+        crash_dir = Path(tempfile.mkdtemp(prefix="hponas-r1-recovery-"))
 
         # Run crash recovery
         result = subprocess.run(
-            ["python3", "examples/spike_crash_recovery.py"],
+            [sys.executable, "-m", "examples.spike_crash_recovery",
+             "--output-dir", str(crash_dir)],
             capture_output=True,
             timeout=180,
-            text=True
+            text=True,
         )
-        if result.returncode == 0 and "CRASH RECOVERY DEMONSTRATION COMPLETE" in result.stdout:
+        receipts = list(crash_dir.glob("hponas-recovery-*/recovery-receipt.json"))
+        if result.returncode == 0 and len(receipts) == 1:
             # Check the actual store for config duplicates (not the example's weak assertion)
             import sqlite3
-            db_path = Path("/tmp/hponas_crash/study_crash.db")
+
+            receipt = json.loads(receipts[0].read_text())
+            db_path = receipts[0].parent / "resumed/study.db"
             if db_path.exists():
-                conn = sqlite3.connect(str(db_path))
-                rows = conn.execute("SELECT config_json FROM trials").fetchall()
+                conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+                rows = conn.execute("SELECT config_json FROM trials WHERE status='completed'").fetchall()
                 configs = [tuple(sorted(json.loads(cj).items())) for (cj,) in rows]
                 conn.close()
 
                 unique = len(set(configs))
                 total = len(configs)
-                if unique == total:
-                    criteria.append(Criterion(
-                        name="Functional: crash recovery uniqueness",
-                        status="met",
-                        message=f"Crash recovery verified: {unique} unique configs in {total} trials"
-                    ))
+                if (unique == total == receipt["trials"] == 16
+                        and receipt["committed_preserved"] == 8
+                        and receipt["exact_reference_trace"] is True):
+                    criteria.append(
+                        Criterion(
+                            name="Functional: crash recovery uniqueness",
+                            status="met",
+                            message=f"Crash recovery verified: {unique} unique configs in {total} trials",
+                        )
+                    )
                 else:
-                    criteria.append(Criterion(
+                    criteria.append(
+                        Criterion(
+                            name="Functional: crash recovery uniqueness",
+                            status="blocked",
+                            message=f"Recovery count, uniqueness or trace mismatch: {unique} unique in {total} trials",
+                        )
+                    )
+            else:
+                criteria.append(
+                    Criterion(
                         name="Functional: crash recovery uniqueness",
                         status="blocked",
-                        message=f"DUPLICATE CONFIGS: {unique} unique in {total} trials (Sobol state not restored)"
-                    ))
-            else:
-                criteria.append(Criterion(
+                        message="Crash recovery store not found for verification",
+                    )
+                )
+        else:
+            criteria.append(
+                Criterion(
                     name="Functional: crash recovery uniqueness",
                     status="blocked",
-                    message="Crash recovery store not found for verification"
-                ))
-        else:
-            criteria.append(Criterion(
+                    message=f"Crash recovery example failed (rc={result.returncode})",
+                )
+            )
+    except Exception as e:
+        criteria.append(
+            Criterion(
                 name="Functional: crash recovery uniqueness",
                 status="blocked",
-                message=f"Crash recovery example failed (rc={result.returncode})"
-            ))
-    except Exception as e:
-        criteria.append(Criterion(
-            name="Functional: crash recovery uniqueness",
-            status="blocked",
-            message=f"Crash recovery crashed: {e}"
-        ))
+                message=f"Crash recovery crashed: {e}",
+            )
+        )
 
     # Test suite: pytest passes
     try:
@@ -181,55 +213,65 @@ def check_r1_gate() -> GateResult:
             ["python3", "-m", "pytest", "tests/", "-q"],
             capture_output=True,
             timeout=300,
-            text=True
+            text=True,
         )
         if result.returncode == 0:
             # Extract pass count from output
             if "passed" in result.stdout:
-                criteria.append(Criterion(
-                    name="Test suite",
-                    status="met",
-                    message=f"Test suite passed"
-                ))
+                criteria.append(
+                    Criterion(
+                        name="Test suite", status="met", message=f"Test suite passed"
+                    )
+                )
             else:
-                criteria.append(Criterion(
-                    name="Test suite",
-                    status="warning",
-                    message="Tests ran but no pass count found"
-                ))
+                criteria.append(
+                    Criterion(
+                        name="Test suite",
+                        status="warning",
+                        message="Tests ran but no pass count found",
+                    )
+                )
         else:
-            criteria.append(Criterion(
-                name="Test suite",
-                status="blocked",
-                message=f"Test suite failed (rc={result.returncode})"
-            ))
+            criteria.append(
+                Criterion(
+                    name="Test suite",
+                    status="blocked",
+                    message=f"Test suite failed (rc={result.returncode})",
+                )
+            )
     except Exception as e:
-        criteria.append(Criterion(
-            name="Test suite",
-            status="blocked",
-            message=f"Test suite error: {e}"
-        ))
+        criteria.append(
+            Criterion(
+                name="Test suite", status="blocked", message=f"Test suite error: {e}"
+            )
+        )
 
     # Documentation: README survey page count matches reality
     readme = Path("README.md").read_text()
     if "106 pages" in readme:
-        criteria.append(Criterion(
-            name="Documentation sync: README survey pages",
-            status="warning",
-            message="README claims 106 pages, actual is 114 (stale)"
-        ))
+        criteria.append(
+            Criterion(
+                name="Documentation sync: README survey pages",
+                status="warning",
+                message="README claims 106 pages, actual is 114 (stale)",
+            )
+        )
     elif "114 pages" in readme:
-        criteria.append(Criterion(
-            name="Documentation sync: README survey pages",
-            status="met",
-            message="README survey page count correct"
-        ))
+        criteria.append(
+            Criterion(
+                name="Documentation sync: README survey pages",
+                status="met",
+                message="README survey page count correct",
+            )
+        )
     else:
-        criteria.append(Criterion(
-            name="Documentation sync: README survey pages",
-            status="warning",
-            message="Could not verify survey page count in README"
-        ))
+        criteria.append(
+            Criterion(
+                name="Documentation sync: README survey pages",
+                status="warning",
+                message="Could not verify survey page count in README",
+            )
+        )
 
     # Determine verdict
     blocked = [c for c in criteria if c.status == "blocked"]
@@ -246,98 +288,67 @@ def check_r1_gate() -> GateResult:
         phase="r1",
         verdict=verdict,
         criteria=criteria,
-        timestamp=datetime.now().isoformat()
+        timestamp=datetime.now().isoformat(),
     )
 
 
-def check_tier0_gate() -> GateResult:
-    """Tier 0 Foundation exit criteria."""
-    criteria = []
+def check_tier0_gate(artifact_root=None, *, program_root=None) -> GateResult:
+    """Require master prerequisites and independently audited Tier 0 campaigns."""
+    from tools.program_state import ROOT, tier0_release_blockers
+    from validation.evidence import TIER0
+    from validation.v16_audit_enforcer import V16Enforcer
 
-    # Import validators
-    sys.path.insert(0, str(Path("validation/validators").resolve()))
-
-    try:
-        from v01_validator import V01Validator
-        from v02_validator import V02Validator
-        from v03_validator import V03Validator
-        from v04_validator import V04Validator
-        from v05_validator import V05Validator
-        from v14_validator import V14Validator
-    except ImportError as e:
-        criteria.append(Criterion(
-            name="V16 Audit: Validator import",
-            status="blocked",
-            message=f"Failed to import validators: {e}"
-        ))
-        return GateResult(
-            phase="tier0",
-            verdict="blocked",
-            criteria=criteria,
-            timestamp=datetime.now().isoformat()
-        )
-
-    # Run V16 audit checks for each Tier 0 validator
-    validators = [
-        ("V01", V01Validator, "Vendor Parity"),
-        ("V02", V02Validator, "Deterministic State Replay"),
-        ("V03", V03Validator, "Mutation Testing"),
-        ("V04", V04Validator, "Random Baseline Floor + Sobol vs Random"),
-        ("V05", V05Validator, "Hyperband Scheduling"),
-        ("V14", V14Validator, "Day-One Walk Reproduction"),
-    ]
-
-    for validator_name, validator_class, description in validators:
+    program_root = Path(program_root) if program_root is not None else ROOT
+    registered_root = program_root / "validation/artifacts"
+    artifact_root = Path(artifact_root) if artifact_root is not None else registered_root
+    blockers = tier0_release_blockers(program_root)
+    if artifact_root.resolve() != registered_root.resolve():
+        blockers.append("Campaign root differs from the master program's registered artifacts")
+    criteria = [Criterion(
+        name="Master program prerequisites",
+        status="blocked" if blockers else "met",
+        message="; ".join(blockers) if blockers else "Program, protocol decisions, requirements and release prerequisites are ready for review",
+    )]
+    for vid in TIER0:
         try:
-            validator = validator_class()
-            report = validator.audit()
-
-            if report.passed:
-                criteria.append(Criterion(
-                    name=f"V16 Audit: {validator_name} ({description})",
-                    status="met",
-                    message=f"All 4 V16 checks passed"
-                ))
-            else:
-                failed_checks = [c.name for c in report.checks if not c.passed]
-                criteria.append(Criterion(
-                    name=f"V16 Audit: {validator_name} ({description})",
-                    status="blocked",
-                    message=f"V16 audit failed: {', '.join(failed_checks)}"
-                ))
-        except Exception as e:
-            criteria.append(Criterion(
-                name=f"V16 Audit: {validator_name} ({description})",
-                status="blocked",
-                message=f"V16 audit crashed: {e}"
-            ))
-
-    # Determine verdict
-    blocked = [c for c in criteria if c.status == "blocked"]
-    warnings = [c for c in criteria if c.status == "warning"]
-
-    if blocked:
-        verdict = "blocked"
-    elif warnings:
-        verdict = "hold"
-    else:
-        verdict = "pass"
-
+            pointer = json.loads((artifact_root / vid / "latest.json").read_text())
+            run_dir = artifact_root / vid / pointer["run"]
+            if run_dir.parent.resolve() != (artifact_root / vid).resolve():
+                raise ValueError("Invalid run path")
+            protocol = program_root / "validation/protocols" / (
+                vid.lower().replace("-", "_") + "_protocol.md"
+            )
+            audit = V16Enforcer(protocol).audit_execution(run_dir)
+            result = json.loads((run_dir / "results.json").read_text())
+            met = audit.passed and result.get("verdict") == "PASS"
+            message = (
+                "Campaign and V16 passed"
+                if met
+                else "; ".join(
+                    [f"Campaign: {result.get('verdict', 'missing')}"]
+                    + [c.message for c in audit.checks if not c.passed]
+                )
+            )
+        except (OSError, ValueError, KeyError, TypeError, ImportError) as exc:
+            met, message = False, f"Missing or invalid campaign evidence: {exc}"
+        criteria.append(
+            Criterion(name=vid, status="met" if met else "blocked", message=message)
+        )
     return GateResult(
         phase="tier0",
-        verdict=verdict,
+        verdict="pass" if all(c.status == "met" for c in criteria) else "blocked",
         criteria=criteria,
-        timestamp=datetime.now().isoformat()
+        timestamp=datetime.now().isoformat(),
     )
 
 
 def print_report(result: GateResult, mode: str = "run"):
     """Print human-readable gate report."""
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"GATE CHECK: {result.phase.upper()}")
     print(f"Timestamp: {result.timestamp}")
     print(f"Mode: {mode}")
-    print(f"{'='*80}\n")
+    print(f"{'=' * 80}\n")
 
     # Group by status
     met = [c for c in result.criteria if c.status == "met"]
@@ -362,12 +373,17 @@ def print_report(result: GateResult, mode: str = "run"):
             print(f"   • {c.name}: {c.message}")
         print()
 
-    print(f"{'='*80}")
+    print(f"{'=' * 80}")
     print(f"VERDICT: {result.verdict.upper()}")
-    print(f"{'='*80}\n")
+    print(f"{'=' * 80}\n")
 
     if result.verdict == "pass":
-        print("✅ All exit criteria met. Phase may close.")
+        if result.phase == "tier0":
+            print("✅ Campaigns and master prerequisites pass. REL-01 review and explicit release approval are still required.")
+        elif result.phase == "tier1":
+            print("Finite opt-in Tier-1 capability criteria pass. Integrated-source release remains separate.")
+        else:
+            print("✅ All exit criteria met. Phase may close.")
     elif result.verdict == "hold":
         print("⚠️  Warnings present. Review before proceeding.")
     elif result.verdict == "blocked":
@@ -409,172 +425,66 @@ def write_report(result: GateResult, output_dir: Path):
         f.write(f"- **Blocked:** {blocked}\n\n")
 
         if result.verdict == "pass":
-            f.write("**Decision:** Phase may close. All exit criteria met.\n")
+            if result.phase == "tier0":
+                f.write("**Decision:** Campaigns and master prerequisites pass. REL-01 review and explicit release approval are still required.\n")
+            elif result.phase == "tier1":
+                f.write("**Decision:** Finite opt-in Tier-1 capability criteria pass. Integrated-source release remains separate.\n")
+            else:
+                f.write("**Decision:** Phase may close. All exit criteria met.\n")
         elif result.verdict == "hold":
             f.write("**Decision:** Review warnings before proceeding.\n")
         elif result.verdict == "blocked":
-            f.write("**Decision:** Phase cannot close. Resolve blockers and re-run gate check.\n")
+            f.write(
+                "**Decision:** Phase cannot close. Resolve blockers and re-run gate check.\n"
+            )
 
     print(f"\nGate report written to: {report_path}")
     return report_path
 
 
-def check_tier1_gate() -> GateResult:
-    """Tier 1 Advanced Campaigns exit criteria."""
-    criteria = []
-
-    # Import validators
-    sys.path.insert(0, str(Path("validation/validators").resolve()))
-
-    try:
-        from v04_validator import V04Validator
-        from v06_validator import V06Validator
-        from v09_validator import V09Validator
-        from v11_validator import V11Validator
-    except ImportError as e:
-        criteria.append(Criterion(
-            name="V16 Audit: Validator import",
-            status="blocked",
-            message=f"Failed to import validators: {e}"
-        ))
-        return GateResult(
-            phase="tier1",
-            verdict="blocked",
-            criteria=criteria,
-            timestamp=datetime.now().isoformat()
-        )
-
-    # Run V16 audit checks for each Tier 1 validator
-    validators = [
-        ("V04-T1", V04Validator, "Sobol vs Random (real workload)"),
-        ("V06", V06Validator, "GP Kernel Selection"),
-        ("V09", V09Validator, "Multi-Fidelity Correlation"),
-        ("V11", V11Validator, "Prior Recovery"),
-    ]
-
-    for validator_name, validator_class, description in validators:
-        try:
-            validator = validator_class()
-            report = validator.audit()
-
-            if report.passed:
-                criteria.append(Criterion(
-                    name=f"V16 Audit: {validator_name} ({description})",
-                    status="met",
-                    message=f"All 4 V16 checks passed"
-                ))
-            else:
-                failed_checks = [c.name for c in report.checks if not c.passed]
-                criteria.append(Criterion(
-                    name=f"V16 Audit: {validator_name} ({description})",
-                    status="blocked",
-                    message=f"V16 audit failed: {', '.join(failed_checks)}"
-                ))
-        except Exception as e:
-            criteria.append(Criterion(
-                name=f"V16 Audit: {validator_name} ({description})",
-                status="blocked",
-                message=f"V16 audit crashed: {e}"
-            ))
-
-    # Determine verdict
-    blocked = [c for c in criteria if c.status == "blocked"]
-    warnings = [c for c in criteria if c.status == "warning"]
-
-    if blocked:
-        verdict = "blocked"
-    elif warnings:
-        verdict = "hold"
-    else:
-        verdict = "pass"
-
+def _uncertified_gate(phase):
     return GateResult(
-        phase="tier1",
-        verdict=verdict,
-        criteria=criteria,
-        timestamp=datetime.now().isoformat()
+        phase=phase,
+        verdict="blocked",
+        timestamp=datetime.now().isoformat(),
+        criteria=[
+            Criterion(
+                name="Campaign evidence",
+                status="blocked",
+                message="Current audited campaign evidence and reconciled protocol identities are required; source inspections cannot certify this tier.",
+            )
+        ],
     )
 
 
-def check_tier2_gate() -> GateResult:
-    """Tier 2 Specialized Topics exit criteria."""
-    criteria = []
+def check_tier1_gate():
+    from tools.tier1_gate import evaluate
+    report=evaluate()
+    criteria=[Criterion(row['entry'],'met' if row['passed'] else 'blocked',
+                        row.get('reason',str(row.get('verdict','')))) for row in report['criteria']]
+    criteria.append(Criterion('Acceptance scope','met',
+        'Finite opt-in capability gate only. No automatic defaults or integrated product release.'))
+    return GateResult('tier1','pass' if report['passed'] else 'blocked',criteria,datetime.now().isoformat())
 
-    # Import validators
-    sys.path.insert(0, str(Path("validation/validators").resolve()))
 
-    try:
-        from v10_validator import V10Validator
-        from v13_validator import V13Validator
-    except ImportError as e:
-        criteria.append(Criterion(
-            name="V16 Audit: Validator import",
-            status="blocked",
-            message=f"Failed to import validators: {e}"
-        ))
-        return GateResult(
-            phase="tier2",
-            verdict="blocked",
-            criteria=criteria,
-            timestamp=datetime.now().isoformat()
-        )
-
-    # Run V16 audit checks for each Tier 2 validator
-    validators = [
-        ("V10", V10Validator, "MO-ASHA Rung Correlation"),
-        ("V13", V13Validator, "Warm-Start Effectiveness"),
-    ]
-
-    for validator_name, validator_class, description in validators:
-        try:
-            validator = validator_class()
-            report = validator.audit()
-
-            if report.passed:
-                criteria.append(Criterion(
-                    name=f"V16 Audit: {validator_name} ({description})",
-                    status="met",
-                    message=f"All 4 V16 checks passed"
-                ))
-            else:
-                failed_checks = [c.name for c in report.checks if not c.passed]
-                criteria.append(Criterion(
-                    name=f"V16 Audit: {validator_name} ({description})",
-                    status="blocked",
-                    message=f"V16 audit failed: {', '.join(failed_checks)}"
-                ))
-        except Exception as e:
-            criteria.append(Criterion(
-                name=f"V16 Audit: {validator_name} ({description})",
-                status="blocked",
-                message=f"V16 audit crashed: {e}"
-            ))
-
-    # Determine verdict
-    blocked = [c for c in criteria if c.status == "blocked"]
-    warnings = [c for c in criteria if c.status == "warning"]
-
-    if blocked:
-        verdict = "blocked"
-    elif warnings:
-        verdict = "hold"
-    else:
-        verdict = "pass"
-
-    return GateResult(
-        phase="tier2",
-        verdict=verdict,
-        criteria=criteria,
-        timestamp=datetime.now().isoformat()
-    )
+def check_tier2_gate():
+    return _uncertified_gate("tier2")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Gate check for phase exit criteria")
-    parser.add_argument("--phase", required=True, choices=["r1", "tier0", "tier1", "tier2"],
-                       help="Phase to check")
-    parser.add_argument("--mode", default="run", choices=["run", "dry-run"],
-                       help="run = write report, dry-run = print only")
+    parser.add_argument(
+        "--phase",
+        required=True,
+        choices=["r1", "tier0", "tier1", "tier2"],
+        help="Phase to check",
+    )
+    parser.add_argument(
+        "--mode",
+        default="run",
+        choices=["run", "dry-run"],
+        help="run = write report, dry-run = print only",
+    )
 
     args = parser.parse_args()
 

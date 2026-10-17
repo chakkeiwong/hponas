@@ -1,3 +1,5 @@
+> **Historical reference — superseded for execution.** Read [CONSOLIDATED_MASTER_AUTHORITY.md](CONSOLIDATED_MASTER_AUTHORITY.md) for current scope, work and evidence. This file does not establish current approval or gate status. Its pre-reconciliation bytes are preserved in [the archive](archive/program-2026-09-28/HPO_NAS_RECOVERY_MASTER_PROGRAM.md).
+
 # HPO-NAS Recovery Master Program v1.0
 
 **Status:** RED → CONDITIONAL APPROVAL recovery path  

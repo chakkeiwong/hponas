@@ -67,6 +67,7 @@ def run_searcher_trial(
     objectives_list = []
 
     for trial_idx in range(max_trials):
+        trial_started = time.monotonic()
         # Propose configuration
         proposed = searcher.propose(n=1)
         config = proposed[0]
@@ -92,15 +93,17 @@ def run_searcher_trial(
         }
 
         # Observe result
-        searcher.observe({
-            "config": config,
-            "objectives": objectives,
-            "fidelity": 0.3,
-            "cost": result["cost"],
-        })
+        searcher.observe(
+            {
+                "config": config,
+                "objectives": objectives,
+                "fidelity": 0.3,
+                "cost": result["cost"],
+            }
+        )
 
         configs.append(config)
-        costs.append(result["cost"])
+        costs.append(time.monotonic() - trial_started)
         objectives_list.append(objectives)
 
     return configs, costs, objectives_list
@@ -111,6 +114,7 @@ def compute_hv_curve(
     costs: list[float],
     reference_point: np.ndarray,
     n_points: int = 20,
+    budget_seconds: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Compute hypervolume-over-budget curve.
@@ -126,14 +130,15 @@ def compute_hv_curve(
         hvs: Array of hypervolumes at each budget
     """
     # Convert objectives to array (n_trials, 2)
-    objectives_array = np.array([
-        [obj["prediction_error"], obj["drift"]]
-        for obj in objectives_list
-    ])
+    objectives_array = np.array(
+        [[obj["prediction_error"], obj["drift"]] for obj in objectives_list]
+    )
 
     costs_array = np.array(costs)
     cumulative_costs = np.cumsum(costs_array)
-    total_budget = cumulative_costs[-1]
+    total_budget = (
+        budget_seconds if budget_seconds is not None else cumulative_costs[-1]
+    )
 
     # Sample budget grid
     budget_grid = np.linspace(0, total_budget, n_points)
@@ -158,6 +163,7 @@ def run_validation(
     max_trials: int = 30,
     n_seeds: int = 5,
     alpha: float = 0.05,
+    budget_seconds: float = 60.0,
 ) -> dict:
     """
     Run V09 validation: qLogNEHVI vs Chebyshev vs NSGA-II.
@@ -220,7 +226,9 @@ def run_validation(
         configs_qn, costs_qn, objs_qn = run_searcher_trial(
             searcher_qnehvi, space, max_trials, seed
         )
-        budgets_qn, hvs_qn = compute_hv_curve(objs_qn, costs_qn, reference_point)
+        budgets_qn, hvs_qn = compute_hv_curve(
+            objs_qn, costs_qn, reference_point, budget_seconds=budget_seconds
+        )
         results["qLogNEHVI"]["budgets"].append(budgets_qn)
         results["qLogNEHVI"]["hvs"].append(hvs_qn)
         results["qLogNEHVI"]["final_hvs"].append(hvs_qn[-1])
@@ -237,13 +245,15 @@ def run_validation(
             objectives=objectives,
             weights=random_weights,
             reference_point=reference_point,
-            base_searcher="random",
+            base_searcher="gp",
             seed=seed,
         )
         configs_ch, costs_ch, objs_ch = run_searcher_trial(
             searcher_cheb, space, max_trials, seed
         )
-        budgets_ch, hvs_ch = compute_hv_curve(objs_ch, costs_ch, reference_point)
+        budgets_ch, hvs_ch = compute_hv_curve(
+            objs_ch, costs_ch, reference_point, budget_seconds=budget_seconds
+        )
         results["Chebyshev"]["budgets"].append(budgets_ch)
         results["Chebyshev"]["hvs"].append(hvs_ch)
         results["Chebyshev"]["final_hvs"].append(hvs_ch[-1])
@@ -262,7 +272,9 @@ def run_validation(
         configs_ns, costs_ns, objs_ns = run_searcher_trial(
             searcher_nsga, space, max_trials, seed
         )
-        budgets_ns, hvs_ns = compute_hv_curve(objs_ns, costs_ns, reference_point)
+        budgets_ns, hvs_ns = compute_hv_curve(
+            objs_ns, costs_ns, reference_point, budget_seconds=budget_seconds
+        )
         results["NSGA-II"]["budgets"].append(budgets_ns)
         results["NSGA-II"]["hvs"].append(hvs_ns)
         results["NSGA-II"]["final_hvs"].append(hvs_ns[-1])
@@ -290,21 +302,29 @@ def run_validation(
     nsga_hvs = np.array(results["NSGA-II"]["final_hvs"])
 
     # qLogNEHVI vs Chebyshev
-    t_stat_cheb, p_value_cheb = stats.ttest_rel(qnehvi_hvs, cheb_hvs)
+    t_stat_cheb, p_value_cheb = stats.ttest_rel(
+        qnehvi_hvs, cheb_hvs, alternative="greater"
+    )
     mean_diff_cheb = np.mean(qnehvi_hvs - cheb_hvs)
 
     # qLogNEHVI vs NSGA-II
-    t_stat_nsga, p_value_nsga = stats.ttest_rel(qnehvi_hvs, nsga_hvs)
+    t_stat_nsga, p_value_nsga = stats.ttest_rel(
+        qnehvi_hvs, nsga_hvs, alternative="greater"
+    )
     mean_diff_nsga = np.mean(qnehvi_hvs - nsga_hvs)
 
     print("Statistical Tests (paired t-test):")
-    print(f"  qLogNEHVI vs Chebyshev: t={t_stat_cheb:.3f}, p={p_value_cheb:.4f}, Δ={mean_diff_cheb:.4f}")
-    print(f"  qLogNEHVI vs NSGA-II:   t={t_stat_nsga:.3f}, p={p_value_nsga:.4f}, Δ={mean_diff_nsga:.4f}")
+    print(
+        f"  qLogNEHVI vs Chebyshev: t={t_stat_cheb:.3f}, p={p_value_cheb:.4f}, Δ={mean_diff_cheb:.4f}"
+    )
+    print(
+        f"  qLogNEHVI vs NSGA-II:   t={t_stat_nsga:.3f}, p={p_value_nsga:.4f}, Δ={mean_diff_nsga:.4f}"
+    )
     print()
 
     # Verdict
-    beats_cheb = (mean_diff_cheb > 0) and (p_value_cheb < alpha)
-    beats_nsga = (mean_diff_nsga > 0) and (p_value_nsga < alpha)
+    beats_cheb = (mean_diff_cheb > 0) and (p_value_cheb < alpha / 6)
+    beats_nsga = (mean_diff_nsga > 0) and (p_value_nsga < alpha / 6)
     ties_cheb = not beats_cheb and abs(mean_diff_cheb) < 0.01  # Tie threshold
     ties_nsga = not beats_nsga and abs(mean_diff_nsga) < 0.01
 
@@ -329,6 +349,8 @@ def run_validation(
     print()
 
     return {
+        "certifies_tier1": False,
+        "diagnostic_budget_seconds": budget_seconds,
         "results": results,
         "statistics": {
             "qLogNEHVI_vs_Chebyshev": {
@@ -366,27 +388,35 @@ if __name__ == "__main__":
         print("=" * 70)
         print()
 
-        print("qLogNEHVI   : final HV = {:.4f} ± {:.4f}".format(
-            results["statistics"]["qLogNEHVI"]["mean"],
-            results["statistics"]["qLogNEHVI"]["std"]
-        ))
-        print("Chebyshev   : final HV = {:.4f} ± {:.4f}".format(
-            results["statistics"]["Chebyshev"]["mean"],
-            results["statistics"]["Chebyshev"]["std"]
-        ))
-        print("NSGA-II     : final HV = {:.4f} ± {:.4f}".format(
-            results["statistics"]["NSGA-II"]["mean"],
-            results["statistics"]["NSGA-II"]["std"]
-        ))
+        print(
+            "qLogNEHVI   : final HV = {:.4f} ± {:.4f}".format(
+                results["statistics"]["qLogNEHVI"]["mean"],
+                results["statistics"]["qLogNEHVI"]["std"],
+            )
+        )
+        print(
+            "Chebyshev   : final HV = {:.4f} ± {:.4f}".format(
+                results["statistics"]["Chebyshev"]["mean"],
+                results["statistics"]["Chebyshev"]["std"],
+            )
+        )
+        print(
+            "NSGA-II     : final HV = {:.4f} ± {:.4f}".format(
+                results["statistics"]["NSGA-II"]["mean"],
+                results["statistics"]["NSGA-II"]["std"],
+            )
+        )
         print()
         print("Statistical Tests (paired t-test):")
         for comparison in results["statistics"].get("comparisons", []):
-            print("  {}: t={:.3f}, p={:.4f}, Δ={:.4f}".format(
-                comparison["pair"],
-                comparison["t_stat"],
-                comparison["p_value"],
-                comparison["mean_diff"]
-            ))
+            print(
+                "  {}: t={:.3f}, p={:.4f}, Δ={:.4f}".format(
+                    comparison["pair"],
+                    comparison["t_stat"],
+                    comparison["p_value"],
+                    comparison["mean_diff"],
+                )
+            )
         print()
         print("=" * 70)
         print("Verdict")

@@ -1,0 +1,18 @@
+{
+  "schema": "lab_ce216916788d",
+  "state": {
+    "dispatch_enabled": true,
+    "allocations": [
+      {
+        "allocation": "quadratic-verification-02-updates",
+        "capacity": 24,
+        "charged_units": 24,
+        "uncertain_units": 0
+      }
+    ],
+    "status": "ok",
+    "studies": 1,
+    "trials": 6
+  },
+  "restored_schema": "lab_ce216916788d_restored"
+}

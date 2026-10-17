@@ -45,56 +45,20 @@ def audit_v01_parity():
     return issues
 
 
-def audit_v04_floor():
-    """V04: Searcher complexity floor."""
-    print("Auditing V04 (floor)...")
+def audit_v04_floor(run_dir=None):
+    """Compatibility name for artifact-based V04-T0 conformance audit."""
+    from validation.validators.v04_validator import V04Validator
 
-    issues = []
-    validator_path = Path('validation/v04_performance_check.py')
-
-    if not validator_path.exists():
-        issues.append("V04 validator not implemented")
-        return issues
-
-    content = validator_path.read_text()
-
-    # No-tuning: threshold must be pre-recorded, not computed from results
-    if 'threshold' not in content:
-        issues.append("V04 lacks pre-recorded threshold")
-
-    # Check that threshold isn't computed from data
-    if 'np.percentile' in content or 'np.median' in content or 'np.mean' in content:
-        issues.append("V04 threshold appears to be computed from data (post-hoc tuning)")
-
-    # Non-vacuity: must fail on empty trials
-    if 'len(trials) == 0' not in content and 'if not trials' not in content:
-        issues.append("V04 lacks empty-input check")
-
-    return issues
+    report = V04Validator(run_dir).audit()
+    return [check.message for check in report.checks if not check.passed]
 
 
-def audit_v05_transform():
-    """V05: Transform matters."""
-    print("Auditing V05 (transform)...")
+def audit_v05_transform(run_dir=None):
+    """Audit immutable coordinate evidence; a source scan cannot certify it."""
+    from validation.validators.v05_validator import V05Validator
 
-    issues = []
-    validator_path = Path('validation/v05_log_warping.py')
-
-    if not validator_path.exists():
-        issues.append("V05 validator not implemented")
-        return issues
-
-    content = validator_path.read_text()
-
-    # No-tuning: threshold pre-recorded
-    if 'threshold' not in content:
-        issues.append("V05 lacks pre-recorded threshold")
-
-    # Non-vacuity
-    if 'len(trials) == 0' not in content and 'if not trials' not in content:
-        issues.append("V05 lacks empty-input check")
-
-    return issues
+    report = V05Validator(run_dir).audit()
+    return [check.message for check in report.checks if not check.passed]
 
 
 def audit_v14_reproduction():

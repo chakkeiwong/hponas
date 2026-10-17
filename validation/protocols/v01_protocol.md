@@ -1,274 +1,147 @@
-# V01 Protocol: Vendor Parity
+# V01 Protocol: finite reference trace conformance
 
-**Version:** 1.0  
-**Created:** 2026-09-09  
-**Status:** Preregistered  
-**Tier:** 0  
+**Version:** 2.1
+**Date:** 2026-10-01
+**Status:** Authorized scope; exact inputs frozen before each acceptance execution
+**Tier:** 0
 
----
+## Claim and authorization
 
-## Claim
+Every component in the declared V01 inventory conforms to its explicitly named
+reference on the frozen finite tabular and event corpus, under the bound source,
+dependencies, numerical settings and random streams. This is a finite conformance
+observation, not equality in distribution, universal transition equivalence or
+scientific performance superiority.
 
-Our implementations match reference vendor implementations on standard benchmarks.
+D-V01-REFERENCE-SCOPE records the user's authorization of
+`docs/program/V01_SCOPE_AMENDMENT_PROPOSAL_2026_09_30.md`. The immutable scope
+receipt binds that proposal. Authorization changes the claim; it cannot decide
+its result. The old protocol and evidence remain archived. The global protocol
+register remains DRAFT for other unresolved claims.
 
-**Specific claims:**
-1. Our Sobol implementation matches scipy.stats.qmc.Sobol distribution
-2. Our TPE wrapper matches Optuna TPE performance
-3. Our GP wrapper matches BoTorch GP performance
+D-V01-COVERAGE-SCOPE additionally adopts the exact reviewed
+`docs/program/V01_DATA_COVERAGE_PROPOSAL_2026_09_30.md`. Its scope receipt records
+the user's instruction to continue after the two scope proposals were presented.
+The original v1 run remains INCONCLUSIVE. This amendment changes the coverage
+claim: known original missing cases test truthful refusal; an added complete
+domain tests the affected components' full trajectories. It recovers no rewards.
 
----
+## Objective decision
 
-## Hypothesis
+- **PASS:** Every required complete trajectory executes fully; each frozen
+  expected-missing case agrees exactly with the independently reconstructed
+  reference through its named source cell and stops there. All 45 cases execute
+  and every required observable agrees. Missing refusals are not complete
+  trajectories.
+- **FAIL:** Any reconstructed observable discrepancy, including one on an
+  incomplete trajectory. FAIL takes precedence over missing evidence.
+- **INCONCLUSIVE:** Unexpected missing source cells, missing execution/evidence,
+  execution error or exhausted resource cap, without an observed discrepancy.
 
-### H0 (Null Hypothesis)
-Our implementation and vendor reference implementation produce statistically different distributions of optimization outcomes.
+Broken identities, changed sources, invalid recipes or corrupted artifacts fail
+integrity verification and cannot certify a result. There is no partial PASS,
+score imputation, favorable task replacement, post-outcome subset or
+rerun-until-pass. KS non-rejection, TOST, numerical tolerance bands, alpha and
+power do not establish this finite exact claim. Human acceptance cannot override
+any result. Historical schema-1 diagnostics cannot certify this protocol.
 
-### H1 (Alternative Hypothesis)
-Our implementation and vendor reference implementation produce statistically equivalent distributions of optimization outcomes.
+## Frozen inventory and corpus
 
-### Test Type
-**Equivalence test** (TOST - Two One-Sided Tests) for demonstrating matching behavior.
+`validation/designs/v01_finite_corpus_v2.json` binds the four retained original
+ARLBench PPO tables: Ant, HalfCheetah, Hopper and Humanoid. Known missing cells
+remain included. This is an exposed development regression corpus, not held-out
+or randomly sampled evidence. No population inference is made.
 
----
+For each table: optimizer seed 23; recorded table seed 0; Random, Sobol, TPE and
+CMA-ES each request 12 evaluations, GP requests 6, LegacyGP requests 3, all at the
+maximum recorded fidelity. ASHA, Median and PASHA each request 30 roots and use
+all recorded fidelities. The complete Cartesian product contains 36 cases in
+the frozen order. All 36 original cases remain. The nine HalfCheetah cases
+declare their exact original first-missing cells, independently checked against
+the source and reconstructed references. The other 27 must complete.
 
-## Preregistration
+Nine added cases use the same component/count/seed recipe on **all 187** seed-0
+HalfCheetah configurations finite at **every** original fidelity. The remaining
+69 incomplete configurations are excluded only from this added domain. No score
+ranking, return threshold, alternate seed or favorable trajectory defines
+membership. The verifier reconstructs membership and exact CSV bytes from the
+original source. Projection geometry differs on this domain and is explicit.
+These nine trajectories must complete; no missing exception applies to them.
+The frozen inventory therefore has 45 cases: 36 complete-trajectory obligations
+and nine exact refusal obligations. The original corpus and missing-case
+evidence are hash-bound and cannot be dropped or reclassified. The register's
+general maximum of 30 optimizer seeds does not permit changing the current
+authorized seed 23 recipe.
 
-### Tasks
-**Benchmark:** 2D quadratic synthetic function (x0, x1 ∈ [0,1])
-- Objective: f(x0, x1) = -(x0 - 0.3)² - (x1 - 0.7)²
-- Global optimum: (0.3, 0.7)
-- Used for TPE and GP wrapper tests
+The nine exact reference identities are:
 
-**Benchmark:** Uniform distribution test (Sobol only)
-- d-dimensional unit hypercube [0,1]^d
-- d = 5 dimensions
-- Tests distributional properties, not optimization
+| Component | Reference |
+|---|---|
+| Random | NumPy RandomState uniform stream |
+| Sobol | SciPy scrambled Sobol stream |
+| TPE | Optuna TPESampler |
+| CMA-ES | Optuna CmaEsSampler |
+| GP | BoTorch dimension-scaled Matern-5/2, qLogEI |
+| LegacyGP | BoTorch gamma-prior Matern-5/2, seeded qLogEI |
+| ASHA | Pinned Syne Tune 0.13.0 promotion source |
+| Median | Independent completed-reference running-mean specification |
+| PASHA | Pinned Syne Tune 0.13.0 with sorted-set unordered-pair adapter |
 
-**Held-out requirement:** These are synthetic benchmarks designed specifically for parity testing. Real workloads tested in V05.
+PASHA's deterministic pair correction is explicitly part of its reference. This
+is not parity with unmodified vendor epsilon behavior. Original vendor source,
+adapter and counterexample remain available. Each scheduler generates its own
+one-worker dispatch stream, with promotions before new roots; there is no claim
+covering every asynchronous event order.
 
-### Seeds
-- Sobol distributional test: seed=42
-- TPE wrapper test: seed=42
-- GP wrapper test: seed=43
+## Observations and reconstruction
 
-### Margin (Equivalence Bound)
+Both actors independently propose configurations, query the original recorded
+cells and update their own state. Common projection uses normalized coordinates,
+log learning rate, nearest recorded configuration and lowest configuration ID
+for projection ties. No return is interpolated.
 
-**For Sobol distributional test:**
-- KS statistic < 0.05 (distributions are close)
-- p-value > 0.05 (cannot reject same distribution)
+Acceptance compares exact projected configuration cells, statuses, recorded
+scores, incumbent selections with earliest-observation tie breaking, scheduler
+dispatches/decisions, resource milestones, and PASHA cap/epsilon. Incumbents are
+tracked separately at each recorded fidelity; final selection uses only the
+maximum fidelity. Recorded training steps describe the table recipe, not measured
+training time. Continuous proposal differences are retained diagnostics; no
+post-hoc floating-point tolerance determines acceptance.
 
-**For wrapper parity tests (TPE, GP):**
-- Equivalence margin δ = 0.10 (10% difference acceptable)
-- TOST with α = 0.05 (two one-sided tests at 0.025 each)
-- Justification: 10% performance difference is operationally negligible for a wrapper
+The verifier reconstructs each vendor's whole adaptive path from its seed and
+the original table, without invoking the tested wrapper. It reconstructs scores,
+incumbents and resource observations from raw rows. Producer verdicts and summary
+flags are never the oracle. Missing cells halt that actor immediately and remain
+visible. A matching prefix satisfies only an explicitly frozen missing-refusal
+obligation, never a complete-trajectory obligation. Unknown missingness cannot
+be reclassified after execution.
 
-**Fallback (if TOST not implemented):**
-- KS statistic < 0.10 and p-value > 0.05
-- Note: This is weaker than proper equivalence test; upgrade to TOST required per Checklist Item 7
+## Execution and evidence
 
-### Alpha
-- α = 0.05 (two-sided for KS test, one-sided per TOST direction)
-- No Bonferroni correction needed (separate benchmarks, not multiple comparisons on same data)
+`OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python -m validation.run_validation_with_audit V01` writes a new immutable run.
+Before any case executes, it freezes the complete inventory, exact table bytes,
+protocol register and individual protocol, authorization, current source digest,
+dependency versions, reference sources/adapter and CPU double-precision,
+one-thread numerical recipe. Local monotonic execution records bind that freeze
+to every ordered case and its raw evidence. These are instrumentation on a trusted
+local host, not hostile-host authentication or independently anchored chronology.
 
-### Power
-- Target: 0.80
-- Sample size calculation: Not applicable for distributional parity test (deterministic comparison)
-- For wrapper tests: n_trials=30 provides reasonable power to detect δ=0.10 difference
+The corpus permits at most 600 seconds of local CPU case execution. The cap is
+checked between cases; a running case may overshoot. Any overshoot is recorded
+and vetoes PASS. All skipped/error case slots remain in the result. No PPO
+training or GPU allocation is authorized by this protocol.
 
-### Sample Size
-
-**Sobol distributional test:**
-- n_samples = 1000 per dimension
-- n_dims = 5
-- Total samples = 1000
-
-**TPE wrapper test:**
-- n_trials = 30
-- n_seeds = 1 (deterministic given seed)
-
-**GP wrapper test:**
-- n_trials = 30
-- n_seeds = 1
-
-### Analysis
-
-**Sobol test:**
-- Per-dimension Kolmogorov-Smirnov two-sample test
-- Compare our_samples[dim] vs scipy_samples[dim]
-- Report: max(KS_statistic) across dimensions, min(p_value) across dimensions
-
-**Wrapper tests:**
-- Kolmogorov-Smirnov two-sample test on final score distributions
-- Compare our_scores vs vendor_scores after n_trials
-- Future: Upgrade to TOST equivalence test (per Checklist Item 7)
-
----
-
-## Decision States
-
-### PASS
-**All of the following must be true:**
-1. Sobol test: max_KS < 0.05 AND min_p > 0.05
-2. TPE test: KS < 0.10 AND p > 0.05 (or TOST confirms equivalence)
-3. GP test: KS < 0.10 AND p > 0.05 (or TOST confirms equivalence)
-4. V16 audit: non-vacuous, no post-hoc tuning, correct reference, runnable independently
-
-### FAIL
-**Any of the following:**
-1. Sobol test: max_KS ≥ 0.05 OR min_p ≤ 0.05
-2. TPE test: KS ≥ 0.10 OR p ≤ 0.05 (or TOST rejects equivalence)
-3. GP test: KS ≥ 0.10 OR p ≤ 0.05 (or TOST rejects equivalence)
-4. V16 audit fails
-5. Vendor library not available (blocker)
-
-### INCONCLUSIVE
-**Any of the following:**
-1. GP wrapper not yet implemented (partial pass: Sobol + TPE only)
-2. V16 audit detects post-hoc threshold tuning
-3. Test runs on zero trials (vacuous pass caught by V16)
-
----
-
-## Immutable Artifacts
-
-### Protocol (This File)
-- **Path:** validation/protocols/v01_protocol.md
-- **Status:** Immutable after campaign starts
-- **Hash:** (git commit hash when frozen)
-
-### Results
-- **Path:** validation/results/v01_results.json
-- **Format:** JSON with structure:
-  ```json
-  {
-    "validation_id": "v01",
-    "timestamp": "ISO8601",
-    "sobol_test": {"max_ks": float, "min_p": float, "passed": bool, "per_dimension": [...]},
-    "tpe_test": {"ks": float, "p": float, "passed": bool, "our_mean": float, "ref_mean": float},
-    "gp_test": {"ks": float, "p": float, "passed": bool, "our_mean": float, "ref_mean": float},
-    "overall_passed": bool,
-    "v16_audit": {"passed": bool, "checks": [...]}
-  }
-  ```
-- **Write policy:** Write once, never modified
-
-### Log
-- **Path:** validation/results/v01_log.txt
-- **Format:** Append-only text log
-- **Content:** Per-trial details, timestamps, warnings
-
----
-
-## Implementation
-
-### Scripts
-- **Main:** validation/v01_sobol_parity.py (Sobol distributional test)
-- **Main:** validation/v01_wrapper_parity.py (TPE/GP wrapper tests)
-- **Validator:** validation/validators/v01_validator.py (V16-compliant validator)
-
-### Validator Interface
-```python
-class V01Validator:
-    def audit(self) -> AuditReport:
-        """Run V16 audit checks."""
-        # Check 1: Non-vacuity (n_trials > 0, n_samples > 0)
-        # Check 2: No post-hoc tuning (thresholds match protocol)
-        # Check 3: Correct reference (scipy.qmc.Sobol, optuna.samplers.TPESampler, botorch)
-        # Check 4: Runnable independently (no manual intervention)
-        ...
-```
-
-### Dependencies
-- scipy>=1.9.0 (qmc.Sobol with scramble support)
-- optuna>=3.0.0 (TPESampler)
-- botorch>=0.8.0 (GP reference, when implemented)
-
----
+Schema-2 evidence uses exact path/hash bindings, source/dependency checks and an
+independently recomputed decision. An audit of an INCONCLUSIVE campaign is an
+integrity observation, not scientific acceptance. A V01 result alone does not
+close the master, its dependency gates or the overall release.
 
 ## Known Issues
 
-### Issue 1: Tautological Comparison (FIXED)
-**Problem:** BUILD_PROGRAM_REVIEW_VERDICT.md line 66 identified V01 as tautological (comparing to self).
-
-**Resolution:** Protocol now compares to external vendor references:
-- Sobol: scipy.stats.qmc.Sobol
-- TPE: optuna.samplers.TPESampler
-- GP: botorch (when implemented)
-
-**Status:** Fixed in this protocol version
-
-### Issue 2: GP Wrapper Not Implemented
-**Problem:** validation/v01_wrapper_parity.py line 141 has placeholder for GP test.
-
-**Resolution:** V01 can pass with partial coverage (Sobol + TPE) if GP marked INCONCLUSIVE.
-
-**Blocker for Tier 0 gate:** No (partial pass acceptable if Sobol + TPE pass)
-
-### Issue 3: KS Test vs TOST
-**Problem:** Current implementation uses KS two-sample test, not proper equivalence test.
-
-**Resolution:** Checklist Item 7 requires TOST. Current protocol documents both:
-- Current: KS < 0.10, p > 0.05 (weak equivalence claim)
-- Required: TOST with δ=0.10, α=0.05 (proper equivalence)
-
-**Action:** Upgrade analysis to TOST during Week 3 protocol repair.
-
----
-
-## V16 Audit Checklist
-
-### Check 1: Non-Vacuity
-- [ ] Sobol test: n_samples > 0, n_dims > 0
-- [ ] TPE test: n_trials > 0
-- [ ] GP test: n_trials > 0 (or marked not implemented)
-- [ ] Validator fails with clear error if zero-input detected
-
-### Check 2: No Post-Hoc Tuning
-- [ ] Sobol thresholds (0.05, 0.05) match protocol exactly
-- [ ] Wrapper thresholds (0.10, 0.05) match protocol exactly
-- [ ] No command-line override of thresholds
-- [ ] Thresholds hardcoded or read from this immutable protocol file
-
-### Check 3: Correct Reference
-- [ ] Sobol: compares to scipy.stats.qmc.Sobol, not internal implementation
-- [ ] TPE: compares to optuna.samplers.TPESampler, not internal TPE
-- [ ] GP: compares to botorch, not internal GP (when implemented)
-- [ ] No self-comparison (tautological test)
-
-### Check 4: Runnable Independently
-- [ ] `python validation/v01_sobol_parity.py` runs without manual intervention
-- [ ] `python validation/v01_wrapper_parity.py` runs without manual intervention
-- [ ] All parameters from protocol (n_samples, n_trials, seeds, thresholds)
-- [ ] Results written to validation/results/v01_results.json atomically
-
----
-
-## References
-
-**Authority:**
-- BUILD_PROGRAM_REVIEW_VERDICT.md lines 66-67 (tautological issue)
-- HPO_NAS_RECOVERY_MASTER_PROGRAM.md lines 716-720 (V01 repair specification)
-
-**Implementation:**
-- validation/v01_sobol_parity.py (Sobol distributional test)
-- validation/v01_wrapper_parity.py (TPE/GP wrapper tests)
-
-**Related Protocols:**
-- V05 (real workload performance, uses V01 implementations)
-
----
-
-## Changelog
-
-**v1.0 - 2026-09-09**
-- Initial preregistered protocol
-- Fixed tautological comparison (now uses scipy/optuna/botorch references)
-- Documented TOST upgrade path for Checklist Item 7
-- Added V16 audit checklist
-- Preregistered thresholds: Sobol (KS<0.05, p>0.05), Wrappers (KS<0.10, p>0.05)
-- Preregistered sample sizes: Sobol n=1000, Wrappers n_trials=30
-- Preregistered seeds: 42, 42, 43
-
----
-
-**END OF PROTOCOL**
+The retained HalfCheetah table contains blank cells whose causes are unknown.
+They stop nine original trajectories, whose v1 result remains INCONCLUSIVE.
+The v2 gate tests their exact refusal and adds full trajectories on a disclosed
+derived domain. This exposed finite corpus cannot establish population
+equivalence or continuation beyond missing outcomes. PASHA uses the disclosed
+corrected reference adapter. Local timing and process records assume a trusted
+host; measured training runtime is absent from the source tables.

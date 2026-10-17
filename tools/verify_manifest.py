@@ -110,7 +110,7 @@ def check_commit_sha(commit_sha: str) -> None:
     """Verify that the commit SHA resolves to an actual git commit."""
     try:
         result = subprocess.run(
-            ["git", "cat-file", "-e", commit_sha],
+            ["git", "cat-file", "-e", commit_sha + "^{commit}"],
             check=True,
             capture_output=True,
             text=True,
@@ -126,7 +126,9 @@ def compute_registry_digest(task_registry: dict, seed_sets: dict) -> str:
     Canonical JSON serialization: sorted keys, no whitespace, UTF-8.
     """
     payload = {"task_registry": task_registry, "seed_sets": seed_sets}
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    canonical = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    )
     digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     return f"sha256:{digest}"
 
@@ -221,20 +223,29 @@ def check_seed_disjointness(manifest: dict[str, Any]) -> None:
 
 
 def check_signature(manifest: dict[str, Any]) -> None:
-    """
-    Verify manifest signature if present.
+    """Verify Ed25519 over canonical JSON excluding the signature field.
 
-    Tier 1 scope: check for presence and structure. Actual cryptographic verification
-    requires a signature scheme choice (Ed25519, RSA-PSS, ECDSA) and key management,
-    which are deferred to the certification milestone.
+    A self-declared key establishes integrity only. Confirmatory deployment must
+    additionally pin a trusted key; unsigned pilot manifests remain supported.
     """
-    if "signature" in manifest:
-        if "public_key" not in manifest:
-            fail("Manifest has a signature but no public_key field")
-        warn(
-            "Manifest signature present but cryptographic verification is not yet "
-            "implemented (deferred to certification milestone)"
+    if "signature" not in manifest:
+        return
+    if "public_key" not in manifest:
+        fail("Manifest has a signature but no public_key field")
+    try:
+        import base64
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+        key = Ed25519PublicKey.from_public_bytes(
+            base64.b64decode(manifest["public_key"], validate=True)
         )
+        payload = {k: v for k, v in manifest.items() if k != "signature"}
+        canonical = json.dumps(
+            payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        ).encode()
+        key.verify(base64.b64decode(manifest["signature"], validate=True), canonical)
+    except Exception as exc:
+        fail(f"Manifest signature verification failed: {type(exc).__name__}: {exc}")
 
 
 def check_timestamp(manifest: dict[str, Any]) -> None:
@@ -242,7 +253,9 @@ def check_timestamp(manifest: dict[str, Any]) -> None:
     try:
         datetime.fromisoformat(manifest["created_at"].replace("Z", "+00:00"))
     except (ValueError, AttributeError):
-        fail(f"created_at is not a valid ISO 8601 timestamp: {manifest.get('created_at')}")
+        fail(
+            f"created_at is not a valid ISO 8601 timestamp: {manifest.get('created_at')}"
+        )
 
 
 def main() -> None:
@@ -250,6 +263,9 @@ def main() -> None:
         description="Verify a validation campaign manifest before execution"
     )
     parser.add_argument("manifest", type=Path, help="Path to the manifest JSON file")
+    parser.add_argument("--design-only", action="store_true",
+                        help="Check candidate design completeness only; never authorizes execution")
+    parser.add_argument("--phase", choices=["pilot", "confirmation", "replication"], default="confirmation")
     parser.add_argument(
         "--quiet", action="store_true", help="Suppress success message; exit code only"
     )
@@ -262,6 +278,22 @@ def main() -> None:
     args = parser.parse_args()
 
     manifest = load_manifest(args.manifest)
+    if manifest.get("kind") == "tier0-comparison-design":
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from validation.tier0_design import design_errors, require_campaign_ready
+
+        errors = design_errors(manifest)
+        if errors:
+            fail("Incomplete Tier 0 design:\n  " + "\n  ".join(errors))
+        if not args.design_only:
+            try:
+                require_campaign_ready(manifest, args.phase)
+            except ValueError as exc:
+                fail(str(exc))
+        if not args.quiet:
+            print("Design complete; engineering inspection only, no campaign authorized."
+                  if args.design_only else "Certified design and program prerequisites verified.")
+        return
     protocols = load_protocols(args.protocols)
 
     check_required_fields(manifest)
@@ -278,7 +310,9 @@ def main() -> None:
         print(f"  Campaign: {manifest['campaign_id']}", file=sys.stderr)
         print(f"  Entries: {', '.join(manifest['entry_ids'])}", file=sys.stderr)
         print(f"  Commit: {manifest['commit_sha'][:12]}", file=sys.stderr)
-        print(f"  Registry digest: {manifest['registry_digest'][:20]}...", file=sys.stderr)
+        print(
+            f"  Registry digest: {manifest['registry_digest'][:20]}...", file=sys.stderr
+        )
 
 
 if __name__ == "__main__":

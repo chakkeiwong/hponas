@@ -1,0 +1,81 @@
+# HPO and NAS for a universal retail bank
+
+Revision 1, 12 October 2026. Execution authority: [the master](../../CONSOLIDATED_MASTER_AUTHORITY.md). The user's phrase “universal retail back” is interpreted as “universal retail bank.” This document makes that product vision explicit; it does not report new application results.
+
+## Product and meaning of completion
+
+Build a reusable Python HPO and moderate architecture-coordinate NAS tool for the model families used across a universal bank: customer and product prediction, forecasting, causal and policy analysis, financial inference, constrained neural solvers, valuation and allocation. Retail banking is the primary application; the interfaces also serve SME, wealth and market models with the same mathematical contracts. “Universal” describes reuse across declared families, not an optimizer that is best for every objective or a guarantee of bank-wide empirical effectiveness.
+
+The deliverable is a model/data/framework-neutral study workflow: declare a problem, validate capabilities, search under a measured budget, retain failed and successful trials, freeze a selection, evaluate it under a separate protocol, and export a reproducible result with model artifacts. Scalar objectives, feasible Pareto fronts and explicit abstention are first-class outcomes. A bank application supplies its data, model builder, objective and valid evaluation protocol. The core package does not import another workspace repository, require its database, or replace its scientific implementation.
+
+Core completion requires the restored PRD-01 contracts plus BANK-01's independently checkable configured examples for every family below. Every supported profile must exercise the public Study/Store/executor path, resume, selection and reporting. Passing engine tests or mutation testing alone cannot close this program. Application integrations and empirical bank results have separate support states; they are not fabricated from fixtures. Trusted supervised local research remains the operational scope. Production banking deployment, external services and separate-machine tests are not reinstated.
+
+## Workspace evidence and current support
+
+The [snapshot inventory](evidence/2026-10-12/bank-product-scope-01/workspace-inventory.json) retains the exact documents inspected. They establish representative requirements, not that sibling implementations have been audited. The previous [lineage review](MASTER_PROGRAM_LINEAGE_REVIEW_2026_10_12.md) remains the history of the recovered program.
+
+| Family and representative sources | Required tuning workflow | Existing evidence and remaining obligation |
+|---|---|---|
+| Customer/product prediction and forecasting — FinMarketing; credit, survival and censored targets also occur in SMEwallet/cardnpv | Regularization, model family, calibration and coordinate NAS; grouped or chronological splits, fold-local preprocessing, decision-time features, appropriate predictive/uncertainty loss | Quadratic/ridge/filter fixtures cover numerical pieces. Configured tabular, censored and chronological study profiles are planned under BANK-01/PREDICTION. |
+| Causal and policy models — causal; FinMarketing policy uses | Tune nuisance models only under a declared estimand, identification assumptions, cross-fitting, overlap and time rules; retain bounds or unsupported results | A finite MDP is not evidence for observational identification. Known-structural-model and overlap-failure profiles are planned under BANK-01/CAUSAL. |
+| State-space, likelihood and posterior inference — MacroFinance, BayesFilter, dsge_hmc, dataml | Preserve the target and correction; distinguish predictive validation, numerical tuning and posterior assessment; integrate a native tuner through an explicit contract when appropriate | Gaussian HMC/learned-transform fixtures have finite numerical evidence. General inference study and handoff profiles are planned under BANK-01/INFERENCE. |
+| Constrained neural/equilibrium solvers — MOONeural, dsge_hmc | Joint training HPO and real architecture choices; per-task feasibility, normalized training loss, derivative/residual and domain checks, reloadable models | Fixed-knot networks and Hamiltonian features are useful restricted fixtures. A constrained-solver profile is planned under BANK-01/SOLVERS. |
+| Valuation, latent wallet and allocation — cardnpv, SMEwallet, FinMarketing, MacroFinance | Preserve target sign, censoring and identification; tune statistical/surrogate components; propagate uncertainty to constrained decisions | The two-asset allocation fixture is accepted within its finite scope. Valuation/censoring/bounds and decision profiles are planned under BANK-01/DECISIONS. |
+| Coordinate NAS across neural profiles | Width, depth, activation, representation size and training controls must change the constructed model; measure parameters/work, preserve checkpoint compatibility and real artifacts | Restricted architecture and transfer evidence exists. Cross-profile NAS workflow and portability are planned under BANK-01/NAS-PORTABILITY. |
+
+MacroFinance worktrees represent the same broad family, not extra independent coverage. Authoring, documentation and integration utilities such as humanvoice, research-assistant, MathDevMCP, DynareMCP and claudecodex are not automatically HPO workloads. This is a representative model-family inventory, not a claim to cover every file under `~/workspace`.
+
+## Problem declaration and evaluation contract
+
+Each admitted profile declares and persists:
+
+1. Objective identity and version, units, direction, estimand/target, data or synthetic-generator identity, model builder identity, all constraints and missing/failed-value semantics. Vector objectives additionally declare scaling, reference points and feasible-front rules.
+2. Training, tuning and final-evaluation roles. Repeated seeds address stochastic computation; they do not prevent data leakage. Record time, entity/group membership, information-availability rules, fold identities, preprocessing fitted within each training fold, tuning repetitions and aggregation. Nested selection is required when estimating the performance of the selection procedure; a sealed final evaluation is required for the selected-model claim.
+3. Searcher/scheduler capabilities and explicit unsupported combinations. No model name silently certifies support for conditional spaces, architecture changes, multi-fidelity, vector objectives or constrained inference.
+4. Candidate-count budget, fidelity/work units, normalization to full-run equivalents when meaningful, worker capacity and elapsed/resource limits. Charge failed attempts, repetitions, promotions and transfer work. Final evaluation has a separate reserved budget and cannot be silently omitted after search spends the allocation.
+5. A frozen selection policy, refit policy, final-evaluation protocol and resumable state. Final measurements cannot update the searcher, select another candidate, or calibrate an acceptance threshold. Reopening selection creates a new study and records exposure. A deterministic known-answer fixture may explicitly opt out of stochastic repetitions; its report must say why.
+6. An export containing the declaration, full trial history, failures, selection and feasible front, diagnostic limits, measured costs, model/checkpoint artifacts and replay instructions. Partial, infeasible, unidentified and insufficient-evidence outcomes remain explicit.
+
+The package can enforce declared roles, hashes, access paths and state transitions. It cannot prove that arbitrary user code respects undeclared information boundaries; that trust boundary is part of the report. Private bank data need not be copied into the trial store: callers may provide stable identifiers/content digests and an external access mechanism.
+
+Scientific tolerances come from mathematics, numerical error analysis, target validity or a prospectively stated decision loss. They are not fitted to observed HPO results or decided by reviewer preference. Business resource limits and utility tradeoffs are application inputs; they are distinct from evidence that an algorithm works. When a scientific comparison is warranted, prespecify the estimand, comparison, uncertainty and stopping rule before collecting its evaluation evidence. The present core plan makes no general superiority claim and therefore does not require a huge PPO/power campaign.
+
+## Family-specific correctness rules
+
+Prediction uses a loss appropriate to its target, such as squared error, a proper probabilistic score or a declared censored likelihood. Calibration and decision value are separate reported quantities. Time-series profiles use rolling/blocked evaluation with a gap appropriate to the information horizon; random row splits cannot stand in for this. Entity leakage and target-derived preprocessing must be rejected in finite counterexamples.
+
+Causal tuning preserves the estimand and identification conditions. Cross-fitted nuisance prediction can be optimized without declaring a causal effect identified. A low prediction loss cannot erase overlap failure, censoring assumptions or partial-identification bounds. The profile returns an explicit unsupported/bounded outcome where the declared assumptions fail.
+
+Inference distinguishes three procedures: learning a predictive model, selecting a numerically admissible inference configuration, and assessing posterior sampling. In particular, BayesFilter's current candidate controller applies candidate-specific acceptance/numerical-health checks and fresh verification and retains all verified pairs. R-hat, ESS and MCSE belong to its separate posterior assessment; HPO-NAS must not rank that tuner's candidates by these statistics. A generic ESS-per-second research objective is not a drop-in replacement. Learned proposals/transports must preserve the target density, inverse/Jacobian and any required correction.
+
+For constrained neural solvers, normalized training losses and final task tolerances are different objects. A small weighted sum cannot override a violated task. Profiles report each residual/constraint and test derivatives and distinct evaluation states. A cheaper network is eligible only when the declared feasibility checks pass.
+
+Valuation preserves units, discounting, target sign and censoring conventions; a mathematically tractable LP/QP or closed-form decision uses its exact solution as the reference or actual solver. HPO tunes unknown statistical/surrogate/training choices; it does not replace an available exact answer with unnecessary search. Unsupported identification and uncertainty must survive into the decision output.
+
+## NAS and computational scope
+
+[NAS_SCOPE_DECISION.md](../../NAS_SCOPE_DECISION.md) defines moderate coordinate NAS. The original roughly 2–10 coordinates describe the first qualified envelope, not a universal mathematical limit for all HPO. Additional dimensions need an explicit method capability and bounded verification; prior acceptance does not expand automatically. Search over arbitrary cells/topologies, supernets, shared weights and differentiable architecture optimization remains excluded.
+
+Measured training cost, model size and declared runtime constraints may be objectives for a caller's ordinary coordinate search. No hardware-specific latency predictor, energy-optimal architecture engine, production-device qualification or guaranteed cost saving is promised. Existing local cost accounting is not such a guarantee.
+
+## Executable completion sequence
+
+The [PRD repair contract](PRODUCT_REPAIR_CONTRACT_2026_10_12.md) closes the foundation first. BANK-01 then executes the following stages in order; each stage retains its evidence, repairs demonstrated defects, refreshes the next bounded plan and continues. These stages are part of the master, not a replacement direction.
+
+| Stage | Concrete deliverable and independent finite check |
+|---|---|
+| SCOPE | Completed documentation audit, snapshot provenance, explicit product contract and registered obligations; no family implementation claim |
+| PROFILE-CONTRACTS | Freeze profile schemas, role/split semantics, generator/reference formulas, test roster and measured caps before implementation qualification |
+| PREDICTION | Standalone ridge and finite Bernoulli/censored examples plus a small AR/state-space forecast; independently solve ridge risk, enumerate finite conditional likelihoods and check temporal/group leakage counterexamples |
+| CAUSAL | Finite structural linear/policy model with analytically known intervention effect; honest nuisance cross-fitting and explicit no-overlap/unknown-identification outcomes |
+| INFERENCE | Scalar linear-Gaussian likelihood/filter reference and Gaussian or invertible transport reference; candidate-specific verification and fresh handoff, with posterior assessment kept separate |
+| SOLVERS | Tiny constrained residual system with a known solution and constructed neural basis; exact per-task feasibility and derivative reference, adverse low-scalar-loss case |
+| DECISIONS | Finite discounted cashflow/censoring model and small LP/QP allocation; independent enumeration/closed-form reference, target-sign and unidentified/bounds counterexamples |
+| NAS-PORTABILITY | At least prediction and constrained-solver coordinate builders through the common workflow; construct different models, reload them, measure size/work and reject incompatible transfers; verify a package installation without sibling repositories |
+| INTEGRATED-REVIEW | Reconcile every inherited and banking clause to behavior, appropriate current-source evidence or explicit scope disposition; qualify affected source, synchronize documentation and publish a precise support matrix locally |
+
+Each profile begins with at most 32 configurations, two declared stochastic repetitions where needed, small finite data and a single CPU, with no GPU or sibling execution. Start with one measured diagnostic capped at 60 seconds; focused test commands cap at 300 seconds. A stage records a total allocation before multiple runs. Timeout/failure is evidence and triggers repair or a prospective cost review, not repeated blind reruns. These are engineering caps, not statistical sample-size justifications. New large campaigns require their own measured plan; none is allocated here.
+
+Acceptance has three distinct layers: mathematical/reference correctness; executable configured-workflow correctness; empirical application usefulness. The first two are required for core profile completion. Empirical results require named tasks/data and an appropriate independent evaluation, and remain unestablished until that work actually happens. Finite search regret, feasibility and work are reported without inventing a superiority threshold. Failures and null or inconclusive findings remain in the record.
+
+The master is complete only when PRD-01 and BANK-01 close their registered final stages with this traceability. The accepted 12 October finite baseline and mutation gate are retained milestones; neither is whole-product completion.

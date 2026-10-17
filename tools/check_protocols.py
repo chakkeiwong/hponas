@@ -43,7 +43,7 @@ CHAPTER_PATH = Path('hpo-survey/sections/16-validation.tex')
 # This is the check that finding F1 needed and did not have. Five entries had already
 # been corrected on paper while the chapter still carried the superseded rule.
 RETIRED_RULES = [
-    (r'0\.5\\%', 'V01 fixed 0.5% tolerance band (replaced by distributional comparison)'),
+    (r'0\.5\\%', 'V01 fixed 0.5% tolerance band (replaced by exact finite conformance)'),
     (r'clears \$0\.6\$|lower bound clears \$0\.6\$',
      'V10 gating on Spearman rho >= 0.6 (replaced by false-cull and recall bounds)'),
     (r'single fixed seed',
@@ -354,6 +354,48 @@ def check_program_alignment(entries: dict) -> list[str]:
     return problems
 
 
+def check_objective_evidence(data) -> list[str]:
+    """Scientific decisions must not drift back to authority-based overrides."""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from validation.tier0_objectivity import OBJECTIVE_POLICY
+
+    policy = data.get('policy', {})
+    problems = []
+    if policy.get('objective_evidence') != OBJECTIVE_POLICY:
+        problems.append('Scientific result policy differs from D-OBJECTIVE-EVIDENCE')
+    d5 = [item for item in policy.get('open_decisions', []) if item.get('id') == 'D5']
+    if len(d5) != 1 or d5[0].get('chosen') != 'objective_evidence_separate_resource_authorization':
+        problems.append('D5 must separate objective evidence from resource authorization')
+    return problems
+
+
+def check_phase_readiness(data) -> list[str]:
+    from validation.tier0_phase_contracts import PHASE_POLICY, SIZING_POLICY
+    from validation.stylized_contract import STYLIZED_POLICY
+
+    problems = []
+    if data.get('policy', {}).get('stylized_tier0') is not None:
+        if data['policy']['stylized_tier0'] != STYLIZED_POLICY:
+            problems.append('Stylized Tier 0 policy differs from the prospective finite contract')
+        for vid in STYLIZED_POLICY['entries']:
+            entry = data['entries'][vid]
+            if (entry.get('version') != '4.0' or entry.get('class') != 'deterministic_veto'
+                    or entry.get('alpha_family') is not None
+                    or entry.get('max_sample') != STYLIZED_POLICY['counts'][vid]
+                    or entry.get('power_target') is not None):
+                problems.append(f'{vid}: finite conformance cannot retain statistical ranking gates')
+        historical = data.get('policy', {}).get('historical_tier0_v3', {})
+        if (historical.get('tier0_phase_readiness') != PHASE_POLICY
+                or historical.get('tier0_pilot_sizing') != SIZING_POLICY):
+            problems.append('Retired PPO phase/sizing rules must remain preserved as historical')
+        return problems
+    if data.get('policy', {}).get('tier0_phase_readiness') != PHASE_POLICY:
+        problems.append('Tier 0 phase readiness differs from the noncircular objective contract')
+    if data.get('policy', {}).get('tier0_pilot_sizing') != SIZING_POLICY:
+        problems.append('Tier 0 pilot sizing differs from the single prespecified method')
+    return problems
+
+
 def check_retired_rules() -> list[str]:
     """
     The chapter may explain a retired rule but may not carry it as an active one.
@@ -413,6 +455,105 @@ def check_open_decisions(data: dict) -> list[str]:
     return problems
 
 
+def check_finite_conformance(entries: dict) -> list[str]:
+    """Prevent a drift back to partial or inferential V01 acceptance."""
+    problems = []
+    v01 = entries.get('V01', {})
+    if (v01.get('scope_contract') != 'finite_reference_trace_conformance_v2'
+            or v01.get('test') != 'finite_corpus_exact_trace_conformance'
+            or v01.get('decision_rule', {}).get('pass') != 'all_required_trajectories_complete_and_frozen_missing_refusals_verified_with_exact_agreement'
+            or v01.get('decision_rule', {}).get('priority') != 'fail_before_inconclusive_before_pass'
+            or v01.get('decision_rule', {}).get('distributional_equivalence') is not False
+            or v01.get('decision_rule', {}).get('expected_missing_is_complete_trajectory') is not False
+            or v01.get('decision_rule', {}).get('complete_domain') != 'all_seed0_configurations_finite_at_every_original_fidelity_no_return_filter'
+            or v01.get('corpus', {}).get('path') != 'validation/designs/v01_finite_corpus_v2.json'
+            or not v01.get('scope_authorization')):
+        problems.append('V01 must retain its authorized exact finite corpus and complete-evidence rule')
+    if entries.get('V02', {}).get('scope_contract') != 'recorded_event_and_runtime_conformance_v1':
+        problems.append('V02 must bind its recorded event and mandatory runtime inventory')
+    return problems
+
+
+def check_finite_tier1(data):
+    from validation.tier1_contract import ENTRIES, CLAIM, contract
+    problems=[]
+    policy=data.get('policy',{}).get('finite_tier1',{})
+    if policy.get('entries')!=list(ENTRIES) or policy.get('claim')!=CLAIM or policy.get('default_activation') is not False:
+        problems.append('Tier-1 finite scope or opt-in consequence differs')
+    for vid in ENTRIES:
+        entry=data['entries'].get(vid,{})
+        if (entry.get('contract')!=contract(vid) or entry.get('scope_contract')!=CLAIM
+                or entry.get('class')!='deterministic_veto' or entry.get('alpha_family') is not None
+                or entry.get('power_target') is not None or entry.get('max_sample')!=len(contract(vid)['slots'])
+                or set(entry.get('release_consequence',{}))!={'pass','fail','inconclusive'}):
+            problems.append(vid+': finite roster/rules/consequences differ')
+    historical=data.get('policy',{}).get('historical_tier1_before_finite',{})
+    if set(historical.get('family',{}).get('members',[]))!={'V04-T1','V06','V09','V10','V11a','V11b'}:
+        problems.append('Historical Tier-1 family must remain preserved')
+    return problems
+
+
+def check_finite_population(data):
+    from validation.population_contract import CLAIM, contract
+    entry = data['entries'].get('V08', {})
+    policy = data.get('policy', {}).get('finite_population', {})
+    historical = data.get('policy', {}).get('historical_v08_before_finite', {})
+    problems = []
+    if (entry.get('contract') != contract() or entry.get('scope_contract') != CLAIM
+            or entry.get('class') != 'deterministic_veto' or entry.get('alpha_family') is not None
+            or entry.get('power_target') is not None or entry.get('max_sample') != len(contract()['slots'])
+            or set(entry.get('release_consequence', {})) != {'pass', 'fail', 'inconclusive'}):
+        problems.append('V08 finite roster/rules/consequences differ')
+    if (policy.get('entry') != 'V08' or policy.get('claim') != CLAIM
+            or policy.get('default_activation') is not False
+            or policy.get('preparation_does_not_authorize_campaigns') is not True):
+        problems.append('V08 finite scope or preparation restriction differs')
+    if historical.get('family', {}).get('members') != ['V08'] or historical.get('entry', {}).get('class') != 'confirmatory':
+        problems.append('Historical V08 statistical design must remain preserved')
+    return problems
+
+
+def check_finite_ifbo(data):
+    from validation.ifbo_finite_contract import CLAIM, contract
+    entry = data['entries'].get('V15a', {})
+    policy = data.get('policy', {}).get('finite_ifbo', {})
+    historical = data.get('policy', {}).get('historical_v15_before_finite', {})
+    problems = []
+    if (entry.get('contract') != contract() or entry.get('scope_contract') != CLAIM
+            or entry.get('class') != 'deterministic_veto' or entry.get('alpha_family') is not None
+            or entry.get('power_target') is not None or entry.get('max_sample') != 6
+            or entry.get('release_consequence') != {k: contract()[k] for k in ['pass', 'fail', 'inconclusive']}):
+        problems.append('V15a finite feasibility contract or cancellation consequence differs')
+    if (policy.get('entry') != 'V15a' or policy.get('claim') != CLAIM
+            or policy.get('default_activation') is not False
+            or policy.get('integration_requires_v15a_pass') is not True
+            or policy.get('preparation_does_not_authorize_campaigns') is not True):
+        problems.append('V15a finite scope or success gate differs')
+    if set(historical.get('entries', {})) != {'V15a', 'V15b'}:
+        problems.append('Original V15 statistical entries must remain preserved')
+    return problems
+
+
+def check_finite_warm(data):
+    from validation.warm_finite_contract import CLAIM, contract
+    entry = data['entries'].get('V12', {})
+    policy = data.get('policy', {}).get('finite_warm', {})
+    historical = data.get('policy', {}).get('historical_v12_before_finite', {})
+    problems = []
+    if (entry.get('contract') != contract() or entry.get('scope_contract') != CLAIM
+            or entry.get('class') != 'deterministic_veto' or entry.get('alpha_family') is not None
+            or entry.get('power_target') is not None or entry.get('max_sample') != 6
+            or entry.get('release_consequence') != {k:contract()[k] for k in ['pass','fail','inconclusive']}):
+        problems.append('V12 finite warm contract or consequences differ')
+    if (policy.get('entry') != 'V12' or policy.get('claim') != CLAIM
+            or policy.get('default_activation') is not False or policy.get('empirical_speedup_established') is not False
+            or policy.get('preparation_does_not_authorize_campaigns') is not True):
+        problems.append('V12 finite scope or preparation restriction differs')
+    if historical.get('family', {}).get('members') != ['V12'] or historical.get('entry', {}).get('class') != 'confirmatory':
+        problems.append('Historical V12 empirical design must remain preserved')
+    return problems
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--quiet', action='store_true', help='exit code only')
@@ -435,6 +576,13 @@ def main() -> int:
         ("retired rules absent", check_retired_rules()),
         ("entries documented", check_entries_documented()),
         ("open decisions", check_open_decisions(data)),
+        ("objective evidence", check_objective_evidence(data)),
+        ("phase readiness", check_phase_readiness(data)),
+        ("finite conformance", check_finite_conformance(entries)),
+        ("finite Tier-1", check_finite_tier1(data)),
+        ("finite population", check_finite_population(data)),
+        ("finite ifBO feasibility", check_finite_ifbo(data)),
+        ("finite warm starts", check_finite_warm(data)),
     ]
 
     total = sum(len(problems) for _, problems in checks)
@@ -465,8 +613,8 @@ def main() -> int:
     print("All checks passed.")
     if open_count:
         print(
-            f"{open_count} open policy decision(s) still require sign-off "
-            f"before confirmatory campaigns; see policy.open_decisions."
+            f"{open_count} open policy decision(s) retain their recorded evidence, scope or resource "
+            f"requirements; see policy.open_decisions. Human sign-off cannot establish scientific PASS."
         )
     return 0
 

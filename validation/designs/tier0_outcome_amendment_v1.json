@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "kind": "tier0-outcome-scope-amendment",
+  "version": "1.0-proposal",
+  "status": "NOT_ADOPTED",
+  "decision": "D-T0-OUTCOME-SCOPE",
+  "certifies_acceptance": false,
+  "review": {
+    "path": "docs/program/OUTCOME_SCOPE_AMENDMENT_2026_09_29.md",
+    "sha256": "76250e6a2009ba3ea2ea4dab127587356a58e53726d82ded8c9b3e33943f4755"
+  },
+  "current_design": {
+    "path": "validation/designs/tier0_candidate_v1.json",
+    "sha256": "769b73b8312b6398a6c886ef1e305cef9739e73aaa9bfa40d89b68ec69e721f9"
+  },
+  "proposed_endpoints": {
+    "V04-T0": [
+      "final_paired_win",
+      "anytime_paired_win"
+    ],
+    "V05": [
+      "final_paired_win"
+    ]
+  },
+  "method": "paired_rank_fixed_suite_candidate_v1",
+  "scope": "conditional_on_named_frozen_suite",
+  "independent_unit": "complete_seed_vector_all_tasks_and_paired_arms",
+  "null": "average_expected_win_minus_loss_at_most_zero",
+  "missingness": "retain_all_planned_vectors_analyze_worst_case_lower_bounds",
+  "integrity": "invalid_or_altered_evidence_is_a_veto_not_statistical_missingness",
+  "family": {
+    "entries": [
+      "V04-T0",
+      "V05"
+    ],
+    "alpha": 0.05,
+    "v04_components": 8,
+    "combination": "intersection_union_then_holm"
+  },
+  "power_target": 0.8,
+  "confirmation_cap_per_entry": 20,
+  "planning_alternative": null,
+  "power_obligation_satisfied": false,
+  "stopping": "one_fixed_count_confirmation",
+  "optional_replication": "unused",
+  "protected_evaluation": "freeze_search_selected_policy_schedule_before_any_test_scores; test_data_never_fed_to_searcher",
+  "held_out_tasks": [],
+  "independent_selector": null,
+  "resource_allocation": null,
+  "implemented_preparation": [
+    "retained_rank_intervals",
+    "exact_conditional_binary_sensitivity",
+    "protected_incumbent_plan_and_curve",
+    "disjoint_protected_episode_namespace",
+    "declared_real_table_projection",
+    "v02_input_population_snapshot"
+  ],
+  "remaining": [
+    "explicit_outcome_scope_review",
+    "capability_exposure_and_independent_selection",
+    "justified_planning_alternative",
+    "independence_and_execution_contract",
+    "full_vendor_reference_loops_and_v01_claim_contract",
+    "protected_runtime_and_artifact_integration",
+    "final_v02_bindings",
+    "measured_resource_envelope",
+    "actual_phase_certification"
+  ],
+  "not_established": [
+    "raw_return_mean_superiority",
+    "raw_regret_auc_superiority",
+    "task_population_superiority",
+    "actual_workload_power",
+    "runtime_or_gpu_allocation",
+    "release_acceptance"
+  ]
+}

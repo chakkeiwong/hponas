@@ -31,6 +31,7 @@ from typing import Any
 @dataclass
 class V16Check:
     """Single V16 audit check."""
+
     name: str
     passed: bool
     message: str
@@ -40,6 +41,7 @@ class V16Check:
 @dataclass
 class V16AuditResult:
     """V16 audit result for a validation execution."""
+
     validation_id: str
     run_dir: Path
     checks: list[V16Check] = field(default_factory=list)
@@ -49,19 +51,19 @@ class V16AuditResult:
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dict for JSON storage."""
         return {
-            'validation_id': self.validation_id,
-            'run_dir': str(self.run_dir),
-            'checks': [
+            "validation_id": self.validation_id,
+            "run_dir": str(self.run_dir),
+            "checks": [
                 {
-                    'name': c.name,
-                    'passed': c.passed,
-                    'message': c.message,
-                    'severity': c.severity
+                    "name": c.name,
+                    "passed": c.passed,
+                    "message": c.message,
+                    "severity": c.severity,
                 }
                 for c in self.checks
             ],
-            'passed': self.passed,
-            'timestamp': self.timestamp
+            "passed": self.passed,
+            "timestamp": self.timestamp,
         }
 
     def __str__(self) -> str:
@@ -119,11 +121,12 @@ class V16Enforcer:
         # v01_protocol.md → V01
         # v04_t0_protocol.md → V04-T0
         stem = self.protocol_path.stem
-        parts = stem.split('_')
+        parts = stem.split("_")
         vid = parts[0].upper()
-        if len(parts) > 1 and parts[1] != 'protocol':
-            vid += '-' + parts[1].upper()
-        return vid
+        if len(parts) > 1 and parts[1] != "protocol":
+            vid += "-" + parts[1].upper()
+        from validation.protocol_identity import canonical_id
+        return canonical_id(vid)
 
     def audit_execution(self, validation_run_dir: str | Path) -> V16AuditResult:
         """
@@ -153,7 +156,7 @@ class V16Enforcer:
             validation_id=self.validation_id,
             run_dir=run_dir,
             checks=checks,
-            passed=passed
+            passed=passed,
         )
 
     def _check_protocol_immutability(self, run_dir: Path) -> V16Check:
@@ -170,7 +173,7 @@ class V16Enforcer:
                 name="Protocol Immutability",
                 passed=False,
                 message=f"Protocol snapshot not found in run artifacts: {saved_protocol}",
-                severity="error"
+                severity="error",
             )
 
         # Compare content hashes
@@ -186,14 +189,14 @@ class V16Enforcer:
                     f"Current hash: {current_hash[:8]}, "
                     f"Saved hash: {saved_hash[:8]}"
                 ),
-                severity="error"
+                severity="error",
             )
 
         return V16Check(
             name="Protocol Immutability",
             passed=True,
             message="Protocol unchanged since execution",
-            severity="error"
+            severity="error",
         )
 
     def _check_decision_adherence(self, run_dir: Path) -> V16Check:
@@ -210,7 +213,7 @@ class V16Enforcer:
                 name="Decision Adherence",
                 passed=False,
                 message=f"Results file not found: {results_file}",
-                severity="error"
+                severity="error",
             )
 
         try:
@@ -221,42 +224,29 @@ class V16Enforcer:
                 name="Decision Adherence",
                 passed=False,
                 message=f"Results file invalid JSON: {e}",
-                severity="error"
+                severity="error",
             )
 
-        # Check that verdict exists
-        if 'verdict' not in results:
+        try:
+            from validation.evidence import decision
+
+            computed = decision(self.validation_id, results)
+            matches = results.get("verdict") == computed and results.get("passed") == (
+                computed == "PASS"
+            )
+            return V16Check(
+                name="Decision Adherence",
+                passed=matches,
+                message=f"Recomputed verdict: {computed}",
+                severity="error",
+            )
+        except (ValueError, KeyError, TypeError, OSError) as exc:
             return V16Check(
                 name="Decision Adherence",
                 passed=False,
-                message="No 'verdict' field in results",
-                severity="error"
+                message=f"Invalid campaign evidence: {exc}",
+                severity="error",
             )
-
-        verdict = results['verdict']
-        if verdict not in ['PASS', 'FAIL', 'INCONCLUSIVE']:
-            return V16Check(
-                name="Decision Adherence",
-                passed=False,
-                message=f"Invalid verdict: {verdict} (must be PASS/FAIL/INCONCLUSIVE)",
-                severity="error"
-            )
-
-        # Check that decision criteria are documented
-        if 'decision_criteria' not in results:
-            return V16Check(
-                name="Decision Adherence",
-                passed=False,
-                message="No 'decision_criteria' field documenting threshold application",
-                severity="warning"
-            )
-
-        return V16Check(
-            name="Decision Adherence",
-            passed=True,
-            message=f"Verdict '{verdict}' documented with decision criteria",
-            severity="error"
-        )
 
     def _check_artifact_completeness(self, run_dir: Path) -> V16Check:
         """
@@ -284,14 +274,14 @@ class V16Enforcer:
                 name="Artifact Completeness",
                 passed=False,
                 message=f"Missing required artifacts: {', '.join(missing)}",
-                severity="error"
+                severity="error",
             )
 
         return V16Check(
             name="Artifact Completeness",
             passed=True,
             message="All required artifacts present",
-            severity="error"
+            severity="error",
         )
 
     def _check_metadata_correctness(self, run_dir: Path) -> V16Check:
@@ -311,7 +301,7 @@ class V16Enforcer:
                 name="Metadata Correctness",
                 passed=False,
                 message=f"Metadata file not found: {metadata_file}",
-                severity="error"
+                severity="error",
             )
 
         try:
@@ -322,10 +312,17 @@ class V16Enforcer:
                 name="Metadata Correctness",
                 passed=False,
                 message=f"Metadata file invalid JSON: {e}",
-                severity="error"
+                severity="error",
             )
 
-        required_fields = ['validation_id', 'timestamp']
+        required_fields = [
+            "validation_id",
+            "timestamp",
+            "source_digest",
+            "version",
+            "packages",
+            "results_sha256",
+        ]
         missing_fields = [f for f in required_fields if f not in metadata]
 
         if missing_fields:
@@ -333,11 +330,11 @@ class V16Enforcer:
                 name="Metadata Correctness",
                 passed=False,
                 message=f"Missing required metadata fields: {', '.join(missing_fields)}",
-                severity="error"
+                severity="error",
             )
 
         # Check that validation_id matches
-        if metadata['validation_id'] != self.validation_id:
+        if metadata["validation_id"] != self.validation_id:
             return V16Check(
                 name="Metadata Correctness",
                 passed=False,
@@ -346,11 +343,25 @@ class V16Enforcer:
                     f"metadata claims {metadata['validation_id']}, "
                     f"protocol is {self.validation_id}"
                 ),
-                severity="error"
+                severity="error",
+            )
+
+        from validation.evidence import source_digest, digest
+
+        if (
+            not (run_dir / "results.json").is_file()
+            or metadata["source_digest"] != source_digest()
+            or metadata["results_sha256"] != digest(run_dir / "results.json")
+        ):
+            return V16Check(
+                name="Metadata Correctness",
+                passed=False,
+                message="Source/protocol fingerprint is stale or results changed",
+                severity="error",
             )
 
         # Warn if optional but recommended fields missing
-        recommended_fields = ['seed', 'version', 'duration_seconds']
+        recommended_fields = ["seed", "version", "duration_seconds"]
         missing_recommended = [f for f in recommended_fields if f not in metadata]
 
         if missing_recommended:
@@ -358,14 +369,14 @@ class V16Enforcer:
                 name="Metadata Correctness",
                 passed=True,
                 message=f"Recommended fields missing: {', '.join(missing_recommended)}",
-                severity="warning"
+                severity="warning",
             )
 
         return V16Check(
             name="Metadata Correctness",
             passed=True,
             message="All required metadata fields present and correct",
-            severity="error"
+            severity="error",
         )
 
     def _check_known_issues_disclosure(self, run_dir: Path) -> V16Check:
@@ -382,11 +393,11 @@ class V16Enforcer:
                 name="Known Issues Disclosure",
                 passed=False,
                 message="Protocol missing '## Known Issues' section",
-                severity="error"
+                severity="error",
             )
 
         # Extract Known Issues section
-        lines = protocol_content.split('\n')
+        lines = protocol_content.split("\n")
         in_known_issues = False
         known_issues_lines = []
 
@@ -406,14 +417,14 @@ class V16Enforcer:
                 name="Known Issues Disclosure",
                 passed=False,
                 message="Known Issues section is empty",
-                severity="warning"
+                severity="warning",
             )
 
         return V16Check(
             name="Known Issues Disclosure",
             passed=True,
             message=f"Known Issues section present ({len(non_blank)} lines)",
-            severity="error"
+            severity="error",
         )
 
     def _compute_file_hash(self, filepath: Path) -> str:
@@ -431,14 +442,12 @@ class V16Enforcer:
         if output_path is None:
             output_path = audit_result.run_dir / "v16_audit.json"
 
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(audit_result.to_dict(), f, indent=2)
 
 
 def enforce_v16_on_validation(
-    validation_id: str,
-    run_dir: Path,
-    protocol_dir: Path = None
+    validation_id: str, run_dir: Path, protocol_dir: Path = None
 ) -> V16AuditResult:
     """
     Convenience function to enforce V16 audit on a validation run.
@@ -457,7 +466,7 @@ def enforce_v16_on_validation(
     # Map validation_id to protocol filename
     # V01 → v01_protocol.md
     # V04-T0 → v04_t0_protocol.md
-    vid_lower = validation_id.lower().replace('-', '_')
+    vid_lower = validation_id.lower().replace("-", "_")
     protocol_path = protocol_dir / f"{vid_lower}_protocol.md"
 
     enforcer = V16Enforcer(protocol_path)
@@ -472,7 +481,9 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 3:
         print("Usage: python v16_audit_enforcer.py <validation_id> <run_dir>")
-        print("Example: python v16_audit_enforcer.py V01 validation/artifacts/v01_run_20260909_143022/")
+        print(
+            "Example: python v16_audit_enforcer.py V01 validation/artifacts/v01_run_20260909_143022/"
+        )
         sys.exit(1)
 
     validation_id = sys.argv[1]

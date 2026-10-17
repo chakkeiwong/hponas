@@ -1,8 +1,7 @@
 """
-⚠️ OLD CODE - DO NOT USE IN NEW IMPLEMENTATIONS ⚠️
-This file is LEGACY code from pre-recovery implementation.
-- Used only by validation scripts
-- New implementations should use hponas/searchers/ package
+Maintained Optuna TPE implementation. The public Study and Tier 0 campaigns
+use it through hponas.searchers.adapter.LegacySearcherAdapter, which translates
+the propose/observe API into the current searcher contract.
 
 TPE (Tree-structured Parzen Estimator) searcher via Optuna wrapper.
 
@@ -16,10 +15,12 @@ Implementation strategy: minimize translation layer to preserve parity for V01.
 
 from __future__ import annotations
 
+import copy
 from typing import Any
 
 try:
     import optuna
+
     OPTUNA_AVAILABLE = True
 except ImportError:
     OPTUNA_AVAILABLE = False
@@ -61,6 +62,7 @@ class TPESearcher:
         # Track pending trials (proposed but not yet observed)
         self._pending: dict[int, dict[str, Any]] = {}
         self._next_trial_id = 0
+        self._events = []
 
     def _build_optuna_space(self) -> None:
         """
@@ -71,10 +73,6 @@ class TPESearcher:
         """
         self._knob_map = {}
         for knob in self.space.knobs:
-            if knob.condition:
-                # Tier 0: conditionals not implemented
-                continue
-
             self._knob_map[knob.name] = knob
 
     def propose(self, n: int) -> list[dict[str, Any]]:
@@ -91,6 +89,11 @@ class TPESearcher:
             config: dict[str, Any] = {}
 
             for knob_name, knob in self._knob_map.items():
+                if (
+                    knob.condition
+                    and config.get(knob.condition[0]) != knob.condition[1]
+                ):
+                    continue
                 if knob.kind == "continuous":
                     low, high = knob.bounds
                     if knob.transform == "log":
@@ -105,7 +108,7 @@ class TPESearcher:
                     config[knob_name] = int(val)
 
                 elif knob.kind == "categorical":
-                    val = trial.suggest_categorical(knob_name, knob.choices)
+                    val = trial.suggest_categorical(knob_name, knob.bounds)
                     config[knob_name] = val
 
                 else:
@@ -120,7 +123,8 @@ class TPESearcher:
             configs.append(config)
 
         self._n_proposed += n
-        return configs
+        self._events.append({"action": "propose", "configs": configs})
+        return copy.deepcopy(configs)
 
     def observe(self, trial_result: dict[str, Any]) -> None:
         """
@@ -158,73 +162,45 @@ class TPESearcher:
         self._study.tell(optuna_trial, -value)
 
         self._n_observed += 1
+        self._events.append({"action": "observe", "result": copy.deepcopy(trial_result)})
 
     def state_dict(self) -> dict[str, Any]:
-        """
-        Serialize state for crash recovery.
-
-        Optuna study can be pickled, but for portability we serialize
-        trial history and reconstruct.
-        """
-        # Extract trial history
-        trials_data = []
-        for trial in self._study.trials:
-            trials_data.append({
-                "number": trial.number,
-                "params": trial.params,
-                "value": trial.value,
-                "state": trial.state.name,
-            })
+        """Replayable ask/tell ledger, including pending asks and sampler RNG use."""
+        import copy
 
         return {
             "kind": "tpe",
+            "schema_version": 2,
             "seed": self.seed,
-            "n_proposed": self._n_proposed,
-            "n_observed": self._n_observed,
-            "trials": trials_data,
-            "pending_count": len(self._pending),
+            "events": copy.deepcopy(self._events),
         }
 
     def load_state_dict(self, state: dict[str, Any]) -> None:
-        """
-        Restore state after crash.
+        import copy
 
-        Reconstructs Optuna study by replaying completed trials.
-        Pending trials are lost (expected: executor will re-propose them).
-        """
-        if state.get("kind") != "tpe":
-            raise ValueError(f"TPESearcher cannot load state of kind {state.get('kind')!r}")
+        if state.get("kind") != "tpe" or state.get("schema_version") != 2:
+            raise ValueError(
+                "TPE checkpoint requires complete version 2 ask/tell ledger"
+            )
+        restored = type(self)(self.space, seed=state["seed"])
+        for event in copy.deepcopy(state["events"]):
+            if event["action"] == "propose":
+                if restored.propose(len(event["configs"])) != event["configs"]:
+                    raise ValueError(
+                        "TPE sampler changed; checkpoint cannot be replayed exactly"
+                    )
+            elif event["action"] == "observe":
+                restored.observe(event["result"])
+            else:
+                raise ValueError("Unknown TPE checkpoint event")
+        self.__dict__.update(restored.__dict__)
 
-        self.seed = state["seed"]
-        self._n_proposed = state["n_proposed"]
-        self._n_observed = state["n_observed"]
-
-        # Rebuild Optuna study
-        sampler = optuna.samplers.TPESampler(seed=self.seed)
-        self._study = optuna.create_study(
-            direction="minimize",
-            sampler=sampler,
-        )
-
-        # Replay completed trials
-        for trial_data in state["trials"]:
-            if trial_data["state"] == "COMPLETE":
-                # Use enqueue_trial to replay with exact params
-                self._study.enqueue_trial(trial_data["params"])
-                trial = self._study.ask()
-                self._study.tell(trial, trial_data["value"])
-
-        # Pending trials are not restored (crash loses in-flight work)
-        self._pending = {}
-        self._next_trial_id = len(self._study.trials)
+    @property
+    def support(self):
+        from hponas.capabilities import SearcherCapabilities, MIXED
+        return SearcherCapabilities(MIXED, conditionals=True, max_dimensions=100)
 
     @property
     def capabilities(self) -> dict[str, Any]:
         """Declare TPE capabilities."""
-        return {
-            "knob_kinds": ["continuous", "ordinal", "categorical"],
-            "conditionals": False,  # Tier 0: not implemented
-            "multi_objective": False,
-            "prior": False,
-            "max_dim": 100,  # Optuna TPE scales well
-        }
+        return self.support.report()

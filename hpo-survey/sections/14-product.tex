@@ -103,8 +103,9 @@ is what makes the test set a genuine held-out evaluation rather than
 part of the search feedback loop.
 
 The searcher on day one is the wrapped TPE; the scheduler is ASHA
-with the median rule beside it, granting first rungs at one tenth of
-full fidelity. While the study runs, every trial streams its curve
+with the median rule available explicitly, granting first rungs at one tenth of
+full fidelity; automatic shipping as the default remains conditional on V06 PASS.
+While the study runs, every trial streams its curve
 into the run store with its configuration, seed, rung history, and
 bill, and the store computes one diagnostic the researcher did not
 ask for: the rank correlation between rung scores and final scores,

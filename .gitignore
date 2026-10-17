@@ -26,6 +26,8 @@ build/
 # Data and logs
 *.log
 *.db
+*.db-wal
+*.db-shm
 *.sqlite
 *.sqlite3
 runs/
@@ -78,5 +80,13 @@ hpo-survey/.localresources/
 # Claude session state (local only, never commit)
 .claude/
 
+# Reconstructible local runtimes and caches survive host restarts.
+.hponas-runtime/
+
 mutants/
 mutmut_junit.xml
+
+# Audited campaigns retain the closed database and completed Study snapshot.
+!validation/artifacts/**/*.db
+!validation/artifacts/**/checkpoints/
+!validation/artifacts/**/checkpoints/**

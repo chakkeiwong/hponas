@@ -8,7 +8,24 @@ R1 spike exit criterion: conformance tests pass.
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from hponas.legacy_executors import LocalExecutor, RayExecutor
+
+
+@pytest.fixture(scope="module", autouse=True)
+def close_test_cluster():
+    """Bound this test module's local cluster and release only owned resources."""
+    import ray
+
+    owns_cluster = not ray.is_initialized()
+    if owns_cluster:
+        ray.init(num_cpus=2, include_dashboard=False)
+    try:
+        yield
+    finally:
+        if owns_cluster:
+            ray.shutdown()
 
 
 def dummy_objective(config: dict) -> float:

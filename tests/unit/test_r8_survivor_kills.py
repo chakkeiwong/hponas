@@ -45,39 +45,39 @@ class TestASHASchedulerBoundaryConditions:
     def test_promote_boundary_at_eta_threshold(self):
         """Promotion logic when population size equals eta exactly."""
         # This targets mutant_16: if n_pop <= self.config.eta vs if n_pop < self.config.eta
-        config = ASHAConfig(r_min=1, r_max=9, eta=3)
+        config = ASHAConfig(r_min=1, r_max=9, eta=3, promotion_policy="legacy_bootstrap")
         scheduler = ASHAScheduler(config)
 
         # Simulate 3 paused trials at rung 0 (exactly eta trials)
         scheduler._rung_populations[0] = [
-            ('trial_1', 0.5),  # best (lowest value)
-            ('trial_2', 0.6),
-            ('trial_3', 0.8),
+            ("trial_1", 0.5),  # best (lowest value)
+            ("trial_2", 0.6),
+            ("trial_3", 0.8),
         ]
         scheduler._trial_state = {
-            'trial_1': (0, 1.0, 0.5, 'paused'),
-            'trial_2': (0, 1.0, 0.6, 'paused'),
-            'trial_3': (0, 1.0, 0.8, 'paused'),
+            "trial_1": (0, 1.0, 0.5, "paused"),
+            "trial_2": (0, 1.0, 0.6, "paused"),
+            "trial_3": (0, 1.0, 0.8, "paused"),
         }
 
         # Should promote all 3 trials when n_pop <= eta
         promotions = scheduler.promote()
         assert len(promotions) == 3
-        assert ('trial_1', 3.0) in promotions  # promoted to next rung (3.0)
+        assert ("trial_1", 3.0) in promotions  # promoted to next rung (3.0)
 
     def test_promote_boundary_below_eta(self):
         """Promotion with population < eta."""
-        config = ASHAConfig(r_min=1, r_max=9, eta=3)
+        config = ASHAConfig(r_min=1, r_max=9, eta=3, promotion_policy="legacy_bootstrap")
         scheduler = ASHAScheduler(config)
 
         # Simulate 2 paused trials at rung 0 (below eta)
         scheduler._rung_populations[0] = [
-            ('trial_1', 0.5),
-            ('trial_2', 0.6),
+            ("trial_1", 0.5),
+            ("trial_2", 0.6),
         ]
         scheduler._trial_state = {
-            'trial_1': (0, 1.0, 0.5, 'paused'),
-            'trial_2': (0, 1.0, 0.6, 'paused'),
+            "trial_1": (0, 1.0, 0.5, "paused"),
+            "trial_2": (0, 1.0, 0.6, "paused"),
         }
 
         # Should promote both trials when n_pop < eta
@@ -141,10 +141,12 @@ class TestSpaceSerializationRoundTrip:
         # Targets multiple mutants in to_json serialization
         import json
 
-        original = SearchSpace([
-            Knob("lr", "continuous", (0.001, 0.1), transform="log"),
-            Knob("opt", "categorical", ["adam", "sgd"]),
-        ])
+        original = SearchSpace(
+            [
+                Knob("lr", "continuous", (0.001, 0.1), transform="log"),
+                Knob("opt", "categorical", ["adam", "sgd"]),
+            ]
+        )
 
         json_str = original.to_json()
         data = json.loads(json_str)
@@ -174,9 +176,7 @@ class TestLegacySearcherDefaults:
         from hponas.space import SearchSpace, Knob
 
         # Create space with the new API
-        space = SearchSpace([
-            Knob(name="x", kind="continuous", bounds=(0.0, 1.0))
-        ])
+        space = SearchSpace([Knob(name="x", kind="continuous", bounds=(0.0, 1.0))])
 
         # Call without seed argument
         searcher1 = SobolSearcher(space)
@@ -211,10 +211,7 @@ class TestLocalExecutorModeValidation:
 
         executor = LocalExecutor(mode="sync")
         trial = Trial(trial_id="t1", config=Config(values={"x": 0.5}))
-        result = executor.execute(
-            trial=trial,
-            objective_fn=lambda cfg: cfg["x"] * 2
-        )
+        result = executor.execute(trial=trial, objective_fn=lambda cfg: cfg["x"] * 2)
 
         # Result has trial_id and objective_value fields
         assert result.trial_id == "t1"
@@ -229,7 +226,7 @@ class TestRandomSearcherStateRoundTrip:
         # Kills mutmut_7 (get_state) and mutmut_10 (set_state):
         # These mutants skip index 3 and duplicate index 4 in the rng_state tuple
         space = SearchSpace(
-            knobs=[Knob(name="x", kind="real", bounds=(0.0, 1.0))]
+            knobs=[Knob(name="x", kind="continuous", bounds=(0.0, 1.0))]
         )
         searcher = RandomSearcher(search_space=space, seed=42)
 
@@ -242,7 +239,9 @@ class TestRandomSearcherStateRoundTrip:
 
         # The bug is in the rng_state tuple serialization
         rng_state = state["rng_state"]
-        assert len(rng_state) == 5, f"Expected 5-tuple for rng_state, got {len(rng_state)}"
+        assert len(rng_state) == 5, (
+            f"Expected 5-tuple for rng_state, got {len(rng_state)}"
+        )
 
         # Verify all 5 elements are distinct (mutations duplicate index 4)
         # Elements: (str, list, int, int, float)
@@ -260,4 +259,6 @@ class TestRandomSearcherStateRoundTrip:
         for _ in range(10):
             config1 = searcher.suggest()
             config2 = searcher2.suggest()
-            assert config1 == config2, "State restoration failed: RNG sequences diverged"
+            assert config1 == config2, (
+                "State restoration failed: RNG sequences diverged"
+            )

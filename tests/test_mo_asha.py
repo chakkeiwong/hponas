@@ -12,12 +12,7 @@ from hponas.schedulers import MOASHAScheduler, MOASHAConfig
 
 def test_mo_asha_basic():
     """MO-ASHA schedules multi-objective trials through rungs."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=3.0,
-        objectives=["loss", "latency"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=3.0, objectives=["loss", "latency"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -32,8 +27,8 @@ def test_mo_asha_basic():
             fidelity=1.0,
             objectives={
                 "loss": 1.0 + i * 0.1,  # trial_0 best on loss
-                "latency": 2.0 - i * 0.05  # trial_8 best on latency
-            }
+                "latency": 2.0 - i * 0.05,  # trial_8 best on latency
+            },
         )
         assert decision == "pause"
 
@@ -52,13 +47,14 @@ def test_mo_asha_pareto_ranking():
         r_min=1.0,
         r_max=3.0,
         eta=2.0,
-        objectives=["f1", "f2"]
+        objectives=["f1", "f2"],
+        reference_point=[4.0, 4.0],
     )
 
     scheduler = MOASHAScheduler(config)
 
     # Report 4 trials with different trade-offs
-    # trial_0: (1.0, 3.0) - dominated
+    # trial_0: (1.0, 3.0) - Pareto optimal
     # trial_1: (2.0, 1.0) - Pareto optimal
     # trial_2: (1.5, 2.0) - Pareto optimal
     # trial_3: (3.0, 3.0) - dominated
@@ -75,7 +71,8 @@ def test_mo_asha_pareto_ranking():
     # Should promote Pareto-optimal trials
     assert len(promoted_ids) == 2
     assert "trial_1" in promoted_ids
-    assert "trial_2" in promoted_ids
+    # Exclusive HV: trial_0=.5, trial_1=2, trial_2=.5; stable tie chooses trial_0.
+    assert "trial_0" in promoted_ids
 
 
 def test_mo_asha_hypervolume_contribution():
@@ -85,7 +82,7 @@ def test_mo_asha_hypervolume_contribution():
         r_max=3.0,
         eta=2.0,
         objectives=["f1", "f2"],
-        reference_point=[2.0, 2.0]
+        reference_point=[2.0, 2.0],
     )
 
     scheduler = MOASHAScheduler(config)
@@ -104,12 +101,7 @@ def test_mo_asha_hypervolume_contribution():
 
 def test_mo_asha_final_rung_stops():
     """MO-ASHA stops trials at final rung."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=3.0,
-        eta=3.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=3.0, eta=3.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -120,12 +112,7 @@ def test_mo_asha_final_rung_stops():
 
 def test_mo_asha_non_rung_fidelity():
     """MO-ASHA continues at non-rung fidelities."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=3.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=3.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -136,12 +123,7 @@ def test_mo_asha_non_rung_fidelity():
 
 def test_mo_asha_small_population():
     """MO-ASHA promotes all trials when population <= eta."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=5.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=5.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -161,55 +143,49 @@ def test_mo_asha_requires_two_objectives():
             r_min=1.0,
             r_max=9.0,
             eta=3.0,
-            objectives=["f1"]  # Only 1 objective
+            objectives=["f1"],  # Only 1 objective
         )
         MOASHAScheduler(config)
 
 
 def test_mo_asha_pareto_mask():
     """MO-ASHA correctly identifies Pareto front."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=3.0,
-        eta=2.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=3.0, eta=2.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
     # Test objectives
-    objectives = np.array([
-        [1.0, 3.0],  # Dominated by [0.5, 0.5]
-        [0.5, 0.5],  # Pareto optimal (dominates all others here)
-        [2.0, 1.0],  # Dominated by [0.5, 0.5]
-        [3.0, 3.0],  # Dominated
-    ])
+    objectives = np.array(
+        [
+            [1.0, 3.0],  # Dominated by [0.5, 0.5]
+            [0.5, 0.5],  # Pareto optimal (dominates all others here)
+            [2.0, 1.0],  # Dominated by [0.5, 0.5]
+            [3.0, 3.0],  # Dominated
+        ]
+    )
 
     pareto_mask = scheduler._compute_pareto_mask(objectives)
 
     assert pareto_mask[0] == False  # Dominated
-    assert pareto_mask[1] == True   # Pareto optimal
+    assert pareto_mask[1] == True  # Pareto optimal
     assert pareto_mask[2] == False  # [0.5, 0.5] is better on both objectives
     assert pareto_mask[3] == False  # Dominated
 
 
 def test_mo_asha_pareto_mask_genuine_tradeoff():
     """MO-ASHA keeps both points when neither dominates the other."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=3.0,
-        eta=2.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=3.0, eta=2.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
     # Genuine trade-off: neither point dominates the other
-    objectives = np.array([
-        [0.5, 2.0],  # Better on f1
-        [2.0, 0.5],  # Better on f2
-        [3.0, 3.0],  # Dominated by both
-    ])
+    objectives = np.array(
+        [
+            [0.5, 2.0],  # Better on f1
+            [2.0, 0.5],  # Better on f2
+            [3.0, 3.0],  # Dominated by both
+        ]
+    )
 
     pareto_mask = scheduler._compute_pareto_mask(objectives)
 
@@ -220,12 +196,7 @@ def test_mo_asha_pareto_mask_genuine_tradeoff():
 
 def test_mo_asha_gate_registration():
     """MO-ASHA can register veto gates."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=3.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=3.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -239,12 +210,7 @@ def test_mo_asha_gate_registration():
 
 def test_mo_asha_gate_veto_stops_trial():
     """Failing a gate returns 'stop' from report()."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=3.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=3.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -269,12 +235,7 @@ def test_mo_asha_gate_veto_stops_trial():
 
 def test_mo_asha_vetoed_trial_not_promoted():
     """Vetoed trials are excluded from promotion."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=3.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=3.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -302,12 +263,7 @@ def test_mo_asha_vetoed_trial_not_promoted():
 
 def test_mo_asha_gate_passes_normal_flow():
     """Passing all gates allows normal ASHA flow."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=3.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=3.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -329,12 +285,7 @@ def test_mo_asha_gate_passes_normal_flow():
 
 def test_mo_asha_multiple_gates_all_must_pass():
     """Multiple gates enforce AND logic: all must pass."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=3.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=3.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -375,12 +326,7 @@ def test_mo_asha_multiple_gates_all_must_pass():
 
 def test_mo_asha_veto_persists_across_rungs():
     """Once vetoed, a trial stays vetoed (cannot un-veto)."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=3.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=3.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -409,12 +355,7 @@ def test_mo_asha_veto_persists_across_rungs():
 
 def test_mo_asha_vetoed_pareto_optimal_excluded():
     """Veto overrides Pareto optimality: vetoed trial not promoted even if best."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=2.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=2.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -443,12 +384,7 @@ def test_mo_asha_vetoed_pareto_optimal_excluded():
 
 def test_mo_asha_all_trials_vetoed():
     """All trials vetoed: promote returns empty list."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=3.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=3.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -473,12 +409,7 @@ def test_mo_asha_all_trials_vetoed():
 
 def test_mo_asha_no_gates_zero_overhead():
     """No gates registered: normal ASHA behavior."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=3.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=3.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -487,11 +418,7 @@ def test_mo_asha_no_gates_zero_overhead():
 
     # Normal flow
     for i in range(9):
-        decision = scheduler.report(
-            f"trial_{i}",
-            1.0,
-            {"f1": float(i), "f2": float(i)}
-        )
+        decision = scheduler.report(f"trial_{i}", 1.0, {"f1": float(i), "f2": float(i)})
         assert decision == "pause"
 
     # Should promote top 1/3
@@ -504,12 +431,7 @@ def test_mo_asha_no_gates_zero_overhead():
 
 def test_mo_asha_gate_with_nan_objectives():
     """Gate can veto trials with NaN objectives."""
-    config = MOASHAConfig(
-        r_min=1.0,
-        r_max=9.0,
-        eta=3.0,
-        objectives=["f1", "f2"]
-    )
+    config = MOASHAConfig(r_min=1.0, r_max=9.0, eta=3.0, objectives=["f1", "f2"])
 
     scheduler = MOASHAScheduler(config)
 
@@ -524,10 +446,9 @@ def test_mo_asha_gate_with_nan_objectives():
     assert decision == "pause"
 
     # Trial with NaN
-    decision = scheduler.report("trial_1", 1.0, {"f1": float('nan'), "f2": 2.0})
+    decision = scheduler.report("trial_1", 1.0, {"f1": float("nan"), "f2": 2.0})
     assert decision == "stop"
     assert "trial_1" in scheduler.get_vetoed_trials()
-
 
 
 # Mutation-targeted tests for report() trial-state bookkeeping.
@@ -629,7 +550,7 @@ def test_mo_asha_vetoed_trial_re_report_returns_stop():
     Kills the `self._gates and ...` -> `self._gates or ...` mutation: without
     the `and`, a vetoed trial (in `_vetoed_trials`) would enter the gate loop
     when `self._gates` is empty or would skip the veto check entirely.
-    
+
     Also requires a guard to short-circuit vetoed trials before line 493.
     """
     scheduler = MOASHAScheduler(_veto_config())

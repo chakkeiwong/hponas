@@ -1,308 +1,333 @@
+"""Opt-in ranked configuration seeding from explicit, completed run-store history.
+
+Ranked initialization transfers configurations only. Surrogate transfer (RGPE)
+and the separate V12 performance/default decision remain unaccepted.
 """
-⚠️ OLD CODE - DO NOT USE IN NEW IMPLEMENTATIONS ⚠️
-This file is LEGACY code from pre-recovery implementation.
-- Used only by validation scripts
-- Contains specification violations: builds RGPE immediately (WRONG per TRACEABILITY_MATRIX_v1.md)
-- Correct implementation should defer RGPE until sufficient data
-
-Warm start: seed searchers from prior run-store trials.
-
-Survey reference: Ch 8 sec:warm-start-from-store, validation V12.
-Tier 1: Implement config seeding from ranked prior trials with space compatibility checks.
-Tier 2: V12 gate requires ≥20% trial savings (measured campaign), persistent store,
-        crash recovery, monitoring.
-"""
-
 from __future__ import annotations
 
+from copy import deepcopy
+import hashlib
 import json
-from typing import TYPE_CHECKING, Any, Optional, Sequence
+from typing import Any, Optional, Sequence, TYPE_CHECKING
 
+from .searchers.base import BaseSearcher
 from .space import SearchSpace
+from .types import Config
+from .warm_history import SeedQueue, physical_key, select, space_signature
 
 if TYPE_CHECKING:
     from .store import Store
 
 
-def load_seed_configs(
-    store: Store,
-    study_id: str,
-    target_space: SearchSpace,
-    n: int = 10,
-    objective: str = "minimize",
-) -> list[dict]:
-    """
-    Load seed configurations from a prior study's best trials.
-
-    Args:
-        store: Run store instance
-        study_id: Prior study to load from
-        target_space: Search space for the new study (for compatibility check)
-        n: Number of top trials to load (default: 10)
-        objective: "minimize" or "maximize"
-
-    Returns:
-        List of compatible configurations, sorted best-first (empty if none compatible).
-
-    Survey: V12 warm start loads ranked trials from a prior study. Configs are filtered
-    through the target space's validate_config to ensure type/bounds compatibility.
-    If the source and target spaces differ structurally (conditional knobs, added/removed
-    knobs), incompatible configs are skipped silently — warm start is best-effort.
-
-    Usage:
-        store = Store("runs.db")
-        seeds = load_seed_configs(store, "prior_study_1", target_space, n=5)
-        # Seeds can be passed to searcher initialization or used as initial trials
-    """
-    study = store.read_study(study_id)
-    if study is None:
-        return []
-
-    # Get ranked trials from the store
-    trials = store.get_best_trials(study_id, n=n, objective=objective)
-    if not trials:
-        return []
-
-    # Filter through target space validation (skip incompatible configs)
-    compatible = []
-    for trial in trials:
-        try:
-            target_space.validate_config(trial.config)
-            compatible.append(trial.config)
-        except (ValueError, KeyError):
-            # Config doesn't match target space structure/bounds — skip
-            continue
-
-    return compatible
+def _checkpoint_json(value):
+    # Core Result checkpoints retain failed/nonfinite observations as such.
+    # Selection/history JSON remains strictly finite; this encoding follows the
+    # existing searcher checkpoint contract and preserves the raw failures.
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=True)
 
 
-def check_space_compatibility(
-    source_space_json: str,
-    target_space: SearchSpace,
-) -> bool:
-    """
-    Check if a source space (serialized) is structurally compatible with a target space.
+def checkpoint_digest(value):
+    return hashlib.sha256(_checkpoint_json(value).encode()).hexdigest()
 
-    Args:
-        source_space_json: JSON-serialized SearchSpace from store
-        target_space: The new study's space
 
-    Returns:
-        True if spaces have the same knob structure (names, kinds, bounds), False otherwise.
-
-    Survey: Tier 2 cross-study warm start may query trials from multiple prior studies.
-    Structural compatibility (same knob names and kinds) is a stricter filter than
-    per-config validation. Use this to short-circuit incompatible studies before loading
-    trials.
-
-    Note: This is a Tier 2 optimization. Tier 1 just validates configs on load.
-    """
+def check_space_compatibility(source_space_json: str, target_space: SearchSpace) -> bool:
+    """Compare all coordinate semantics, including transforms and conditions."""
     try:
-        source_space = SearchSpace.from_json(source_space_json)
-    except (json.JSONDecodeError, ValueError, KeyError, TypeError):
-        # Unparseable or legacy (pre-canonical-JSON) space record: treat as incompatible
-        # rather than raising. Warm start is best-effort; a study we cannot read is a
-        # study we skip.
+        return space_signature(SearchSpace.from_json(source_space_json)) == space_signature(target_space)
+    except (ValueError, KeyError, TypeError):
         return False
 
-    # Compare kind and bounds per knob name. Bounds are normalized to tuples on both
-    # sides: a JSON round-trip turns continuous/ordinal (low, high) into [low, high],
-    # so comparing raw values would report every space as incompatible with itself.
-    source_knobs = {k.name: (k.kind, tuple(k.bounds)) for k in source_space.knobs}
-    target_knobs = {k.name: (k.kind, tuple(k.bounds)) for k in target_space.knobs}
 
-    if set(source_knobs) != set(target_knobs):
-        return False
+def load_seed_selection(store, target_space, *, context, n=10, study_ids=None,
+                        exclude_study_ids=()):
+    """Read one immutable history snapshot; never infer absent eligibility."""
+    if type(n) is not int or n < 0:
+        raise ValueError("Selection limit must be a nonnegative integer")
+    if context is None:
+        return None
+    histories = [s for s in store.read_warm_histories()
+                 if (study_ids is None or s["study_id"] in study_ids)
+                 and s["study_id"] not in exclude_study_ids]
+    return select(histories, context, target_space, n)
 
-    return all(source_knobs[name] == target_knobs[name] for name in source_knobs)
 
+def load_seed_configs(store: Store, study_id: str, target_space: SearchSpace,
+                      n: int = 10, objective: str = "minimize", *, context=None) -> list[dict]:
+    """Load within-study ranked seeds when explicit eligibility is available.
 
-def load_seed_configs_from_all_studies(
-    store: Store,
-    target_space: SearchSpace,
-    n: int = 10,
-    objective: str = "minimize",
-    exclude_study_ids: Optional[Sequence[str]] = None,
-) -> list[dict[str, Any]]:
+    Old records without a frozen history/context yield an empty cold-start seed
+    list. A matching space alone does not establish comparable objectives/tasks.
     """
-    Load seed configs from every structurally compatible study in the store.
+    return load_seed_configs_from_all_studies(store, target_space, n, objective,
+                                             context=context, study_ids=[study_id])
 
-    Survey: V12 warm start queries "similar completed studies" — plural. This pools the
-    best trials across studies whose space matches the target structurally, then re-ranks
-    the pool globally and returns the top n.
 
-    Args:
-        store: Run store instance
-        target_space: Search space for the new study
-        n: Number of seed configs to return overall (not per study)
-        objective: "minimize" or "maximize"
-        exclude_study_ids: Studies to skip (e.g. the study being started)
+def load_seed_configs_from_all_studies(store: Store, target_space: SearchSpace,
+                                       n: int = 10, objective: str = "minimize",
+                                       exclude_study_ids: Optional[Sequence[str]] = None,
+                                       *, context=None, study_ids=None) -> list[dict[str, Any]]:
+    """Deduplicate configurations ordered by exact within-study quantiles."""
+    if objective not in {"minimize", "maximize"}:
+        raise ValueError("Invalid objective direction")
+    if context is not None and context.get("direction") != objective:
+        raise ValueError("Target context and objective direction differ")
+    selection = load_seed_selection(store, target_space, context=context, n=n,
+                                    study_ids=study_ids, exclude_study_ids=exclude_study_ids or ())
+    return [] if selection is None else [deepcopy(r["config"]) for r in selection["seeds"]]
 
-    Returns:
-        Up to n configs, best-first, deduplicated.
 
-    Comparability caveat: values are pooled across studies, which assumes the studies
-    optimized the same objective on the same workload. `check_space_compatibility` only
-    proves the *space* matches; matching spaces do not prove matching objectives. Callers
-    pooling across workloads should filter study ids themselves.
-    """
-    excluded = set(exclude_study_ids or ())
-    scored: list[tuple[float, dict[str, Any]]] = []
-
-    for study in store.list_studies():
-        if study.study_id in excluded:
-            continue
-        if study.objective != objective:
-            continue
-        if not check_space_compatibility(study.space_json, target_space):
-            continue
-
-        for trial in store.get_best_trials(study.study_id, n=n, objective=objective):
-            if trial.value is None:
-                continue
-            try:
-                target_space.validate_config(trial.config)
-            except (ValueError, KeyError):
-                continue
-            scored.append((trial.value, trial.config))
-
-    scored.sort(key=lambda pair: pair[0], reverse=(objective == "maximize"))
-
-    # Deduplicate, keeping the best-ranked occurrence of each config
-    seen: set[str] = set()
-    seeds: list[dict[str, Any]] = []
-    for _, config in scored:
-        key = json.dumps(config, sort_keys=True, default=str)
-        if key in seen:
-            continue
-        seen.add(key)
-        seeds.append(config)
-        if len(seeds) >= n:
-            break
-
-    return seeds
+def _validate_selection(selection, space):
+    SeedQueue(selection)  # Validate immutable content binding.
+    if selection.get("schema") != "ranked_history_v1":
+        raise ValueError("Unsupported ranked selection schema")
+    select([], selection["context"], space, selection["limit"])
+    if len(selection["seeds"]) > selection["limit"]:
+        raise ValueError("Selection exceeds its registered seed limit")
+    keys, previous = set(), None
+    from fractions import Fraction
+    for row in selection["seeds"]:
+        if set(row) != {"study_id", "trial_id", "config", "quantile"}:
+            raise ValueError("Malformed ranked seed")
+        if any(not isinstance(row[k], str) or not row[k] for k in ["study_id", "trial_id"]):
+            raise ValueError("Missing ranked seed identity")
+        if row["study_id"] == selection["context"]["study_id"]:
+            raise ValueError("Target study cannot seed itself")
+        q = row["quantile"]
+        if (not isinstance(q, list) or len(q) != 2 or any(type(v) is not int for v in q)
+                or not 0 < q[0] < q[1]):
+            raise ValueError("Invalid empirical quantile")
+        order = (Fraction(*q), row["study_id"], row["trial_id"])
+        key = physical_key(space, row["config"])
+        if key in keys or (previous is not None and order < previous):
+            raise ValueError("Seeds must be uniquely and deterministically ranked")
+        keys.add(key)
+        previous = order
 
 
 class WarmStartSearcher:
+    """Dictionary/propose compatibility wrapper; use RankedWarmStartSearcher for Study.
+
+    Explicit manual seeds remain supported. Store-based seeding requires a target
+    context and immutable completed history. Recovery validates a detached base
+    before committing the base and seed queue together.
     """
-    Wrap any Searcher so its first proposals are seed configs from prior studies.
-
-    Survey reference: Ch 8 sec:warm-start-from-store, roadmap-11 / ch08-03 (validation V12).
-
-    The wrapper drains a queue of seed configs before delegating to the base searcher, so
-    the early budget goes to configurations that already worked somewhere rather than to
-    the base searcher's cold-start design. Everything else — observations, capabilities —
-    passes straight through.
-
-    Seeds are *proposed*, not injected as observations. Their prior objective values are
-    not comparable across workloads, and feeding them to the base searcher's surrogate as
-    if they were measurements of the current study would bias it toward whatever the
-    earlier study happened to measure. The base searcher learns from the seeds the normal
-    way: `observe` is called once they have actually been evaluated here.
-
-    Tier 1 scope: implementation plus unit tests. The V12 gate (warm start saves ≥20% of
-    trials) is a Tier 2 measured campaign.
-
-    Usage:
-        base = SobolSearcher(space, seed=0)
-        seeds = load_seed_configs(store, "prior_study", space, n=5)
-        searcher = WarmStartSearcher(base, seeds)
-        first = searcher.propose(3)   # seeds[0:3]
-    """
-
-    def __init__(self, base: Any, seed_configs: Sequence[dict[str, Any]]):
+    def __init__(self, base: Any, seed_configs: Sequence[dict[str, Any]], *, selection=None):
         self._base = base
-        self._seed_queue: list[dict[str, Any]] = [dict(c) for c in seed_configs]
-        self._n_seeds_total = len(self._seed_queue)
+        self._selection = deepcopy(selection)
+        self._seed_configs = []
+        seen = set()
+        for config in seed_configs:
+            key = physical_key(self.space, config)
+            if key not in seen:
+                self._seed_configs.append(deepcopy(config))
+                seen.add(key)
+        if selection is not None:
+            _validate_selection(selection, self.space)
+            if self._seed_configs != [r["config"] for r in selection["seeds"]]:
+                raise ValueError("Seed configurations and selection differ")
         self._n_seeds_used = 0
+        self.fallback_reason = None if self._seed_configs else "no_eligible_history"
+
+    @property
+    def space(self):
+        return self._base.space
+
+    @property
+    def seed(self):
+        return self._base.seed
 
     @classmethod
-    def from_store(
-        cls,
-        base: Any,
-        store: Store,
-        space: SearchSpace,
-        study_id: Optional[str] = None,
-        n: int = 10,
-        objective: str = "minimize",
-    ) -> "WarmStartSearcher":
-        """
-        Build a warm-started searcher directly from the run store.
-
-        With `study_id`, seeds come from that study alone; without it, from every
-        compatible study in the store. Either way an empty store degrades to the base
-        searcher's cold-start behavior rather than failing.
-        """
-        if study_id is not None:
-            seeds = load_seed_configs(store, study_id, space, n=n, objective=objective)
-        else:
-            seeds = load_seed_configs_from_all_studies(
-                store, space, n=n, objective=objective
-            )
-        return cls(base, seeds)
+    def from_store(cls, base, store, space, study_id=None, n=10, objective="minimize", *, context=None):
+        if space_signature(base.space) != space_signature(space):
+            raise ValueError("Base searcher and requested space differ")
+        if objective not in {"minimize", "maximize"} or (context is not None and context.get("direction") != objective):
+            raise ValueError("Target context and objective direction differ")
+        selection = load_seed_selection(store, space, context=context, n=n,
+                                        study_ids=None if study_id is None else [study_id])
+        configs = [] if selection is None else [r["config"] for r in selection["seeds"]]
+        result = cls(base, configs, selection=selection)
+        if context is None:
+            result.fallback_reason = "missing_target_context"
+        return result
 
     @property
-    def n_seeds_remaining(self) -> int:
-        """Seed configs not yet proposed."""
-        return len(self._seed_queue)
+    def n_seeds_remaining(self):
+        return len(self._seed_configs) - self._n_seeds_used
 
     @property
-    def n_seeds_used(self) -> int:
-        """Seed configs already handed out (V12 accounting)."""
+    def n_seeds_used(self):
         return self._n_seeds_used
 
-    def propose(self, n: int) -> list[dict[str, Any]]:
-        """
-        Propose n configs: queued seeds first, then base-searcher proposals.
-
-        The base searcher is only asked for the shortfall, so consuming seeds does not
-        advance its internal sequence — a warm-started Sobol run and a cold one draw the
-        same Sobol points, just offset by the number of seeds spent.
-        """
-        if n <= 0:
-            return []
-
-        n_from_seeds = min(n, len(self._seed_queue))
-        configs = [self._seed_queue.pop(0) for _ in range(n_from_seeds)]
-        self._n_seeds_used += n_from_seeds
-
-        shortfall = n - n_from_seeds
-        if shortfall > 0:
-            configs.extend(self._base.propose(shortfall))
-
+    def propose(self, n):
+        if type(n) is not int or n < 0:
+            raise ValueError("Proposal count must be a nonnegative integer")
+        count = min(n, self.n_seeds_remaining)
+        end = self._n_seeds_used + count
+        configs = deepcopy(self._seed_configs[self._n_seeds_used:end])
+        # Queue consumption is committed only after any base proposals succeed.
+        if n > count:
+            configs.extend(self._base.propose(n - count))
+        self._n_seeds_used = end
         return configs
 
-    def observe(self, trial: dict[str, Any]) -> None:
-        """Pass the observation through to the base searcher."""
+    def observe(self, trial):
         self._base.observe(trial)
 
-    def state_dict(self) -> dict[str, Any]:
-        """Serialize wrapper state plus the base searcher's state (crash recovery)."""
-        return {
-            "kind": "warm_start",
-            "seed_queue": [dict(c) for c in self._seed_queue],
-            "n_seeds_total": self._n_seeds_total,
-            "n_seeds_used": self._n_seeds_used,
-            "base": self._base.state_dict(),
-        }
+    def validate_study_context(self, study_name, maximize):
+        if self._selection is not None:
+            context = self._selection["context"]
+            if (context["study_id"] != study_name
+                    or (context["direction"] == "maximize") != maximize):
+                raise ValueError("Study identity/objective differs from the warm-start target")
 
-    def load_state_dict(self, state: dict[str, Any]) -> None:
-        """
-        Restore wrapper and base state after a crash.
+    def state_dict(self):
+        body = {"kind": "warm_start", "schema_version": 2,
+                "space_signature": space_signature(self.space),
+                "seed_configs": deepcopy(self._seed_configs), "selection": deepcopy(self._selection),
+                "n_seeds_used": self._n_seeds_used, "n_seeds_total": len(self._seed_configs),
+                "seed_queue": deepcopy(self._seed_configs[self._n_seeds_used:]),
+                "base_type": type(self._base).__module__ + "." + type(self._base).__qualname__,
+                "fallback_reason": self.fallback_reason, "base": deepcopy(self._base.state_dict())}
+        return {**body, "binding": checkpoint_digest(body)}
 
-        The unconsumed seed queue is restored verbatim so recovery does not re-propose
-        seeds that were already evaluated (the store would have them as duplicate trials).
-        """
-        if state.get("kind") != "warm_start":
-            raise ValueError(
-                f"WarmStartSearcher cannot load state of kind {state.get('kind')!r}"
-            )
-        self._seed_queue = [dict(c) for c in state["seed_queue"]]
-        self._n_seeds_total = int(state["n_seeds_total"])
-        self._n_seeds_used = int(state["n_seeds_used"])
-        self._base.load_state_dict(state["base"])
+    def load_state_dict(self, state):
+        if not isinstance(state, dict) or state.get("kind") != "warm_start":
+            raise ValueError(f"WarmStartSearcher cannot load state of kind {state.get('kind') if isinstance(state, dict) else None!r}")
+        body = {k: v for k, v in state.items() if k != "binding"}
+        if state.get("binding") != checkpoint_digest(body) or state.get("schema_version") != 2:
+            raise ValueError("Malformed warm-start checkpoint binding/schema")
+        if (state["space_signature"] != space_signature(self.space)
+                or state["base_type"] != type(self._base).__module__ + "." + type(self._base).__qualname__):
+            raise ValueError("Warm-start checkpoint identity differs")
+        candidate = WarmStartSearcher(deepcopy(self._base), state["seed_configs"], selection=state["selection"])
+        cursor, total = state["n_seeds_used"], state["n_seeds_total"]
+        if (type(cursor) is not int or type(total) is not int or total != len(candidate._seed_configs)
+                or not 0 <= cursor <= total or state["seed_queue"] != candidate._seed_configs[cursor:]):
+            raise ValueError("Malformed warm-start checkpoint cursor/queue")
+        if self._selection is not None and state["selection"] != self._selection:
+            raise ValueError("Warm-start selection/context differs")
+        candidate._base.load_state_dict(deepcopy(state["base"]))
+        self._base, self._seed_configs, self._selection = candidate._base, candidate._seed_configs, candidate._selection
+        self._n_seeds_used = cursor
+        self.fallback_reason = state["fallback_reason"]
 
     @property
-    def capabilities(self) -> dict[str, Any]:
-        """Delegate to the base searcher — warm start adds no capability of its own."""
-        return self._base.capabilities
+    def support(self):
+        from dataclasses import replace
+        base = getattr(self._base, 'support', None)
+        return replace(base, joint_batch=False) if base else None
+
+    @property
+    def capabilities(self):
+        return {**self._base.capabilities, **(self.support.report() if self.support else {})}
+
+
+class RankedWarmStartSearcher(BaseSearcher):
+    """Modern Study-compatible seed proposals with a source-bound selection."""
+    def __init__(self, base, selection):
+        if not isinstance(base, BaseSearcher):
+            raise TypeError("Ranked warm start requires a BaseSearcher")
+        if base.history or base.trials:
+            raise ValueError("Ranked warm start requires a fresh target base searcher")
+        _validate_selection(selection, base.search_space)
+        super().__init__(base.search_space, base.seed)
+        self._base = base
+        self._selection = deepcopy(selection)
+        self._queue = SeedQueue(selection)
+        self._maximize = selection["context"]["direction"] == "maximize"
+        if hasattr(base, "maximize") and base.maximize != self._maximize:
+            raise ValueError("Base searcher and target objective direction differ")
+
+    @classmethod
+    def from_store(cls, base, store, *, context, n=10):
+        if context is None:
+            raise ValueError("An explicit target context is required")
+        return cls(base, load_seed_selection(store, base.search_space, context=context, n=n))
+
+    @property
+    def maximize(self):
+        return self._maximize
+
+    @maximize.setter
+    def maximize(self, value):
+        if not isinstance(value, bool) or value != self._maximize:
+            raise ValueError("Study objective direction differs from warm-start context")
+
+    @property
+    def support(self):
+        from dataclasses import replace
+        base = getattr(self._base, 'support', None)
+        return replace(base, joint_batch=False) if base else None
+
+    @property
+    def capabilities(self):
+        return {**self._base.capabilities, **(self.support.report() if self.support else {})}
+
+    @property
+    def selection(self):
+        return deepcopy(self._selection)
+
+    @property
+    def n_seeds_used(self):
+        return self._queue.state_dict()["cursor"]
+
+    @property
+    def n_seeds_remaining(self):
+        return len(self._selection["seeds"]) - self.n_seeds_used
+
+    @property
+    def fallback_reason(self):
+        return "no_eligible_history" if not self._selection["seeds"] else None
+
+    def suggest(self):
+        seeds = self._queue.take(1)
+        return Config(seeds[0]) if seeds else self._base.suggest()
+
+    def validate_study_context(self, study_name):
+        if study_name != self._selection["context"]["study_id"]:
+            raise ValueError("Study identity differs from the held-out warm-start target")
+
+    def observe(self, result):
+        # Transfer only current-study config identities and actual measurements.
+        self._base.trials = deepcopy(self.trials)
+        self._base.observe(result)
+        super().observe(result)
+
+    def get_state(self):
+        body = {**deepcopy(super().get_state()), "kind": "ranked_warm_start_v1",
+                "selection": self.selection, "queue": self._queue.state_dict(),
+                "space_signature": space_signature(self.search_space),
+                "base_type": type(self._base).__module__ + "." + type(self._base).__qualname__,
+                "base": deepcopy(self._base.get_state())}
+        return {**body, "binding": checkpoint_digest(body)}
+
+    def set_state(self, state):
+        if not isinstance(state, dict):
+            raise ValueError("Malformed ranked warm-start checkpoint")
+        body = {k: v for k, v in state.items() if k != "binding"}
+        if state.get("binding") != checkpoint_digest(body) or state.get("kind") != "ranked_warm_start_v1":
+            raise ValueError("Malformed ranked warm-start checkpoint binding/schema")
+        if (state["selection"] != self._selection
+                or state["space_signature"] != space_signature(self.search_space)
+                or state["base_type"] != type(self._base).__module__ + "." + type(self._base).__qualname__):
+            raise ValueError("Ranked warm-start context, selection or base differs")
+        queue = SeedQueue(self._selection)
+        queue.load_state_dict(state["queue"])
+        base = deepcopy(self._base)
+        base.set_state(deepcopy(state["base"]))
+        if hasattr(base, "maximize") and base.maximize != self._maximize:
+            raise ValueError("Restored base objective differs from warm-start context")
+        candidate = BaseState(self.search_space)
+        candidate.set_state(deepcopy(state))
+        if (_checkpoint_json([r.to_dict() for r in candidate.history]) != _checkpoint_json([r.to_dict() for r in base.history])
+                or any(tid not in candidate.trials or config.to_dict() != candidate.trials[tid].to_dict()
+                       for tid, config in base.trials.items()) or candidate.seed != base.seed):
+            raise ValueError("Base and wrapper current-study histories differ")
+        self.seed, self.history, self.trials = candidate.seed, candidate.history, candidate.trials
+        self._base, self._queue = base, queue
+
+
+class BaseState(BaseSearcher):
+    """Detached validation of the shared base state before an atomic restore."""
+    def suggest(self):
+        raise NotImplementedError

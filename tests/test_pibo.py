@@ -65,7 +65,10 @@ def test_pibo_without_prior_is_vanilla():
     searcher = GPqLogEISearcher(space, seed=42)
 
     assert searcher.prior_fn is None
-    assert searcher.capabilities["prior"] is False
+    # Method support is independent of whether a prior is currently enabled.
+    assert searcher.capabilities["prior"] is True
+    assert searcher.capabilities == GPqLogEISearcher(
+        space, seed=42, prior_fn=_good_prior).capabilities
 
 
 @pytest.mark.skipif(not BOTORCH_AVAILABLE, reason="BoTorch not available")
@@ -257,3 +260,63 @@ def test_pibo_prefers_high_prior_region_when_qlogei_negative():
         f"Weighted acquisition prefers low-prior region (acq_high={acq_high:.4f}, "
         f"acq_low={acq_low:.4f}). Log-space weighting may be broken."
     )
+
+
+@pytest.mark.skipif(not BOTORCH_AVAILABLE, reason="BoTorch not available")
+def test_python_prior_moves_optimized_acquisition():
+    """The optimizer must follow a Python prior's slope, including from a restart."""
+    import math
+    import torch
+    from botorch.acquisition import AcquisitionFunction
+    from botorch.optim import optimize_acqf
+    from hponas.searchers_gp import PriorWeightedAcquisition
+
+    class Quadratic(AcquisitionFunction):
+        def __init__(self):
+            super().__init__(model=None)
+
+        def forward(self, X):
+            return -(X[..., 0] - 0.2).square().mean(dim=-1)
+
+    acquisition = PriorWeightedAcquisition(
+        Quadratic(), lambda c: math.exp(0.6 * c["x"]), 1, 1.0,
+        torch.tensor([0.0]), torch.tensor([1.0]),
+        [Knob("x", "continuous", (0.0, 1.0))],
+    )
+    candidate, _ = optimize_acqf(
+        acquisition, torch.tensor([[0.0], [1.0]], dtype=torch.float64),
+        q=1, num_restarts=1,
+        batch_initial_conditions=torch.tensor([[[0.2]]], dtype=torch.float64),
+    )
+    # -(x - .2)^2 + log(exp(.6*x)) is maximized at .5, not .2.
+    assert candidate.item() == pytest.approx(0.5, abs=1e-5)
+
+
+@pytest.mark.skipif(not BOTORCH_AVAILABLE, reason="BoTorch not available")
+def test_python_prior_gradients_honor_log_coordinates_batches_and_bounds():
+    import torch
+    from botorch.acquisition import AcquisitionFunction
+    from hponas.searchers_gp import PriorWeightedAcquisition
+
+    class Flat(AcquisitionFunction):
+        def __init__(self):
+            super().__init__(model=None)
+
+        def forward(self, X):
+            return X[..., 0].sum(dim=-1) * 0.0
+
+    def prior(config):
+        assert 1.0 <= config["x"] <= 100.0 * (1 + 1e-14)
+        return config["x"]
+
+    acquisition = PriorWeightedAcquisition(
+        Flat(), prior, 4, 2.0, torch.tensor([1.0]), torch.tensor([100.0]),
+        [Knob("x", "continuous", (1.0, 100.0), transform="log")],
+    )
+    X = torch.tensor([[[[0.0], [1.0]], [[0.3], [0.7]]]], dtype=torch.float64,
+                     requires_grad=True)
+    values = acquisition(X)
+    assert values.shape == (1, 2)
+    gradient, = torch.autograd.grad(values.sum(), X)
+    # log(exp(log(100)*u)) has slope log(100), scaled by beta/n and 1/q.
+    assert torch.allclose(gradient, torch.full_like(X, np.log(100) / 4), atol=1e-7)

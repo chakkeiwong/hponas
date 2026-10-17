@@ -1,0 +1,60 @@
+{
+  "validation_id": "v02_state_replay",
+  "timestamp": "2026-09-12T19:31:29.220336Z",
+  "protocol_version": "1.0",
+  "scenarios": [
+    {
+      "id": "scenario_1",
+      "description": "Single searcher replay (GP+qLogEI)",
+      "seed": 42,
+      "n_trials": 20,
+      "passed": false,
+      "mismatches": [],
+      "notes": "BLOCKED: Event log infrastructure not implemented (hponas.store)"
+    },
+    {
+      "id": "scenario_2",
+      "description": "Multi-fidelity ASHA replay",
+      "seed": 43,
+      "n_trials": 30,
+      "passed": false,
+      "mismatches": [],
+      "notes": "BLOCKED: ASHA scheduler event log not implemented"
+    },
+    {
+      "id": "scenario_3",
+      "description": "Crash-resume replay",
+      "seed": 44,
+      "n_trials": 50,
+      "passed": false,
+      "mismatches": [],
+      "notes": "BLOCKED: Checkpoint/resume infrastructure not implemented (hponas.checkpoint)"
+    },
+    {
+      "id": "scenario_4",
+      "description": "Concurrent events replay (4 workers)",
+      "seed": 45,
+      "n_trials": 20,
+      "passed": false,
+      "mismatches": [],
+      "notes": "BLOCKED: Parallel execution event log not implemented"
+    },
+    {
+      "id": "scenario_5",
+      "description": "Zero-trial replay vacuity check",
+      "seed": 46,
+      "n_trials": 0,
+      "passed": true,
+      "mismatches": [],
+      "notes": "PASS: Empty log correctly rejected with ValueError: Empty event log: no trials to replay"
+    }
+  ],
+  "overall_passed": false,
+  "v16_audit": {
+    "non_vacuity": true,
+    "no_posthoc_tuning": true,
+    "correct_reference": true,
+    "runnable_independently": true
+  },
+  "blocked_on": "Event log infrastructure (hponas.store, hponas.checkpoint)"
+}

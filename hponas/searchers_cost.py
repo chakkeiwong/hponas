@@ -47,14 +47,22 @@ class CostModelGP:
         self._train_y: list[float] = []
 
         # Extract continuous knobs for normalization
-        self.cont_knobs = [k for k in space.knobs if k.kind == "continuous" and not k.condition]
+        self.cont_knobs = [
+            k for k in space.knobs if k.kind == "continuous" and not k.condition
+        ]
         if not self.cont_knobs:
             raise ValueError("CostModelGP requires continuous knobs")
 
         # Store bounds for normalization to [0, 1]^d
-        self._bounds_low = torch.tensor([k.bounds[0] for k in self.cont_knobs], dtype=torch.float64)
-        self._bounds_high = torch.tensor([k.bounds[1] for k in self.cont_knobs], dtype=torch.float64)
-        self._log_dims = torch.tensor([k.transform == "log" for k in self.cont_knobs], dtype=torch.bool)
+        self._bounds_low = torch.tensor(
+            [k.bounds[0] for k in self.cont_knobs], dtype=torch.float64
+        )
+        self._bounds_high = torch.tensor(
+            [k.bounds[1] for k in self.cont_knobs], dtype=torch.float64
+        )
+        self._log_dims = torch.tensor(
+            [k.transform == "log" for k in self.cont_knobs], dtype=torch.bool
+        )
 
     def _to_unit_cube(self, config: dict) -> np.ndarray:
         """Transform config from original space to [0, 1]^d unit cube."""
@@ -76,7 +84,7 @@ class CostModelGP:
 
     def observe(self, config: dict, cost: float) -> None:
         """Record a trial's wall-clock cost (seconds)."""
-        if cost <= 0:
+        if not np.isfinite(cost) or cost <= 0:
             raise ValueError(f"Cost must be positive, got {cost}")
 
         # Normalize config to [0, 1]^d
@@ -110,8 +118,7 @@ class CostModelGP:
 
         # Normalize and predict
         X = torch.tensor(
-            np.array([self._to_unit_cube(c) for c in configs]),
-            dtype=torch.float64
+            np.array([self._to_unit_cube(c) for c in configs]), dtype=torch.float64
         )
 
         with torch.no_grad():
@@ -241,11 +248,13 @@ class CostAwareAcquisition(AcquisitionFunction):
         # Sum costs across q (batch sequential scenario: q is serial)
         if X.ndim >= 3:
             q = X.shape[-2]
-            log_total_cost = log_costs.reshape(-1, q).sum(dim=-1)
+            log_total_cost = torch.logsumexp(log_costs.reshape(X.shape[:-1]), dim=-1)
         else:
             log_total_cost = log_costs
 
-        log_total_cost = log_total_cost.clamp(min=-20.0)  # exp(-20) ~ 2e-9, epsilon guard
+        log_total_cost = log_total_cost.clamp(
+            min=-20.0
+        )  # exp(-20) ~ 2e-9, epsilon guard
 
         # Apply penalty
         if _is_log_scale_acquisition(self.base_acq):
@@ -348,8 +357,15 @@ class CostAwareGPSearcher:
         #
         # We need _build_gp, _build_acqf, _acqf, _from_unit_cube, _dim, n_restarts,
         # raw_samples. If any are missing, delegate — e.g. SobolSearcher has none.
-        required = ("_build_gp", "_build_acqf", "_acqf", "_from_unit_cube",
-                    "_dim", "n_restarts", "raw_samples")
+        required = (
+            "_build_gp",
+            "_build_acqf",
+            "_acqf",
+            "_from_unit_cube",
+            "_dim",
+            "n_restarts",
+            "raw_samples",
+        )
         if any(not hasattr(self.base_searcher, attr) for attr in required):
             return self.base_searcher.propose(n)
 
@@ -388,10 +404,12 @@ class CostAwareGPSearcher:
             temperature=temperature,
         )
 
-        bounds = torch.stack([
-            torch.zeros(base._dim, dtype=torch.float64),
-            torch.ones(base._dim, dtype=torch.float64),
-        ])
+        bounds = torch.stack(
+            [
+                torch.zeros(base._dim, dtype=torch.float64),
+                torch.ones(base._dim, dtype=torch.float64),
+            ]
+        )
 
         candidates, _ = optimize_acqf(
             acq_function=cost_aware_acqf,

@@ -1,0 +1,22 @@
+{
+  "action": "verify",
+  "status": "FAIL",
+  "source_digest": "bc131050672ad7a77e17535358400a22940ec35f09e54ab88f197242572d8c19",
+  "elapsed_seconds": 3.664618620998226,
+  "output_directory": "/home/ubuntu/workspace/hponas/deployments/local-lab/receipts/verification-01",
+  "physical_hosts": 1,
+  "scientific_campaigns": 0,
+  "mutation_runs": 0,
+  "distributed_service_accepted": false,
+  "error": "RuntimeError: Owned command failed; see /home/ubuntu/workspace/hponas/deployments/local-lab/receipts/verification-01/roles.log; exit=1",
+  "scripts": [
+    {
+      "path": "/home/ubuntu/workspace/hponas/deployments/local-lab/manage.py",
+      "sha256": "d59c703835c5d5fbb9f19b190f5105b9fbe64bc63643e894bc7b3a0282c9cc66"
+    },
+    {
+      "path": "/home/ubuntu/workspace/hponas/deployments/local-lab/client.py",
+      "sha256": "d393719eebcce7a8ee1b71eb29d8778a1effe3f171d0950ffa1bdd7a5ef3eb4a"
+    }
+  ]
+}

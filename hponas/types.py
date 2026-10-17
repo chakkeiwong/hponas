@@ -66,6 +66,10 @@ class Trial:
     cost: float = 1.0
     parent_trial_id: Optional[str] = None
     status: str = "pending"  # pending, running, completed, failed
+    root_trial_id: Optional[str] = None
+    continuation: str = "restart"
+    resume_from: float = 0.0
+    checkpoint: Any = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -78,6 +82,10 @@ class Trial:
             "cost": self.cost,
             "parent_trial_id": self.parent_trial_id,
             "status": self.status,
+            "root_trial_id": self.root_trial_id,
+            "continuation": self.continuation,
+            "resume_from": self.resume_from,
+            "checkpoint": self.checkpoint,
         }
 
 
@@ -104,7 +112,7 @@ class Result:
 
     def is_valid(self) -> bool:
         """Check if result is valid (not NaN, not failed)."""
-        if self.status != "completed":
+        if self.status not in {"completed", "paused"}:
             return False
         if not np.isfinite(self.objective_value):
             return False

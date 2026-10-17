@@ -1,0 +1,5 @@
+{
+  "scope": "owned_postgresql_and_ray_only",
+  "stop": "python deployments/local-lab/manage.py stop",
+  "remote_faults": false
+}

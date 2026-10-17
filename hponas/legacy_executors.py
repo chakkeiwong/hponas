@@ -37,6 +37,7 @@ from concurrent.futures import ThreadPoolExecutor, Future
 try:
     import ray
     from ray import tune
+
     RAY_AVAILABLE = True
 except ImportError:
     RAY_AVAILABLE = False
@@ -104,6 +105,7 @@ class LocalExecutor:
 
         Returns the trial_id.
         """
+
         def _run_trial():
             start = time.time()
             try:
@@ -204,7 +206,7 @@ class RayExecutor:
         checkpoint_dir: str | Path = "./ray_checkpoints",
         num_cpus: float = 1.0,
         num_gpus: float = 0.0,
-        ray_address: Optional[str] = None
+        ray_address: Optional[str] = None,
     ):
         """
         Initialize Ray executor.
@@ -215,6 +217,9 @@ class RayExecutor:
             num_gpus: GPUs per trial (can be fractional)
             ray_address: Ray cluster address (None = local mode)
         """
+        # Cleanup must also be safe if dependency or cluster initialization fails.
+        self._futures: dict[str, Any] = {}
+        self._trial_configs: dict[str, dict] = {}
         if not RAY_AVAILABLE:
             raise ImportError("RayExecutor requires ray: pip install ray")
 
@@ -227,10 +232,6 @@ class RayExecutor:
         # Initialize Ray if not already running
         if not ray.is_initialized():
             ray.init(address=ray_address, ignore_reinit_error=True)
-
-        # Track running trials
-        self._futures: dict[str, ray.ObjectRef] = {}
-        self._trial_configs: dict[str, dict] = {}
 
     def launch(
         self,
@@ -253,8 +254,7 @@ class RayExecutor:
         """
         # Submit trial to Ray using ray.remote wrapper
         future = _run_trial_remote.options(
-            num_cpus=self.num_cpus,
-            num_gpus=self.num_gpus
+            num_cpus=self.num_cpus, num_gpus=self.num_gpus
         ).remote(trial_id, config, objective_fn, fidelity, self.checkpoint_dir)
 
         self._futures[trial_id] = future
@@ -277,7 +277,9 @@ class RayExecutor:
         """
         return self.get_result(trial_id)
 
-    def get_result(self, trial_id: str, timeout: Optional[float] = None) -> dict[str, Any]:
+    def get_result(
+        self, trial_id: str, timeout: Optional[float] = None
+    ) -> dict[str, Any]:
         """
         Get trial result (blocking).
 
@@ -302,7 +304,7 @@ class RayExecutor:
                 "value": None,
                 "cost": 0.0,
                 "status": "running",
-                "error": "Timeout waiting for result"
+                "error": "Timeout waiting for result",
             }
 
     def checkpoint(self, trial_id: str, path: Path) -> None:
@@ -319,6 +321,7 @@ class RayExecutor:
         src_path = self.checkpoint_dir / f"{trial_id}.pkl"
         if src_path.exists():
             import shutil
+
             shutil.copy(src_path, path / f"{trial_id}.pkl")
 
     def load_checkpoint(self, trial_id: str, path: Path) -> Any:
@@ -355,6 +358,7 @@ class RayExecutor:
 
         dst_path = self.checkpoint_dir / f"{dst_trial_id}.pkl"
         import shutil
+
         shutil.copy(src_path, dst_path)
 
     def shutdown(self) -> None:
@@ -362,7 +366,14 @@ class RayExecutor:
         # Cancel any running trials
         for trial_id, future in self._futures.items():
             try:
-                ray.cancel(future)
+                # Completed results remain available for repeated get_result()
+                # calls. Cancelling those settled tasks during destruction can
+                # race Ray's completion bookkeeping. Only cancel pending work
+                # in a live cluster; cleanup must never auto-start a cluster.
+                if ray.is_initialized():
+                    ready, _ = ray.wait([future], timeout=0)
+                    if not ready:
+                        ray.cancel(future)
             except Exception:
                 pass
 
@@ -379,13 +390,14 @@ class RayExecutor:
 
 # Ray remote function (must be at module level)
 if RAY_AVAILABLE:
+
     @ray.remote
     def _run_trial_remote(
         trial_id: str,
         config: dict[str, Any],
         objective_fn: Callable[[dict[str, Any]], float],
         fidelity: float,
-        checkpoint_dir: Path
+        checkpoint_dir: Path,
     ) -> dict[str, Any]:
         """
         Remote trial execution (runs as Ray actor).
@@ -403,12 +415,15 @@ if RAY_AVAILABLE:
             # Save checkpoint
             checkpoint_path = checkpoint_dir / f"{trial_id}.pkl"
             with open(checkpoint_path, "wb") as f:
-                pickle.dump({
-                    "config": config,
-                    "value": value,
-                    "fidelity": fidelity,
-                    "cost": cost,
-                }, f)
+                pickle.dump(
+                    {
+                        "config": config,
+                        "value": value,
+                        "fidelity": fidelity,
+                        "cost": cost,
+                    },
+                    f,
+                )
 
             return {
                 "trial_id": trial_id,

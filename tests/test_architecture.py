@@ -5,11 +5,17 @@ Survey reference: Ch 9 sec:architecture-search-in-moderation, Ch 15 sec:archfact
 R1 spike exit criterion: compatibility tests pass, incompatible pairs refuse correctly.
 """
 
-from hponas.architecture import build, compatible, get_architecture_axes, measure, transfer_policy
+from hponas.architecture import (
+    build,
+    compatible,
+    get_architecture_axes,
+    measure,
+    transfer_policy,
+)
 
 
-def test_build_stub():
-    """Build returns a model stub with typed coordinates."""
+def test_build_model():
+    """Build returns a Torch model with typed coordinates."""
     config = {
         "width": 128,
         "depth": 3,
@@ -32,15 +38,18 @@ def test_build_defaults():
     assert model.normalization == "none"
 
 
-def test_measure_stub():
+def test_measure_model():
     """Measure returns (param_count, flops) for a model."""
     config = {"width": 128, "depth": 3}
     model = build(config)
     params, flops = measure(model)
 
-    # Spike: simple mock calculation
-    assert params == 128 * 3 * 100
-    assert flops == 128 * 3 * 1_000_000
+    # Dense layers 4->128->128->128->1, including each bias.
+    assert params == (4 + 1) * 128 + 2 * (128 + 1) * 128 + 129
+    assert flops == 2 * (4 * 128 + 2 * 128 * 128 + 128) + 3 * 128 + 1
+    import torch
+
+    assert model(torch.zeros(2, 4)).shape == (2, 1)
 
 
 def test_compatible_same_architecture():
@@ -120,8 +129,14 @@ def test_conformance_compatible_predicate():
     """
     # Same architecture, different hyperparameters → should be compatible
     configs_compatible = [
-        ({"width": 128, "depth": 3, "lr": 0.01}, {"width": 128, "depth": 3, "lr": 0.001}),
-        ({"width": 64, "depth": 2, "activation": "relu"}, {"width": 64, "depth": 2, "activation": "tanh"}),
+        (
+            {"width": 128, "depth": 3, "lr": 0.01},
+            {"width": 128, "depth": 3, "lr": 0.001},
+        ),
+        (
+            {"width": 64, "depth": 2, "activation": "relu"},
+            {"width": 64, "depth": 2, "activation": "tanh"},
+        ),
     ]
 
     for cfg_a, cfg_b in configs_compatible:
@@ -135,4 +150,6 @@ def test_conformance_compatible_predicate():
     ]
 
     for cfg_a, cfg_b in configs_incompatible:
-        assert not compatible(cfg_a, cfg_b), f"Should be incompatible: {cfg_a} vs {cfg_b}"
+        assert not compatible(cfg_a, cfg_b), (
+            f"Should be incompatible: {cfg_a} vs {cfg_b}"
+        )

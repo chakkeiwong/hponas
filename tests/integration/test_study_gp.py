@@ -19,13 +19,13 @@ def branin(x: float, y: float) -> float:
     Search domain: x ∈ [-5, 10], y ∈ [0, 15]
     """
     a = 1.0
-    b = 5.1 / (4.0 * np.pi ** 2)
+    b = 5.1 / (4.0 * np.pi**2)
     c = 5.0 / np.pi
     r = 6.0
     s = 10.0
     t = 1.0 / (8.0 * np.pi)
 
-    term1 = a * (y - b * x ** 2 + c * x - r) ** 2
+    term1 = a * (y - b * x**2 + c * x - r) ** 2
     term2 = s * (1 - t) * np.cos(x)
     term3 = s
 
@@ -228,6 +228,7 @@ class TestStudyGPIntegration:
 
     def test_study_gp_with_nan_results(self, branin_search_space):
         """Test Study + GP handles NaN results gracefully."""
+
         def noisy_branin(config: dict) -> float:
             """Branin that sometimes returns NaN."""
             if np.random.rand() < 0.2:  # 20% chance of NaN
@@ -287,15 +288,16 @@ class TestStudyGPCheckpoint:
 
         result = study.run()
 
-        # Checkpoint should have been saved (at trial 10)
+        # Final checkpoint contains all committed results.
         checkpoint_file = tmp_path / "test_checkpoint_study_checkpoint.json"
         assert checkpoint_file.exists()
 
         # Verify checkpoint contains searcher state
         import json
+
         with open(checkpoint_file) as f:
             checkpoint = json.load(f)
 
         assert "searcher_state" in checkpoint
         assert "trials" in checkpoint["searcher_state"]
-        assert len(checkpoint["searcher_state"]["trials"]) == 10
+        assert len(checkpoint["searcher_state"]["trials"]) == 15

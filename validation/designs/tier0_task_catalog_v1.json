@@ -1,0 +1,901 @@
+{
+  "schema_version": 1,
+  "kind": "tier0-benchmark-candidate-catalog",
+  "version": "1.0-research",
+  "status": "SOURCE_PINNED_ACCEPTANCE_DESIGN_NOT_FROZEN",
+  "certifies_acceptance": false,
+  "source_bundle": {
+    "path": "docs/program/evidence/2026-09-29/stat-03/task-sources/manifest.json",
+    "sha256": "ec07a016e4a007f6ad701fb1e53185d579ffe0c029d76aa15329938a45832736"
+  },
+  "current_live_candidate": {
+    "path": "validation/designs/tier0_candidate_v1.json",
+    "sha256": "769b73b8312b6398a6c886ef1e305cef9739e73aaa9bfa40d89b68ec69e721f9"
+  },
+  "selection_rule": {
+    "basis": "Full source-declared numeric LCBench domain and full ARLBench PPO landscape file list; no HPO winner screening or favorable-result filters.",
+    "lcbench_instances_authority": "configuration-space choices, not embedding vocabulary",
+    "lineage_rule": "Keep all tasks using a source dataset in one group; dataset IDs are a first deduplication, not proof of independent data origins.",
+    "roles": "External ARLBench tables are exposed reference/development data. LCBench metadata are candidate sampling-frame records; no surrogate outcomes have been evaluated.",
+    "independent_selector": null,
+    "holdout_status": "Independent selection/blinding and full exposure review required by survey section 16 are not yet satisfied; no acceptance role is asserted."
+  },
+  "layers": {
+    "v01_reference_conformance": {
+      "existing": "Synthetic vendor/wrapper engineering fixtures; no new V01 gate PASS.",
+      "new_table_adapter": "Exact ARLBench config/seed/fidelity lookup; missing cells retained, arbitrary GP/TPE suggestions refused, no interpolated objective or invented runtime.",
+      "remaining": "Complete genuine tabular proposal/evaluation mapping and prospective equivalence contract for the full wrapper inventory."
+    },
+    "cheap_statistical_candidates": {
+      "suite": "YAHPO LCBench",
+      "instances": [
+        "3945",
+        "7593",
+        "34539",
+        "126025",
+        "126026",
+        "126029",
+        "146212",
+        "167104",
+        "167149",
+        "167152",
+        "167161",
+        "167168",
+        "167181",
+        "167184",
+        "167185",
+        "167190",
+        "167200",
+        "167201",
+        "168329",
+        "168330",
+        "168331",
+        "168335",
+        "168868",
+        "168908",
+        "168910",
+        "189354",
+        "189862",
+        "189865",
+        "189866",
+        "189873",
+        "189905",
+        "189906",
+        "189908",
+        "189909"
+      ],
+      "encoding_only_ids": [
+        "167083"
+      ],
+      "sampling_unit": "source_dataset_not_task_id_or_fold",
+      "supports_live_ppo_claim": false,
+      "certifies_acceptance": false,
+      "tasks": [
+        {
+          "task_id": "3945",
+          "dataset_id": "1111",
+          "name": "KDDCup09_appetency",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "7593",
+          "dataset_id": "1596",
+          "name": "covertype",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "34539",
+          "dataset_id": "4135",
+          "name": "Amazon_employee_access",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "126025",
+          "dataset_id": "1590",
+          "name": "adult",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "126026",
+          "dataset_id": "1486",
+          "name": "nomao",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "126029",
+          "dataset_id": "1461",
+          "name": "bank-marketing",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "146212",
+          "dataset_id": "40685",
+          "name": "shuttle",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "167104",
+          "dataset_id": "40981",
+          "name": "Australian",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "167149",
+          "dataset_id": "3",
+          "name": "kr-vs-kp",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "167152",
+          "dataset_id": "12",
+          "name": "mfeat-factors",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "167161",
+          "dataset_id": "31",
+          "name": "credit-g",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "167168",
+          "dataset_id": "54",
+          "name": "vehicle",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "167181",
+          "dataset_id": "1067",
+          "name": "kc1",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "167184",
+          "dataset_id": "1464",
+          "name": "blood-transfusion-service-center",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "167185",
+          "dataset_id": "1468",
+          "name": "cnae-9",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "167190",
+          "dataset_id": "1489",
+          "name": "phoneme",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "167200",
+          "dataset_id": "23512",
+          "name": "higgs",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "167201",
+          "dataset_id": "40668",
+          "name": "connect-4",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "168329",
+          "dataset_id": "41169",
+          "name": "helena",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "168330",
+          "dataset_id": "41168",
+          "name": "jannis",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "168331",
+          "dataset_id": "41166",
+          "name": "volkert",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "168335",
+          "dataset_id": "41150",
+          "name": "MiniBooNE",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "168868",
+          "dataset_id": "41138",
+          "name": "APSFailure",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "168908",
+          "dataset_id": "41142",
+          "name": "christine",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "168910",
+          "dataset_id": "41164",
+          "name": "fabert",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "189354",
+          "dataset_id": "1169",
+          "name": "airlines",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "189862",
+          "dataset_id": "41143",
+          "name": "jasmine",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "189865",
+          "dataset_id": "41146",
+          "name": "sylvine",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "189866",
+          "dataset_id": "41147",
+          "name": "albert",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "189873",
+          "dataset_id": "41167",
+          "name": "dionis",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "189905",
+          "dataset_id": "40975",
+          "name": "car",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "189906",
+          "dataset_id": "40984",
+          "name": "segment",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "189908",
+          "dataset_id": "40996",
+          "name": "Fashion-MNIST",
+          "role": "metadata_only_candidate"
+        },
+        {
+          "task_id": "189909",
+          "dataset_id": "41027",
+          "name": "jungle_chess_2pcs_raw_endgame_complete",
+          "role": "metadata_only_candidate"
+        }
+      ],
+      "dataset_groups": {
+        "3": [
+          "167149"
+        ],
+        "12": [
+          "167152"
+        ],
+        "31": [
+          "167161"
+        ],
+        "54": [
+          "167168"
+        ],
+        "1067": [
+          "167181"
+        ],
+        "1111": [
+          "3945"
+        ],
+        "1169": [
+          "189354"
+        ],
+        "1461": [
+          "126029"
+        ],
+        "1464": [
+          "167184"
+        ],
+        "1468": [
+          "167185"
+        ],
+        "1486": [
+          "126026"
+        ],
+        "1489": [
+          "167190"
+        ],
+        "1590": [
+          "126025"
+        ],
+        "1596": [
+          "7593"
+        ],
+        "4135": [
+          "34539"
+        ],
+        "23512": [
+          "167200"
+        ],
+        "40668": [
+          "167201"
+        ],
+        "40685": [
+          "146212"
+        ],
+        "40975": [
+          "189905"
+        ],
+        "40981": [
+          "167104"
+        ],
+        "40984": [
+          "189906"
+        ],
+        "40996": [
+          "189908"
+        ],
+        "41027": [
+          "189909"
+        ],
+        "41138": [
+          "168868"
+        ],
+        "41142": [
+          "168908"
+        ],
+        "41143": [
+          "189862"
+        ],
+        "41146": [
+          "189865"
+        ],
+        "41147": [
+          "189866"
+        ],
+        "41150": [
+          "168335"
+        ],
+        "41164": [
+          "168910"
+        ],
+        "41166": [
+          "168331"
+        ],
+        "41167": [
+          "189873"
+        ],
+        "41168": [
+          "168330"
+        ],
+        "41169": [
+          "168329"
+        ]
+      },
+      "actual_table_or_surrogate_acquired": false,
+      "scope": "Only this pinned surrogate/domain if later selected; no original-training or live-PPO runtime claim.",
+      "normalization_support": "Original classification accuracy has domain bounds after units are confirmed. An unconstrained surrogate prediction is not automatically bounded accuracy."
+    },
+    "external_rl_references": {
+      "suite": "ARLBench",
+      "ppo_landscape_universe": [
+        "landscapes/atari_battle_zone_ppo.csv",
+        "landscapes/atari_double_dunk_ppo.csv",
+        "landscapes/atari_phoenix_ppo.csv",
+        "landscapes/atari_qbert_ppo.csv",
+        "landscapes/atari_this_game_ppo.csv",
+        "landscapes/box2d_bipedal_walker_ppo.csv",
+        "landscapes/box2d_continuous_lunar_lander_ppo.csv",
+        "landscapes/box2d_lunar_lander_ppo.csv",
+        "landscapes/brax_ant_ppo.csv",
+        "landscapes/brax_halfcheetah_ppo.csv",
+        "landscapes/brax_hopper_ppo.csv",
+        "landscapes/brax_humanoid_ppo.csv",
+        "landscapes/cc_acrobot_ppo.csv",
+        "landscapes/cc_cartpole_ppo.csv",
+        "landscapes/cc_continuous_mountain_car_ppo.csv",
+        "landscapes/cc_mountain_car_ppo.csv",
+        "landscapes/cc_pendulum_ppo.csv",
+        "landscapes/minigrid_door_key_ppo.csv",
+        "landscapes/minigrid_empty_random_ppo.csv",
+        "landscapes/minigrid_four_rooms_ppo.csv",
+        "landscapes/minigrid_unlock_ppo.csv"
+      ],
+      "acquired_brax_landscapes": {
+        "ant": {
+          "source_sha256": "66fee35a7cd2e37c46f6aaedc42c22876f8c8efcb7a937ba1bbe77f6150c7835",
+          "rows": 25600,
+          "configurations": 256,
+          "seeds": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "training_steps": [
+            5000000,
+            10000000,
+            15000000,
+            20000000,
+            25000000,
+            30000000,
+            35000000,
+            40000000,
+            45000000,
+            50000000
+          ],
+          "absent_grid_cells": 0,
+          "fidelities": [
+            {
+              "training_steps": 5000000,
+              "statuses": {
+                "blank": 1,
+                "finite": 2559
+              }
+            },
+            {
+              "training_steps": 10000000,
+              "statuses": {
+                "blank": 2,
+                "finite": 2558
+              }
+            },
+            {
+              "training_steps": 15000000,
+              "statuses": {
+                "blank": 2,
+                "finite": 2558
+              }
+            },
+            {
+              "training_steps": 20000000,
+              "statuses": {
+                "blank": 2,
+                "finite": 2558
+              }
+            },
+            {
+              "training_steps": 25000000,
+              "statuses": {
+                "blank": 2,
+                "finite": 2558
+              }
+            },
+            {
+              "training_steps": 30000000,
+              "statuses": {
+                "blank": 2,
+                "finite": 2558
+              }
+            },
+            {
+              "training_steps": 35000000,
+              "statuses": {
+                "blank": 2,
+                "finite": 2558
+              }
+            },
+            {
+              "training_steps": 40000000,
+              "statuses": {
+                "blank": 2,
+                "finite": 2558
+              }
+            },
+            {
+              "training_steps": 45000000,
+              "statuses": {
+                "blank": 2,
+                "finite": 2558
+              }
+            },
+            {
+              "training_steps": 50000000,
+              "statuses": {
+                "blank": 2,
+                "finite": 2558
+              }
+            }
+          ],
+          "terminal_training_steps": 50000000,
+          "terminal_expected_cells": 2560,
+          "terminal_statuses": {
+            "blank": 2,
+            "finite": 2558
+          },
+          "terminal_missing_fraction": 0.0007812499999999556,
+          "terminal_finite_min": -8.626756e+16,
+          "terminal_finite_max": 6757.8643,
+          "scale_adopted": false,
+          "provides_population_support_bound": false,
+          "independent_hpo_studies": 0,
+          "cost_seconds": null
+        },
+        "halfcheetah": {
+          "source_sha256": "d29ba69d2c745cb81eda4566d79849887a87b30812833d63f46302b72432b3c9",
+          "rows": 25600,
+          "configurations": 256,
+          "seeds": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "training_steps": [
+            5000000,
+            10000000,
+            15000000,
+            20000000,
+            25000000,
+            30000000,
+            35000000,
+            40000000,
+            45000000,
+            50000000
+          ],
+          "absent_grid_cells": 0,
+          "fidelities": [
+            {
+              "training_steps": 5000000,
+              "statuses": {
+                "blank": 73,
+                "finite": 2487
+              }
+            },
+            {
+              "training_steps": 10000000,
+              "statuses": {
+                "blank": 130,
+                "finite": 2430
+              }
+            },
+            {
+              "training_steps": 15000000,
+              "statuses": {
+                "blank": 250,
+                "finite": 2310
+              }
+            },
+            {
+              "training_steps": 20000000,
+              "statuses": {
+                "blank": 349,
+                "finite": 2211
+              }
+            },
+            {
+              "training_steps": 25000000,
+              "statuses": {
+                "blank": 449,
+                "finite": 2111
+              }
+            },
+            {
+              "training_steps": 30000000,
+              "statuses": {
+                "blank": 501,
+                "finite": 2059
+              }
+            },
+            {
+              "training_steps": 35000000,
+              "statuses": {
+                "blank": 581,
+                "finite": 1979
+              }
+            },
+            {
+              "training_steps": 40000000,
+              "statuses": {
+                "blank": 677,
+                "finite": 1883
+              }
+            },
+            {
+              "training_steps": 45000000,
+              "statuses": {
+                "blank": 736,
+                "finite": 1824
+              }
+            },
+            {
+              "training_steps": 50000000,
+              "statuses": {
+                "blank": 771,
+                "finite": 1789
+              }
+            }
+          ],
+          "terminal_training_steps": 50000000,
+          "terminal_expected_cells": 2560,
+          "terminal_statuses": {
+            "blank": 771,
+            "finite": 1789
+          },
+          "terminal_missing_fraction": 0.301171875,
+          "terminal_finite_min": -2.4234055e+21,
+          "terminal_finite_max": 12480.486,
+          "scale_adopted": false,
+          "provides_population_support_bound": false,
+          "independent_hpo_studies": 0,
+          "cost_seconds": null
+        },
+        "hopper": {
+          "source_sha256": "d217dfba744c3394e1e811fbf2a1f4d5b2ec8e64bf77402b996973787dd93755",
+          "rows": 25600,
+          "configurations": 256,
+          "seeds": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "training_steps": [
+            5000000,
+            10000000,
+            15000000,
+            20000000,
+            25000000,
+            30000000,
+            35000000,
+            40000000,
+            45000000,
+            50000000
+          ],
+          "absent_grid_cells": 0,
+          "fidelities": [
+            {
+              "training_steps": 5000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 10000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 15000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 20000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 25000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 30000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 35000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 40000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 45000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 50000000,
+              "statuses": {
+                "finite": 2560
+              }
+            }
+          ],
+          "terminal_training_steps": 50000000,
+          "terminal_expected_cells": 2560,
+          "terminal_statuses": {
+            "finite": 2560
+          },
+          "terminal_missing_fraction": 0.0,
+          "terminal_finite_min": -896948899999.9999,
+          "terminal_finite_max": 3696.3296,
+          "scale_adopted": false,
+          "provides_population_support_bound": false,
+          "independent_hpo_studies": 0,
+          "cost_seconds": null
+        },
+        "humanoid": {
+          "source_sha256": "60d411ddf568dab656f150ebcee6c10fce89ac77c30da57ffb47824f16662a10",
+          "rows": 25600,
+          "configurations": 256,
+          "seeds": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "training_steps": [
+            5000000,
+            10000000,
+            15000000,
+            20000000,
+            25000000,
+            30000000,
+            35000000,
+            40000000,
+            45000000,
+            50000000
+          ],
+          "absent_grid_cells": 0,
+          "fidelities": [
+            {
+              "training_steps": 5000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 10000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 15000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 20000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 25000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 30000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 35000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 40000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 45000000,
+              "statuses": {
+                "finite": 2560
+              }
+            },
+            {
+              "training_steps": 50000000,
+              "statuses": {
+                "finite": 2560
+              }
+            }
+          ],
+          "terminal_training_steps": 50000000,
+          "terminal_expected_cells": 2560,
+          "terminal_statuses": {
+            "finite": 2560
+          },
+          "terminal_missing_fraction": 0.0,
+          "terminal_finite_min": -5.7034245e+19,
+          "terminal_finite_max": 10706.277,
+          "scale_adopted": false,
+          "provides_population_support_bound": false,
+          "independent_hpo_studies": 0,
+          "cost_seconds": null
+        }
+      },
+      "scope": "Published fixed-configuration RL landscape, not independent HPO studies or project acceptance.",
+      "transfer_mismatches": [
+        "Published curve steps are 5M..50M; project requests 100K (101120..655360 scheduled interactions).",
+        "Published example is mjx with 2048 environments; project candidate is generalized with 32 environments.",
+        "Published and installed Brax/PPO code, hyperparameter domains and evaluation recipes differ.",
+        "No complete-study elapsed cost or GP/TPE-versus-Sobol advantage is supplied by these landscape tables."
+      ]
+    },
+    "required_live_ppo": {
+      "task_ids": {
+        "V04-T0": [
+          "brax-ant-ppo-100k-v1",
+          "brax-halfcheetah-ppo-100k-v1",
+          "brax-hopper-ppo-100k-v1"
+        ],
+        "V05": [
+          "brax-ant-ppo-100k-v1",
+          "brax-halfcheetah-ppo-100k-v1",
+          "brax-hopper-ppo-100k-v1"
+        ]
+      },
+      "status": "Existing candidate retained for review; no population sample or acceptance freeze asserted.",
+      "scope": "Brax continuous-control locomotion only; three names cannot establish iid draws from an RL task population.",
+      "external_scale_adopted": false,
+      "support_bounds_proved": false,
+      "exposure": "inverted_pendulum is recorded development/smoke work; ant is the workload default and requires exposure review. Absence of a matching local receipt is not proof of non-exposure."
+    }
+  },
+  "sampling_design_review": {
+    "paired_unit": "All required arms of one complete task/optimizer-seed study block, never individual adaptive trials.",
+    "current_cross_task_rng": "Candidate v1.2 repairs v1.1 stream reuse using explicit task indices and disjoint task/phase/block slots for optimizer and PPO randomness; the runner and replay verify the actual slot.",
+    "independence_limit": "Disjoint pseudorandom namespaces do not prove a random task population or independent execution noise. Flat T*n inference still requires the independent-stream and controlled-execution model.",
+    "conservative_unit_if_cross_task_dependence_remains": "One complete seed vector across the fixed task set; at most 20 confirmation units, assuming independent seed vectors.",
+    "candidate_finite_suite_estimand": "Equal-weight mean of expected paired improvements over named frozen tasks; conditional on tasks and independent study streams. This is a prospective scope clarification, not adopted population inference.",
+    "population_claim_requirement": "A declared task universe, sampling design, source-lineage groups and uncertainty for task sampling; cannot replace these by names or seed counts.",
+    "required_repairs": [
+      "Validate the independent-stream/controlled-execution sampling assumptions, or preserve whole seed-vector clusters. Namespace collision and replay repair is implemented.",
+      "A missingness/reliability estimand with justified handling; <=10% complete-case exclusion alone is insufficient.",
+      "True support/tail assumptions for the raw-return mean, or explicit certification of a changed bounded objective; no silent clipping."
+    ]
+  },
+  "not_adopted": [
+    "Empirical extrema or quantiles as almost-sure support",
+    "ARLBench times as project throughput",
+    "Lookup time as original training cost",
+    "LCBench as a replacement for required live PPO",
+    "Metadata acquisition as a V01/V04/V05 PASS",
+    "All named tasks as iid Gaussian clusters"
+  ]
+}

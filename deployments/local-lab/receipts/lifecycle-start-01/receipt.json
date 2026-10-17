@@ -1,0 +1,22 @@
+{
+  "action": "start",
+  "status": "PASS",
+  "source_digest": "bc131050672ad7a77e17535358400a22940ec35f09e54ab88f197242572d8c19",
+  "elapsed_seconds": 0.3407690660096705,
+  "output_directory": "/home/ubuntu/workspace/hponas/deployments/local-lab/receipts/lifecycle-start-01",
+  "physical_hosts": 1,
+  "scientific_campaigns": 0,
+  "mutation_runs": 0,
+  "distributed_service_accepted": false,
+  "error": null,
+  "scripts": [
+    {
+      "path": "/home/ubuntu/workspace/hponas/deployments/local-lab/manage.py",
+      "sha256": "7dc4fde3bba902b16c394a29c39250d004930426968df5beecfe8a3e77fc676d"
+    },
+    {
+      "path": "/home/ubuntu/workspace/hponas/deployments/local-lab/client.py",
+      "sha256": "7eb85ff8b7bad990fabf773f894d79cb61af9456d59d5ae403751f6d96179110"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "service": "hponas_local_maintenance",
+  "service_file": "/home/ubuntu/workspace/hponas/.hponas-runtime/deployments/local-lab/pg_service.conf",
+  "role": "local_peer_owner"
+}

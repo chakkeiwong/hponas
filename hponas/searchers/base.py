@@ -5,6 +5,18 @@ from typing import Dict, List, Optional, Any
 from hponas.types import Config, Result, SearchSpace
 
 
+class PendingSuggestionError(RuntimeError):
+    """A bounded suggestion has saved progress but has no configuration yet."""
+
+
+class SearchSpaceExhaustedError(RuntimeError):
+    """Every distinct configuration in a declared finite domain was proposed."""
+
+
+class SearchBudgetExhaustedError(RuntimeError):
+    """A searcher's measured-work budget has been consumed."""
+
+
 class BaseSearcher(ABC):
     """Base class for all searchers (optimization algorithms).
 
@@ -14,6 +26,8 @@ class BaseSearcher(ABC):
     - State serialization/deserialization works
     - Deterministic behavior given seed
     """
+
+    support = None
 
     def __init__(self, search_space: SearchSpace, seed: Optional[int] = None):
         """Initialize searcher.
@@ -34,17 +48,9 @@ class BaseSearcher(ABC):
         Returns:
             Dict describing what the searcher supports
         """
-        # Infer from search space what parameter types are supported
-        param_types = set()
-        for param in self.search_space.parameters.values():
-            param_types.add(param.type.value)
-
-        return {
-            "parameter_types": list(param_types),
-            "supports_fidelity": False,
-            "supports_constraints": False,
-            "max_dim": None,  # no dimension limit by default
-        }
+        return self.support.report() if self.support is not None else {
+            'support_contract': None, 'parameter_types': [], 'supports_fidelity': False,
+            'supports_constraints': False, 'max_dim': None}
 
     @abstractmethod
     def suggest(self) -> Config:
@@ -61,6 +67,10 @@ class BaseSearcher(ABC):
         Args:
             result: Trial result to incorporate
         """
+        for index, old in enumerate(self.history):
+            if old.trial_id == result.trial_id:
+                self.history[index] = result
+                return
         self.history.append(result)
 
     def get_state(self) -> Dict[str, Any]:
@@ -82,9 +92,7 @@ class BaseSearcher(ABC):
             state: Searcher state dictionary
         """
         self.seed = state["seed"]
-        self.history = [
-            Result(**r) for r in state["history"]
-        ]
+        self.history = [Result(**r) for r in state["history"]]
         self.trials = {
             tid: Config(**cfg) for tid, cfg in state.get("trials", {}).items()
         }

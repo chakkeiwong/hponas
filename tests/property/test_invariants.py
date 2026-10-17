@@ -43,7 +43,11 @@ class TestSearcherInvariants:
     """Property-based tests for searcher invariants."""
 
     @given(space=search_space_strategy(), n=st.integers(min_value=1, max_value=20))
-    @settings(max_examples=50, deadline=1000)
+    @settings(
+        max_examples=50,
+        deadline=1000,
+        suppress_health_check=[HealthCheck.differing_executors],
+    )
     def test_propose_returns_exact_count(self, space, n):
         """propose(n) must return exactly n configs for any valid space."""
         searcher = RandomSearcher(space, seed=42)
@@ -51,7 +55,11 @@ class TestSearcherInvariants:
         assert len(configs) == n
 
     @given(space=search_space_strategy(), n=st.integers(min_value=1, max_value=20))
-    @settings(max_examples=50, deadline=1000)
+    @settings(
+        max_examples=50,
+        deadline=1000,
+        suppress_health_check=[HealthCheck.differing_executors],
+    )
     def test_propose_respects_bounds(self, space, n):
         """All proposed configs must satisfy bounds for any valid space."""
         searcher = RandomSearcher(space, seed=42)
@@ -62,7 +70,11 @@ class TestSearcherInvariants:
             space.validate_config(cfg)
 
     @given(space=search_space_strategy())
-    @settings(max_examples=50, deadline=1000)
+    @settings(
+        max_examples=50,
+        deadline=1000,
+        suppress_health_check=[HealthCheck.differing_executors],
+    )
     def test_state_dict_roundtrip(self, space):
         """state_dict → load_state_dict must preserve behavior."""
         searcher1 = RandomSearcher(space, seed=42)
@@ -84,7 +96,11 @@ class TestSearcherInvariants:
                 assert cfg1[key] == cfg2[key]
 
     @given(space=search_space_strategy(), seed=st.integers(min_value=0, max_value=10000))
-    @settings(max_examples=50, deadline=1000)
+    @settings(
+        max_examples=50,
+        deadline=1000,
+        suppress_health_check=[HealthCheck.differing_executors],
+    )
     def test_same_seed_same_output(self, space, seed):
         """Same seed must produce identical proposals."""
         searcher1 = RandomSearcher(space, seed=seed)
@@ -103,7 +119,14 @@ class TestSobolInvariants:
     """Property-based tests for Sobol quasi-random invariants."""
 
     @given(space=search_space_strategy(), n=st.integers(min_value=1, max_value=50))
-    @settings(max_examples=30, deadline=1000, suppress_health_check=[HealthCheck.filter_too_much])
+    @settings(
+        max_examples=30,
+        deadline=1000,
+        suppress_health_check=[
+            HealthCheck.filter_too_much,
+            HealthCheck.differing_executors,
+        ],
+    )
     def test_sobol_deterministic_given_seed(self, space, n):
         """Sobol sequence must be deterministic given seed."""
         assume(all(k.kind == "continuous" for k in space.knobs))  # Sobol only for continuous
@@ -122,7 +145,14 @@ class TestSobolInvariants:
                 assert cfg1[key] == cfg2[key]
 
     @given(space=search_space_strategy(), n=st.integers(min_value=1, max_value=50))
-    @settings(max_examples=30, deadline=1000, suppress_health_check=[HealthCheck.filter_too_much])
+    @settings(
+        max_examples=30,
+        deadline=1000,
+        suppress_health_check=[
+            HealthCheck.filter_too_much,
+            HealthCheck.differing_executors,
+        ],
+    )
     def test_sobol_respects_bounds(self, space, n):
         """All Sobol configs must satisfy bounds."""
         assume(all(k.kind == "continuous" for k in space.knobs))
@@ -141,7 +171,11 @@ class TestSearchSpaceInvariants:
     """Property-based tests for SearchSpace invariants."""
 
     @given(space=search_space_strategy())
-    @settings(max_examples=50, deadline=1000)
+    @settings(
+        max_examples=50,
+        deadline=1000,
+        suppress_health_check=[HealthCheck.differing_executors],
+    )
     def test_sample_always_valid(self, space):
         """space.sample_config() must always produce valid config."""
         rng = np.random.default_rng(42)
@@ -151,13 +185,21 @@ class TestSearchSpaceInvariants:
             space.validate_config(config)
 
     @given(space=search_space_strategy())
-    @settings(max_examples=50, deadline=1000)
+    @settings(
+        max_examples=50,
+        deadline=1000,
+        suppress_health_check=[HealthCheck.differing_executors],
+    )
     def test_knob_count_positive(self, space):
         """SearchSpace must have at least one knob."""
         assert len(space.knobs) > 0
 
     @given(space=search_space_strategy())
-    @settings(max_examples=50, deadline=1000)
+    @settings(
+        max_examples=50,
+        deadline=1000,
+        suppress_health_check=[HealthCheck.differing_executors],
+    )
     def test_knob_names_unique(self, space):
         """All knob names must be unique."""
         names = [k.name for k in space.knobs]

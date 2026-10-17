@@ -39,14 +39,15 @@
     "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/12-roadmap.tex",
     "source_lines": "31",
     "chapter": "5",
-    "rationale": "Kills bad trials early; the biggest single saving",
+    "rationale": "Explicit ASHA/median remains available opt-in. Finite V06 checks decisions and actual work; no automatic default follows.",
     "validation_entries": [
       "V06"
     ],
     "tier": "T0",
     "cost_estimate": "days",
     "what_it_buys": "kills bad trials early; the biggest single saving",
-    "when_applies": "any workload with learning curves"
+    "when_applies": "Explicit opt-in on reporting-compatible workloads; no universal savings guarantee.",
+    "acceptance_amendment": "D-TIER1-KNOWN-ANSWER: finite scoped conformance only; historical default/superiority/calibration consequences retired prospectively."
   },
   {
     "id": "roadmap-04",
@@ -112,7 +113,8 @@
     "tier": "T1",
     "cost_estimate": "weeks",
     "what_it_buys": "noisy Pareto fronts, two to four objectives",
-    "when_applies": "Hamiltonian, finance"
+    "when_applies": "Hamiltonian, finance",
+    "acceptance_amendment": "D-TIER1-KNOWN-ANSWER: finite scoped conformance only; historical default/superiority/calibration consequences retired prospectively."
   },
   {
     "id": "roadmap-08",
@@ -128,7 +130,8 @@
     "tier": "T1",
     "cost_estimate": "days",
     "what_it_buys": "fallback at any objective count; random weights approximate the front when best-seen values proxy the ideal point",
-    "when_applies": "five-plus objectives, or cheap engine"
+    "when_applies": "five-plus objectives, or cheap engine",
+    "acceptance_amendment": "D-TIER1-KNOWN-ANSWER: finite scoped conformance only; historical default/superiority/calibration consequences retired prospectively."
   },
   {
     "id": "roadmap-09",
@@ -145,7 +148,8 @@
     "tier": "T1",
     "cost_estimate": "week",
     "what_it_buys": "early stopping for fronts; correctness gates",
-    "when_applies": "Hamiltonian, samplers"
+    "when_applies": "Hamiltonian, samplers",
+    "acceptance_amendment": "D-TIER1-KNOWN-ANSWER: finite scoped conformance only; historical default/superiority/calibration consequences retired prospectively."
   },
   {
     "id": "roadmap-10",
@@ -209,7 +213,8 @@
     "tier": "T2",
     "cost_estimate": "months",
     "what_it_buys": "schedules and architecture at scale",
-    "when_applies": "RL with 8+ parallel workers"
+    "when_applies": "RL with 8+ parallel workers",
+    "acceptance_amendment": "D-POPULATION-KNOWN-ANSWER: finite local conformance only; historical V08 statistical/default/worker-regime claims retired prospectively."
   },
   {
     "id": "roadmap-14",
@@ -225,7 +230,8 @@
     "tier": "T3",
     "cost_estimate": "weeks",
     "what_it_buys": "most consistent small-budget RL tuner",
-    "when_applies": "10--64 full runs"
+    "when_applies": "10--64 full runs",
+    "acceptance_amendment": "D-DEHB-FINITE: finite owned serial conformance only; historical RL rankings/defaults retired."
   },
   {
     "id": "roadmap-15",
@@ -241,7 +247,8 @@
     "tier": "T3",
     "cost_estimate": "weeks",
     "what_it_buys": "curve-shape-aware budget allocation",
-    "when_applies": "once pause/resume is solid"
+    "when_applies": "once pause/resume is solid",
+    "acceptance_amendment": "D-IFBO-FINITE: finite reference feasibility, success-gated exact parity only; statistical designs archived."
   },
   {
     "id": "roadmap-16",
@@ -358,7 +365,8 @@
       "V07"
     ],
     "tier": null,
-    "cost_estimate": null
+    "cost_estimate": null,
+    "acceptance_amendment": "D-DEHB-FINITE: finite owned serial conformance only; historical RL rankings/defaults retired."
   },
   {
     "id": "ch04-01",
@@ -443,7 +451,8 @@
       "V08"
     ],
     "tier": "T1",
-    "cost_estimate": "weeks"
+    "cost_estimate": "weeks",
+    "acceptance_amendment": "D-POPULATION-KNOWN-ANSWER: finite local conformance only; historical V08 statistical/default/worker-regime claims retired prospectively."
   },
   {
     "id": "ch04-07",
@@ -478,13 +487,15 @@
     "source_file": "/home/ubuntu/workspace/hponas/hpo-survey/sections/05-multifidelity.tex",
     "source_lines": "481-486",
     "chapter": "5",
-    "rationale": "The workhorse pair. Between them they capture the bulk of the order-of-magnitude savings this chapter promises, compose with any searcher, and ask almost nothing of the training code beyond reporting a metric as it goes. If the package shipped only one scheduler, it would be this one.",
+    "rationale": "Explicit ASHA/median remains available opt-in. Finite V06 checks decisions and actual work; no automatic default follows.",
     "validation_entries": [
       "V02",
       "V06"
     ],
     "tier": "T0",
-    "cost_estimate": "days"
+    "cost_estimate": "days",
+    "acceptance_amendment": "D-TIER1-KNOWN-ANSWER: finite scoped conformance only; historical default/superiority/calibration consequences retired prospectively.",
+    "when_applies": "Explicit opt-in on reporting-compatible workloads; no universal savings guarantee."
   },
   {
     "id": "ch05-02",
@@ -524,7 +535,8 @@
       "V07"
     ],
     "tier": "T3",
-    "cost_estimate": "weeks"
+    "cost_estimate": "weeks",
+    "acceptance_amendment": "D-DEHB-FINITE: finite owned serial conformance only; historical RL rankings/defaults retired."
   },
   {
     "id": "ch05-05",
@@ -552,7 +564,8 @@
       "V15"
     ],
     "tier": "T3",
-    "cost_estimate": "weeks, gated on pause/resume plumbing"
+    "cost_estimate": "weeks, gated on pause/resume plumbing",
+    "acceptance_amendment": "D-IFBO-FINITE: finite reference feasibility, success-gated exact parity only; statistical designs archived."
   },
   {
     "id": "ch06-01",
@@ -580,7 +593,8 @@
       "V08"
     ],
     "tier": "T2",
-    "cost_estimate": "moderate cost"
+    "cost_estimate": "moderate cost",
+    "acceptance_amendment": "D-POPULATION-KNOWN-ANSWER: finite local conformance only; historical V08 statistical/default/worker-regime claims retired prospectively."
   },
   {
     "id": "ch06-03",
@@ -594,7 +608,8 @@
       "V08"
     ],
     "tier": "T2",
-    "cost_estimate": "months (the flagship)"
+    "cost_estimate": "months (the flagship)",
+    "acceptance_amendment": "D-POPULATION-KNOWN-ANSWER: finite local conformance only; historical V08 statistical/default/worker-regime claims retired prospectively."
   },
   {
     "id": "ch06-04",
@@ -621,7 +636,8 @@
       "V09"
     ],
     "tier": "T1",
-    "cost_estimate": "weeks (the premium searcher)"
+    "cost_estimate": "weeks (the premium searcher)",
+    "acceptance_amendment": "D-TIER1-KNOWN-ANSWER: finite scoped conformance only; historical default/superiority/calibration consequences retired prospectively."
   },
   {
     "id": "ch07-02",
@@ -635,7 +651,8 @@
       "V09"
     ],
     "tier": "T1",
-    "cost_estimate": "days"
+    "cost_estimate": "days",
+    "acceptance_amendment": "D-TIER1-KNOWN-ANSWER: finite scoped conformance only; historical default/superiority/calibration consequences retired prospectively."
   },
   {
     "id": "ch07-03",
@@ -662,7 +679,8 @@
       "V09"
     ],
     "tier": "T1",
-    "cost_estimate": "free"
+    "cost_estimate": "free",
+    "acceptance_amendment": "D-TIER1-KNOWN-ANSWER: finite scoped conformance only; historical default/superiority/calibration consequences retired prospectively."
   },
   {
     "id": "ch07-05",
@@ -677,7 +695,8 @@
       "V13"
     ],
     "tier": "T1",
-    "cost_estimate": "about a week over ASHA"
+    "cost_estimate": "about a week over ASHA",
+    "acceptance_amendment": "D-TIER1-KNOWN-ANSWER: finite scoped conformance only; historical default/superiority/calibration consequences retired prospectively."
   },
   {
     "id": "ch07-06",
@@ -759,7 +778,8 @@
       "V15"
     ],
     "tier": "adopt",
-    "cost_estimate": null
+    "cost_estimate": null,
+    "acceptance_amendment": "D-IFBO-FINITE: finite reference feasibility, success-gated exact parity only; statistical designs archived."
   },
   {
     "id": "ch08-06",
@@ -813,7 +833,8 @@
       "V07"
     ],
     "tier": "workload template",
-    "cost_estimate": null
+    "cost_estimate": null,
+    "acceptance_amendment": "D-DEHB-FINITE: finite owned serial conformance only; historical RL rankings/defaults retired."
   },
   {
     "id": "ch09-02",
@@ -827,7 +848,8 @@
       "V08"
     ],
     "tier": "workload template",
-    "cost_estimate": null
+    "cost_estimate": null,
+    "acceptance_amendment": "D-POPULATION-KNOWN-ANSWER: finite local conformance only; historical V08 statistical/default/worker-regime claims retired prospectively."
   },
   {
     "id": "ch09-03",
@@ -841,7 +863,8 @@
       "V13"
     ],
     "tier": "workload template",
-    "cost_estimate": null
+    "cost_estimate": null,
+    "acceptance_amendment": "D-TIER1-KNOWN-ANSWER: finite scoped conformance only; historical default/superiority/calibration consequences retired prospectively."
   },
   {
     "id": "ch09-04",
@@ -855,7 +878,8 @@
       "V09"
     ],
     "tier": "workload template",
-    "cost_estimate": null
+    "cost_estimate": null,
+    "acceptance_amendment": "D-TIER1-KNOWN-ANSWER: finite scoped conformance only; historical default/superiority/calibration consequences retired prospectively."
   },
   {
     "id": "ch09-05",
@@ -869,7 +893,8 @@
       "V08"
     ],
     "tier": "workload template",
-    "cost_estimate": null
+    "cost_estimate": null,
+    "acceptance_amendment": "D-POPULATION-KNOWN-ANSWER: finite local conformance only; historical V08 statistical/default/worker-regime claims retired prospectively."
   },
   {
     "id": "ch09-06",

@@ -311,7 +311,9 @@ class TestSearchSpaceSerialization:
     def test_to_json_from_json_roundtrip(self):
         """Test to_json/from_json preserves space structure."""
         space1 = SearchSpace()
-        space1.add_knob(Knob(name="x", kind="continuous", bounds=(0.0, 1.0), transform="log"))
+        space1.add_knob(
+            Knob(name="x", kind="continuous", bounds=(0.01, 1.0), transform="log")
+        )
         space1.add_knob(Knob(name="opt", kind="categorical", bounds=["a", "b"]))
 
         json_str = space1.to_json()
@@ -405,7 +407,9 @@ class TestSpaceMutationTargets:
         space = SearchSpace()
         space.add_knob(Knob(name="mode", kind="categorical", bounds=["a", "b"]))
         space.add_knob(
-            Knob(name="y", kind="continuous", bounds=(0.0, 1.0), condition=("mode", "a"))
+            Knob(
+                name="y", kind="continuous", bounds=(0.0, 1.0), condition=("mode", "a")
+            )
         )
 
         rng = np.random.default_rng(42)
@@ -423,7 +427,9 @@ class TestSpaceMutationTargets:
         space = SearchSpace()
         space.add_knob(Knob(name="mode", kind="categorical", bounds=["a", "b"]))
         space.add_knob(
-            Knob(name="y", kind="continuous", bounds=(0.0, 1.0), condition=("mode", "b"))
+            Knob(
+                name="y", kind="continuous", bounds=(0.0, 1.0), condition=("mode", "b")
+            )
         )
         space.add_knob(Knob(name="z", kind="continuous", bounds=(0.0, 1.0)))
 
@@ -439,7 +445,9 @@ class TestSpaceMutationTargets:
         Mutation: np.exp(...) -> ...
         """
         space = SearchSpace()
-        space.add_knob(Knob(name="lr", kind="continuous", bounds=(1e-5, 1e-1), transform="log"))
+        space.add_knob(
+            Knob(name="lr", kind="continuous", bounds=(1e-5, 1e-1), transform="log")
+        )
 
         rng = np.random.default_rng(42)
         values = [space.sample_config(rng)["lr"] for _ in range(100)]
@@ -455,7 +463,9 @@ class TestSpaceMutationTargets:
         Mutation: np.log(low), np.log(high) -> low, high
         """
         space = SearchSpace()
-        space.add_knob(Knob(name="lr", kind="continuous", bounds=(1e-4, 1e-1), transform="log"))
+        space.add_knob(
+            Knob(name="lr", kind="continuous", bounds=(1e-4, 1e-1), transform="log")
+        )
 
         rng = np.random.default_rng(42)
         values = [space.sample_config(rng)["lr"] for _ in range(1000)]
@@ -515,7 +525,9 @@ class TestSpaceMutationTargets:
         space = SearchSpace()
         space.add_knob(Knob(name="mode", kind="categorical", bounds=["a", "b"]))
         space.add_knob(
-            Knob(name="y", kind="continuous", bounds=(0.0, 1.0), condition=("mode", "a"))
+            Knob(
+                name="y", kind="continuous", bounds=(0.0, 1.0), condition=("mode", "a")
+            )
         )
 
         # When condition holds (mode=a), y must be present
@@ -530,7 +542,9 @@ class TestSpaceMutationTargets:
         space = SearchSpace()
         space.add_knob(Knob(name="mode", kind="categorical", bounds=["a", "b"]))
         space.add_knob(
-            Knob(name="y", kind="continuous", bounds=(0.0, 1.0), condition=("mode", "a"))
+            Knob(
+                name="y", kind="continuous", bounds=(0.0, 1.0), condition=("mode", "a")
+            )
         )
 
         # When condition doesn't hold (mode=b), y must not be present

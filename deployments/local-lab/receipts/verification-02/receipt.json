@@ -1,0 +1,22 @@
+{
+  "action": "verify",
+  "status": "PASS",
+  "source_digest": "bc131050672ad7a77e17535358400a22940ec35f09e54ab88f197242572d8c19",
+  "elapsed_seconds": 61.33129322301829,
+  "output_directory": "/home/ubuntu/workspace/hponas/deployments/local-lab/receipts/verification-02",
+  "physical_hosts": 1,
+  "scientific_campaigns": 0,
+  "mutation_runs": 0,
+  "distributed_service_accepted": false,
+  "error": null,
+  "scripts": [
+    {
+      "path": "/home/ubuntu/workspace/hponas/deployments/local-lab/manage.py",
+      "sha256": "7dc4fde3bba902b16c394a29c39250d004930426968df5beecfe8a3e77fc676d"
+    },
+    {
+      "path": "/home/ubuntu/workspace/hponas/deployments/local-lab/client.py",
+      "sha256": "d393719eebcce7a8ee1b71eb29d8778a1effe3f171d0950ffa1bdd7a5ef3eb4a"
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+# Historical bootstrap/quota regression contract, explicitly retained for compatibility.
+# Default reference ASHA is verified in test_asha_reference.py.
 """
 Test ASHA scheduler: state-machine tests for async promotion logic.
 
@@ -10,14 +12,14 @@ from hponas.schedulers import ASHAConfig, ASHAScheduler
 
 def test_asha_rung_computation():
     """Rungs are [r_min, r_min*η, ..., r_max]."""
-    config = ASHAConfig(eta=3, r_min=1.0, r_max=27.0)
+    config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=27.0)
     scheduler = ASHAScheduler(config)
     assert scheduler.rungs == [1.0, 3.0, 9.0, 27.0]
 
 
 def test_asha_single_trial():
     """A single trial at a rung is paused (will promote)."""
-    config = ASHAConfig(eta=3, r_min=1.0, r_max=9.0)
+    config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=9.0)
     scheduler = ASHAScheduler(config)
 
     decision = scheduler.report("trial_1", fidelity=1.0, value=0.5)
@@ -26,7 +28,7 @@ def test_asha_single_trial():
 
 def test_asha_promotion_top_third():
     """ASHA promotes top 1/η trials at each rung."""
-    config = ASHAConfig(eta=3, r_min=1.0, r_max=9.0)
+    config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=9.0)
     scheduler = ASHAScheduler(config)
 
     # Report 3 trials at rung 1.0 with different values (minimize)
@@ -44,7 +46,7 @@ def test_asha_promotion_top_third():
 
 def test_asha_final_rung_stops():
     """Trials at final rung are stopped (no further promotion)."""
-    config = ASHAConfig(eta=3, r_min=1.0, r_max=9.0)
+    config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=9.0)
     scheduler = ASHAScheduler(config)
 
     decision = scheduler.report("trial_1", fidelity=9.0, value=0.5)
@@ -53,7 +55,7 @@ def test_asha_final_rung_stops():
 
 def test_asha_async_out_of_order():
     """Trials finish out of order (async ASHA property, Ch 5)."""
-    config = ASHAConfig(eta=2, r_min=1.0, r_max=4.0)
+    config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=2, r_min=1.0, r_max=4.0)
     scheduler = ASHAScheduler(config)
 
     # Trial 2 finishes first at rung 1.0
@@ -68,7 +70,7 @@ def test_asha_async_out_of_order():
 
 def test_asha_not_at_rung_boundary():
     """Reports at non-rung fidelities return 'continue'."""
-    config = ASHAConfig(eta=3, r_min=1.0, r_max=9.0)
+    config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=9.0)
     scheduler = ASHAScheduler(config)
 
     decision = scheduler.report("trial_1", fidelity=1.5, value=0.5)
@@ -77,7 +79,7 @@ def test_asha_not_at_rung_boundary():
 
 def test_asha_promotion_fidelity():
     """Promote returns next rung's fidelity."""
-    config = ASHAConfig(eta=3, r_min=1.0, r_max=9.0)
+    config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=9.0)
     scheduler = ASHAScheduler(config)
 
     scheduler.report("trial_1", fidelity=1.0, value=0.1)
@@ -92,7 +94,7 @@ def test_asha_promotion_fidelity():
 
 def test_asha_multiple_rungs():
     """Trial progresses through multiple rungs."""
-    config = ASHAConfig(eta=2, r_min=1.0, r_max=4.0)
+    config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=2, r_min=1.0, r_max=4.0)
     scheduler = ASHAScheduler(config)
 
     # Trial at rung 1.0

@@ -1,184 +1,40 @@
-# V13 Protocol: Warm-Start Effectiveness
+# V13 — Fixed Gaussian HMC transitions, diagnostics and veto conformance
 
-**Version:** 1.0  
-**Created:** 2026-09-09  
-**Status:** Preregistered  
-**Tier:** 2 (deferred from Tier 1)  
+Version 2.0. This prospective finite contract supersedes this entry's historical
+statistical/default design. Original rules and outcomes are preserved in
+`archive/program-2026-10-07/before-tier1-protocol-migration/manifest.json`.
 
----
+Stable/scaled, resumed, resonant and unstable Gaussian chains, plus six diagnostic boundary cases and two direct diagnostic fixtures; exact leapfrog matrix and independent RNG/diagnostic reconstruction.
 
-## Claim
+The exact ordered roster, method options, seeds and controls are in
+`validation.tier1_contract.contract("V13")` and this registry entry's `contract`.
+Source, runtime, registry, individual protocol and the complete phase allocation
+must be frozen before the first objective call. No official campaign is allowed
+during preparation. Each process has a 300-second deadline, one CPU affinity,
+single-thread numerical libraries, and no GPU. One generation and three decision reconstructions are allocated per attempt:
+initial decision, V16 audit, and final capability gate. The supervisor bounds the
+combined invocation, including audit.
 
-Warm-start transfer learning correctly vets failing configs, ranks survivors by ESS/gradient, and pilot agrees with reference posterior.
+`validation.tier1_reference` independently reconstructs numerical/physical truth.
+Method replay verifies the actual implementation, options, seed and recovery;
+it is not an independent mathematical proof of the optimizer. Measured elapsed
+time is descriptive; physical integer work is retained and verified separately.
+The exposed finite cases do not represent a sample from a task population.
+Floating-point tolerances are engineering envelopes, not rigorous error bounds.
 
-**Operational requirement:** Transfer learning must not promote known-bad configs or mis-rank good configs.
-
----
-
-## Hypothesis
-
-### H0 (Null Hypothesis)
-Warm-start sampler promotes veto-failing configs or mis-ranks survivors.
-
-### H1 (Alternative Hypothesis)
-Warm-start sampler satisfies three criteria:
-1. Zero veto-failing configs promoted
-2. Survivors ranked by ESS/gradient (correlation ρ > 0.8)
-3. Pilot posterior matches reference posterior (KL divergence < 0.1)
-
-### Test Type
-**Composite veto + correlation + calibration** - all three criteria must pass.
-
----
-
-## Preregistration
-
-### Task
-**Benchmark:** Transfer learning scenario
-- Source tasks: 3 related tasks with historical data
-- Target task: New task, warm-started from source
-- Configs: 100 candidate configs
-
-**Veto criteria:**
-- NaN objective
-- Diverged training (gradient explosion)
-- Out-of-bounds constraint violation
-
-### Seeds
-**Preregistered seeds:** 0, 1, 2, 3, 4 (5 seeds)
-
-### Thresholds
-
-**Criterion 1 (veto):** Zero veto-failing configs promoted (hard constraint)  
-**Criterion 2 (ranking):** Spearman ρ > 0.8 between sampler rank and ESS/gradient rank  
-**Criterion 3 (calibration):** KL divergence < 0.1 between pilot posterior and reference posterior
-
-### Alpha
-α = 0.05 (per criterion where applicable)
-
-**Family correction:** V13 deferred to Tier 2, separate family.
-
-### Power
-- Target: 0.80
-- Method: Simulation under transfer scenario
-
-### Sample Size
-**Preregistered:**
-- n_configs = 100 (candidate pool)
-- n_seeds = 5
-- n_source_tasks = 3
-
----
-
-## Decision States
-
-### PASS
-**All of the following must be true:**
-1. Zero veto-failing configs promoted
-2. Spearman ρ > 0.8 (ranking by ESS/gradient)
-3. KL divergence < 0.1 (calibration)
-4. V16 audit: non-vacuous, threshold preregistered
-
-### FAIL
-**Any of the following:**
-1. Any veto-failing config promoted
-2. ρ ≤ 0.8
-3. KL divergence ≥ 0.1
-
-### INCONCLUSIVE
-**Any of the following:**
-1. Transfer learning infrastructure not implemented
-2. Reference posterior not available
-
----
-
-## Immutable Artifacts
-
-### Protocol (This File)
-- **Path:** validation/protocols/v13_protocol.md
-- **Status:** Immutable after campaign starts
-- **Hash:** (git commit hash when frozen)
-
-### Results
-- **Path:** validation/results/v13_results.json
-
-### Log
-- **Path:** validation/results/v13_log.txt
-
----
-
-## Implementation
-
-### Scripts
-- **Main:** validation/v13_warmstart_effectiveness.py (to be created)
-- **Validator:** validation/validators/v13_validator.py (V16-compliant)
-
-### Dependencies
-- hponas.transfer (warm-start sampler)
-- RGPE (Rank-weighted GP Ensemble)
-
----
+PASS requires every frozen slot, independent reference and method replay to
+conform. A reconstructed violation is FAIL. Missing, failed or interrupted slots
+are INCONCLUSIVE and cannot be replaced. Retain slot starts, partial files,
+closed-slot raw observations, immutable receipts and errors. Numerical helpers
+may buffer updates within a slot; interrupted unknown work remains incomplete
+and can never be counted as a zero-work success. An integrity or
+source mismatch invalidates acceptance. V16 recomputes the verdict from raw
+evidence; a supplied PASS label or human decision cannot substitute.
 
 ## Known Issues
 
-### Issue 1: Deferred to Tier 2
-**Status:** BUILD_PROGRAM_DRIFT_REPORT.md line 34 deferred V13 to Week 30 (Tier 2).
-
-**Reason:** "Sampler veto correctness deferred 18 weeks."
-
-### Issue 2: Not Implemented
-**Status:** No V13 implementation files found in validation/.
-
-**Resolution:** To be implemented during Tier 2.
-
-### Issue 3: Specification Violation
-**Problem:** HPO_NAS_RECOVERY_MASTER_PROGRAM.md lines 105-109 document warm-start specification violation:
-- WRONG: Build RGPE immediately
-- RIGHT: Query ranked/quantile samples first, then build RGPE
-
-**Resolution:** Fix implementation during Tier 2 execution per traceability matrix.
-
-**Blocker:** V13 cannot run until warm-start implementation fixed.
-
----
-
-## V16 Audit Checklist
-
-### Check 1: Non-Vacuity
-- [ ] n_configs > 0, n_seeds > 0
-- [ ] At least one veto criterion applied
-
-### Check 2: No Post-Hoc Tuning
-- [ ] Thresholds (ρ>0.8, KL<0.1) preregistered
-- [ ] Veto criteria preregistered
-
-### Check 3: Correct Reference
-- [ ] Reference posterior defined and computed
-
-### Check 4: Runnable Independently
-- [ ] Script runs without manual intervention
-
----
-
-## References
-
-**Authority:**
-- TIER1_GATE_STATUS.md lines 136-148 (V13 deferred)
-- BUILD_PROGRAM_DRIFT_REPORT.md line 34 (18-week deferral)
-- HPO_NAS_RECOVERY_MASTER_PROGRAM.md lines 105-109 (specification violation)
-- HPO_NAS_RECOVERY_MASTER_PROGRAM.md lines 817-823 (V13 repair)
-
----
-
-## Changelog
-
-**v1.0 - 2026-09-09**
-- Initial protocol
-- Deferred to Tier 2 (Week 30)
-- Not yet implemented
-- Specification violation documented (RGPE sequencing)
-- Three criteria: veto, ranking, calibration
-
----
-
-**END OF PROTOCOL**
+PASS permits only the declared finite opt-in capability. No automatic default,
+general superiority, finite-budget recovery guarantee, population calibration or
+experimental culling permission follows. FAIL/INCONCLUSIVE withholds acceptance;
+repairs require a prospective source/contract review preserving the original run.
+No ranking margin, alpha, pilot or power calculation applies to this finite claim.

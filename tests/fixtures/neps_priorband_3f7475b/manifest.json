@@ -1,0 +1,13 @@
+{
+  "commit": "3f7475b5afaaacdace56f25357ddfbf0e5616157",
+  "repository": "https://github.com/automl/neps",
+  "files": {
+    "LICENSE": "146888ea779a3f3551973d7dfad2b9af683a2b5eac9c444e6838ead5b68398f0",
+    "hyperband.py": "745c76ea0711d3e69d8ee0e3bf163aef4418ccfbb5a849de3270895cae106459",
+    "priorband.py": "3dfab2a005119dd63b4103b972351f2001ed390c36e272bccf8cb58d60903c2d",
+    "promotion_policy.py": "177486b327c660ee7ab989fb7bf4e77a1ed725a6e35f7d6c6420841307dd6097",
+    "sampling_policy.py": "3b73ebd9ac0f5c27ac1e7cc8acd0a9b0da77f0fb0df784aeed1f0f4e7be20fd7",
+    "successive_halving.py": "77e131ee8acafb40fefff0bb8fc830831b7b00e4911dd15a050072ca72978200",
+    "utils.py": "4c578f32d731438d6f7a10a563d9fcf7e95dfdaaee2da72680f40e5d4c1352e2"
+  }
+}

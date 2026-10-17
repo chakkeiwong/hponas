@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "status": "DRAFT",
-  "status_note": "Repairs findings F1-F3 and items 1-8 of RESPONSE_TO_CODEX_STATISTICAL_REVIEW.md. Awaiting: Codex re-review, pilot report, PI certification.",
+  "status_note": "Finite V07 adopted prospectively; exact source qualification and allocation remain required. Historical acceptance stays source-specific.",
   "created": "2026-08-31",
   "sources": {
     "chapter": "hpo-survey/sections/16-validation.tex",
@@ -12,62 +12,34 @@
   "policy": {
     "confirmatory_families": {
       "decision": "Per-gate Holm-Bonferroni over decision-bearing statistical tests only.",
-      "rationale": "Gates are separate decisions taken at different times on different data with different release consequences, so the family is the gate, not the program. A single family across all 15 entries and 30+ weeks would cost power on the tier-0 floor tests for no inferential gain. Deterministic vetoes and reproduction checks are not null-hypothesis tests and carry no alpha.",
+      "rationale": "Only statistical claims consume family alpha. Finite Tier-0/Tier-1 conformance does not; separate later statistical families retain their own rules.",
       "correction": "holm-bonferroni",
       "alpha_family": 0.05,
       "families": {
         "tier0_gate": {
-          "members": [
-            "V04-T0",
-            "V05"
-          ],
-          "m": 2,
+          "members": [],
+          "m": 0,
           "note": "V01, V02, V03 are hard vetoes and V14 is a reproduction check; all four are pass/fail on deterministic criteria and consume no alpha."
         },
         "tier1_gate": {
-          "members": [
-            "V04-T1",
-            "V06",
-            "V09",
-            "V10",
-            "V11a",
-            "V11b"
-          ],
-          "m": 6,
-          "note": "V13 vetoes are deterministic; V13's agreement check is a calibration criterion, not a ranking claim, and is excluded from the family."
+          "members": [],
+          "m": 0,
+          "note": "Prospective finite Tier-1 conformance has no stochastic ranking claim. Historical six-entry family is preserved in historical_tier1_before_finite."
         },
         "tier2_gate": {
-          "members": [
-            "V08"
-          ],
-          "m": 1,
-          "note": "Single confirmatory primary. The 3-repetition run is exploratory and consumes no alpha (see V08.exploratory_tripwire)."
-        },
-        "dist_beta_gate": {
-          "members": [
-            "V12"
-          ],
-          "m": 1
+          "members": [],
+          "m": 0,
+          "note": "Finite local population conformance consumes no alpha; original comparison retained in historical_v08_before_finite."
         },
         "tier3_v07": {
-          "members": [
-            "V07"
-          ],
-          "m": 1,
-          "note": "Electives are independent go/no-go decisions taken at different times, so each is its own family rather than one shared tier-3 family."
+          "members": [],
+          "m": 0,
+          "note": "Finite DEHB conformance consumes no alpha; historical RL comparison archived."
         },
         "tier3_v15": {
-          "members": [
-            "V15a",
-            "V15b"
-          ],
-          "m": 1,
-          "structure": "fixed_sequence",
-          "sequence": [
-            "V15a",
-            "V15b"
-          ],
-          "note": "Fixed-sequence (gatekeeping) pair: V15b is only tested if V15a rejects. A fixed sequence holds the family-wise rate at alpha without correction because the second hypothesis is only reached when the first was rejected, so the correction denominator is 1 despite two members. The order is prespecified here, which is the condition that makes the procedure valid; reordering after seeing results would void the error control."
+          "members": [],
+          "m": 0,
+          "note": "Finite feasibility and conditional exact parity consume no alpha; prior statistical family preserved."
         }
       },
       "note": "V16 (validator audit) is deterministic and consumes no alpha at any gate."
@@ -77,11 +49,8 @@
     "power": {
       "default_target": 0.8,
       "high_target": 0.9,
-      "high_target_entries": [
-        "V04-T1",
-        "V08"
-      ],
-      "high_target_rationale": "Power protects against false demotion. V04-T1 (TuRBO, ~10 engineer-days) and V08 (BG-PBT flagship, the largest campaign in the program) carry sunk build cost that a false demotion would waste, so their false-negative cost is asymmetrically high. Cheaper capabilities whose demotion means 'ships opt-in instead of default' (V05, V11) keep 0.8.",
+      "high_target_entries": [],
+      "high_target_rationale": "Historical high-cost default comparisons are retired prospectively; finite conformance does not consume power.",
       "method": "simulation",
       "method_detail": "Sample size is obtained by Monte Carlo simulation under the entry's own hierarchy (task cluster, then paired study block), not from a closed-form t-test formula, because the estimand is a cluster-level paired difference and the closed form does not apply. 2,000 simulation replicates per candidate n; report attained power and interval coverage.",
       "min_pilot": 5,
@@ -91,13 +60,15 @@
       "pilot_data_reuse": "forbidden",
       "pilot_data_reuse_detail": "Pilot observations do not enter the confirmatory estimate. Pilot and confirmatory campaigns use disjoint seed sets.",
       "sidedness_source": "Each entry declares direction and sidedness; the power calculation uses the same sidedness and the same family-adjusted alpha as the confirmatory test.",
-      "max_sample_rule": "Every entry carries an integer maximum sample. Reaching it without crossing the decision threshold yields verdict='inconclusive', which is a real outcome with the consequence named in the entry's release_consequence."
+      "max_sample_rule": "Every entry carries an integer maximum sample. Reaching it without crossing the decision threshold yields verdict='inconclusive', which is a real outcome with the consequence named in the entry's release_consequence.",
+      "applicability": "Statistical entries only; finite Tier-0/Tier-1/V08 contracts require no power or pilot sizing."
     },
     "escalation": {
       "decision": "One pre-budgeted replication, then terminal.",
       "detail": "An 'inconclusive' verdict permits at most one replication, whose budget, owner, and stopping rule are fixed before the first confirmatory result is seen. After that replication the verdict is terminal and resolves to the entry's release_consequence.inconclusive. This closes the review's objection that inconclusive had no funder and no end.",
       "requires_named_owner": true,
-      "requires_deadline": true
+      "requires_deadline": true,
+      "applicability": "Statistical comparison entries only. Finite stylized V04-T0/V05 use policy.stylized_tier0."
     },
     "resampling": {
       "algorithm": "paired_cluster_bootstrap",
@@ -108,18 +79,21 @@
       "pairing_rule_frozen_before_data": true,
       "pairing_definition": "A paired block is the set of arms sharing the same task and the same optimizer seed. Pairing is used only where every arm in the block ran to the declared endpoint under the same accounting policy.",
       "unpaired_fallback": "Declared per entry before data collection, never chosen after inspecting results. An entry may only fall back to unpaired if its pairing precondition (identical task, identical seed, identical accounting policy across arms) fails for a prespecified reason recorded in the manifest.",
-      "single_cluster_rule": "An entry whose acceptance set holds one task may not claim a workload-family result. Its task_scope is 'pinned-task' and its wording is limited accordingly."
+      "single_cluster_rule": "An entry whose acceptance set holds one task may not claim a workload-family result. Its task_scope is 'pinned-task' and its wording is limited accordingly.",
+      "applicability": "Statistical comparison entries only. Finite stylized V04-T0/V05 use policy.stylized_tier0."
     },
     "scale": {
       "decision": "Range-normalized differences against pre-declared bounds.",
       "rationale": "Percentage margins are undefined when the baseline objective is zero or negative (RL return routinely is) and are ambiguous when the denominator is itself estimated in the campaign. Range normalization fixes the denominator before data.",
       "definition": "normalized_difference = (arm_value - comparator_value) / (bound_high - bound_low), where bounds are declared in the entry's scale_bounds and frozen in the pre-run manifest.",
       "direction_normalized": true,
-      "direction_note": "All differences are sign-flipped so that positive always means better, regardless of whether the raw objective is maximized or minimized."
+      "direction_note": "All differences are sign-flipped so that positive always means better, regardless of whether the raw objective is maximized or minimized.",
+      "applicability": "Statistical comparison entries only. Finite stylized V04-T0/V05 use policy.stylized_tier0."
     },
     "missingness": {
       "default": "A study replicate that fails to reach its declared endpoint is not silently dropped. The entry declares whether the replicate is (a) excluded with its paired block, (b) carried forward at last observed value, or (c) treated as worst-case. Missingness above 10% of planned replicates in any arm voids the campaign and triggers re-run after diagnosis.",
-      "censoring_requires_declaration": true
+      "censoring_requires_declaration": true,
+      "applicability": "Statistical comparison entries only. Finite stylized V04-T0/V05 use policy.stylized_tier0."
     },
     "preregistration_order": [
       "Commit analysis code and protocol register; obtain commit SHA",
@@ -162,43 +136,787 @@
       },
       {
         "id": "D5",
-        "question": "Required sign-off level before confirmatory campaigns.",
-        "chosen": "codex_plus_pi_certification",
+        "question": "How are objective scientific readiness and permission to spend separated?",
+        "chosen": "objective_evidence_separate_resource_authorization",
         "status": "RESOLVED",
-        "rationale": "PI is a professor in computational statistics and global head of ML at a major bank. Codex surfaces issues; PI rules on them. External statistician would cost ~1 week and is unlikely to add material value beyond PI's domain expertise.",
-        "procedure": "Codex re-reviews the repaired protocols and chapter. Any items flagged as potentially unsound are raised to PI for ruling. PI certifies the final protocol set before any campaign spend.",
-        "note": "The review stated explicitly it is engineering review, not credentialed external certification (RESPONSE_TO_CODEX_STATISTICAL_REVIEW.md, amendment 8). With PI as the statistical authority, that certification is internal rather than external."
+        "rationale": "The user directs that scientific results be proved objectively and not decided by human acceptance. Mathematical guarantees require stated assumptions; empirical conclusions require frozen tests and reproducible evidence. Credentials and approval cannot discharge missing evidence.",
+        "procedure": "Compute scientific readiness from evidence and unresolved proof obligations. Freeze each complete phase design before its data. Record separate hash-bound resource authorization before spending. Recompute the empirical verdict from raw artifacts; no scientific override exists.",
+        "note": "D-OBJECTIVE-EVIDENCE supersedes the prior PI-ruling requirement. Human or automated review may discover errors; the reproducible correction and evidence, never reviewer identity, determine the result."
       }
-    ]
+    ],
+    "phase_certification": {
+      "sequence": [
+        "Establish objective pilot-design prerequisites; freeze the protocol, resource cap and prospective sizing/adaptation rule before pilot data",
+        "Record resource-only execution authorization and run the independent external pilot; retain its data only for allowed planning and diagnosis",
+        "Apply the frozen sizing rule, verify inference and prepare measured confirmation allocation",
+        "Recompute scientific readiness, freeze the completed confirmation protocol and manifest, and separately authorize its resources before confirmation data",
+        "Run and analyze confirmation once using disjoint seeds and the frozen decision rule"
+      ],
+      "d5_application": "Legacy phase-certification wording means evidence validation plus separate resource authorization. No person decides scientific validity or can waive an unresolved proof/evidence obligation. A pilot report is needed for confirmation sizing, not initial pilot readiness.",
+      "planning_effects": "Justify positive alternatives independently of this pilot observed advantage and freeze them before pilot data. Superiority margin zero does not imply a zero planning alternative.",
+      "replication": "A pre-budgeted replication also requires a valid prespecified repeated-testing rule before the first confirmation result; a fresh unadjusted test after an inconclusive result is insufficient.",
+      "scientific_validation": "The invalid small-task percentile procedure remains refused. The adopted bounded test has an explicit error proof under independent vectors and bounded outcomes. Its actual sampling/isolation assumptions and prospective power still require evidence; passing code tests or review does not establish those facts.",
+      "applicability": "Statistical comparison entries only. Finite stylized V04-T0/V05 use policy.stylized_tier0."
+    },
+    "objective_evidence": {
+      "decision": "D-OBJECTIVE-EVIDENCE",
+      "scientific_result": "recomputed_from_frozen_rules_and_bound_raw_evidence",
+      "human_scientific_override": false,
+      "reviewer_identity_required": false,
+      "unknown_assumptions": "unresolved_never_approved_into_passing",
+      "resource_authorization": "separate_no_scientific_effect"
+    },
+    "historical_tier0_v3": {
+      "tier0_outcome_scope_amendment": {
+        "decision": "D-T0-OUTCOME-SCOPE",
+        "status": "CLAIM_ADOPTED_EVIDENCE_AND_RESOURCES_INCOMPLETE",
+        "approval": {
+          "path": "docs/program/evidence/2026-09-29/stat-03/outcome-scope-approval.json",
+          "sha256": "f86db6a696b549e15ed1200a4d3a93b8cb28bc405afac3344b673506be43178c"
+        },
+        "entries": [
+          "V04-T0",
+          "V05"
+        ],
+        "precedence": "For these two entries only, the following rules supersede generic range-normalization, task-bootstrap and complete-case-exclusion defaults.",
+        "inference": "Fixed-count uniform mixture integral_0^1 product_s(1+lambda*X_s) d_lambda; p=min(1,1/E); independent complete seed vectors; evaluate by positive quadrature.",
+        "outcome": "Final paired win-minus-loss and fixed-grid anytime paired win-minus-loss, protected policy evaluation after search-only incumbent freeze.",
+        "sampling": "Named finite suite with equal task weights. Within-vector task/arm dependence permitted; independent latent vectors required. No task-population inference.",
+        "missingness": "Retain every planned vector; analyze conservative lower endpoints of feasible utility intervals. >10% unresolved loss in any arm remains an operational veto. Altered/malformed evidence is an integrity veto.",
+        "stopping": "One fixed-count confirmation; optional replication unused; no unplanned peeking, restarts or replacement seeds.",
+        "raw_reporting": "Report protected/raw returns, loss magnitudes, failures and costs separately. Rank success is not raw-mean superiority.",
+        "power": "Analytical sensitivity first; .80 power at a justified positive alternative remains required; example detectable effects do not supply the alternative."
+      },
+      "tier0_phase_readiness": {
+        "development": "separate_capped_nonacceptance_recipe",
+        "pilot": "exact_phase_freeze_and_prospective_rule_no_observed_effect_prerequisite",
+        "confirmation": "reconstructed_independent_pilot_sizing_and_fresh_exact_phase_freeze",
+        "scope_change": "explicit_authorization_not_scientific_evidence",
+        "resources": "separate_exact_phase_authorization",
+        "global_draft": "does_not_replace_concrete_phase_validation"
+      },
+      "tier0_pilot_sizing": {
+        "method": "independent_pilot_joint_event_v1",
+        "planning_error": 0.05,
+        "confidence_entries": 2,
+        "good_vector_component_lower": [
+          84,
+          125
+        ],
+        "good_vector_requires": "all_components_at_threshold_and_no_unresolved_studies",
+        "count_rule": "smallest_sufficient_fixed_count_5_to_20",
+        "pilot_use": "sizing_only_no_confirmation_reuse",
+        "operational_bound": "joint_good_vector_binomial_tail_covers_ten_percent_loss_cap",
+        "cost_scope": "conditional_on_frozen_resource_envelope_no_cost_veto"
+      },
+      "status": "Retired prospectively on 2026-10-05; no historical result is relabeled."
+    },
+    "stylized_tier0": {
+      "version": 1,
+      "decision": "D-SELF-CONTAINED-VALIDATION",
+      "claim": "finite_stylized_known_answer_conformance_v1",
+      "entries": [
+        "V04-T0",
+        "V05"
+      ],
+      "counts": {
+        "V04-T0": 1024,
+        "V05": 128
+      },
+      "seeds": [
+        510501,
+        510502
+      ],
+      "trials_per_study": 16,
+      "generation_wall_seconds": {
+        "V04-T0": 300,
+        "V05": 180
+      },
+      "reconstruction_wall_seconds_per_call": {
+        "V04-T0": 300,
+        "V05": 180
+      },
+      "maximum_reconstructions": 2,
+      "cpu_threads": 1,
+      "gpu": false,
+      "freeze": "source_protocol_corpus_methods_seeds_before_first_objective",
+      "oracle": "independent_analytic_and_intermediate_output_reconstruction",
+      "inference": "none_no_regret_or_superiority_threshold",
+      "release": "finite_correctness_only_no_searcher_or_transform_default_promotion",
+      "missingness": "all_slots_retained_incomplete_is_inconclusive_no_replacement",
+      "historical": "PPO_v3_pilot_sizing_and_comparison_claims_retired_prospectively"
+    },
+    "preregistration_order_note": "For stylized V04-T0/V05, freeze the complete local source digest, protocols, finite corpus, seeds, methods and caps in stylized-freeze.json before model evaluations. Dirty checkout bytes are hashed; trusted local chronology is disclosed. No signature establishes a scientific fact.",
+    "historical_tier1_before_finite": {
+      "archive": "archive/program-2026-10-07/before-tier1-protocol-migration/manifest.json",
+      "entries": {
+        "V04-T1": {
+          "id": "V04-T1",
+          "gate": "tier1_gate",
+          "class": "confirmatory",
+          "claim": "the tier-1 searchers earn their complexity",
+          "estimand": "Range-normalized difference in final objective between each tier-1 searcher (TuRBO, prior-aware qLogEI) and the log+Sobol floor at matched measured budget, as a cluster-level paired mean.",
+          "test": "superiority_one_sided",
+          "sidedness": "one-sided",
+          "direction": "higher_is_better_after_normalization",
+          "comparators": [
+            "log+Sobol floor"
+          ],
+          "combination": "single",
+          "primary_endpoint": "Cluster-level paired mean normalized difference in final objective at matched measured budget.",
+          "secondary_endpoints": [
+            "normalized area under the regret curve (adjusted interval, decision-bearing)"
+          ],
+          "scale_bounds": "Per-task, declared in the task registry before data.",
+          "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
+          "task_scope": "acceptance task set (multiple independent tasks)",
+          "alpha_family": "tier1_gate",
+          "power_target": 0.9,
+          "max_sample": 25,
+          "power_note": "0.9 per policy.power.high_target_entries: TuRBO carries ~10 engineer-days of sunk build cost and the population line depends on it, so a false demotion is expensive.",
+          "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
+          "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+          "release_consequence": {
+            "pass": "Searcher ships as a tier-1 default.",
+            "fail": "Population line is deferred (BG-PBT depends on the trust region) and tier-2 scope is reassessed.",
+            "inconclusive": "Searcher does not become a default; one pre-budgeted replication permitted, then terminal."
+          },
+          "repairs": [
+            "accepted correction: capability-specific regimes, multiple tasks",
+            "F2: alpha bound to a declared family"
+          ]
+        },
+        "V06": {
+          "id": "V06",
+          "gate": "tier1_gate",
+          "class": "confirmatory",
+          "claim": "early stopping is nearly free",
+          "estimand": "Joint claim: (a) quality of searcher+ASHA is non-inferior to searcher-at-full-fidelity within margin delta on a range-normalized scale, and (b) the upper confidence bound on the active-accelerator-second cost ratio is at or below one third.",
+          "test": "non_inferiority_one_sided_plus_cost_bound",
+          "sidedness": "one-sided",
+          "direction": "higher_is_better_after_normalization",
+          "margin": 0.05,
+          "margin_justification": "A 5% range-normalized quality loss is the largest degradation that would not change the default recommendation to enable ASHA. This is a product tolerance, not an estimate from observed noise, and is fixed before data per the review's item-1 requirement.",
+          "comparators": [
+            "searcher at full fidelity"
+          ],
+          "combination": "intersection-union",
+          "combination_note": "Both the quality non-inferiority condition and the cost bound must clear. Passing on quality while cost overruns is not a pass, and vice versa.",
+          "primary_endpoint": "Paired non-inferiority on normalized final quality AND upper 95% confidence bound of the cost ratio <= 1/3.",
+          "cost_estimand": "active_accelerator_seconds",
+          "cost_estimand_detail": "Active accelerator-seconds is the primary: the honest measure of GPU occupancy on local hardware. The real cost is opportunity \u2014 what else could have run on that GPU. Reported as separate secondary columns for diagnosis: CPU-seconds, elapsed wall-clock, queue wait. Seconds are never converted across resource types.",
+          "cost_uncertainty": "The cost ratio carries a paired cluster bootstrap interval; the gate reads its upper bound, not a point estimate.",
+          "cost_attribution": "Shared startup and queue time is attributed deterministically per trial by allocation record. Both arms run under the same scheduling policy and the same hardware; heterogeneous hardware voids the comparison.",
+          "scale_bounds": "Per-task, declared in the task registry before data.",
+          "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
+          "task_scope": "acceptance RL task set (multiple independent tasks)",
+          "alpha_family": "tier1_gate",
+          "power_target": 0.8,
+          "max_sample": 20,
+          "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; retries and preempted work remain on the cost bill.",
+          "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+          "release_consequence": {
+            "pass": "ASHA is on by default.",
+            "fail": "Promotion is blocked and the rung-correlation assumptions are diagnosed.",
+            "inconclusive": "ASHA does not become a default; one pre-budgeted replication permitted, then terminal."
+          },
+          "repairs": [
+            "F3: queue wait no longer inside accelerator-seconds; primary cost estimand named",
+            "item 6: separate cost columns, deterministic attribution, interval on the ratio",
+            "accepted correction: quality non-inferiority, not CI overlap",
+            "D4: active accelerator-seconds on local hardware, not billed resource-seconds"
+          ]
+        },
+        "V09": {
+          "id": "V09",
+          "gate": "tier1_gate",
+          "class": "confirmatory",
+          "claim": "the premium MO searcher earns its tier",
+          "estimand": "Cluster-level paired mean difference in final hypervolume between qLogNEHVI and each comparator, computed against a frozen reference point and frozen normalization.",
+          "test": "paired_non_inferiority_then_superiority",
+          "test_detail": "Paired test on the difference, replacing the rejected interval-overlap rule. Overlap of two marginal intervals is not a test of their difference: intervals can overlap while the paired difference is significant, and can separate while it is not.",
+          "sidedness": "one-sided",
+          "direction": "higher_is_better_after_normalization",
+          "margin": 0.05,
+          "margin_justification": "A 5% normalized hypervolume shortfall is the largest gap that would still leave the premium searcher worth its tier. Ties demote to option per the survey's declared rule.",
+          "comparators": [
+            "random-weight Chebyshev scalarization",
+            "wrapped NSGA-II"
+          ],
+          "combination": "intersection-union",
+          "combination_note": "qLogNEHVI must clear both comparators at the family-adjusted level to hold its tier slot. Beating only NSGA-II does not earn the premium slot.",
+          "primary_endpoint": "Cluster-level paired mean difference in final hypervolume against the frozen reference point.",
+          "secondary_endpoints": [
+            "hypervolume-over-budget curve (descriptive only)"
+          ],
+          "frozen_before_data": [
+            "hypervolume reference point",
+            "objective normalization",
+            "objective bounds"
+          ],
+          "frozen_source": "Reference point and normalization are set from declared domain bounds in the task registry, never from observed campaign results.",
+          "scale_bounds": "Declared domain bounds per objective in the task registry.",
+          "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
+          "task_scope": "pinned Hamiltonian task",
+          "task_scope_note": "One task, so the claim is pinned-task and may not be stated as a workload-family result (policy.resampling.single_cluster_rule).",
+          "alpha_family": "tier1_gate",
+          "power_target": 0.8,
+          "max_sample": 20,
+          "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
+          "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+          "release_consequence": {
+            "pass": "qLogNEHVI ships as the MO default.",
+            "fail": "Demote to a tier-2 option; the Hamiltonian workload defaults to scalarization.",
+            "inconclusive": "Demote to option; one pre-budgeted replication permitted, then terminal."
+          },
+          "repairs": [
+            "F1: interval-overlap demotion rule replaced with a paired test on the difference",
+            "F1: reference point and normalization frozen before data",
+            "accepted correction: freeze normalization/reference from domain bounds, paired non-inferiority, include NSGA-II"
+          ]
+        },
+        "V10": {
+          "id": "V10",
+          "gate": "tier1_gate",
+          "class": "confirmatory_safety",
+          "claim": "cheap MO fidelity signals may cull",
+          "estimand": "Operational error of early culling on the short-horizon drift signal: the probability that a configuration which would be top-k or Pareto-optimal at full fidelity is culled at the rung.",
+          "test": "safety_bounds_plus_association",
+          "test_detail": "Association alone is insufficient: a high rank correlation does not bound the probability of culling a future good configuration. The gate now reads operational error metrics, with correlation retained as a secondary descriptor.",
+          "sidedness": "one-sided",
+          "direction": "lower_false_cull_is_better",
+          "comparators": [
+            "full-fidelity ranking (ground truth)"
+          ],
+          "combination": "intersection-union",
+          "combination_note": "All safety criteria must clear. Failing any one leaves the signal advisory.",
+          "primary_endpoint": "Upper 95% confidence bound on false-cull probability for top-k configurations at or below 0.05, AND lower bound on top-k survivor recall at or above 0.90.",
+          "top_k": 10,
+          "secondary_endpoints": [
+            "Spearman rank correlation with bootstrap interval (descriptive)",
+            "normalized regret of the culled set (decision-bearing, adjusted interval)"
+          ],
+          "scale_bounds": "Not applicable by construction: both primary endpoints are probabilities bounded in [0, 1] (false-cull probability, top-k survivor recall), so they need no range normalization against declared objective bounds. The secondary regret endpoint is range-normalized per task using the same registry bounds as V09.",
+          "seeds_per_config": 5,
+          "seeds_note": "Raised from the single fixed seed of the rejected design. One seed per configuration confounds training-seed variance with configuration quality and cannot estimate false-cull probability at all.",
+          "repetition_unit": "configuration evaluated across multiple training seeds, clustered by task",
+          "task_scope": "multiple independent Hamiltonian-family tasks",
+          "task_scope_note": "Multiple tasks are required; the rejected single-task design could not support the workload-family claim the scheduler relies on.",
+          "rung_selection": "The candidate rung is fixed before acceptance data is seen and is recorded in the manifest.",
+          "alpha_family": "tier1_gate",
+          "power_target": 0.8,
+          "max_sample": 200,
+          "max_sample_note": "Configurations, not runs. Total runs is max_sample x seeds_per_config x tasks.",
+          "missingness": "A configuration whose full-fidelity run fails is excluded from both the rung and endpoint vectors and is reported.",
+          "stopping_rule": "Fixed configuration budget sized by simulation; at max_sample without clearing, verdict is inconclusive.",
+          "release_consequence": {
+            "pass": "MO-ASHA may kill on the drift signal.",
+            "fail": "Scheduler still runs but the signal is advisory; promotion falls back to the objective that does correlate.",
+            "inconclusive": "Signal stays advisory; one pre-budgeted replication permitted, then terminal."
+          },
+          "repairs": [
+            "F1: gate now reads top-k recall and false-cull probability, not correlation alone",
+            "F1: multiple seeds and multiple tasks replace 100 configs at one fixed seed",
+            "accepted correction: multiple seeds/tasks, gate on top-k recall and false-cull probability"
+          ]
+        },
+        "V11a": {
+          "id": "V11a",
+          "gate": "tier1_gate",
+          "class": "confirmatory",
+          "claim": "priors help under good advice",
+          "split_note": "V11 is split because it makes two claims with different estimands and different sidedness. Bundling a superiority claim and a non-inferiority claim under one margin, as the chapter did, is not testable as written.",
+          "estimand": "Range-normalized difference in final objective between the folklore-prior arm and the no-prior arm, as a cluster-level paired mean.",
+          "test": "superiority_one_sided",
+          "sidedness": "one-sided",
+          "direction": "higher_is_better_after_normalization",
+          "margin": 0.0,
+          "margin_justification": "Superiority against no prior: any reliable positive gain justifies default-on, so the margin is zero and the test is ordinary one-sided superiority.",
+          "comparators": [
+            "no-prior arm"
+          ],
+          "combination": "single",
+          "primary_endpoint": "Cluster-level paired mean normalized difference in final objective.",
+          "implementation_requirement": "Tests the actual piBO decay multiplier and the actual PriorBand rung portfolio. GP-mean substitution and top-K sampling are different methods and do not satisfy this entry.",
+          "prior_support_requirement": "The declared prior must place nonzero density on the region containing the no-prior arm's optimum, verified and recorded before the campaign; a prior with zero support there makes the comparison vacuous.",
+          "scale_bounds": "Per-task, declared in the task registry before data.",
+          "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
+          "task_scope": "acceptance task set (multiple independent tasks)",
+          "alpha_family": "tier1_gate",
+          "power_target": 0.8,
+          "max_sample": 20,
+          "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
+          "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+          "release_consequence": {
+            "pass": "Priors are eligible for default-on, conditional on V11b also passing.",
+            "fail": "Demote piBO/PriorBand to opt-in.",
+            "inconclusive": "Remains opt-in; one pre-budgeted replication permitted, then terminal."
+          },
+          "repairs": [
+            "accepted correction: test actual piBO/PriorBand, require nonzero support, predefine gain and recovery margins separately"
+          ]
+        },
+        "V11b": {
+          "id": "V11b",
+          "gate": "tier1_gate",
+          "class": "confirmatory",
+          "claim": "priors are safe under wrong advice",
+          "estimand": "Range-normalized difference in final objective between the wrong-prior arm and the no-prior arm, as a cluster-level paired mean, tested for non-inferiority within margin delta.",
+          "test": "non_inferiority_one_sided",
+          "sidedness": "one-sided",
+          "direction": "higher_is_better_after_normalization",
+          "margin": 0.1,
+          "margin_justification": "A 10% range-normalized shortfall under a deliberately wrong prior is the largest recovery failure that would still permit default-on: beyond it, a user with bad intuition is materially worse off than a user with none. Product tolerance, fixed before data.",
+          "endpoint_definition": "Recovery is measured as the normalized final objective at the declared endpoint, not as an informal 'within noise'. Time-to-recover is a declared secondary.",
+          "comparators": [
+            "no-prior arm"
+          ],
+          "combination": "single",
+          "primary_endpoint": "Paired non-inferiority of normalized final objective within margin 0.10.",
+          "secondary_endpoints": [
+            "trials to reach the no-prior arm's final value (adjusted interval, decision-bearing)"
+          ],
+          "implementation_requirement": "Same as V11a: actual piBO decay multiplier and actual PriorBand rung portfolio.",
+          "scale_bounds": "Per-task, declared in the task registry before data.",
+          "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
+          "task_scope": "acceptance task set (multiple independent tasks)",
+          "alpha_family": "tier1_gate",
+          "power_target": 0.8,
+          "max_sample": 20,
+          "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
+          "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+          "release_consequence": {
+            "pass": "Combined with V11a, priors ship default-on.",
+            "fail": "Demote piBO/PriorBand to opt-in regardless of the V11a result.",
+            "inconclusive": "Remains opt-in; one pre-budgeted replication permitted, then terminal."
+          },
+          "repairs": [
+            "item 1: 'recovery within noise' replaced with a fixed endpoint, horizon, and margin",
+            "accepted correction: predefine gain and recovery margins separately"
+          ]
+        },
+        "V13": {
+          "id": "V13",
+          "gate": "tier1_gate",
+          "class": "deterministic_veto_plus_calibration",
+          "claim": "sampler correctness cannot be bought by speed",
+          "estimand": "Two separable questions: (a) do the absolute correctness vetoes hold, and (b) does the candidate sampler's posterior agree with a frozen reference posterior within Monte Carlo error.",
+          "test": "sbc_plus_automated_diagnostics",
+          "test_detail": "Simulation-based calibration fixtures replace visual inspection. Multimodality is detected by an automated diagnostic, not by looking at trace plots, and chains are never re-initialized on the basis of an inspection that happened after seeing the data.",
+          "vetoes": [
+            "Any configuration with a divergent transition is never promoted.",
+            "Any configuration with rank-normalized split R-hat above 1.01 on any monitored marginal is never promoted.",
+            "Any configuration with bulk-ESS or tail-ESS below 400 is never promoted.",
+            "A single promotion of a veto-failing configuration fails the entry outright."
+          ],
+          "veto_note": "Vetoes are absolute and deterministic; they consume no family alpha. The false-veto rate is a declared cost of conservatism and is reported in the gate report.",
+          "calibration_check": "Simulation-based calibration over declared fixtures: rank statistics of the true parameter within the posterior draws must be uniform, tested by the SBC rank histogram with a simultaneous band.",
+          "agreement_check": "MCSE-aware and interval-based: the candidate posterior mean must lie within a Monte Carlo standard error band of the frozen reference mean, with the band accounting for both samplers' MCSE, and the criterion applied simultaneously across monitored marginals rather than one at a time.",
+          "agreement_note": "Replaces the rejected 'within one standard error of the reference mean' rule, which was a weak single-marginal test that ignored simultaneity and treated the reference as exact.",
+          "frozen_before_data": [
+            "reference posterior artifact",
+            "monitored marginal list",
+            "SBC fixture set"
+          ],
+          "multimodality_diagnostic": "Automated: mixture-component detection on pooled draws plus between-chain mode disagreement statistic, both with declared thresholds. Dispersed re-initialization is a preregistered protocol branch, not a post hoc response.",
+          "sampling_protocol": "Four independent chains per configuration from dispersed initializations; 2,000 warmup draws discarded plus 2,000 retained per chain (8,000 retained total). Reference posterior uses the same four-chain protocol with 20,000 retained draws per chain.",
+          "ranking_rule": "Survivors are ranked by effective sample size per gradient evaluation, measured by the executor. Speed enters only after the vetoes and the calibration and agreement checks pass.",
+          "comparators": [
+            "frozen reference posterior"
+          ],
+          "combination": "intersection-union",
+          "primary_endpoint": "All vetoes hold, SBC ranks are uniform within the simultaneous band, and simultaneous MCSE-aware agreement holds across monitored marginals.",
+          "repetition_unit": "configuration (four chains) within SBC fixture",
+          "task_scope": "sampler workload fixtures plus the pinned Hamiltonian posterior",
+          "alpha_family": null,
+          "alpha_note": "Vetoes and calibration are correctness criteria, not ranking claims, so V13 consumes no family alpha. Multiplicity across monitored marginals is handled by the simultaneous band, not by Holm-Bonferroni over a confirmatory family.",
+          "power_target": null,
+          "max_sample": 100,
+          "missingness": "A chain that fails to complete voids its configuration, which is re-run; a failed chain is never analyzed as a shorter chain.",
+          "stopping_rule": "Fixed fixture set. Any veto breach fails the entry outright.",
+          "release_consequence": {
+            "pass": "Sampler workload ships.",
+            "fail": "Sampler workload does not ship until the correctness defect is fixed."
+          },
+          "repairs": [
+            "F1: visual multimodality inspection replaced with automated diagnostics",
+            "F1: one-standard-error agreement replaced with simultaneous MCSE-aware intervals",
+            "F1: SBC fixtures added",
+            "accepted correction: SBC fixtures, rank-normalized R-hat, bulk/tail ESS, MCSE-aware comparisons, automated mode diagnostics"
+          ]
+        }
+      },
+      "family": {
+        "members": [
+          "V04-T1",
+          "V06",
+          "V09",
+          "V10",
+          "V11a",
+          "V11b"
+        ],
+        "m": 6,
+        "note": "V13 vetoes are deterministic; V13's agreement check is a calibration criterion, not a ranking claim, and is excluded from the family."
+      },
+      "disposition": "retired_prospectively_no_historical_outcome_reclassified"
+    },
+    "finite_tier1": {
+      "claim": "tier1_finite_known_answer_v1",
+      "entries": [
+        "V04-T1",
+        "V06",
+        "V09",
+        "V10",
+        "V11a",
+        "V11b",
+        "V13",
+        "V-COST"
+      ],
+      "contract_module": "validation.tier1_contract",
+      "decision": "D-TIER1-KNOWN-ANSWER",
+      "inference": "none",
+      "default_activation": false,
+      "preparation_does_not_authorize_campaigns": true
+    },
+    "historical_v08_before_finite": {
+      "entry": {
+        "id": "V08",
+        "gate": "tier2_gate",
+        "class": "confirmatory",
+        "claim": "the population line does not lose in its home regime",
+        "estimand": "Range-normalized difference in final objective between the population line and each comparator, as a cluster-level paired mean, evaluated separately on each side of the eight-worker boundary.",
+        "home_regime_definition": "Above the boundary: 16 workers. Below: 4 workers. 'Home regime' is the above-boundary side; the below-boundary side is run to establish that the method does not win only by consuming parallelism, and its result cannot alone produce a pass.",
+        "test": "non_inferiority_one_sided",
+        "sidedness": "one-sided",
+        "direction": "higher_is_better_after_normalization",
+        "margin": 0.05,
+        "margin_justification": "A 5% range-normalized shortfall in the home regime is the largest gap that would still leave the flagship worth defaulting to at 16 workers. Product tolerance, fixed before data.",
+        "comparators": [
+          "DEHB",
+          "BO+ASHA"
+        ],
+        "combination": "intersection-union",
+        "combination_note": "Non-inferiority must hold against both comparators on the above-boundary side for a pass.",
+        "primary_endpoint": "Paired non-inferiority of normalized final objective against both comparators on the 16-worker side, at matched measured compute.",
+        "scale_bounds": "Declared per task in the task registry before data.",
+        "repetition_unit": "complete study replicate (paired by task and optimizer seed, within worker-count side)",
+        "task_scope": "pinned rl_large_parallel task",
+        "task_scope_note": "One task, so the claim is pinned-task (policy.resampling.single_cluster_rule).",
+        "alpha_family": "tier2_gate",
+        "power_target": 0.9,
+        "max_sample": 10,
+        "power_note": "0.9 per policy.power.high_target_entries: BG-PBT is the flagship and the most expensive build in the program, so a false demotion is the costliest error in the suite.",
+        "exploratory_tripwire": {
+          "purpose": "The 3-repetition run is an exploratory tripwire only. It can trigger demotion or continuation; it can never produce a pass. This resolves finding F3, where the declared exception could not make the flagship green at its own gate.",
+          "reps": 3,
+          "consumes_alpha": false,
+          "ordering_statistic": "Mean range-normalized difference against the worse of the two comparators, computed per side.",
+          "demotion_trigger": "All three repetitions show the population line behind the same comparator on the 16-worker side AND the mean normalized shortfall exceeds 0.10.",
+          "min_loss_margin": 0.1,
+          "min_loss_margin_note": "A consistent ordering in three noisy repetitions is not by itself evidence of a loss, so a bare ordering does not demote; the shortfall must also exceed twice the decision margin.",
+          "tie_rule": "A normalized difference within +/-0.02 is a tie and does not count toward the consistent-ordering condition.",
+          "missing_run_rule": "Fewer than three completed repetitions on a side cannot trigger demotion; the tripwire is re-run.",
+          "false_demotion_risk": "Reported in the gate report as the simulated probability of this trigger firing under a true null, estimated from the pilot hierarchy. The tripwire is deliberately asymmetric and this is its declared cost."
+        },
+        "promotion_route": "A full powered campaign at power_target and max_sample is the only route to pass.",
+        "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm on a side voids that side.",
+        "stopping_rule": "Tripwire first; if it does not demote, the powered campaign runs. At max_sample without clearing, verdict is hold.",
+        "release_consequence": {
+          "pass": "BG-PBT ships as the default for rl_large_parallel.",
+          "fail": "Demote to an option; rl_large_parallel defaults to whichever of DEHB or BO+ASHA won V07. If V07 tied or was inconclusive, the default is DEHB, declared here so the fallback is not undefined at gate time.",
+          "hold": "Ships opt-in only, with no default dispatch, under a named owner, a dated expiry, and a funded powered follow-up campaign. If the expiry passes without the follow-up completing, the entry auto-demotes to option. Hold does not block the internal beta gate.",
+          "implementation_fail": "Distinct from a method loss: the population manager did not run correctly. Not a demotion; the defect is fixed and the campaign re-run."
+        },
+        "hold_requires": [
+          "named_owner",
+          "expiry_date",
+          "funded_followup_budget"
+        ],
+        "repairs": [
+          "F3: pass is now reachable via the powered campaign; the 3-rep run is explicitly exploratory",
+          "item 8: ordering statistic, tie rule, missing-run rule, minimum loss margin, and false-demotion risk all defined",
+          "item 8: hold has an owner, expiry, budget, and auto-demotion",
+          "item 8: home regime defined, both sides specified, V07 fallback tie-break declared",
+          "accepted correction: define initial status and green meaning, both sides, sequential maximum sample"
+        ]
+      },
+      "family": {
+        "members": [
+          "V08"
+        ],
+        "m": 1,
+        "note": "Single confirmatory primary. The 3-repetition run is exploratory and consumes no alpha (see V08.exploratory_tripwire)."
+      },
+      "archive": "archive/program-2026-10-08/before-population-finite-migration/manifest.json",
+      "disposition": "retired_prospectively_no_historical_outcome_reclassified"
+    },
+    "finite_population": {
+      "entry": "V08",
+      "claim": "finite_local_population_conformance_v1",
+      "contract_module": "validation.population_contract",
+      "decision": "D-POPULATION-KNOWN-ANSWER",
+      "inference": "none",
+      "default_activation": false,
+      "preparation_does_not_authorize_campaigns": true
+    },
+    "historical_v15_before_finite": {
+      "entries": {
+        "V15a": {
+          "id": "V15a",
+          "gate": "tier3_per_item",
+          "class": "confirmatory_feasibility",
+          "claim": "the curve-model bet is live before we pay for it",
+          "estimand": "Range-normalized difference in final objective between the published pretrained ifBO surrogate and ASHA at matched measured compute on curve-informative public benchmarks.",
+          "test": "non_inferiority_one_sided",
+          "sidedness": "one-sided",
+          "direction": "higher_is_better_after_normalization",
+          "margin": 0.05,
+          "margin_justification": "A 5% range-normalized shortfall is the largest gap that would still justify paying for integration work. Product tolerance, fixed before data.",
+          "comparators": [
+            "ASHA"
+          ],
+          "combination": "single",
+          "primary_endpoint": "Paired non-inferiority of normalized final objective at matched measured compute.",
+          "uses_published_model": true,
+          "uses_published_model_note": "Runs the published pretrained surrogate as-is. No model training and no integration work happens before this entry clears, which is the point of splitting V15.",
+          "scale_bounds": "Declared per benchmark in the task registry before data.",
+          "repetition_unit": "complete study replicate (paired by benchmark and optimizer seed)",
+          "task_scope": "curve-informative public benchmark suites (multiple independent tasks)",
+          "alpha_family": "tier3_v15",
+          "power_target": 0.8,
+          "max_sample": 20,
+          "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
+          "stopping_rule": "Size from pilot; at max_sample without clearing, verdict is inconclusive.",
+          "release_consequence": {
+            "pass": "V15b integration work is authorized.",
+            "fail": "Cancel the curve-model build; do not debug. The tier-3 slot is reallocated.",
+            "inconclusive": "Cancel; the bet does not clear its own feasibility bar and no integration budget is committed."
+          },
+          "repairs": [
+            "accepted correction: split into pre-build feasibility on the published model, and post-integration parity"
+          ]
+        },
+        "V15b": {
+          "id": "V15b",
+          "gate": "tier3_per_item",
+          "class": "confirmatory",
+          "claim": "the integrated curve model preserves the feasibility result",
+          "estimand": "Range-normalized difference in final objective between our integrated ifBO implementation and the published pretrained surrogate measured in V15a, as a cluster-level paired mean on the same benchmarks.",
+          "test": "non_inferiority_one_sided",
+          "sidedness": "one-sided",
+          "direction": "higher_is_better_after_normalization",
+          "margin": 0.02,
+          "margin_justification": "Integration parity is a tighter bar than feasibility: our implementation should reproduce the published surrogate's behavior, so only a 2% normalized shortfall is tolerated. A wider gap means the integration changed the method.",
+          "comparators": [
+            "published pretrained surrogate as run in V15a"
+          ],
+          "combination": "single",
+          "primary_endpoint": "Paired non-inferiority of normalized final objective against the V15a arm on the same benchmarks and seeds.",
+          "precondition": "V15a must have passed. V15b does not run otherwise.",
+          "scale_bounds": "Identical to V15a; reused from the frozen task registry.",
+          "repetition_unit": "complete study replicate (paired by benchmark and optimizer seed)",
+          "task_scope": "same curve-informative benchmarks as V15a",
+          "alpha_family": "tier3_v15",
+          "power_target": 0.8,
+          "max_sample": 20,
+          "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
+          "stopping_rule": "Size from pilot; at max_sample without clearing, verdict is inconclusive.",
+          "release_consequence": {
+            "pass": "Integrated curve model ships.",
+            "fail": "Integration is reverted; the published-surrogate path is used or the feature is dropped.",
+            "inconclusive": "Does not ship as a default; one pre-budgeted replication permitted, then terminal."
+          },
+          "repairs": [
+            "accepted correction: split into pre-build feasibility and post-integration parity"
+          ]
+        }
+      },
+      "family": {
+        "members": [
+          "V15a",
+          "V15b"
+        ],
+        "m": 1,
+        "structure": "fixed_sequence",
+        "sequence": [
+          "V15a",
+          "V15b"
+        ],
+        "note": "Fixed-sequence (gatekeeping) pair: V15b is only tested if V15a rejects. A fixed sequence holds the family-wise rate at alpha without correction because the second hypothesis is only reached when the first was rejected, so the correction denominator is 1 despite two members. The order is prespecified here, which is the condition that makes the procedure valid; reordering after seeing results would void the error control."
+      },
+      "archive": "archive/program-2026-10-08/before-ifbo-finite-feasibility/manifest.json",
+      "disposition": "retired prospectively, no result reclassified"
+    },
+    "finite_ifbo": {
+      "entry": "V15a",
+      "claim": "finite_pretrained_ifbo_feasibility_v1",
+      "decision": "D-IFBO-FINITE",
+      "inference": "none",
+      "default_activation": false,
+      "integration_requires_v15a_pass": true,
+      "preparation_does_not_authorize_campaigns": true
+    },
+    "historical_v07_before_finite": {
+      "entry": {
+        "id": "V07",
+        "gate": "tier3_per_item",
+        "class": "confirmatory",
+        "claim": "the small-budget RL verdict holds here",
+        "estimand": "Range-normalized difference in final objective between DEHB and BO+ASHA at a matched 16-run budget on the pinned RL task, as a cluster-level paired mean.",
+        "test": "two_sided_comparison",
+        "sidedness": "two-sided",
+        "direction": "higher_is_better_after_normalization",
+        "two_sided_note": "Unlike the other entries this is not a promotion claim about one method; it asks which of two shipped methods wins at routine budget, so neither direction is privileged and the test is two-sided.",
+        "comparators": [
+          "DEHB",
+          "BO+ASHA"
+        ],
+        "combination": "single",
+        "primary_endpoint": "Cluster-level paired mean normalized difference in final objective at a matched 16-run budget.",
+        "tie_consequence": "A result whose interval contains zero is a tie and is reported as such. A tie sets the rl_routine default to BO+ASHA, declared here because V08's fallback rule depends on V07 having a defined outcome.",
+        "scale_bounds": "Declared per task in the task registry before data.",
+        "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
+        "task_scope": "pinned RL task",
+        "task_scope_note": "One task, so the claim is pinned-task (policy.resampling.single_cluster_rule).",
+        "alpha_family": "tier3_v07",
+        "power_target": 0.8,
+        "max_sample": 20,
+        "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
+        "stopping_rule": "Size from pilot; at max_sample without clearing, verdict is tie.",
+        "release_consequence": {
+          "pass": "The winning method becomes the rl_routine default at routine budget.",
+          "fail": "Not applicable; this entry has no failing method, only a winner or a tie.",
+          "inconclusive": "Tie; rl_routine defaults to BO+ASHA."
+        },
+        "repairs": [
+          "item 8 dependency: V07's tie outcome is now defined because V08's fallback rule referenced it and was previously undefined on a tie"
+        ]
+      },
+      "family": {
+        "members": [
+          "V07"
+        ],
+        "m": 1,
+        "note": "Electives are independent go/no-go decisions taken at different times, so each is its own family rather than one shared tier-3 family."
+      },
+      "archive": "archive/program-2026-10-08/before-dehb-finite-migration/manifest.json",
+      "disposition": "Both RL ranking/default and contradictory GPU-capacity markdown retired prospectively; no historical outcome reclassified."
+    },
+    "historical_v12_before_finite": {
+      "entry": {
+        "id": "V12",
+        "gate": "dist_beta_gate",
+        "class": "confirmatory",
+        "claim": "warm starts pay",
+        "estimand": "Cluster-level paired mean reduction in trials required to reach the cold-start arm's final objective value, expressed as a fraction of the cold-start trial count.",
+        "test": "superiority_one_sided",
+        "sidedness": "one-sided",
+        "direction": "fewer_trials_is_better",
+        "margin": 0.2,
+        "margin_justification": "Below a 20% trial saving, warm starting is not worth defaulting on: the store lookup and transfer machinery costs more in complexity than it returns. Product tolerance, fixed before data.",
+        "comparators": [
+          "cold-start arm (same searcher, same task)"
+        ],
+        "combination": "single",
+        "primary_endpoint": "Paired mean fractional trial saving to reach the cold-start arm's final value, lower 95% confidence bound at or above 0.20.",
+        "endpoint_note": "The target value is the cold-start arm's own final value on the same task and seed, fixed within the paired block, so the endpoint is not a moving target estimated across arms.",
+        "precondition": "The run store must hold at least ten completed studies from the same model family (same architecture class, same task domain) before the campaign runs. Below that the warm-start query has no history to learn from and the entry is not run.",
+        "precondition_gate_note": "This precondition is why V12 sits at the Distributed Beta gate rather than Tier 1: the store only accumulates enough same-family studies after Tier 0 through Tier 2 campaigns have run. The survey assigns V12 to T1+, meaning tier 1 or later, so this placement is consistent with the survey.",
+        "scale_bounds": "Trial counts are non-negative integers; the fractional saving is bounded in [0, 1] by construction.",
+        "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
+        "task_scope": "new studies on familiar model families (multiple independent tasks)",
+        "alpha_family": "dist_beta_gate",
+        "power_target": 0.8,
+        "max_sample": 20,
+        "missingness": "A replicate whose cold-start arm never reaches a stable final value is excluded with its paired block; >10% loss voids the campaign.",
+        "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+        "release_consequence": {
+          "pass": "Warm start is on by default for recognized model families.",
+          "fail": "Warm start demotes to opt-in.",
+          "inconclusive": "Remains opt-in; one pre-budgeted replication permitted, then terminal."
+        },
+        "repairs": [
+          "gate assignment recovered: V12 was dropped from the corrected timeline entirely and is now placed at the Distributed Beta gate with its precondition stated"
+        ]
+      },
+      "family": {
+        "members": [
+          "V12"
+        ],
+        "m": 1
+      },
+      "status": "historical_not_satisfied_by_synthetic_fixtures",
+      "archive": "archive/program-2026-10-08/before-warm-finite-migration/manifest.json"
+    },
+    "finite_warm": {
+      "entry": "V12",
+      "claim": "finite_ranked_warm_start_conformance_v1",
+      "default_activation": false,
+      "empirical_speedup_established": false,
+      "preparation_does_not_authorize_campaigns": true
+    }
   },
   "entries": {
     "V01": {
       "id": "V01",
       "gate": "tier0_gate",
       "class": "deterministic_veto",
-      "claim": "each wrapped searcher/scheduler matches its reference implementation on tabular benchmarks",
-      "estimand": "Equality in distribution between our wrapper and the vendor reference on tabular benchmarks at shared seeds and matched budget.",
-      "test": "distributional_regression",
-      "test_detail": "Two-sample distributional comparison (Kolmogorov-Smirnov on final scores, plus per-rung anytime scores) at shared seeds. Replaces the rejected fixed 0.5% tolerance, which assumed a determinism the references do not have.",
+      "claim": "Each Tier 0 searcher/scheduler conforms to its explicitly named reference on the prospectively frozen finite tabular/event corpus.",
+      "estimand": "Equality of configuration-cell, decision, policy-selection and score traces on the exact finite corpus under pinned dependencies, numerical settings and random streams.",
+      "test": "finite_corpus_exact_trace_conformance",
+      "test_detail": "Independently reconstruct each reference trajectory from its frozen seed and original table bytes. Require zero observable discrepancies and complete required evidence; finite agreement makes no all-seed or distributional claim.",
       "comparators": [
-        "vendor reference implementation"
+        "numpy.RandomState_uniform",
+        "scipy.stats.qmc.Sobol_scrambled",
+        "optuna.samplers.TPESampler",
+        "optuna.samplers.CmaEsSampler",
+        "botorch_dim_scaled_matern52_qLogEI",
+        "botorch_gamma_prior_matern52_seeded_qLogEI",
+        "syne_tune_0_13_0_verbatim_promotion",
+        "independent_completed_reference_running_mean",
+        "syne_tune_0_13_0_sorted_set_pair_adapter"
       ],
-      "primary_endpoint": "Distributional equivalence of final and anytime score vectors.",
-      "repetition_unit": "complete optimizer run at a shared seed",
-      "task_scope": "tabular benchmark suite (multiple tasks)",
+      "primary_endpoint": "Zero discrepancies in all 45 frozen cases, with 36 complete required trajectories and nine verified exact missing-cell refusals.",
+      "repetition_unit": "One complete fixed component/table/seed trace",
+      "task_scope": "All four original exposed ARLBench tables plus all 187 seed-0 HalfCheetah configurations finite at every original fidelity; original 36 cases retained.",
       "alpha_family": null,
-      "alpha_note": "Deterministic veto; consumes no family alpha. A divergence is a wiring bug, not a ranking claim.",
+      "alpha_note": "Deterministic finite conformance; no hypothesis test, equivalence margin or family alpha.",
       "power_target": null,
       "max_sample": 30,
-      "missingness": "Any failed reference run voids that comparison and is re-run; it is never dropped.",
-      "stopping_rule": "Fixed sample. Veto fires on any divergence outside the declared band.",
+      "missingness": "Only nine frozen original missing-cell refusals can satisfy failure-handling coverage; independently reconstruct the exact stopped reference. They remain incomplete trajectories. Missing execution/evidence or unexpected incompleteness is INCONCLUSIVE, subject to FAIL priority.",
+      "stopping_rule": "Execute every frozen case within the retained CPU cap. PASS requires all complete trajectories and exact verified expected-missing refusals to agree; any discrepancy is FAIL; all other incompleteness is INCONCLUSIVE.",
       "release_consequence": {
-        "pass": "Wrapper is trusted for tier-0 use.",
-        "fail": "Tier 1 is blocked until the wiring defect is found and fixed."
+        "pass": "Finite declared wrapper/reference corpus conforms; no global distributional equivalence or release authorization.",
+        "fail": "Repair the observed discrepancy and prospectively refreeze before re-execution; retain failed evidence.",
+        "inconclusive": "Keep V01 and Tier 0 release blocked; preserve unresolved cases and their exact source cells."
       },
       "repairs": [
-        "accepted correction: distributional regression, not 0.5% tolerance"
-      ]
+        "D-V01-REFERENCE-SCOPE authorized 2026-09-30: replace unproved distributional equality with exact finite-corpus conformance.",
+        "Retire all KS nonrejection/TOST/percentage bands as V01 acceptance rules.",
+        "PASHA uses the named deterministic unordered-pair reference correction, not an unmodified-vendor claim.",
+        "D-V01-COVERAGE-SCOPE authorized: retain original missingness as explicit failure-handling coverage and add all-complete-domain trajectories; historical v1 INCONCLUSIVE retained."
+      ],
+      "version": "2.1",
+      "scope_contract": "finite_reference_trace_conformance_v2",
+      "decision_rule": {
+        "pass": "all_required_trajectories_complete_and_frozen_missing_refusals_verified_with_exact_agreement",
+        "fail": "any_reconstructed_observable_discrepancy",
+        "inconclusive": "missing_execution_evidence_or_unexpected_incompleteness_without_observed_discrepancy",
+        "priority": "fail_before_inconclusive_before_pass",
+        "no_imputation_replacement_or_post_outcome_subsets": true,
+        "distributional_equivalence": false,
+        "scientific_performance_claim": false,
+        "expected_missing_is_complete_trajectory": false,
+        "complete_domain": "all_seed0_configurations_finite_at_every_original_fidelity_no_return_filter"
+      },
+      "corpus": {
+        "path": "validation/designs/v01_finite_corpus_v2.json",
+        "sha256": "0bfb105885df8858382304cf899fac7585ab60574bed5ecb1abdf161a40753d4"
+      },
+      "scope_authorization": {
+        "path": "docs/program/evidence/2026-10-01/scope-adoption/v01-scope-authorization.json",
+        "sha256": "5e0055bf2b943aafa6a973121d774f4ddd4881398d5d733b8a6ab35eb21cd1fd"
+      }
     },
     "V02": {
       "id": "V02",
@@ -207,123 +925,339 @@
       "claim": "scheduler logic is correct under asynchrony",
       "estimand": "Conformance of scheduler decisions to specification on recorded curves under adversarial event ordering.",
       "test": "state_machine_and_property",
-      "test_detail": "Replay of recorded curves plus state-machine and property tests over out-of-order, duplicate, late, and dropped events, and straggler injection. Clean replay alone was insufficient per the accepted correction.",
+      "test_detail": "Frozen 10,000-case ASHA event stratum plus eight raw integration scenarios and the complete mandatory SPEC-02/SPEC-03 scheduler, streamed runtime, checkpoint and replay conformance suite. Independently reconstruct source-bound raw outcomes and all planned assertion phases; no subset or skipped-case PASS.",
       "comparators": [
         "written specification"
       ],
       "primary_endpoint": "Zero specification violations across the generated event orderings.",
       "repetition_unit": "generated event ordering (property-test case)",
-      "task_scope": "recorded curve fixtures",
+      "task_scope": "Exact frozen recorded event fixtures and runtime conformance inventory; finite coverage, no assertion over all possible asynchronous schedules.",
       "alpha_family": null,
       "alpha_note": "Deterministic veto; consumes no family alpha.",
       "power_target": null,
       "max_sample": 10000,
-      "missingness": "Not applicable; fixtures are deterministic replays.",
+      "missingness": "Missing execution, skipped required assertion or resource exhaustion is INCONCLUSIVE absent an observed discrepancy. No silent replacement or partial PASS.",
       "stopping_rule": "Fixed number of generated cases. Any violation fails the entry outright.",
       "release_consequence": {
-        "pass": "Scheduler is trusted under asynchrony.",
-        "fail": "Scheduler is not shipped; the defect is fixed and the suite re-run."
+        "pass": "Finite declared event and runtime corpus conforms; other master and release obligations remain.",
+        "fail": "Scheduler is not shipped; the defect is fixed and the suite re-run.",
+        "inconclusive": "Retain missing evidence and block V02 acceptance."
       },
       "repairs": [
-        "accepted correction: add state-machine/property tests for out-of-order, duplicate, late events"
-      ]
+        "accepted correction: add state-machine/property tests for out-of-order, duplicate, late events",
+        "2026-09-30: reconcile individual protocol with the registered event population and bind mandatory scheduler/recovery conformance under the existing finite deterministic-veto scope."
+      ],
+      "scope_contract": "recorded_event_and_runtime_conformance_v1",
+      "protocol_version": "2.0"
     },
     "V03": {
       "id": "V03",
       "gate": "tier0_gate",
       "class": "deterministic_veto",
       "claim": "the suite itself catches wiring bugs",
-      "estimand": "Detection rate of the V01-V02 suite against a generated population of seeded defects.",
+      "estimand": "Deterministic detection fraction over the complete mutmut population for the declared twenty-four implementation modules; no population-general bug-detection probability.",
       "test": "mutation_testing",
-      "test_detail": "Mutation testing with a declared minimum kill score, replacing the rejected three hand-planted defects. Mutation operators cover rung off-by-one, dropped seed, swapped objective sign, and event reordering.",
+      "test_detail": "Fresh mutmut 3.8.0 source/test copy, all generated mutants, complete results --all true; defaults include string mutations. No static pre-kills, narrowed survivor reruns or hidden build exclusions.",
       "comparators": [
         "seeded defect population"
       ],
       "primary_endpoint": "Mutation kill score at or above the declared minimum.",
       "kill_score_threshold": 0.9,
       "repetition_unit": "generated mutant",
-      "task_scope": "V01-V02 suite under mutation",
+      "task_scope": "Full frozen non-slow test selection and twenty-four declared modern/legacy implementation modules, including executable V01/V02 conformance assertions.",
       "alpha_family": null,
       "alpha_note": "Deterministic veto; consumes no family alpha.",
       "power_target": null,
-      "max_sample": 200,
-      "missingness": "A mutant that fails to build is excluded and logged; the excluded count is reported.",
-      "stopping_rule": "Fixed mutant population. Kill score below threshold fails the entry.",
+      "max_sample": "complete_generated_population_no_200_mutant_sampling_cap",
+      "missingness": "Only raw exit -24 is excluded as a timeout; raw 1 is a kill. Runner exits 3/255, unknown codes, unchecked/suspicious/segfault/interrupted/skipped/type-check-only outcomes or missing/inconsistent raw metadata veto completion. Failed collection/listing and partial wall-limited execution are INCONCLUSIVE; timeout cap remains 20%.",
+      "stopping_rule": "Full fixed generated population under six-hour wall cap and 24 distinct inherited CPU slots with measured outcome-blind admission. All original overall/module/critical-path criteria apply. Expiry preserves partial evidence and is INCONCLUSIVE.",
       "release_consequence": {
         "pass": "The suite is trusted to catch wiring defects.",
-        "fail": "Suite is strengthened before any layer-two campaign runs."
+        "fail": "Suite is strengthened before any layer-two campaign runs.",
+        "inconclusive": "Repair tooling/coverage or obtain complete evidence; Tier 0 stays blocked."
       },
       "repairs": [
-        "accepted correction: mutation testing with score requirement, not three planted defects"
-      ]
+        "accepted correction: mutation testing with score requirement, not three planted defects",
+        "Objective phase reconciliation 2026-10-01: retain stricter full expanded population and default string operators from the executed repair profile; remove contradictory legacy 200 cap and inactive paths; no threshold weakened.",
+        "Version 2.1: actual campaign TPE backend hponas/searchers_tpe.py added to required module population and its propose/observe/recovery functions to critical paths. Earlier twenty-module attempts cannot certify this scope.",
+        "Version 2.2: exhaustively assign all 32 library files: 24 required, five explicitly deferred and three import facades. Add LegacyGP, architecture and priors; no thresholds or previous modules removed. Retain portable execution evidence and check copied-source identity after execution.",
+        "Version 2.3: after direct-fork coordinator crash and contradictory kill attribution, use supported forkserver isolation without warmup or automatic restarts; require clean/unused-assignment/broken-stack calibration before full execution. Preserve every attempt, all modules, tests/operators and thresholds; clean up the owned group on any coordinator exit.",
+        "Version 2.4: enforce exact same-workspace calibration before every fresh complete run; retain and reconstruct controls, diffs, selected tests and startup logs. Its 900-second bound counts within the six-hour campaign allowance. The successful earlier calibration remains diagnostic.",
+        "Version 2.5: fix reproduced clean Ray ordering failure without removing tests; require exact unskipped order calibration. Fix floating promotion counts with exact arithmetic and add the helper to critical paths. Permit only three source-bound equivalence lemmas reconstructed against retained generated functions; no reviewer-label exclusions or numerical threshold changes.",
+        "Version 2.6: recovered original V02 Ray logs identify a delayed force-cancellation race across evaluations. Require the four-test restart/timeout/crash-retry/ownership order; add confirmed cancellation and failed-attempt accounting with the new helper in critical paths. Prospectively add only the source-bound tpe_replay_copy_v1 lemma for serialized JSON checkpoints. Preserve attempt 06 and all thresholds/caps.",
+        "Version 2.7: reconstruct retained raw process exits in calibration and full inventory; only exit 1 is a kill and -24 a timeout, with runner exits 3/255 suspicious. Repair collection-time construction, preserve failed-generation/listing evidence, use the pinned formula ceil(6*(selected-test duration+22))/2 wall seconds, replacing tool defaults (1,15) with explicit settings (22,3), and prospectively bind twenty exact equivalence rules. Retain attempt 07 under protocol 2.6; no numerical threshold or total resource-cap changes. Freeze non-Python test data in source and executed copies, retain calibration/final bytes, and mark master evidence stale after fixture changes. Use deterministic layer/module/node ordering for all selected tests, preserving every item and the separate mandatory four-test cancellation order; bind the plugin and refuse its omission.",
+        "Version 2.8: account for all 66 current library modules with 24 unchanged required modules, 39 explicitly assigned outside-scope modules and three import facades. Bind the complete mapping in the register and executable checker. Separate method/operations evidence is not mutation coverage. No threshold, required module or operator change; final integrated allocation remains unset.",
+        "Version 2.12: after allocation 05 reached its deadline, repair collection-time fixture construction and add public-contract checks before prospectively allocating 24 distinct CPU slots in the cold forkserver. The retained complete-function cost projection supports the same six-hour wall cap and 1500-second calibration. The selection algorithm and original tests remain; no changes to required modules, operators, raw outcome rules, timeout formula, equivalence rules or score thresholds.",
+        "Version 2.13: allocation 06 exceeded the 64-GiB owned-RSS guard; its linear memory projection is invalid. Prospectively freeze the complete population and selected tests, allow no more than eight measured high-memory jobs and 52 GiB of child reservations, and replay every admission from raw evidence. The 64-GiB guard, six-hour campaign cap, 1,500-second calibration, timeout formula, operators, population and scientific rules are unchanged. No official allocation is authorized by this protocol amendment.",
+        "Version 2.14: retain the refused sandbox census with two unbounded terminal-suggestion mutants. Add bounded public tests of both terminal searcher refusals, including empty/completed prefixes and durable reason/status/events; add a repeated-terminal-call assertion to the existing finite-exhaustion fixture. Keep the complete population, original tests, timeout formula and decision rules. Real Ray diagnostics require host socket capability; the failed sandbox baseline is infrastructure evidence. No official allocation is authorized by this amendment.",
+        "Version 2.15: retain the 64.014236-GiB host intervention and all 1,811 outcomes. Its subnormal constructor mutant consumed 56.726109 GiB. The boundary fixture now preserves real float arithmetic and refuses a repeated non-progressing step across all ASHA variants; reference drains assert unique promotions. Preserve full population, selected-test rule, timeout formula, admission and scientific rules. Complete comparable function populations from interrupted host runs are conservative timing evidence only; fresh guarded diagnostics must cover repaired runaways and required missing/changed populations before a new official allocation.",
+        "Version 2.16: retain the clean host stats child exit and Ray fatal terminal-task cancellation log. Legacy executor cleanup now cancels only pending tasks in a live cluster. The 31 controlled/recovery and five real-Ray conformance checks pass. Refresh exact generated population, source, current installation, clean calibration, timing eligibility and affected local-operation evidence. Preserve the 24-module scope, selected-test rule, scientific thresholds, timeout formula and resource caps.",
+        "Version 2.17: replace the mandatory duplicate timing census with prospective guarded once-only admission after descendant/guard controls, current complete calibration, installation, local-impact continuity, protocol refusal checks and program checks. Prior projections remain uncertain engineering evidence; no timing guarantee or favorable outcome reuse is inferred. Preserve all population, test, timeout, scientific and resource rules. A failed or incomplete allocation requires repair, not automatic retry.",
+        "Version 2.19: retain incomplete final03 and all original outcomes; add public Study budget, proposal, cancellation, role and reporting contracts, and prospectively enable only the source-bound cancelled-result reconstruction lemma. The two exact rewrites preserve already-cancelled canonical scalar/vector aggregates. Pin Study, evaluation, vector-study, vector-specification and types source; refuse nearby AST changes and stale dependencies. No population, selection, operator, threshold, timeout or resource change; successor allocation remains separate.",
+        "Version 2.20: preserve recovered complete final04 FAIL and all 168 diagnostic outcomes. Add precise public GP/checkpoint/persistence boundary tests and four source-bound semantic rules for an already-admitted GP guard, one-element acquisition view, isolated concrete controller restoration and falsey restore defaults. The twelve exact rewrites require pinned source/dependencies/runtime and negative controls. No module, operator, selection, threshold, timeout or resource change; prospective complete qualification remains separate."
+      ],
+      "version": "2.20",
+      "scope_contract": "fresh_complete_mutation_population_v2",
+      "decision_rule": {
+        "overall_minimum": 0.9,
+        "every_module_minimum": 0.9,
+        "critical_survivors": 0,
+        "equivalent_maximum_fraction": 0.05,
+        "minimum_mutants": 100,
+        "timeout_maximum_fraction": 0.2,
+        "abnormal_or_unchecked": "INCONCLUSIVE",
+        "equivalent_policy": "Only the twenty-five listed equivalence_rules under exact source, companion-source and runtime-bound domains in MUTATION_EQUIVALENCE_LEMMAS_2026_10_16.md. Verify actual generated original/mutated functions. Unknown survivors remain; maximum fraction 0.05.",
+        "equivalence_rules": [
+          "builtin_nan_case_v1",
+          "full_population_slice_v1",
+          "unused_gp_stack_v1",
+          "tpe_replay_copy_v1",
+          "gp_invalidated_cache_v1",
+          "pasha_empty_interval_v1",
+          "pasha_falsey_report_default_v1",
+          "pasha_reversal_flag_v1",
+          "pasha_latest_comparison_v1",
+          "cmaes_scalar_config_copy_v1",
+          "local_falsey_guard_v1",
+          "gp_library_default_v1",
+          "gp_tensor_construction_v1",
+          "gp_unused_batch_argument_v1",
+          "tpe_unused_bookkeeping_v1",
+          "replay_unused_batch_default_v1",
+          "replay_empty_promotion_queue_v1",
+          "modern_gp_kernel_flag_v1",
+          "modern_gp_training_axis_v1",
+          "ray_terminal_retry_bound_v1",
+          "study_cancelled_reaggregation_v1",
+          "modern_gp_admitted_guard_v1",
+          "modern_gp_scalar_view_v1",
+          "study_restore_controller_copy_v1",
+          "study_restore_falsey_default_v1"
+        ],
+        "raw_outcome_policy": "mutmut_3_8_forkserver_process_outcomes_v1",
+        "raw_kill_exit_code": 1,
+        "raw_timeout_exit_code": -24
+      },
+      "module_ownership": {
+        "required": [
+          "hponas.searchers.base",
+          "hponas.searchers.gp_searcher",
+          "hponas.searchers.random_searcher",
+          "hponas.executors.local_executor",
+          "hponas.executors.ray_executor",
+          "hponas.legacy_searchers",
+          "hponas.searchers_tpe",
+          "hponas.searchers_gp",
+          "hponas.architecture",
+          "hponas.priors",
+          "hponas.legacy_executors",
+          "hponas.schedulers",
+          "hponas.space",
+          "hponas.types",
+          "hponas.study",
+          "hponas.replay",
+          "hponas.events",
+          "hponas.encoding",
+          "hponas.persistence",
+          "hponas.executors.base",
+          "hponas.executors.reporting",
+          "hponas.searchers.adapter",
+          "hponas.searchers.cmaes_searcher",
+          "hponas.store"
+        ],
+        "outside_scope": {
+          "hponas.searchers_cost": "T1-COST",
+          "hponas.searchers_mo": "T1-MO",
+          "hponas.reporting_mo": "T1-MO",
+          "hponas.searchers_priorband": "PRI-01",
+          "hponas.warm_start": "T1-WARM",
+          "hponas.bg_pbt": "T2-POP",
+          "hponas.bg_population": "T2-POP",
+          "hponas.categorical_prior": "PRI-01",
+          "hponas.cost_inference": "T1-COST",
+          "hponas.cost_likelihood": "T1-COST",
+          "hponas.cost_policy": "T1-COST",
+          "hponas.cost_searcher": "T1-COST",
+          "hponas.dehb": "T3-01",
+          "hponas.generational_transfer": "T2-POP",
+          "hponas.gp_robustness": "T3-01",
+          "hponas.multi_objective": "T1-MO",
+          "hponas.operations": "OPS-01",
+          "hponas.pb2_mix": "T2-POP",
+          "hponas.population": "T2-POP",
+          "hponas.population_bandit": "T2-POP",
+          "hponas.population_gp": "T2-POP",
+          "hponas.population_search": "T2-POP",
+          "hponas.postgres": "OPS-01",
+          "hponas.postgres_operations": "OPS-01",
+          "hponas.prior_band": "PRI-01",
+          "hponas.prior_sampling": "PRI-01",
+          "hponas.product_prior": "PRI-01",
+          "hponas.schedulers_mo": "T1-MO",
+          "hponas.schedulers_prior": "PRI-01",
+          "hponas.searchers.multi_objective": "T1-MO",
+          "hponas.searchers.prior": "PRI-01",
+          "hponas.searchers.priorband": "PRI-01",
+          "hponas.searchers.product_priorband": "PRI-01",
+          "hponas.searchers.robust_gp_searcher": "T3-01",
+          "hponas.study_mo": "T1-MO",
+          "hponas.trust_controller": "T1-TRUST",
+          "hponas.trust_searcher": "T1-TRUST",
+          "hponas.trust_space": "T1-TRUST",
+          "hponas.warm_history": "T1-WARM",
+          "hponas.evaluation": "PRD-01",
+          "hponas.budgets": "PRD-01",
+          "hponas.capabilities": "PRD-01",
+          "hponas.diagnostics": "PRD-01",
+          "hponas.reporting": "PRD-01"
+        },
+        "import_facades": [
+          "hponas.__init__",
+          "hponas.executors.__init__",
+          "hponas.searchers.__init__"
+        ]
+      },
+      "execution_resources": {
+        "workers": 24,
+        "cpu_slots": "distinct_inherited_cpu_per_live_child",
+        "wall_seconds": 21600,
+        "calibration_wall_seconds": 1500,
+        "scheduler": {
+          "kind": "v03_measured_resource_admission_v1",
+          "max_workers": 24,
+          "high_memory_limit": 8,
+          "child_budget_gib": 52,
+          "fixed_reserve_gib": 8,
+          "guard_gib": 64,
+          "high_memory_gib": 6.5,
+          "regular_memory_gib": 2.25,
+          "high_memory_test_files": [
+            "tests/integration/test_ray_cluster_ownership.py",
+            "tests/integration/test_ray_streaming.py",
+            "tests/test_executors.py"
+          ],
+          "measured_high_memory_functions": [
+            "hponas.events.x\u01c1EventLog\u01c1_load_existing",
+            "hponas.events.x\u01c1EventLog\u01c1replace_study_events",
+            "hponas.executors.ray_executor.x\u01c1RayExecutor\u01c1__init__",
+            "hponas.executors.ray_executor.x\u01c1RayExecutor\u01c1_execute_streaming",
+            "hponas.executors.ray_executor.x\u01c1RayExecutor\u01c1_initialize_ray",
+            "hponas.executors.ray_executor.x\u01c1RayExecutor\u01c1_payload_to_result",
+            "hponas.executors.ray_executor.x\u01c1RayExecutor\u01c1shutdown",
+            "hponas.legacy_executors.x\u01c1RayExecutor\u01c1copy_checkpoint",
+            "hponas.replay.x\u01c1ReplayEngine\u01c1verify_determinism",
+            "hponas.schedulers.x\u01c1ASHAScheduler\u01c1_restore_state"
+          ],
+          "resource_observation": {
+            "path": "docs/program/evidence/2026-10-09/mutation-schedule-repair-01/memory-observation.json",
+            "sha256": "2d0019c2e6ae150b32c5f30a1c88c86b96b091089abe66e9d7a3d757d6593b7b"
+          },
+          "priority": "descending clean selected-test duration, then mutant identity",
+          "admission": "first eligible job in frozen priority order; release only after a drained raw result",
+          "outcome_blind": true,
+          "sampled_bound_not_guarantee": true,
+          "calibration_controls": [
+            "hponas.searchers_gp.x\u01c1GPqLogEISearcher\u01c1_build_acqf__mutmut_2",
+            "hponas.searchers_gp.x\u01c1GPqLogEISearcher\u01c1_build_acqf__mutmut_3"
+          ]
+        }
+      },
+      "execution_admission": {
+        "kind": "guarded_single_full_allocation_v1",
+        "complete_timing_census_required": false,
+        "prerequisites": [
+          "descendant_cleanup_controls",
+          "exact_leaking_mutant_selected_tests",
+          "independent_resource_guard_controls",
+          "current_complete_calibration",
+          "python312_python313_installation",
+          "local_operation_change_impact",
+          "protocol_refusal_controls",
+          "six_program_checks"
+        ],
+        "official_runs_per_allocation": 1,
+        "automatic_retry": false,
+        "prior_scientific_outcomes_reused": false,
+        "incomplete_or_resource_intervention": "INCONCLUSIVE_REPAIR_REQUIRED"
+      }
     },
     "V04-T0": {
       "id": "V04-T0",
       "gate": "tier0_gate",
-      "class": "confirmatory",
-      "claim": "the tier-0 searchers earn their complexity",
-      "estimand": "Range-normalized difference in final objective between each tier-0 searcher (GP+qLogEI, wrapped TPE) and the log+Sobol floor at matched measured budget, as a cluster-level paired mean.",
-      "test": "superiority_one_sided",
-      "sidedness": "one-sided",
-      "direction": "higher_is_better_after_normalization",
+      "version": "4.0",
+      "class": "deterministic_veto",
+      "claim": "The specified model outputs, legal search traces, best-result selection and accounting conform on eight fixed self-contained known-answer fixtures.",
+      "estimand": "No population estimand. Exact finite model/objective discrepancies, observed regret curves, trial counts, work units and measured timings.",
+      "test": "finite_stylized_known_answer_conformance_v1",
       "comparators": [
-        "log+Sobol floor",
-        "random search"
+        "independent analytic formulas and intermediate-output reconstruction",
+        "reproduced method/seed proposal traces"
       ],
-      "combination": "intersection-union",
-      "combination_note": "Each shipped tier-0 searcher must clear both the floor and random search at the family-adjusted level. Beating only random search does not earn a default slot.",
-      "primary_endpoint": "Cluster-level paired mean normalized difference in final objective at matched measured budget.",
+      "primary_endpoint": "Zero conformance violations and complete planned evidence under the frozen binary64 numerical envelope.",
       "secondary_endpoints": [
-        "normalized area under the regret curve (adjusted interval, decision-bearing)"
+        "Descriptive best-so-far and final analytic regret in each fixture's units",
+        "Objective work units, elapsed time and search overhead; no method ranking inference"
       ],
-      "scale_bounds": "Per-task, declared in the task registry before data.",
-      "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
-      "task_scope": "acceptance task set (multiple independent tasks)",
-      "alpha_family": "tier0_gate",
-      "power_target": 0.8,
-      "max_sample": 20,
-      "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
-      "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+      "repetition_unit": "A named case, method and optimizer seed with 16 sequential proposals; finite coverage only, no independent-replicate claim.",
+      "task_scope": "Eight fixed cases: two each of ridge regression, quadratic gradient descent, scalar filtering and bottleneck architecture selection.",
+      "alpha_family": null,
+      "alpha_note": "Deterministic finite conformance and descriptive reporting make no statistical superiority claim; no alpha or power calculation applies.",
+      "max_sample": 1024,
+      "missingness": "Retain every planned slot, including partial or failed studies. Missing completion is INCONCLUSIVE; observed implementation failures are FAIL. Changed/malformed evidence is an integrity rejection. No replacement seeds.",
+      "stopping_rule": "Exactly 1024 proposals, plus 32 fixed reference probes, unless the fixed CPU wall cap interrupts execution. No stopping on observed regret or favorable results.",
       "release_consequence": {
-        "pass": "Searcher ships as a tier-0 default.",
-        "fail": "Searcher is identified and fixed before tier 1 proceeds.",
-        "inconclusive": "Searcher does not become a default; one pre-budgeted replication permitted, then terminal."
+        "pass": "Finite correctness obligation satisfied. Does not promote a searcher or transform to a performance-backed default. All other current-source gates and requirement dispositions remain mandatory.",
+        "fail": "Repair the demonstrated correctness failure; preserve this evidence and rerun under a new freeze.",
+        "inconclusive": "Gate remains blocked pending complete evidence; no historical PPO result can substitute."
       },
-      "repairs": [
-        "accepted correction: capability-specific regimes, non-inferiority margins, multiple tasks, separate GP vs TPE vs random",
-        "F2: alpha now bound to a declared family"
-      ]
+      "resources": {
+        "cpu_threads": 1,
+        "gpu": false,
+        "generation_seconds": 300,
+        "each_reconstruction_seconds": 300,
+        "reconstructions": 2
+      },
+      "known_limitations": "Exposed finite fixtures and two fixed optimizer seeds do not establish generalized search performance, statistical power, nonlinear-training optima, or a real-workload speedup. Timings are trusted local measurements, not physical attestation. The floating-point envelope is engineering conformance, not a formal interval proof.",
+      "scope_amendment": "D-WORKSPACE-VALIDATION and D-SELF-CONTAINED-VALIDATION. Old v3.7 PPO ranking, default-promotion, pilot, sizing and resource requirements are retired prospectively; archives preserve their rules and results."
     },
     "V05": {
       "id": "V05",
       "gate": "tier0_gate",
-      "class": "confirmatory",
-      "claim": "the log transform matters as claimed",
-      "estimand": "Range-normalized difference in final objective between log-warped GP and unwarped GP on scale-sensitive tasks, as a cluster-level paired mean.",
-      "test": "superiority_one_sided",
-      "sidedness": "one-sided",
-      "direction": "higher_is_better_after_normalization",
+      "version": "4.0",
+      "class": "deterministic_veto",
+      "claim": "The specified log/linear coordinates, shared physical initialization and resulting numerical search traces conform on the fixed ridge corpus.",
+      "estimand": "No population estimand. Exact finite model/objective discrepancies, observed regret curves, trial counts, work units and measured timings.",
+      "test": "finite_stylized_known_answer_conformance_v1",
       "comparators": [
-        "unwarped GP"
+        "independent analytic formulas and intermediate-output reconstruction",
+        "reproduced method/seed proposal traces"
       ],
-      "combination": "single",
-      "primary_endpoint": "Cluster-level paired mean normalized difference in final objective.",
-      "scale_bounds": "Per-task, declared in the task registry before data.",
-      "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
-      "task_scope": "scale-sensitive acceptance tasks (multiple independent tasks)",
-      "alpha_family": "tier0_gate",
-      "power_target": 0.8,
-      "max_sample": 20,
-      "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
-      "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+      "primary_endpoint": "Zero conformance violations and complete planned evidence under the frozen binary64 numerical envelope.",
+      "secondary_endpoints": [
+        "Descriptive best-so-far and final analytic regret in each fixture's units",
+        "Objective work units, elapsed time and search overhead; no method ranking inference"
+      ],
+      "repetition_unit": "A named case, method and optimizer seed with 16 sequential proposals; finite coverage only, no independent-replicate claim.",
+      "task_scope": "Two fixed ridge cases with two coordinate arms.",
+      "alpha_family": null,
+      "alpha_note": "Deterministic finite conformance and descriptive reporting make no statistical superiority claim; no alpha or power calculation applies.",
+      "max_sample": 128,
+      "missingness": "Retain every planned slot, including partial or failed studies. Missing completion is INCONCLUSIVE; observed implementation failures are FAIL. Changed/malformed evidence is an integrity rejection. No replacement seeds.",
+      "stopping_rule": "Exactly 128 proposals, plus 8 fixed reference probes, unless the fixed CPU wall cap interrupts execution. No stopping on observed regret or favorable results.",
       "release_consequence": {
-        "pass": "Log warping is on by default for scale-sensitive knobs.",
-        "fail": "Log warping demotes to an opt-in feature.",
-        "inconclusive": "Remains opt-in; one pre-budgeted replication permitted, then terminal."
+        "pass": "Finite correctness obligation satisfied. Does not promote a searcher or transform to a performance-backed default. All other current-source gates and requirement dispositions remain mandatory.",
+        "fail": "Repair the demonstrated correctness failure; preserve this evidence and rerun under a new freeze.",
+        "inconclusive": "Gate remains blocked pending complete evidence; no historical PPO result can substitute."
       },
-      "repairs": [
-        "accepted correction: positive gain required on scale-sensitive tasks, not merely 'must not lose'"
-      ]
+      "resources": {
+        "cpu_threads": 1,
+        "gpu": false,
+        "generation_seconds": 180,
+        "each_reconstruction_seconds": 180,
+        "reconstructions": 2
+      },
+      "known_limitations": "Exposed finite fixtures and two fixed optimizer seeds do not establish generalized search performance, statistical power, nonlinear-training optima, or a real-workload speedup. Timings are trusted local measurements, not physical attestation. The floating-point envelope is engineering conformance, not a formal interval proof.",
+      "scope_amendment": "D-WORKSPACE-VALIDATION and D-SELF-CONTAINED-VALIDATION. Old v3.7 PPO ranking, default-promotion, pilot, sizing and resource requirements are retired prospectively; archives preserve their rules and results."
     },
     "V14": {
       "id": "V14",
@@ -355,499 +1289,1208 @@
     },
     "V04-T1": {
       "id": "V04-T1",
+      "version": "2.0",
       "gate": "tier1_gate",
-      "class": "confirmatory",
-      "claim": "the tier-1 searchers earn their complexity",
-      "estimand": "Range-normalized difference in final objective between each tier-1 searcher (TuRBO, prior-aware qLogEI) and the log+Sobol floor at matched measured budget, as a cluster-level paired mean.",
-      "test": "superiority_one_sided",
-      "sidedness": "one-sided",
-      "direction": "higher_is_better_after_normalization",
+      "class": "deterministic_veto",
+      "claim": "Fixed trust-region numerical, controller and recovery conformance",
+      "scope_contract": "tier1_finite_known_answer_v1",
+      "estimand": "Seven quadratic training traces: integer, continuous linear/log, maximization, pending/restart recovery and finite exhaustion; independent rational updates and GP/controller reconstruction.",
+      "test": "finite_known_answer_and_production_identity_conformance",
       "comparators": [
-        "log+Sobol floor"
+        "independent mathematical reference",
+        "frozen production method replay"
       ],
-      "combination": "single",
-      "primary_endpoint": "Cluster-level paired mean normalized difference in final objective at matched measured budget.",
-      "secondary_endpoints": [
-        "normalized area under the regret curve (adjusted interval, decision-bearing)"
-      ],
-      "scale_bounds": "Per-task, declared in the task registry before data.",
-      "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
-      "task_scope": "acceptance task set (multiple independent tasks)",
-      "alpha_family": "tier1_gate",
-      "power_target": 0.9,
-      "max_sample": 25,
-      "power_note": "0.9 per policy.power.high_target_entries: TuRBO carries ~10 engineer-days of sunk build cost and the population line depends on it, so a false demotion is expensive.",
-      "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
-      "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+      "primary_endpoint": "All fixed slots complete, all independent physical/decision reconstructions agree, and production method/seed/options/state replay agrees.",
+      "repetition_unit": "one explicitly enumerated exposed deterministic slot",
+      "task_scope": "Seven quadratic training traces: integer, continuous linear/log, maximization, pending/restart recovery and finite exhaustion; independent rational updates and GP/controller reconstruction.",
+      "max_sample": 7,
+      "alpha_family": null,
+      "power_target": null,
+      "alpha_note": "Finite conformance only; no probabilistic performance, calibration or task-population inference.",
+      "missingness": "Retain every slot start, completed observation and error. Missing, failed or interrupted slots are INCONCLUSIVE; no replacements.",
+      "stopping_rule": "Frozen roster once under a 300-second process bound; no outcome-based expansion, pilot or best-of attempt selection.",
       "release_consequence": {
-        "pass": "Searcher ships as a tier-1 default.",
-        "fail": "Population line is deferred (BG-PBT depends on the trust region) and tier-2 scope is reassessed.",
-        "inconclusive": "Searcher does not become a default; one pre-budgeted replication permitted, then terminal."
+        "pass": "Finite opt-in capability only under the declared supported envelope; no automatic default, broad ranking, calibration or general culling permission.",
+        "fail": "Capability finite acceptance withheld; retain original result and repair prospectively before any new source-qualified attempt.",
+        "inconclusive": "Capability finite acceptance remains unestablished; retain missing/interrupted work and resolve the cause before a prospective amendment."
       },
-      "repairs": [
-        "accepted correction: capability-specific regimes, multiple tasks",
-        "F2: alpha bound to a declared family"
-      ]
+      "numerics": "Fixed reference engineering envelopes; no rigorous floating-point bound claimed.",
+      "source_authorization": "Standing user instruction for self-contained known-answer stylistic tuning tests and continuous bounded execution; D-TIER1-KNOWN-ANSWER.",
+      "contract": {
+        "version": 1,
+        "claim": "tier1_finite_known_answer_v1",
+        "entry": "V04-T1",
+        "slots": [
+          {
+            "id": "integer",
+            "kind": "trust"
+          },
+          {
+            "id": "integer-pending",
+            "kind": "trust",
+            "recovery": "pending"
+          },
+          {
+            "id": "integer-restart",
+            "kind": "trust",
+            "recovery": "restart"
+          },
+          {
+            "id": "maximize",
+            "kind": "trust",
+            "maximize": true
+          },
+          {
+            "id": "continuous-linear",
+            "kind": "trust",
+            "transform": "none"
+          },
+          {
+            "id": "continuous-log",
+            "kind": "trust",
+            "transform": "log"
+          },
+          {
+            "id": "finite-exhaustion",
+            "kind": "trust",
+            "finite_stop": true
+          }
+        ],
+        "wall_seconds_per_process": 300,
+        "maximum_reconstructions": 3,
+        "cpu_affinity_count": 1,
+        "numerical_threads": 1,
+        "gpu": false,
+        "missingness": "retain_all_slots_no_replacement_incomplete_is_inconclusive",
+        "decision": "all_frozen_slots_independently_conform_and_production_identity_replays",
+        "replay_scope": "same_runtime_identity_only_not_independent_algorithm_proof",
+        "release": "finite_opt_in_capability_only_no_default_or_population_inference",
+        "numerics": "fixed_reference_engineering_tolerances_not_rigorous_error_bounds",
+        "fixture_source": [
+          "validation/tier1_producers.py",
+          "validation/tier1_reference.py",
+          "examples",
+          "workloads",
+          "validation/*_reference.py"
+        ]
+      }
     },
     "V06": {
       "id": "V06",
+      "version": "2.0",
       "gate": "tier1_gate",
-      "class": "confirmatory",
-      "claim": "early stopping is nearly free",
-      "estimand": "Joint claim: (a) quality of searcher+ASHA is non-inferior to searcher-at-full-fidelity within margin delta on a range-normalized scale, and (b) the upper confidence bound on the active-accelerator-second cost ratio is at or below one third.",
-      "test": "non_inferiority_one_sided_plus_cost_bound",
-      "sidedness": "one-sided",
-      "direction": "higher_is_better_after_normalization",
-      "margin": 0.05,
-      "margin_justification": "A 5% range-normalized quality loss is the largest degradation that would not change the default recommendation to enable ASHA. This is a product tolerance, not an estimate from observed noise, and is fixed before data per the review's item-1 requirement.",
+      "class": "deterministic_veto",
+      "claim": "Fixed ASHA/median decisions, physical work and continuation conformance",
+      "scope_contract": "tier1_finite_known_answer_v1",
+      "estimand": "Fourteen finite trajectories with ascending/descending/alternating proposals, median on/off, resume/restart, full-fidelity baseline and interruption; exact quadratic rankings and actual work.",
+      "test": "finite_known_answer_and_production_identity_conformance",
       "comparators": [
-        "searcher at full fidelity"
+        "independent mathematical reference",
+        "frozen production method replay"
       ],
-      "combination": "intersection-union",
-      "combination_note": "Both the quality non-inferiority condition and the cost bound must clear. Passing on quality while cost overruns is not a pass, and vice versa.",
-      "primary_endpoint": "Paired non-inferiority on normalized final quality AND upper 95% confidence bound of the cost ratio <= 1/3.",
-      "cost_estimand": "active_accelerator_seconds",
-      "cost_estimand_detail": "Active accelerator-seconds is the primary: the honest measure of GPU occupancy on local hardware. The real cost is opportunity \u2014 what else could have run on that GPU. Reported as separate secondary columns for diagnosis: CPU-seconds, elapsed wall-clock, queue wait. Seconds are never converted across resource types.",
-      "cost_uncertainty": "The cost ratio carries a paired cluster bootstrap interval; the gate reads its upper bound, not a point estimate.",
-      "cost_attribution": "Shared startup and queue time is attributed deterministically per trial by allocation record. Both arms run under the same scheduling policy and the same hardware; heterogeneous hardware voids the comparison.",
-      "scale_bounds": "Per-task, declared in the task registry before data.",
-      "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
-      "task_scope": "acceptance RL task set (multiple independent tasks)",
-      "alpha_family": "tier1_gate",
-      "power_target": 0.8,
-      "max_sample": 20,
-      "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; retries and preempted work remain on the cost bill.",
-      "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+      "primary_endpoint": "All fixed slots complete, all independent physical/decision reconstructions agree, and production method/seed/options/state replay agrees.",
+      "repetition_unit": "one explicitly enumerated exposed deterministic slot",
+      "task_scope": "Fourteen finite trajectories with ascending/descending/alternating proposals, median on/off, resume/restart, full-fidelity baseline and interruption; exact quadratic rankings and actual work.",
+      "max_sample": 14,
+      "alpha_family": null,
+      "power_target": null,
+      "alpha_note": "Finite conformance only; no probabilistic performance, calibration or task-population inference.",
+      "missingness": "Retain every slot start, completed observation and error. Missing, failed or interrupted slots are INCONCLUSIVE; no replacements.",
+      "stopping_rule": "Frozen roster once under a 300-second process bound; no outcome-based expansion, pilot or best-of attempt selection.",
       "release_consequence": {
-        "pass": "ASHA is on by default.",
-        "fail": "Promotion is blocked and the rung-correlation assumptions are diagnosed.",
-        "inconclusive": "ASHA does not become a default; one pre-budgeted replication permitted, then terminal."
+        "pass": "Finite opt-in capability only under the declared supported envelope; no automatic default, broad ranking, calibration or general culling permission.",
+        "fail": "Capability finite acceptance withheld; retain original result and repair prospectively before any new source-qualified attempt.",
+        "inconclusive": "Capability finite acceptance remains unestablished; retain missing/interrupted work and resolve the cause before a prospective amendment."
       },
-      "repairs": [
-        "F3: queue wait no longer inside accelerator-seconds; primary cost estimand named",
-        "item 6: separate cost columns, deterministic attribution, interval on the ratio",
-        "accepted correction: quality non-inferiority, not CI overlap",
-        "D4: active accelerator-seconds on local hardware, not billed resource-seconds"
-      ]
+      "numerics": "Fixed reference engineering envelopes; no rigorous floating-point bound claimed.",
+      "source_authorization": "Standing user instruction for self-contained known-answer stylistic tuning tests and continuous bounded execution; D-TIER1-KNOWN-ANSWER.",
+      "contract": {
+        "version": 1,
+        "claim": "tier1_finite_known_answer_v1",
+        "entry": "V06",
+        "slots": [
+          {
+            "id": "full",
+            "kind": "multifidelity",
+            "order": "ascending",
+            "policy": "resume",
+            "median": false,
+            "full": true
+          },
+          {
+            "id": "ascending-resume-median0",
+            "kind": "multifidelity",
+            "order": "ascending",
+            "policy": "resume",
+            "median": false
+          },
+          {
+            "id": "ascending-restart-median0",
+            "kind": "multifidelity",
+            "order": "ascending",
+            "policy": "restart",
+            "median": false
+          },
+          {
+            "id": "ascending-resume-median1",
+            "kind": "multifidelity",
+            "order": "ascending",
+            "policy": "resume",
+            "median": true
+          },
+          {
+            "id": "ascending-restart-median1",
+            "kind": "multifidelity",
+            "order": "ascending",
+            "policy": "restart",
+            "median": true
+          },
+          {
+            "id": "descending-resume-median0",
+            "kind": "multifidelity",
+            "order": "descending",
+            "policy": "resume",
+            "median": false
+          },
+          {
+            "id": "descending-restart-median0",
+            "kind": "multifidelity",
+            "order": "descending",
+            "policy": "restart",
+            "median": false
+          },
+          {
+            "id": "descending-resume-median1",
+            "kind": "multifidelity",
+            "order": "descending",
+            "policy": "resume",
+            "median": true
+          },
+          {
+            "id": "descending-restart-median1",
+            "kind": "multifidelity",
+            "order": "descending",
+            "policy": "restart",
+            "median": true
+          },
+          {
+            "id": "alternating-resume-median0",
+            "kind": "multifidelity",
+            "order": "alternating",
+            "policy": "resume",
+            "median": false
+          },
+          {
+            "id": "alternating-restart-median0",
+            "kind": "multifidelity",
+            "order": "alternating",
+            "policy": "restart",
+            "median": false
+          },
+          {
+            "id": "alternating-resume-median1",
+            "kind": "multifidelity",
+            "order": "alternating",
+            "policy": "resume",
+            "median": true
+          },
+          {
+            "id": "alternating-restart-median1",
+            "kind": "multifidelity",
+            "order": "alternating",
+            "policy": "restart",
+            "median": true
+          },
+          {
+            "id": "crash-resume",
+            "kind": "multifidelity",
+            "order": "ascending",
+            "policy": "resume",
+            "median": false,
+            "crash": true
+          }
+        ],
+        "wall_seconds_per_process": 300,
+        "maximum_reconstructions": 3,
+        "cpu_affinity_count": 1,
+        "numerical_threads": 1,
+        "gpu": false,
+        "missingness": "retain_all_slots_no_replacement_incomplete_is_inconclusive",
+        "decision": "all_frozen_slots_independently_conform_and_production_identity_replays",
+        "replay_scope": "same_runtime_identity_only_not_independent_algorithm_proof",
+        "release": "finite_opt_in_capability_only_no_default_or_population_inference",
+        "numerics": "fixed_reference_engineering_tolerances_not_rigorous_error_bounds",
+        "fixture_source": [
+          "validation/tier1_producers.py",
+          "validation/tier1_reference.py",
+          "examples",
+          "workloads",
+          "validation/*_reference.py"
+        ]
+      }
     },
     "V09": {
       "id": "V09",
+      "version": "2.0",
       "gate": "tier1_gate",
-      "class": "confirmatory",
-      "claim": "the premium MO searcher earns its tier",
-      "estimand": "Cluster-level paired mean difference in final hypervolume between qLogNEHVI and each comparator, computed against a frozen reference point and frozen normalization.",
-      "test": "paired_non_inferiority_then_superiority",
-      "test_detail": "Paired test on the difference, replacing the rejected interval-overlap rule. Overlap of two marginal intervals is not a test of their difference: intervals can overlap while the paired difference is significant, and can separate while it is not.",
-      "sidedness": "one-sided",
-      "direction": "higher_is_better_after_normalization",
-      "margin": 0.05,
-      "margin_justification": "A 5% normalized hypervolume shortfall is the largest gap that would still leave the premium searcher worth its tier. Ties demote to option per the survey's declared rule.",
+      "class": "deterministic_veto",
+      "claim": "Fixed vector optimizer and Pareto/hypervolume conformance",
+      "scope_contract": "tier1_finite_known_answer_v1",
+      "estimand": "Actual random, qLogNEHVI, Chebyshev and NSGA-II methods; six fits each on the 128 fixed-knot ReLU architectures; independent rational error, feasible frontier and volume.",
+      "test": "finite_known_answer_and_production_identity_conformance",
       "comparators": [
-        "random-weight Chebyshev scalarization",
-        "wrapped NSGA-II"
+        "independent mathematical reference",
+        "frozen production method replay"
       ],
-      "combination": "intersection-union",
-      "combination_note": "qLogNEHVI must clear both comparators at the family-adjusted level to hold its tier slot. Beating only NSGA-II does not earn the premium slot.",
-      "primary_endpoint": "Cluster-level paired mean difference in final hypervolume against the frozen reference point.",
-      "secondary_endpoints": [
-        "hypervolume-over-budget curve (descriptive only)"
-      ],
-      "frozen_before_data": [
-        "hypervolume reference point",
-        "objective normalization",
-        "objective bounds"
-      ],
-      "frozen_source": "Reference point and normalization are set from declared domain bounds in the task registry, never from observed campaign results.",
-      "scale_bounds": "Declared domain bounds per objective in the task registry.",
-      "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
-      "task_scope": "pinned Hamiltonian task",
-      "task_scope_note": "One task, so the claim is pinned-task and may not be stated as a workload-family result (policy.resampling.single_cluster_rule).",
-      "alpha_family": "tier1_gate",
-      "power_target": 0.8,
-      "max_sample": 20,
-      "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
-      "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+      "primary_endpoint": "All fixed slots complete, all independent physical/decision reconstructions agree, and production method/seed/options/state replay agrees.",
+      "repetition_unit": "one explicitly enumerated exposed deterministic slot",
+      "task_scope": "Actual random, qLogNEHVI, Chebyshev and NSGA-II methods; six fits each on the 128 fixed-knot ReLU architectures; independent rational error, feasible frontier and volume.",
+      "max_sample": 4,
+      "alpha_family": null,
+      "power_target": null,
+      "alpha_note": "Finite conformance only; no probabilistic performance, calibration or task-population inference.",
+      "missingness": "Retain every slot start, completed observation and error. Missing, failed or interrupted slots are INCONCLUSIVE; no replacements.",
+      "stopping_rule": "Frozen roster once under a 300-second process bound; no outcome-based expansion, pilot or best-of attempt selection.",
       "release_consequence": {
-        "pass": "qLogNEHVI ships as the MO default.",
-        "fail": "Demote to a tier-2 option; the Hamiltonian workload defaults to scalarization.",
-        "inconclusive": "Demote to option; one pre-budgeted replication permitted, then terminal."
+        "pass": "Finite opt-in capability only under the declared supported envelope; no automatic default, broad ranking, calibration or general culling permission.",
+        "fail": "Capability finite acceptance withheld; retain original result and repair prospectively before any new source-qualified attempt.",
+        "inconclusive": "Capability finite acceptance remains unestablished; retain missing/interrupted work and resolve the cause before a prospective amendment."
       },
-      "repairs": [
-        "F1: interval-overlap demotion rule replaced with a paired test on the difference",
-        "F1: reference point and normalization frozen before data",
-        "accepted correction: freeze normalization/reference from domain bounds, paired non-inferiority, include NSGA-II"
-      ]
+      "numerics": "Fixed reference engineering envelopes; no rigorous floating-point bound claimed.",
+      "source_authorization": "Standing user instruction for self-contained known-answer stylistic tuning tests and continuous bounded execution; D-TIER1-KNOWN-ANSWER.",
+      "contract": {
+        "version": 1,
+        "claim": "tier1_finite_known_answer_v1",
+        "entry": "V09",
+        "slots": [
+          {
+            "id": "random",
+            "kind": "vector",
+            "method": "random",
+            "seed": 13,
+            "trials": 6
+          },
+          {
+            "id": "qlognehvi",
+            "kind": "vector",
+            "method": "qlognehvi",
+            "seed": 13,
+            "trials": 6
+          },
+          {
+            "id": "chebyshev",
+            "kind": "vector",
+            "method": "chebyshev",
+            "seed": 13,
+            "trials": 6
+          },
+          {
+            "id": "nsgaii",
+            "kind": "vector",
+            "method": "nsgaii",
+            "seed": 13,
+            "trials": 6
+          }
+        ],
+        "wall_seconds_per_process": 300,
+        "maximum_reconstructions": 3,
+        "cpu_affinity_count": 1,
+        "numerical_threads": 1,
+        "gpu": false,
+        "missingness": "retain_all_slots_no_replacement_incomplete_is_inconclusive",
+        "decision": "all_frozen_slots_independently_conform_and_production_identity_replays",
+        "replay_scope": "same_runtime_identity_only_not_independent_algorithm_proof",
+        "release": "finite_opt_in_capability_only_no_default_or_population_inference",
+        "numerics": "fixed_reference_engineering_tolerances_not_rigorous_error_bounds",
+        "fixture_source": [
+          "validation/tier1_producers.py",
+          "validation/tier1_reference.py",
+          "examples",
+          "workloads",
+          "validation/*_reference.py"
+        ]
+      }
     },
     "V10": {
       "id": "V10",
+      "version": "2.0",
       "gate": "tier1_gate",
-      "class": "confirmatory_safety",
-      "claim": "cheap MO fidelity signals may cull",
-      "estimand": "Operational error of early culling on the short-horizon drift signal: the probability that a configuration which would be top-k or Pareto-optimal at full fidelity is culled at the rung.",
-      "test": "safety_bounds_plus_association",
-      "test_detail": "Association alone is insufficient: a high rank correlation does not bound the probability of culling a future good configuration. The gate now reads operational error metrics, with correlation retained as a secondary descriptor.",
-      "sidedness": "one-sided",
-      "direction": "lower_false_cull_is_better",
+      "class": "deterministic_veto",
+      "claim": "Fixed advisory promotion and absolute constraint-veto conformance",
+      "scope_contract": "tier1_finite_known_answer_v1",
+      "estimand": "Rank reversal, infeasible/failed trials and scheduler recovery; all feasible configurations reach full fidelity. Experimental Pareto culling is not certified.",
+      "test": "finite_known_answer_and_production_identity_conformance",
       "comparators": [
-        "full-fidelity ranking (ground truth)"
+        "independent mathematical reference",
+        "frozen production method replay"
       ],
-      "combination": "intersection-union",
-      "combination_note": "All safety criteria must clear. Failing any one leaves the signal advisory.",
-      "primary_endpoint": "Upper 95% confidence bound on false-cull probability for top-k configurations at or below 0.05, AND lower bound on top-k survivor recall at or above 0.90.",
-      "top_k": 10,
-      "secondary_endpoints": [
-        "Spearman rank correlation with bootstrap interval (descriptive)",
-        "normalized regret of the culled set (decision-bearing, adjusted interval)"
-      ],
-      "scale_bounds": "Not applicable by construction: both primary endpoints are probabilities bounded in [0, 1] (false-cull probability, top-k survivor recall), so they need no range normalization against declared objective bounds. The secondary regret endpoint is range-normalized per task using the same registry bounds as V09.",
-      "seeds_per_config": 5,
-      "seeds_note": "Raised from the single fixed seed of the rejected design. One seed per configuration confounds training-seed variance with configuration quality and cannot estimate false-cull probability at all.",
-      "repetition_unit": "configuration evaluated across multiple training seeds, clustered by task",
-      "task_scope": "multiple independent Hamiltonian-family tasks",
-      "task_scope_note": "Multiple tasks are required; the rejected single-task design could not support the workload-family claim the scheduler relies on.",
-      "rung_selection": "The candidate rung is fixed before acceptance data is seen and is recorded in the manifest.",
-      "alpha_family": "tier1_gate",
-      "power_target": 0.8,
-      "max_sample": 200,
-      "max_sample_note": "Configurations, not runs. Total runs is max_sample x seeds_per_config x tasks.",
-      "missingness": "A configuration whose full-fidelity run fails is excluded from both the rung and endpoint vectors and is reported.",
-      "stopping_rule": "Fixed configuration budget sized by simulation; at max_sample without clearing, verdict is inconclusive.",
+      "primary_endpoint": "All fixed slots complete, all independent physical/decision reconstructions agree, and production method/seed/options/state replay agrees.",
+      "repetition_unit": "one explicitly enumerated exposed deterministic slot",
+      "task_scope": "Rank reversal, infeasible/failed trials and scheduler recovery; all feasible configurations reach full fidelity. Experimental Pareto culling is not certified.",
+      "max_sample": 2,
+      "alpha_family": null,
+      "power_target": null,
+      "alpha_note": "Finite conformance only; no probabilistic performance, calibration or task-population inference.",
+      "missingness": "Retain every slot start, completed observation and error. Missing, failed or interrupted slots are INCONCLUSIVE; no replacements.",
+      "stopping_rule": "Frozen roster once under a 300-second process bound; no outcome-based expansion, pilot or best-of attempt selection.",
       "release_consequence": {
-        "pass": "MO-ASHA may kill on the drift signal.",
-        "fail": "Scheduler still runs but the signal is advisory; promotion falls back to the objective that does correlate.",
-        "inconclusive": "Signal stays advisory; one pre-budgeted replication permitted, then terminal."
+        "pass": "Finite opt-in capability only under the declared supported envelope; no automatic default, broad ranking, calibration or general culling permission.",
+        "fail": "Capability finite acceptance withheld; retain original result and repair prospectively before any new source-qualified attempt.",
+        "inconclusive": "Capability finite acceptance remains unestablished; retain missing/interrupted work and resolve the cause before a prospective amendment."
       },
-      "repairs": [
-        "F1: gate now reads top-k recall and false-cull probability, not correlation alone",
-        "F1: multiple seeds and multiple tasks replace 100 configs at one fixed seed",
-        "accepted correction: multiple seeds/tasks, gate on top-k recall and false-cull probability"
-      ]
+      "numerics": "Fixed reference engineering envelopes; no rigorous floating-point bound claimed.",
+      "source_authorization": "Standing user instruction for self-contained known-answer stylistic tuning tests and continuous bounded execution; D-TIER1-KNOWN-ANSWER.",
+      "contract": {
+        "version": 1,
+        "claim": "tier1_finite_known_answer_v1",
+        "entry": "V10",
+        "slots": [
+          {
+            "id": "advisory-reversal",
+            "kind": "advisory",
+            "restore": false
+          },
+          {
+            "id": "advisory-recovery",
+            "kind": "advisory",
+            "restore": true
+          }
+        ],
+        "wall_seconds_per_process": 300,
+        "maximum_reconstructions": 3,
+        "cpu_affinity_count": 1,
+        "numerical_threads": 1,
+        "gpu": false,
+        "missingness": "retain_all_slots_no_replacement_incomplete_is_inconclusive",
+        "decision": "all_frozen_slots_independently_conform_and_production_identity_replays",
+        "replay_scope": "same_runtime_identity_only_not_independent_algorithm_proof",
+        "release": "finite_opt_in_capability_only_no_default_or_population_inference",
+        "numerics": "fixed_reference_engineering_tolerances_not_rigorous_error_bounds",
+        "fixture_source": [
+          "validation/tier1_producers.py",
+          "validation/tier1_reference.py",
+          "examples",
+          "workloads",
+          "validation/*_reference.py"
+        ]
+      }
     },
     "V11a": {
       "id": "V11a",
+      "version": "2.0",
       "gate": "tier1_gate",
-      "class": "confirmatory",
-      "claim": "priors help under good advice",
-      "split_note": "V11 is split because it makes two claims with different estimands and different sidedness. Bundling a superiority claim and a non-inferiority claim under one margin, as the chapter did, is not testable as written.",
-      "estimand": "Range-normalized difference in final objective between the folklore-prior arm and the no-prior arm, as a cluster-level paired mean.",
-      "test": "superiority_one_sided",
-      "sidedness": "one-sided",
-      "direction": "higher_is_better_after_normalization",
-      "margin": 0.0,
-      "margin_justification": "Superiority against no prior: any reliable positive gain justifies default-on, so the margin is zero and the test is ordinary one-sided superiority.",
+      "class": "deterministic_veto",
+      "claim": "Fixed actual piBO and PriorBand conformance under known-good advice",
+      "scope_contract": "tier1_finite_known_answer_v1",
+      "estimand": "Actual piBO log-score decay with exact analytic prior normalization, categorical and integer linear/log PriorBand, plus no-prior comparison; finite physical training and independent probability/score checks.",
+      "test": "finite_known_answer_and_production_identity_conformance",
       "comparators": [
-        "no-prior arm"
+        "independent mathematical reference",
+        "frozen production method replay"
       ],
-      "combination": "single",
-      "primary_endpoint": "Cluster-level paired mean normalized difference in final objective.",
-      "implementation_requirement": "Tests the actual piBO decay multiplier and the actual PriorBand rung portfolio. GP-mean substitution and top-K sampling are different methods and do not satisfy this entry.",
-      "prior_support_requirement": "The declared prior must place nonzero density on the region containing the no-prior arm's optimum, verified and recorded before the campaign; a prior with zero support there makes the comparison vacuous.",
-      "scale_bounds": "Per-task, declared in the task registry before data.",
-      "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
-      "task_scope": "acceptance task set (multiple independent tasks)",
-      "alpha_family": "tier1_gate",
-      "power_target": 0.8,
-      "max_sample": 20,
-      "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
-      "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+      "primary_endpoint": "All fixed slots complete, all independent physical/decision reconstructions agree, and production method/seed/options/state replay agrees.",
+      "repetition_unit": "one explicitly enumerated exposed deterministic slot",
+      "task_scope": "Actual piBO log-score decay with exact analytic prior normalization, categorical and integer linear/log PriorBand, plus no-prior comparison; finite physical training and independent probability/score checks.",
+      "max_sample": 6,
+      "alpha_family": null,
+      "power_target": null,
+      "alpha_note": "Finite conformance only; no probabilistic performance, calibration or task-population inference.",
+      "missingness": "Retain every slot start, completed observation and error. Missing, failed or interrupted slots are INCONCLUSIVE; no replacements.",
+      "stopping_rule": "Frozen roster once under a 300-second process bound; no outcome-based expansion, pilot or best-of attempt selection.",
       "release_consequence": {
-        "pass": "Priors are eligible for default-on, conditional on V11b also passing.",
-        "fail": "Demote piBO/PriorBand to opt-in.",
-        "inconclusive": "Remains opt-in; one pre-budgeted replication permitted, then terminal."
+        "pass": "Finite opt-in capability only under the declared supported envelope; no automatic default, broad ranking, calibration or general culling permission.",
+        "fail": "Capability finite acceptance withheld; retain original result and repair prospectively before any new source-qualified attempt.",
+        "inconclusive": "Capability finite acceptance remains unestablished; retain missing/interrupted work and resolve the cause before a prospective amendment."
       },
-      "repairs": [
-        "accepted correction: test actual piBO/PriorBand, require nonzero support, predefine gain and recovery margins separately"
-      ]
+      "numerics": "Fixed reference engineering envelopes; no rigorous floating-point bound claimed.",
+      "source_authorization": "Standing user instruction for self-contained known-answer stylistic tuning tests and continuous bounded execution; D-TIER1-KNOWN-ANSWER.",
+      "contract": {
+        "version": 1,
+        "claim": "tier1_finite_known_answer_v1",
+        "entry": "V11a",
+        "slots": [
+          {
+            "id": "categorical",
+            "kind": "priorband",
+            "default": 18
+          },
+          {
+            "id": "uniform",
+            "kind": "priorband",
+            "default": null,
+            "uniform": true
+          },
+          {
+            "id": "integer-none",
+            "kind": "priorband",
+            "default": 18,
+            "product_transform": "none"
+          },
+          {
+            "id": "integer-log",
+            "kind": "priorband",
+            "default": 18,
+            "product_transform": "log"
+          },
+          {
+            "id": "pibo",
+            "kind": "pibo",
+            "advice": "good",
+            "seed": 731031,
+            "trials": 6,
+            "center": 0.45
+          },
+          {
+            "id": "gp",
+            "kind": "pibo",
+            "advice": "none",
+            "seed": 731031,
+            "trials": 6,
+            "center": 0.45
+          }
+        ],
+        "wall_seconds_per_process": 300,
+        "maximum_reconstructions": 3,
+        "cpu_affinity_count": 1,
+        "numerical_threads": 1,
+        "gpu": false,
+        "missingness": "retain_all_slots_no_replacement_incomplete_is_inconclusive",
+        "decision": "all_frozen_slots_independently_conform_and_production_identity_replays",
+        "replay_scope": "same_runtime_identity_only_not_independent_algorithm_proof",
+        "release": "finite_opt_in_capability_only_no_default_or_population_inference",
+        "numerics": "fixed_reference_engineering_tolerances_not_rigorous_error_bounds",
+        "fixture_source": [
+          "validation/tier1_producers.py",
+          "validation/tier1_reference.py",
+          "examples",
+          "workloads",
+          "validation/*_reference.py"
+        ]
+      }
     },
     "V11b": {
       "id": "V11b",
+      "version": "2.0",
       "gate": "tier1_gate",
-      "class": "confirmatory",
-      "claim": "priors are safe under wrong advice",
-      "estimand": "Range-normalized difference in final objective between the wrong-prior arm and the no-prior arm, as a cluster-level paired mean, tested for non-inferiority within margin delta.",
-      "test": "non_inferiority_one_sided",
-      "sidedness": "one-sided",
-      "direction": "higher_is_better_after_normalization",
-      "margin": 0.1,
-      "margin_justification": "A 10% range-normalized shortfall under a deliberately wrong prior is the largest recovery failure that would still permit default-on: beyond it, a user with bad intuition is materially worse off than a user with none. Product tolerance, fixed before data.",
-      "endpoint_definition": "Recovery is measured as the normalized final objective at the declared endpoint, not as an informal 'within noise'. Time-to-recover is a declared secondary.",
+      "class": "deterministic_veto",
+      "claim": "Fixed actual piBO and PriorBand conformance under deliberately wrong advice",
+      "scope_contract": "tier1_finite_known_answer_v1",
+      "estimand": "Wrong advice with positive guard, actual piBO decay, categorical/product PriorBand, no-prior comparison and pending/restart recovery; no finite-budget recovery guarantee.",
+      "test": "finite_known_answer_and_production_identity_conformance",
       "comparators": [
-        "no-prior arm"
+        "independent mathematical reference",
+        "frozen production method replay"
       ],
-      "combination": "single",
-      "primary_endpoint": "Paired non-inferiority of normalized final objective within margin 0.10.",
-      "secondary_endpoints": [
-        "trials to reach the no-prior arm's final value (adjusted interval, decision-bearing)"
-      ],
-      "implementation_requirement": "Same as V11a: actual piBO decay multiplier and actual PriorBand rung portfolio.",
-      "scale_bounds": "Per-task, declared in the task registry before data.",
-      "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
-      "task_scope": "acceptance task set (multiple independent tasks)",
-      "alpha_family": "tier1_gate",
-      "power_target": 0.8,
-      "max_sample": 20,
-      "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
-      "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+      "primary_endpoint": "All fixed slots complete, all independent physical/decision reconstructions agree, and production method/seed/options/state replay agrees.",
+      "repetition_unit": "one explicitly enumerated exposed deterministic slot",
+      "task_scope": "Wrong advice with positive guard, actual piBO decay, categorical/product PriorBand, no-prior comparison and pending/restart recovery; no finite-budget recovery guarantee.",
+      "max_sample": 8,
+      "alpha_family": null,
+      "power_target": null,
+      "alpha_note": "Finite conformance only; no probabilistic performance, calibration or task-population inference.",
+      "missingness": "Retain every slot start, completed observation and error. Missing, failed or interrupted slots are INCONCLUSIVE; no replacements.",
+      "stopping_rule": "Frozen roster once under a 300-second process bound; no outcome-based expansion, pilot or best-of attempt selection.",
       "release_consequence": {
-        "pass": "Combined with V11a, priors ship default-on.",
-        "fail": "Demote piBO/PriorBand to opt-in regardless of the V11a result.",
-        "inconclusive": "Remains opt-in; one pre-budgeted replication permitted, then terminal."
+        "pass": "Finite opt-in capability only under the declared supported envelope; no automatic default, broad ranking, calibration or general culling permission.",
+        "fail": "Capability finite acceptance withheld; retain original result and repair prospectively before any new source-qualified attempt.",
+        "inconclusive": "Capability finite acceptance remains unestablished; retain missing/interrupted work and resolve the cause before a prospective amendment."
       },
-      "repairs": [
-        "item 1: 'recovery within noise' replaced with a fixed endpoint, horizon, and margin",
-        "accepted correction: predefine gain and recovery margins separately"
-      ]
+      "numerics": "Fixed reference engineering envelopes; no rigorous floating-point bound claimed.",
+      "source_authorization": "Standing user instruction for self-contained known-answer stylistic tuning tests and continuous bounded execution; D-TIER1-KNOWN-ANSWER.",
+      "contract": {
+        "version": 1,
+        "claim": "tier1_finite_known_answer_v1",
+        "entry": "V11b",
+        "slots": [
+          {
+            "id": "categorical",
+            "kind": "priorband",
+            "default": 1
+          },
+          {
+            "id": "uniform",
+            "kind": "priorband",
+            "default": null,
+            "uniform": true
+          },
+          {
+            "id": "integer-none",
+            "kind": "priorband",
+            "default": 1,
+            "product_transform": "none"
+          },
+          {
+            "id": "integer-log",
+            "kind": "priorband",
+            "default": 1,
+            "product_transform": "log"
+          },
+          {
+            "id": "pibo",
+            "kind": "pibo",
+            "advice": "wrong",
+            "seed": 731031,
+            "trials": 6,
+            "center": 0.025
+          },
+          {
+            "id": "gp",
+            "kind": "pibo",
+            "advice": "none",
+            "seed": 731031,
+            "trials": 6,
+            "center": 0.025
+          },
+          {
+            "id": "wrong-pending",
+            "kind": "priorband",
+            "default": 1,
+            "cap": 1
+          },
+          {
+            "id": "wrong-restart",
+            "kind": "priorband",
+            "default": 1,
+            "continuation": "restart"
+          }
+        ],
+        "wall_seconds_per_process": 300,
+        "maximum_reconstructions": 3,
+        "cpu_affinity_count": 1,
+        "numerical_threads": 1,
+        "gpu": false,
+        "missingness": "retain_all_slots_no_replacement_incomplete_is_inconclusive",
+        "decision": "all_frozen_slots_independently_conform_and_production_identity_replays",
+        "replay_scope": "same_runtime_identity_only_not_independent_algorithm_proof",
+        "release": "finite_opt_in_capability_only_no_default_or_population_inference",
+        "numerics": "fixed_reference_engineering_tolerances_not_rigorous_error_bounds",
+        "fixture_source": [
+          "validation/tier1_producers.py",
+          "validation/tier1_reference.py",
+          "examples",
+          "workloads",
+          "validation/*_reference.py"
+        ]
+      }
     },
     "V13": {
       "id": "V13",
+      "version": "2.0",
       "gate": "tier1_gate",
-      "class": "deterministic_veto_plus_calibration",
-      "claim": "sampler correctness cannot be bought by speed",
-      "estimand": "Two separable questions: (a) do the absolute correctness vetoes hold, and (b) does the candidate sampler's posterior agree with a frozen reference posterior within Monte Carlo error.",
-      "test": "sbc_plus_automated_diagnostics",
-      "test_detail": "Simulation-based calibration fixtures replace visual inspection. Multimodality is detected by an automated diagnostic, not by looking at trace plots, and chains are never re-initialized on the basis of an inspection that happened after seeing the data.",
-      "vetoes": [
-        "Any configuration with a divergent transition is never promoted.",
-        "Any configuration with rank-normalized split R-hat above 1.01 on any monitored marginal is never promoted.",
-        "Any configuration with bulk-ESS or tail-ESS below 400 is never promoted.",
-        "A single promotion of a veto-failing configuration fails the entry outright."
-      ],
-      "veto_note": "Vetoes are absolute and deterministic; they consume no family alpha. The false-veto rate is a declared cost of conservatism and is reported in the gate report.",
-      "calibration_check": "Simulation-based calibration over declared fixtures: rank statistics of the true parameter within the posterior draws must be uniform, tested by the SBC rank histogram with a simultaneous band.",
-      "agreement_check": "MCSE-aware and interval-based: the candidate posterior mean must lie within a Monte Carlo standard error band of the frozen reference mean, with the band accounting for both samplers' MCSE, and the criterion applied simultaneously across monitored marginals rather than one at a time.",
-      "agreement_note": "Replaces the rejected 'within one standard error of the reference mean' rule, which was a weak single-marginal test that ignored simultaneity and treated the reference as exact.",
-      "frozen_before_data": [
-        "reference posterior artifact",
-        "monitored marginal list",
-        "SBC fixture set"
-      ],
-      "multimodality_diagnostic": "Automated: mixture-component detection on pooled draws plus between-chain mode disagreement statistic, both with declared thresholds. Dispersed re-initialization is a preregistered protocol branch, not a post hoc response.",
-      "sampling_protocol": "Four independent chains per configuration from dispersed initializations; 2,000 warmup draws discarded plus 2,000 retained per chain (8,000 retained total). Reference posterior uses the same four-chain protocol with 20,000 retained draws per chain.",
-      "ranking_rule": "Survivors are ranked by effective sample size per gradient evaluation, measured by the executor. Speed enters only after the vetoes and the calibration and agreement checks pass.",
+      "class": "deterministic_veto",
+      "claim": "Fixed Gaussian HMC transitions, diagnostics and veto conformance",
+      "scope_contract": "tier1_finite_known_answer_v1",
+      "estimand": "Stable/scaled, resumed, resonant and unstable Gaussian chains, plus six diagnostic boundary cases and two direct diagnostic fixtures; exact leapfrog matrix and independent RNG/diagnostic reconstruction.",
+      "test": "finite_known_answer_and_production_identity_conformance",
       "comparators": [
-        "frozen reference posterior"
+        "independent mathematical reference",
+        "frozen production method replay"
       ],
-      "combination": "intersection-union",
-      "primary_endpoint": "All vetoes hold, SBC ranks are uniform within the simultaneous band, and simultaneous MCSE-aware agreement holds across monitored marginals.",
-      "repetition_unit": "configuration (four chains) within SBC fixture",
-      "task_scope": "sampler workload fixtures plus the pinned Hamiltonian posterior",
+      "primary_endpoint": "All fixed slots complete, all independent physical/decision reconstructions agree, and production method/seed/options/state replay agrees.",
+      "repetition_unit": "one explicitly enumerated exposed deterministic slot",
+      "task_scope": "Stable/scaled, resumed, resonant and unstable Gaussian chains, plus six diagnostic boundary cases and two direct diagnostic fixtures; exact leapfrog matrix and independent RNG/diagnostic reconstruction.",
+      "max_sample": 6,
       "alpha_family": null,
-      "alpha_note": "Vetoes and calibration are correctness criteria, not ranking claims, so V13 consumes no family alpha. Multiplicity across monitored marginals is handled by the simultaneous band, not by Holm-Bonferroni over a confirmatory family.",
       "power_target": null,
-      "max_sample": 100,
-      "missingness": "A chain that fails to complete voids its configuration, which is re-run; a failed chain is never analyzed as a shorter chain.",
-      "stopping_rule": "Fixed fixture set. Any veto breach fails the entry outright.",
+      "alpha_note": "Finite conformance only; no probabilistic performance, calibration or task-population inference.",
+      "missingness": "Retain every slot start, completed observation and error. Missing, failed or interrupted slots are INCONCLUSIVE; no replacements.",
+      "stopping_rule": "Frozen roster once under a 300-second process bound; no outcome-based expansion, pilot or best-of attempt selection.",
       "release_consequence": {
-        "pass": "Sampler workload ships.",
-        "fail": "Sampler workload does not ship until the correctness defect is fixed."
+        "pass": "Finite opt-in capability only under the declared supported envelope; no automatic default, broad ranking, calibration or general culling permission.",
+        "fail": "Capability finite acceptance withheld; retain original result and repair prospectively before any new source-qualified attempt.",
+        "inconclusive": "Capability finite acceptance remains unestablished; retain missing/interrupted work and resolve the cause before a prospective amendment."
       },
-      "repairs": [
-        "F1: visual multimodality inspection replaced with automated diagnostics",
-        "F1: one-standard-error agreement replaced with simultaneous MCSE-aware intervals",
-        "F1: SBC fixtures added",
-        "accepted correction: SBC fixtures, rank-normalized R-hat, bulk/tail ESS, MCSE-aware comparisons, automated mode diagnostics"
-      ]
+      "numerics": "Fixed reference engineering envelopes; no rigorous floating-point bound claimed.",
+      "source_authorization": "Standing user instruction for self-contained known-answer stylistic tuning tests and continuous bounded execution; D-TIER1-KNOWN-ANSWER.",
+      "contract": {
+        "version": 1,
+        "claim": "tier1_finite_known_answer_v1",
+        "entry": "V13",
+        "slots": [
+          {
+            "id": "stable",
+            "kind": "gaussian",
+            "step_size": 0.5,
+            "steps": 3,
+            "frequency": 1.0
+          },
+          {
+            "id": "scaled",
+            "kind": "gaussian",
+            "step_size": 0.25,
+            "steps": 3,
+            "frequency": 2.0
+          },
+          {
+            "id": "resume",
+            "kind": "gaussian",
+            "step_size": 0.5,
+            "steps": 3,
+            "frequency": 1.0,
+            "resume": true
+          },
+          {
+            "id": "resonance",
+            "kind": "gaussian",
+            "step_size": 1.0,
+            "steps": 3,
+            "frequency": 1.0
+          },
+          {
+            "id": "unstable",
+            "kind": "gaussian",
+            "step_size": 3.0,
+            "steps": 4,
+            "frequency": 1.0
+          },
+          {
+            "id": "diagnostic-boundaries",
+            "kind": "diagnostics"
+          }
+        ],
+        "wall_seconds_per_process": 300,
+        "maximum_reconstructions": 3,
+        "cpu_affinity_count": 1,
+        "numerical_threads": 1,
+        "gpu": false,
+        "missingness": "retain_all_slots_no_replacement_incomplete_is_inconclusive",
+        "decision": "all_frozen_slots_independently_conform_and_production_identity_replays",
+        "replay_scope": "same_runtime_identity_only_not_independent_algorithm_proof",
+        "release": "finite_opt_in_capability_only_no_default_or_population_inference",
+        "numerics": "fixed_reference_engineering_tolerances_not_rigorous_error_bounds",
+        "fixture_source": [
+          "validation/tier1_producers.py",
+          "validation/tier1_reference.py",
+          "examples",
+          "workloads",
+          "validation/*_reference.py"
+        ],
+        "sampler": {
+          "seed": 12,
+          "draws": 32,
+          "warmup": 8,
+          "initial_positions": [
+            -3.0,
+            -1.0,
+            1.0,
+            3.0
+          ],
+          "scope": "ordinary_univariate_Gaussian_HMC_no_SBC_or_general_calibration"
+        }
+      }
     },
     "V08": {
       "id": "V08",
+      "version": "2.0",
       "gate": "tier2_gate",
-      "class": "confirmatory",
-      "claim": "the population line does not lose in its home regime",
-      "estimand": "Range-normalized difference in final objective between the population line and each comparator, as a cluster-level paired mean, evaluated separately on each side of the eight-worker boundary.",
-      "home_regime_definition": "Above the boundary: 16 workers. Below: 4 workers. 'Home regime' is the above-boundary side; the below-boundary side is run to establish that the method does not win only by consuming parallelism, and its result cannot alone produce a pass.",
-      "test": "non_inferiority_one_sided",
-      "sidedness": "one-sided",
-      "direction": "higher_is_better_after_normalization",
-      "margin": 0.05,
-      "margin_justification": "A 5% range-normalized shortfall in the home regime is the largest gap that would still leave the flagship worth defaulting to at 16 workers. Product tolerance, fixed before data.",
+      "class": "deterministic_veto",
+      "claim": "Fixed local PBT/PB2-Mix/BG-PBT mathematical, transfer, recovery and work conformance",
+      "scope_contract": "finite_local_population_conformance_v1",
+      "estimand": "Ten exposed finite controls on exact policy/value models and actual local population methods.",
+      "test": "finite_known_answer_and_production_identity_conformance",
       "comparators": [
-        "DEHB",
-        "BO+ASHA"
+        "independent mathematical reconstruction",
+        "same-runtime production identity replay"
       ],
-      "combination": "intersection-union",
-      "combination_note": "Non-inferiority must hold against both comparators on the above-boundary side for a pass.",
-      "primary_endpoint": "Paired non-inferiority of normalized final objective against both comparators on the 16-worker side, at matched measured compute.",
-      "scale_bounds": "Declared per task in the task registry before data.",
-      "repetition_unit": "complete study replicate (paired by task and optimizer seed, within worker-count side)",
-      "task_scope": "pinned rl_large_parallel task",
-      "task_scope_note": "One task, so the claim is pinned-task (policy.resampling.single_cluster_rule).",
-      "alpha_family": "tier2_gate",
-      "power_target": 0.9,
+      "primary_endpoint": "Every frozen slot complete; every independent mathematical/physical check and method replay agrees.",
+      "repetition_unit": "one explicitly enumerated exposed deterministic slot",
+      "task_scope": "Finite stationary MDPs, tanh shared policy/value networks and serial local POSIX population checkpoints.",
       "max_sample": 10,
-      "power_note": "0.9 per policy.power.high_target_entries: BG-PBT is the flagship and the most expensive build in the program, so a false demotion is the costliest error in the suite.",
-      "exploratory_tripwire": {
-        "purpose": "The 3-repetition run is an exploratory tripwire only. It can trigger demotion or continuation; it can never produce a pass. This resolves finding F3, where the declared exception could not make the flagship green at its own gate.",
-        "reps": 3,
-        "consumes_alpha": false,
-        "ordering_statistic": "Mean range-normalized difference against the worse of the two comparators, computed per side.",
-        "demotion_trigger": "All three repetitions show the population line behind the same comparator on the 16-worker side AND the mean normalized shortfall exceeds 0.10.",
-        "min_loss_margin": 0.1,
-        "min_loss_margin_note": "A consistent ordering in three noisy repetitions is not by itself evidence of a loss, so a bare ordering does not demote; the shortfall must also exceed twice the decision margin.",
-        "tie_rule": "A normalized difference within +/-0.02 is a tie and does not count toward the consistent-ordering condition.",
-        "missing_run_rule": "Fewer than three completed repetitions on a side cannot trigger demotion; the tripwire is re-run.",
-        "false_demotion_risk": "Reported in the gate report as the simulated probability of this trigger firing under a true null, estimated from the pilot hierarchy. The tripwire is deliberately asymmetric and this is its declared cost."
-      },
-      "promotion_route": "A full powered campaign at power_target and max_sample is the only route to pass.",
-      "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm on a side voids that side.",
-      "stopping_rule": "Tripwire first; if it does not demote, the powered campaign runs. At max_sample without clearing, verdict is hold.",
+      "alpha_family": null,
+      "power_target": null,
+      "alpha_note": "Finite conformance only, no optimizer superiority, non-inferiority or general task-population inference.",
+      "missingness": "Retain all slot starts, partial files and errors; incomplete work is INCONCLUSIVE without replacement.",
+      "stopping_rule": "Frozen roster once; three separately consumed reconstruction slots; no favorable reruns or outcome-driven expansion.",
       "release_consequence": {
-        "pass": "BG-PBT ships as the default for rl_large_parallel.",
-        "fail": "Demote to an option; rl_large_parallel defaults to whichever of DEHB or BO+ASHA won V07. If V07 tied or was inconclusive, the default is DEHB, declared here so the fallback is not undefined at gate time.",
-        "hold": "Ships opt-in only, with no default dispatch, under a named owner, a dated expiry, and a funded powered follow-up campaign. If the expiry passes without the follow-up completing, the entry auto-demotes to option. Hold does not block the internal beta gate.",
-        "implementation_fail": "Distinct from a method loss: the population manager did not run correctly. Not a demotion; the defect is fixed and the campaign re-run."
+        "pass": "Finite local opt-in conformance only; no automatic default, optimizer ranking, simulation-adapter or distributed readiness claim.",
+        "fail": "Withhold finite acceptance; retain result and repair under a new prospective source-qualified allocation.",
+        "inconclusive": "Finite acceptance unestablished; retain all missing/uncertain work and resolve causes prospectively."
       },
-      "hold_requires": [
-        "named_owner",
-        "expiry_date",
-        "funded_followup_budget"
-      ],
-      "repairs": [
-        "F3: pass is now reachable via the powered campaign; the 3-rep run is explicitly exploratory",
-        "item 8: ordering statistic, tie rule, missing-run rule, minimum loss margin, and false-demotion risk all defined",
-        "item 8: hold has an owner, expiry, budget, and auto-demotion",
-        "item 8: home regime defined, both sides specified, V07 fallback tie-break declared",
-        "accepted correction: define initial status and green meaning, both sides, sequential maximum sample"
-      ]
+      "source_authorization": "Standing user instruction for self-contained known-answer tuning and continuous bounded execution; D-POPULATION-KNOWN-ANSWER.",
+      "contract": {
+        "version": 1,
+        "entry": "V08",
+        "claim": "finite_local_population_conformance_v1",
+        "slots": [
+          {
+            "id": "mdp-algebra",
+            "kind": "algebra"
+          },
+          {
+            "id": "temporal-kernels",
+            "kind": "gp"
+          },
+          {
+            "id": "categorical-bandit",
+            "kind": "bandit"
+          },
+          {
+            "id": "on-policy-transfer",
+            "kind": "transfer"
+          },
+          {
+            "id": "unknown-update",
+            "kind": "interruption"
+          },
+          {
+            "id": "pbt",
+            "kind": "population",
+            "method": "pbt",
+            "rounds": 2,
+            "recovery": false
+          },
+          {
+            "id": "pbt-acknowledgement",
+            "kind": "population",
+            "method": "pbt",
+            "rounds": 2,
+            "recovery": true
+          },
+          {
+            "id": "pb2-mix",
+            "kind": "population",
+            "method": "pb2_mix",
+            "rounds": 2,
+            "recovery": false
+          },
+          {
+            "id": "bg-restart",
+            "kind": "population",
+            "method": "bgpbt",
+            "rounds": 3,
+            "recovery": false
+          },
+          {
+            "id": "bg-generations",
+            "kind": "generations"
+          }
+        ],
+        "models": "CPU float64 tanh dense networks, widths 1/2/3, depths 1/2, no normalization, shared policy/value trunk",
+        "tasks": "one-state terminal control and two-state two-step control; exact enumerated expectations",
+        "seeds": {
+          "members": [
+            5,
+            6
+          ],
+          "controller": 7,
+          "transfer": 11,
+          "bandit": 17
+        },
+        "independent_reference": "NumPy forward/backprop, enumerated MDP paths, direct GP inverse and bandit probability identities; no production math imports",
+        "identity_replay": "same-runtime complete producer replay, explicitly not an independent proof of optimizer design",
+        "numerical_envelope": {
+          "absolute": 2e-10,
+          "relative": 2e-09,
+          "scope": "engineering tolerance, not rigorous floating-point error proof"
+        },
+        "decision": "all fixed slots complete, independently conform and reproduce method/seed/options/recovery identity",
+        "missingness": "retain every start/error/partial artifact; no replacement; incomplete is INCONCLUSIVE",
+        "release": "finite local opt-in capability only; no default, superiority, simulation-adapter or distributed acceptance",
+        "wall_seconds_per_process": 300,
+        "cpu_affinity_count": 1,
+        "numerical_threads": 1,
+        "gpu": false,
+        "maximum_generations": 1,
+        "maximum_reconstructions": 3,
+        "maximum_gradient_updates_per_generation": 32,
+        "maximum_unknown_gradient_updates_per_generation": 1
+      }
     },
     "V12": {
       "id": "V12",
+      "version": "2.0",
       "gate": "dist_beta_gate",
-      "class": "confirmatory",
-      "claim": "warm starts pay",
-      "estimand": "Cluster-level paired mean reduction in trials required to reach the cold-start arm's final objective value, expressed as a fraction of the cold-start trial count.",
-      "test": "superiority_one_sided",
-      "sidedness": "one-sided",
-      "direction": "fewer_trials_is_better",
-      "margin": 0.2,
-      "margin_justification": "Below a 20% trial saving, warm starting is not worth defaulting on: the store lookup and transfer machinery costs more in complexity than it returns. Product tolerance, fixed before data.",
+      "class": "deterministic_veto",
+      "claim": "Finite ranked warm-start selection, actual training, work and recovery conformance",
+      "scope_contract": "finite_ranked_warm_start_conformance_v1",
+      "estimand": "Agreement of all six declared historical/target finite trajectories.",
+      "test": "deterministic_finite_conformance",
+      "inference": "none",
       "comparators": [
-        "cold-start arm (same searcher, same task)"
+        "independent scalar powers",
+        "pairwise rational ranks",
+        "independent base uniform coordinates"
       ],
-      "combination": "single",
-      "primary_endpoint": "Paired mean fractional trial saving to reach the cold-start arm's final value, lower 95% confidence bound at or above 0.20.",
-      "endpoint_note": "The target value is the cold-start arm's own final value on the same task and seed, fixed within the paired block, so the endpoint is not a moving target estimated across arms.",
-      "precondition": "The run store must hold at least ten completed studies from the same model family (same architecture class, same task domain) before the campaign runs. Below that the warm-start query has no history to learn from and the entry is not run.",
-      "precondition_gate_note": "This precondition is why V12 sits at the Distributed Beta gate rather than Tier 1: the store only accumulates enough same-family studies after Tier 0 through Tier 2 campaigns have run. The survey assigns V12 to T1+, meaning tier 1 or later, so this placement is consistent with the survey.",
-      "scale_bounds": "Trial counts are non-negative integers; the fractional saving is bounded in [0, 1] by construction.",
-      "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
-      "task_scope": "new studies on familiar model families (multiple independent tasks)",
-      "alpha_family": "dist_beta_gate",
-      "power_target": 0.8,
-      "max_sample": 20,
-      "missingness": "A replicate whose cold-start arm never reaches a stable final value is excluded with its paired block; >10% loss voids the campaign.",
-      "stopping_rule": "Size from pilot at the family-adjusted alpha; at max_sample without clearing, verdict is inconclusive.",
+      "primary_endpoint": "All six cases conform on eligibility, ranking, actual work, current observations and recovery.",
+      "repetition_unit": "one explicitly enumerated deterministic slot",
+      "max_sample": 6,
+      "alpha_family": null,
+      "power_target": null,
+      "alpha_note": "No empirical speedup or task-population inference.",
+      "task_scope": "Six synthetic scalar-quadratic history/target studies; all exposed and self-contained.",
+      "missingness": "No omission/replacement; incomplete work retained as INCONCLUSIVE.",
+      "stopping_rule": "Once-only roster and three reconstructions; no replacement allocation.",
       "release_consequence": {
-        "pass": "Warm start is on by default for recognized model families.",
-        "fail": "Warm start demotes to opt-in.",
-        "inconclusive": "Remains opt-in; one pre-budgeted replication permitted, then terminal."
+        "pass": "Finite opt-in ranked seeding only; empirical improvement/default/service remain unestablished.",
+        "fail": "Withhold finite warm acceptance; retain raw failure and repair prospectively.",
+        "inconclusive": "Withhold acceptance and retain incomplete work; never replace a consumed run."
       },
-      "repairs": [
-        "gate assignment recovered: V12 was dropped from the corrected timeline entirely and is now placed at the Distributed Beta gate with its precondition stated"
-      ]
+      "source_authorization": "Standing user known-answer self-contained tuning and continuous bounded execution; D-WARM-FINITE.",
+      "contract": {
+        "entry": "V12",
+        "version": 2,
+        "claim": "finite_ranked_warm_start_conformance_v1",
+        "slots": [
+          {
+            "id": "matching",
+            "history_curvature": 2.0,
+            "target_curvature": 2.0,
+            "eligible": true,
+            "maximize": false,
+            "scale": 1.0
+          },
+          {
+            "id": "shifted",
+            "history_curvature": 3.0,
+            "target_curvature": 1.0,
+            "eligible": true,
+            "maximize": false,
+            "scale": 1.0
+          },
+          {
+            "id": "cold",
+            "history_curvature": 2.0,
+            "target_curvature": 2.0,
+            "eligible": false,
+            "maximize": false,
+            "scale": 1.0
+          },
+          {
+            "id": "ties",
+            "history_curvature": 0.0,
+            "target_curvature": 2.0,
+            "eligible": true,
+            "maximize": false,
+            "scale": 1.0
+          },
+          {
+            "id": "maximize",
+            "history_curvature": 2.0,
+            "target_curvature": 2.0,
+            "eligible": true,
+            "maximize": true,
+            "scale": 1.0
+          },
+          {
+            "id": "scale",
+            "history_curvature": 2.0,
+            "target_curvature": 2.0,
+            "eligible": true,
+            "maximize": false,
+            "scale": 100.0
+          }
+        ],
+        "space": {
+          "eta": [
+            0.125,
+            0.875
+          ]
+        },
+        "history_seeds": [
+          3,
+          3,
+          5,
+          7,
+          9,
+          11
+        ],
+        "history_names": [
+          "A",
+          "B",
+          "C",
+          "held-out",
+          "wrong-space",
+          "future"
+        ],
+        "history_trials": 4,
+        "target_trials": 6,
+        "target_seed": 13,
+        "selected_seeds": 3,
+        "updates_per_trial": 4,
+        "model": "w0=1; gradient h*w; w[k]=(1-eta*h)^k; value=sign*(offset+scale*w[4]^2)",
+        "reference": "independent powers, pairwise rational midranks and uniform RNG coordinates",
+        "selection": "within-study exact midrank; study/trial tie break; physical configuration deduplication",
+        "eligibility": "held-out task, transformed space, future cutoff and incompatible family excluded",
+        "recovery": "interrupt warm target after two commits before trial 2 work; exact Store checkpoint and pending suggestion",
+        "absolute_tolerance": 2e-12,
+        "relative_tolerance": 2e-10,
+        "inference": "finite conformance only; no empirical speedup, default or distributed service claim",
+        "decision": "all six complete cases agree in selection, provenance, actual work, recovery and mathematical outcomes",
+        "allocation": {
+          "generation": 1,
+          "reconstructions": 3,
+          "processes": 2,
+          "wall_seconds_per_process": 300,
+          "maximum_phase_seconds": 600,
+          "cpu_affinity_count": 1,
+          "numerical_threads": 1,
+          "gpu": false,
+          "maximum_gradient_updates": 864,
+          "reconstruction_gradient_updates": 0
+        },
+        "pass": "Finite opt-in ranked seeding only; empirical improvement/default/service remain unestablished.",
+        "fail": "Withhold finite warm acceptance; retain raw failure and repair prospectively.",
+        "inconclusive": "Withhold acceptance and retain incomplete work; never replace a consumed run."
+      }
     },
     "V07": {
       "id": "V07",
+      "version": "2.0",
       "gate": "tier3_per_item",
-      "class": "confirmatory",
-      "claim": "the small-budget RL verdict holds here",
-      "estimand": "Range-normalized difference in final objective between DEHB and BO+ASHA at a matched 16-run budget on the pinned RL task, as a cluster-level paired mean.",
-      "test": "two_sided_comparison",
-      "sidedness": "two-sided",
-      "direction": "higher_is_better_after_normalization",
-      "two_sided_note": "Unlike the other entries this is not a promotion claim about one method; it asks which of two shipped methods wins at routine budget, so neither direction is privileged and the test is two-sided.",
+      "class": "deterministic_veto",
+      "claim": "Finite native DEHB method, known-answer training, work and recovery conformance",
+      "scope_contract": "finite_native_dehb_conformance_v1",
+      "estimand": "Complete agreement of six exposed serial training and method trajectories.",
+      "test": "deterministic_finite_conformance",
+      "inference": "none",
       "comparators": [
-        "DEHB",
-        "BO+ASHA"
+        "independent spectral reconstruction",
+        "pinned original DEHB serial method"
       ],
-      "combination": "single",
-      "primary_endpoint": "Cluster-level paired mean normalized difference in final objective at a matched 16-run budget.",
-      "tie_consequence": "A result whose interval contains zero is a tie and is reported as such. A tie sets the rl_routine default to BO+ASHA, declared here because V08's fallback rule depends on V07 having a defined outcome.",
-      "scale_bounds": "Declared per task in the task registry before data.",
-      "repetition_unit": "complete study replicate (paired by task and optimizer seed)",
-      "task_scope": "pinned RL task",
-      "task_scope_note": "One task, so the claim is pinned-task (policy.resampling.single_cluster_rule).",
-      "alpha_family": "tier3_v07",
-      "power_target": 0.8,
-      "max_sample": 20,
-      "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
-      "stopping_rule": "Size from pilot; at max_sample without clearing, verdict is tie.",
+      "primary_endpoint": "All six cases complete and conform on training, method, work and recovery.",
+      "repetition_unit": "one explicitly enumerated deterministic slot",
+      "max_sample": 6,
+      "alpha_family": null,
+      "power_target": null,
+      "alpha_note": "Finite deterministic conformance; no task-population or optimizer ranking inference.",
+      "task_scope": "Six exposed rotated quadratic training cases; serial rand/1/binomial, restart fidelity.",
+      "missingness": "No omission or replacement; interrupted work is INCONCLUSIVE and retained.",
+      "stopping_rule": "Once-only fixed roster and three reconstruction slots; no favorable rerun.",
       "release_consequence": {
-        "pass": "The winning method becomes the rl_routine default at routine budget.",
-        "fail": "Not applicable; this entry has no failing method, only a winner or a tie.",
-        "inconclusive": "Tie; rl_routine defaults to BO+ASHA."
+        "pass": "Finite opt-in native DEHB only; no general superiority/default/integrated release.",
+        "fail": "Withhold DEHB acceptance; retain failure and repair prospectively.",
+        "inconclusive": "Withhold DEHB acceptance; preserve consumed slots and partial work."
       },
-      "repairs": [
-        "item 8 dependency: V07's tie outcome is now defined because V08's fallback rule referenced it and was previously undefined on a tie"
-      ]
+      "source_authorization": "Standing user known-answer tuning and continuous bounded execution; D-DEHB-FINITE.",
+      "contract": {
+        "entry": "V07",
+        "version": 1,
+        "claim": "finite_native_dehb_conformance_v1",
+        "slots": [
+          {
+            "id": "late-0",
+            "initial": [
+              0.1,
+              1.0
+            ],
+            "seed": 0
+          },
+          {
+            "id": "late-1",
+            "initial": [
+              0.1,
+              1.0
+            ],
+            "seed": 1
+          },
+          {
+            "id": "early-0",
+            "initial": [
+              1.0,
+              0.1
+            ],
+            "seed": 0
+          },
+          {
+            "id": "early-1",
+            "initial": [
+              1.0,
+              0.1
+            ],
+            "seed": 1
+          },
+          {
+            "id": "balanced-0",
+            "initial": [
+              1.0,
+              1.0
+            ],
+            "seed": 0
+          },
+          {
+            "id": "balanced-1",
+            "initial": [
+              1.0,
+              1.0
+            ],
+            "seed": 1
+          }
+        ],
+        "jobs_per_slot": 50,
+        "fidelities": [
+          1,
+          2,
+          4,
+          8
+        ],
+        "eta": 2,
+        "mutation_factor": 0.5,
+        "crossover_probability": 0.5,
+        "reference_commit": "58f9fb9045e63530692adc6306fc297e318f11f2",
+        "model": "Q diag(1,3) Q^T; Q=[[3/5,-4/5],[4/5,3/5]]; eta=1/40+3x/5",
+        "evaluation": "restart at each fidelity; every gradient update charged",
+        "selection": "minimum full-fidelity loss, earliest evaluation breaks ties",
+        "recovery": "after jobs 7 and 21 and pending asks 13 and 37; exact native JSON transcript",
+        "absolute_tolerance": 2e-12,
+        "relative_tolerance": 2e-10,
+        "reference_coordinate_tolerance": 1e-15,
+        "decision": "all six complete known-answer and pinned-reference trajectories conform",
+        "inference": "none; regret descriptive; no method superiority or default",
+        "allocation": {
+          "generation": 1,
+          "reconstructions": 3,
+          "processes": 2,
+          "wall_seconds_per_process": 300,
+          "maximum_phase_seconds": 600,
+          "cpu_affinity_count": 1,
+          "numerical_threads": 1,
+          "gpu": false,
+          "maximum_gradient_updates": 2400,
+          "reconstruction_gradient_updates": 0
+        },
+        "pass": "Finite opt-in native DEHB only; no general superiority/default/integrated release.",
+        "fail": "Withhold DEHB acceptance; retain failure and repair prospectively.",
+        "inconclusive": "Withhold DEHB acceptance; preserve consumed slots and partial work."
+      }
     },
     "V15a": {
-      "id": "V15a",
       "gate": "tier3_per_item",
-      "class": "confirmatory_feasibility",
-      "claim": "the curve-model bet is live before we pay for it",
-      "estimand": "Range-normalized difference in final objective between the published pretrained ifBO surrogate and ASHA at matched measured compute on curve-informative public benchmarks.",
-      "test": "non_inferiority_one_sided",
-      "sidedness": "one-sided",
-      "direction": "higher_is_better_after_normalization",
-      "margin": 0.05,
-      "margin_justification": "A 5% range-normalized shortfall is the largest gap that would still justify paying for integration work. Product tolerance, fixed before data.",
+      "class": "deterministic_veto",
+      "alpha_family": null,
+      "power_target": null,
+      "alpha_note": "Exposed fixed finite comparison; no population inference or statistical non-inferiority.",
+      "repetition_unit": "one fixed initial-state and optimizer-seed pair",
+      "max_sample": 6,
+      "task_scope": "Three exact rotated quadratics, seeds 0 and 1, 24 training and 8 certification updates per arm.",
+      "missingness": "Incomplete is INCONCLUSIVE; retain all starts, errors and partial outputs without replacement.",
+      "stopping_rule": "One prospective fixed roster and three consumed reconstructions; no outcome-dependent repetition.",
+      "id": "V15a",
+      "version": "2.0",
+      "scope_contract": "finite_pretrained_ifbo_feasibility_v1",
+      "claim": "Original pretrained ifBO reference is no worse than ASHA in every declared finite case",
+      "estimand": "Six full-fidelity certification-loss gaps after equal physical gradient-update budgets; overhead separately measured.",
+      "test": "finite_pointwise_no_worse_with_independent_known_answer_reconstruction",
       "comparators": [
         "ASHA"
       ],
-      "combination": "single",
-      "primary_endpoint": "Paired non-inferiority of normalized final objective at matched measured compute.",
-      "uses_published_model": true,
-      "uses_published_model_note": "Runs the published pretrained surrogate as-is. No model training and no integration work happens before this entry clears, which is the point of splitting V15.",
-      "scale_bounds": "Declared per benchmark in the task registry before data.",
-      "repetition_unit": "complete study replicate (paired by benchmark and optimizer seed)",
-      "task_scope": "curve-informative public benchmark suites (multiple independent tasks)",
-      "alpha_family": "tier3_v15",
-      "power_target": 0.8,
-      "max_sample": 20,
-      "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
-      "stopping_rule": "Size from pilot; at max_sample without clearing, verdict is inconclusive.",
+      "primary_endpoint": "All six ifBO-minus-ASHA certification gaps <= floating-point envelope; source and raw conformance required.",
       "release_consequence": {
-        "pass": "V15b integration work is authorized.",
-        "fail": "Cancel the curve-model build; do not debug. The tier-3 slot is reallocated.",
-        "inconclusive": "Cancel; the bet does not clear its own feasibility bar and no integration budget is committed."
+        "pass": "permit separately frozen exact finite V15b parity preparation only",
+        "fail": "cancel owned ifBO integration and V15b; retain result without favorable rerun",
+        "inconclusive": "cancel owned ifBO integration and V15b; no integration budget"
       },
-      "repairs": [
-        "accepted correction: split into pre-build feasibility on the published model, and post-integration parity"
-      ]
+      "contract": {
+        "entry": "V15a",
+        "version": 1,
+        "claim": "finite_pretrained_ifbo_feasibility_v1",
+        "slots": [
+          {
+            "id": "late-seed-0",
+            "initial": [
+              0.1,
+              1.0
+            ],
+            "seed": 0
+          },
+          {
+            "id": "late-seed-1",
+            "initial": [
+              0.1,
+              1.0
+            ],
+            "seed": 1
+          },
+          {
+            "id": "early-seed-0",
+            "initial": [
+              1.0,
+              0.1
+            ],
+            "seed": 0
+          },
+          {
+            "id": "early-seed-1",
+            "initial": [
+              1.0,
+              0.1
+            ],
+            "seed": 1
+          },
+          {
+            "id": "balanced-seed-0",
+            "initial": [
+              1.0,
+              1.0
+            ],
+            "seed": 0
+          },
+          {
+            "id": "balanced-seed-1",
+            "initial": [
+              1.0,
+              1.0
+            ],
+            "seed": 1
+          }
+        ],
+        "reference_commit": "421ff96986c8efbe92bd2ab64a4bab49b0dd46fb",
+        "weights_sha256": "3703bd004be662794717c857ecb91006768198834e10699ada939fd593f72dc9",
+        "reference_boundary": "unchanged upstream component bodies in an explicitly bound small continuous-space harness; not historical benchmark-stack reproduction",
+        "model": "rotated diag(1,3) quadratic; eta=1/40+3x/5, x in [0,1]",
+        "work_per_arm": {
+          "optimization_updates": 24,
+          "certification_updates": 8
+        },
+        "comparator": "ASHA syne_tune_0_13_0 promotion; eta=2,rungs=1,2,4,8; uniform continuous proposals; no median rule",
+        "selection": "minimum latest normalized loss, then minimum numeric configuration ID",
+        "decision": "all identities and independent conformance; ifBO certification loss <= ASHA certification loss in every fixed case within floating-point envelope",
+        "absolute_tolerance": 2e-12,
+        "relative_tolerance": 2e-10,
+        "pi_absolute_tolerance": 5e-06,
+        "inference": "none; six exposed finite comparisons, no general effectiveness or calibration",
+        "pass": "permit separately frozen exact finite V15b parity preparation only",
+        "fail": "cancel owned ifBO integration and V15b; retain result without favorable rerun",
+        "inconclusive": "cancel owned ifBO integration and V15b; no integration budget",
+        "allocation": {
+          "generation": 1,
+          "reconstructions": 3,
+          "processes": 2,
+          "wall_seconds_per_process": 300,
+          "maximum_phase_seconds": 600,
+          "cpu_affinity_count": 1,
+          "numerical_threads": 1,
+          "gpu": false,
+          "maximum_gradient_updates_including_replays": 1536
+        }
+      }
     },
     "V15b": {
-      "id": "V15b",
       "gate": "tier3_per_item",
-      "class": "confirmatory",
-      "claim": "the integrated curve model preserves the feasibility result",
-      "estimand": "Range-normalized difference in final objective between our integrated ifBO implementation and the published pretrained surrogate measured in V15a, as a cluster-level paired mean on the same benchmarks.",
-      "test": "non_inferiority_one_sided",
-      "sidedness": "one-sided",
-      "direction": "higher_is_better_after_normalization",
-      "margin": 0.02,
-      "margin_justification": "Integration parity is a tighter bar than feasibility: our implementation should reproduce the published surrogate's behavior, so only a 2% normalized shortfall is tolerated. A wider gap means the integration changed the method.",
+      "class": "deterministic_veto",
+      "alpha_family": null,
+      "power_target": null,
+      "alpha_note": "Exposed fixed finite comparison; no population inference or statistical non-inferiority.",
+      "repetition_unit": "one fixed initial-state and optimizer-seed pair",
+      "max_sample": 6,
+      "task_scope": "Three exact rotated quadratics, seeds 0 and 1, 24 training and 8 certification updates per arm.",
+      "missingness": "Incomplete is INCONCLUSIVE; retain all starts, errors and partial outputs without replacement.",
+      "stopping_rule": "One prospective fixed roster and three consumed reconstructions; no outcome-dependent repetition.",
+      "id": "V15b",
+      "version": "2.0",
+      "claim": "Only feasibility-permitted integration exactly reproduces the declared reference cases",
+      "estimand": "Complete finite reference versus owned integration trajectories, selections, recovery and accounting.",
+      "test": "finite_reference_identity_parity",
       "comparators": [
-        "published pretrained surrogate as run in V15a"
+        "Original pretrained reference from V15a"
       ],
-      "combination": "single",
-      "primary_endpoint": "Paired non-inferiority of normalized final objective against the V15a arm on the same benchmarks and seeds.",
-      "precondition": "V15a must have passed. V15b does not run otherwise.",
-      "scale_bounds": "Identical to V15a; reused from the frozen task registry.",
-      "repetition_unit": "complete study replicate (paired by benchmark and optimizer seed)",
-      "task_scope": "same curve-informative benchmarks as V15a",
-      "alpha_family": "tier3_v15",
-      "power_target": 0.8,
-      "max_sample": 20,
-      "missingness": "Replicate failing to reach the declared endpoint is excluded with its paired block; >10% loss in any arm voids the campaign.",
-      "stopping_rule": "Size from pilot; at max_sample without clearing, verdict is inconclusive.",
+      "primary_endpoint": "Exact discrete trace/accounting and numerical tensor parity; source-qualified execution requires a separately frozen contract.",
+      "precondition": "V15a PASS with independently verified complete reference identity; otherwise cancelled, no fallback.",
+      "contract_status": "conditional_not_frozen_no_execution_authorized",
       "release_consequence": {
-        "pass": "Integrated curve model ships.",
-        "fail": "Integration is reverted; the published-surrogate path is used or the feature is dropped.",
-        "inconclusive": "Does not ship as a default; one pre-budgeted replication permitted, then terminal."
-      },
-      "repairs": [
-        "accepted correction: split into pre-build feasibility and post-integration parity"
-      ]
+        "pass": "Finite opt-in integration only, no default or integrated release.",
+        "fail": "Withhold integration; preserve result.",
+        "inconclusive": "Withhold integration, no favorable rerun."
+      }
     },
     "V16": {
       "id": "V16",
@@ -893,6 +2536,289 @@
       "repairs": [
         "new entry, added 2026-09-03 in response to vacuous V14 and tautological V01"
       ]
+    },
+    "V-COST": {
+      "id": "V-COST",
+      "version": "2.0",
+      "gate": "tier1_gate",
+      "class": "deterministic_veto",
+      "claim": "Fixed cost-aware physical-work and method conformance",
+      "scope_contract": "tier1_finite_known_answer_v1",
+      "estimand": "Twenty-four slots: three replica profiles, two seeds, four actual methods at common completion-work budget 72, at most 2048 gradient updates; exact loss/optimum and production method replay.",
+      "test": "finite_known_answer_and_production_identity_conformance",
+      "comparators": [
+        "independent mathematical reference",
+        "frozen production method replay"
+      ],
+      "primary_endpoint": "All fixed slots complete, all independent physical/decision reconstructions agree, and production method/seed/options/state replay agrees.",
+      "repetition_unit": "one explicitly enumerated exposed deterministic slot",
+      "task_scope": "Twenty-four slots: three replica profiles, two seeds, four actual methods at common completion-work budget 72, at most 2048 gradient updates; exact loss/optimum and production method replay.",
+      "max_sample": 24,
+      "alpha_family": null,
+      "power_target": null,
+      "alpha_note": "Finite conformance only; no probabilistic performance, calibration or task-population inference.",
+      "missingness": "Retain every slot start, completed observation and error. Missing, failed or interrupted slots are INCONCLUSIVE; no replacements.",
+      "stopping_rule": "Frozen roster once under a 300-second process bound; no outcome-based expansion, pilot or best-of attempt selection.",
+      "release_consequence": {
+        "pass": "Finite opt-in capability only under the declared supported envelope; no automatic default, broad ranking, calibration or general culling permission.",
+        "fail": "Capability finite acceptance withheld; retain original result and repair prospectively before any new source-qualified attempt.",
+        "inconclusive": "Capability finite acceptance remains unestablished; retain missing/interrupted work and resolve the cause before a prospective amendment."
+      },
+      "numerics": "Fixed reference engineering envelopes; no rigorous floating-point bound claimed.",
+      "source_authorization": "Standing user instruction for self-contained known-answer stylistic tuning tests and continuous bounded execution; D-TIER1-KNOWN-ANSWER.",
+      "contract": {
+        "version": 1,
+        "claim": "tier1_finite_known_answer_v1",
+        "entry": "V-COST",
+        "slots": [
+          {
+            "id": "constant-731021-cost_gp",
+            "kind": "cost",
+            "profile": "constant",
+            "seed": 731021,
+            "method": "cost_gp"
+          },
+          {
+            "id": "constant-731021-gp",
+            "kind": "cost",
+            "profile": "constant",
+            "seed": 731021,
+            "method": "gp"
+          },
+          {
+            "id": "constant-731021-random",
+            "kind": "cost",
+            "profile": "constant",
+            "seed": 731021,
+            "method": "random"
+          },
+          {
+            "id": "constant-731021-sobol",
+            "kind": "cost",
+            "profile": "constant",
+            "seed": 731021,
+            "method": "sobol"
+          },
+          {
+            "id": "constant-731022-cost_gp",
+            "kind": "cost",
+            "profile": "constant",
+            "seed": 731022,
+            "method": "cost_gp"
+          },
+          {
+            "id": "constant-731022-gp",
+            "kind": "cost",
+            "profile": "constant",
+            "seed": 731022,
+            "method": "gp"
+          },
+          {
+            "id": "constant-731022-random",
+            "kind": "cost",
+            "profile": "constant",
+            "seed": 731022,
+            "method": "random"
+          },
+          {
+            "id": "constant-731022-sobol",
+            "kind": "cost",
+            "profile": "constant",
+            "seed": 731022,
+            "method": "sobol"
+          },
+          {
+            "id": "cost_decreases-731021-cost_gp",
+            "kind": "cost",
+            "profile": "cost_decreases",
+            "seed": 731021,
+            "method": "cost_gp"
+          },
+          {
+            "id": "cost_decreases-731021-gp",
+            "kind": "cost",
+            "profile": "cost_decreases",
+            "seed": 731021,
+            "method": "gp"
+          },
+          {
+            "id": "cost_decreases-731021-random",
+            "kind": "cost",
+            "profile": "cost_decreases",
+            "seed": 731021,
+            "method": "random"
+          },
+          {
+            "id": "cost_decreases-731021-sobol",
+            "kind": "cost",
+            "profile": "cost_decreases",
+            "seed": 731021,
+            "method": "sobol"
+          },
+          {
+            "id": "cost_decreases-731022-cost_gp",
+            "kind": "cost",
+            "profile": "cost_decreases",
+            "seed": 731022,
+            "method": "cost_gp"
+          },
+          {
+            "id": "cost_decreases-731022-gp",
+            "kind": "cost",
+            "profile": "cost_decreases",
+            "seed": 731022,
+            "method": "gp"
+          },
+          {
+            "id": "cost_decreases-731022-random",
+            "kind": "cost",
+            "profile": "cost_decreases",
+            "seed": 731022,
+            "method": "random"
+          },
+          {
+            "id": "cost_decreases-731022-sobol",
+            "kind": "cost",
+            "profile": "cost_decreases",
+            "seed": 731022,
+            "method": "sobol"
+          },
+          {
+            "id": "cost_increases-731021-cost_gp",
+            "kind": "cost",
+            "profile": "cost_increases",
+            "seed": 731021,
+            "method": "cost_gp"
+          },
+          {
+            "id": "cost_increases-731021-gp",
+            "kind": "cost",
+            "profile": "cost_increases",
+            "seed": 731021,
+            "method": "gp"
+          },
+          {
+            "id": "cost_increases-731021-random",
+            "kind": "cost",
+            "profile": "cost_increases",
+            "seed": 731021,
+            "method": "random"
+          },
+          {
+            "id": "cost_increases-731021-sobol",
+            "kind": "cost",
+            "profile": "cost_increases",
+            "seed": 731021,
+            "method": "sobol"
+          },
+          {
+            "id": "cost_increases-731022-cost_gp",
+            "kind": "cost",
+            "profile": "cost_increases",
+            "seed": 731022,
+            "method": "cost_gp"
+          },
+          {
+            "id": "cost_increases-731022-gp",
+            "kind": "cost",
+            "profile": "cost_increases",
+            "seed": 731022,
+            "method": "gp"
+          },
+          {
+            "id": "cost_increases-731022-random",
+            "kind": "cost",
+            "profile": "cost_increases",
+            "seed": 731022,
+            "method": "random"
+          },
+          {
+            "id": "cost_increases-731022-sobol",
+            "kind": "cost",
+            "profile": "cost_increases",
+            "seed": 731022,
+            "method": "sobol"
+          }
+        ],
+        "wall_seconds_per_process": 300,
+        "maximum_reconstructions": 3,
+        "cpu_affinity_count": 1,
+        "numerical_threads": 1,
+        "gpu": false,
+        "missingness": "retain_all_slots_no_replacement_incomplete_is_inconclusive",
+        "decision": "all_frozen_slots_independently_conform_and_production_identity_replays",
+        "replay_scope": "same_runtime_identity_only_not_independent_algorithm_proof",
+        "release": "finite_opt_in_capability_only_no_default_or_population_inference",
+        "numerics": "fixed_reference_engineering_tolerances_not_rigorous_error_bounds",
+        "fixture_source": [
+          "validation/tier1_producers.py",
+          "validation/tier1_reference.py",
+          "examples",
+          "workloads",
+          "validation/*_reference.py"
+        ],
+        "cost_contract": {
+          "entry": "V-COST",
+          "version": 1,
+          "claim": "finite_cost_quality_conformance_v1",
+          "methods": [
+            "cost_gp",
+            "gp",
+            "random",
+            "sobol"
+          ],
+          "seeds": [
+            731021,
+            731022
+          ],
+          "profiles": {
+            "constant": [
+              2,
+              2,
+              2
+            ],
+            "cost_decreases": [
+              3,
+              2,
+              1
+            ],
+            "cost_increases": [
+              1,
+              2,
+              3
+            ]
+          },
+          "eta_bounds": [
+            0.025,
+            0.625
+          ],
+          "breakpoints": [
+            0.225,
+            0.425
+          ],
+          "steps": 8,
+          "work_budget": 72,
+          "max_trials_per_study": 9,
+          "study_count": 24,
+          "max_physical_updates": 2048,
+          "initial_budget": 9,
+          "candidate_count": 16,
+          "default_cost": 16,
+          "gp": {
+            "n_fantasies": 32,
+            "raw_samples": 32,
+            "n_restarts": 2
+          },
+          "cost_unit": "gradient_updates",
+          "generation_seconds": 300,
+          "reconstruction_seconds": 300,
+          "cpu_threads": 1,
+          "gpu": false,
+          "inference": "none_exposed_finite_corpus_no_superiority_or_noninferiority_test",
+          "performance_disposition": "report_every_fixed_slot_at_common_work_budget_no_ranking_threshold",
+          "default_activation": false
+        }
+      }
     }
   }
 }

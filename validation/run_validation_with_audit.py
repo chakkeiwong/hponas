@@ -1,151 +1,168 @@
 #!/usr/bin/env python3
-"""
-Validation runner with V16 audit enforcement.
+"""Run supported campaigns and preserve immutable results with V16 receipts."""
 
-Wraps validation executions with V16 audit checks, ensuring all validation
-runs comply with preregistered protocols and audit requirements.
-
-Usage:
-    python validation/run_validation_with_audit.py v04_t0
-    python validation/run_validation_with_audit.py v05
-"""
-
+from __future__ import annotations
 import argparse
-import json
+from datetime import datetime, timezone
+from pathlib import Path
 import shutil
 import sys
-from datetime import datetime
-from pathlib import Path
-from typing import Callable, Any
+import time
+import uuid
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from hponas.persistence import atomic_json
+from validation.evidence import (
+    ROOT, AuditContextError, decision, digest, metadata, source_digest,
+    require_audit_checkout,
+)
 from validation.v16_audit_enforcer import V16Enforcer
+from validation.protocol_identity import canonical_id, protocol_path
+from validation.tier1_contract import ENTRIES as TIER1
 
 
 class ValidationRunner:
-    """Run validation with V16 audit enforcement."""
-
-    def __init__(self, validation_id: str):
-        self.validation_id = validation_id
-        self.protocol_path = self._find_protocol()
+    def __init__(self, validation_id, artifact_root=None, *, run_name=None):
+        require_audit_checkout()
+        self.validation_id = canonical_id(validation_id)
+        if self.validation_id == 'V15b':
+            raise ValueError('V15b is not frozen; verified V15a PASS and separate integration allocation are required')
+        self.protocol_path = protocol_path(self.validation_id)
+        if self.validation_id in {*TIER1, 'V07', 'V08', 'V12', 'V15a'}:
+            if self.validation_id == 'V07':
+                from validation.dehb_finite import require_phase
+                allocated = Path(require_phase()['run_path'])
+            elif self.validation_id == 'V12':
+                from validation.warm_finite_campaign import require_phase
+                allocated = Path(require_phase()['run_path'])
+            elif self.validation_id == 'V15a':
+                from validation.ifbo_finite_campaign import require_phase
+                allocated = Path(require_phase()['run_path'])
+            elif self.validation_id == 'V08':
+                from validation.population_campaign import require_phase
+                allocated = Path(require_phase()['run_path'])
+            else:
+                from validation.tier1_campaign import require_phase
+                allocated = Path(require_phase(self.validation_id)['run_path'])
+            if run_name is not None and run_name != allocated.name:
+                raise ValueError('Run name differs from frozen finite allocation')
+            if artifact_root is not None and Path(artifact_root).resolve() != allocated.parent.parent:
+                raise ValueError('Artifact root differs from frozen finite allocation')
+            run_name = allocated.name
+            artifact_root = allocated.parent.parent
         self.enforcer = V16Enforcer(self.protocol_path)
-
-        # Create run directory
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.run_dir = Path(f"validation/artifacts/{validation_id}_run_{timestamp}")
-        self.run_dir.mkdir(parents=True, exist_ok=True)
-
-    def _find_protocol(self) -> Path:
-        """Locate protocol file for validation ID."""
-        # Try v04_t0_protocol.md format
-        candidates = [
-            Path(f"validation/protocols/{self.validation_id}_protocol.md"),
-            Path(f"validation/protocols/{self.validation_id.replace('-', '_')}_protocol.md"),
-        ]
-
-        for candidate in candidates:
-            if candidate.exists():
-                return candidate
-
-        raise FileNotFoundError(
-            f"Protocol not found for {self.validation_id}. "
-            f"Searched: {[str(c) for c in candidates]}"
+        self.parent = (
+            Path(artifact_root or ROOT / "validation/artifacts") / self.validation_id
         )
+        if run_name is not None and (not isinstance(run_name, str) or not run_name
+                                     or Path(run_name).name != run_name or run_name in {".", ".."}):
+            raise ValueError("Campaign run name must be a single directory name")
+        self.run_dir = self.parent / (run_name or (
+            datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+            + "_"
+            + uuid.uuid4().hex[:8]
+        ))
+        self.run_dir.mkdir(parents=True, exist_ok=False)
 
-    def run(self, validation_fn: Callable[[], dict[str, Any]]) -> bool:
-        """
-        Execute validation with V16 audit.
-
-        Args:
-            validation_fn: Callable that runs the validation and returns results dict
-
-        Returns:
-            True if validation and audit both pass
-        """
-        print(f"=== Running {self.validation_id} with V16 audit ===")
-        print(f"Protocol: {self.protocol_path}")
-        print(f"Run directory: {self.run_dir}")
-        print()
-
-        # Step 1: Save protocol snapshot
-        protocol_snapshot = self.run_dir / "protocol.md"
-        shutil.copy(self.protocol_path, protocol_snapshot)
-        print(f"✓ Protocol snapshot saved: {protocol_snapshot}")
-
-        # Step 2: Execute validation
-        print(f"\nExecuting validation...")
+    def run(self, validation_fn):
+        meta = metadata(self.validation_id)
+        shutil.copyfile(self.protocol_path, self.run_dir / "protocol.md")
+        started = time.monotonic()
         try:
             results = validation_fn()
-        except Exception as e:
-            print(f"✗ Validation execution failed: {e}")
-            return False
-
-        # Step 3: Save results
-        results_file = self.run_dir / "results.json"
-        with open(results_file, 'w') as f:
-            json.dump(results, f, indent=2)
-        print(f"✓ Results saved: {results_file}")
-
-        # Step 4: Save execution metadata
-        metadata = {
-            'validation_id': self.validation_id,
-            'timestamp': datetime.now().isoformat(),
-            'protocol_path': str(self.protocol_path),
-            'run_dir': str(self.run_dir),
-        }
-        metadata_file = self.run_dir / "metadata.json"
-        with open(metadata_file, 'w') as f:
-            json.dump(metadata, f, indent=2)
-        print(f"✓ Metadata saved: {metadata_file}")
-
-        # Step 5: Run V16 audit
-        print(f"\n=== Running V16 audit ===")
-        audit_result = self.enforcer.audit_execution(self.run_dir)
-
-        # Save audit report
-        audit_file = self.run_dir / "v16_audit.json"
-        with open(audit_file, 'w') as f:
-            json.dump(audit_result.to_dict(), f, indent=2)
-
-        audit_txt = self.run_dir / "v16_audit.txt"
-        with open(audit_txt, 'w') as f:
-            f.write(str(audit_result))
-
-        print(audit_result)
-        print(f"\nAudit report saved: {audit_file}")
-
-        # Step 6: Decision
-        if not audit_result.passed:
-            print(f"\n✗ V16 AUDIT FAILED - Results rejected")
-            return False
-
-        validation_passed = results.get('passed', False)
-        if not validation_passed:
-            print(f"\n⚠ Validation did not pass, but V16 audit OK")
-            print(f"  This is an honest FAIL - results are valid but claim not supported")
-            return False
-
-        print(f"\n✓ VALIDATION PASSED with V16 compliance")
-        return True
+            if source_digest() != meta["source_digest"]:
+                raise ValueError("Source changed while the campaign was running")
+            verdict = decision(self.validation_id, results)
+        except Exception as exc:
+            results = {
+                "schema_version": 1,
+                "validation_id": self.validation_id,
+                "blocked_reason": f"{type(exc).__name__}: {exc}",
+            }
+            verdict = "BLOCKED"
+        results.update(verdict=verdict, passed=verdict == "PASS")
+        atomic_json(self.run_dir / "results.json", results)
+        meta.update(
+            results_sha256=digest(self.run_dir / "results.json"),
+            duration_seconds=time.monotonic() - started,
+        )
+        atomic_json(self.run_dir / "metadata.json", meta)
+        audit = self.enforcer.audit_execution(self.run_dir)
+        atomic_json(self.run_dir / "v16_audit.json", audit.to_dict())
+        atomic_json(self.parent / "latest.json", {"run": self.run_dir.name})
+        print(
+            f"{self.validation_id}: {verdict}; V16 audit {'PASS' if audit.passed else 'FAIL'}; {self.run_dir}"
+        )
+        return verdict == "PASS" and audit.passed
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Run validation with V16 audit")
-    parser.add_argument('validation_id', help='Validation ID (e.g., v04_t0, v05)')
-    args = parser.parse_args()
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "validation_id", type=canonical_id, choices=["V01", "V02", "V03", "V04-T0", "V05", "V07", "V08", "V12", "V14", 'V15a', *TIER1]
+    )
+    parser.add_argument("--run-mutations", action="store_true")
+    parser.add_argument("--design", type=Path, help="Certified V04-T0/V05 design manifest")
+    parser.add_argument("--phase", choices=["pilot", "confirmation", "replication"], default="confirmation")
+    parser.add_argument(
+        "--smoke",
+        action="store_true",
+        help="Bounded real workload run; cannot certify performance",
+    )
+    args = parser.parse_args(argv)
+    try:
+        run_name = None
+        if args.validation_id in {"V04-T0", "V05", 'V07', 'V08', 'V12', 'V15a', *TIER1} and (
+            args.design or args.smoke or args.phase != "confirmation"
+        ):
+            raise ValueError("V04-T0/V05 v4 use the fixed stylized contract; legacy PPO design/phase/smoke arguments are retired")
+        runner = ValidationRunner(args.validation_id, run_name=run_name)
+    except (AuditContextError, ValueError, OSError) as exc:
+        parser.exit(2, f"Campaign not started: {exc}\n")
+    if args.validation_id == 'V07':
+        from validation.dehb_finite import campaign
 
-    runner = ValidationRunner(args.validation_id)
+        fn = lambda: campaign(runner.run_dir)
+    elif args.validation_id == 'V12':
+        from validation.warm_finite_campaign import campaign
 
-    # For demonstration, we would import and run the actual validation function
-    # For now, just show the structure
-    print(f"ValidationRunner ready for {args.validation_id}")
-    print(f"To complete integration:")
-    print(f"  1. Import validation function (e.g., from validation.v04_t0_baseline_floor import run_check)")
-    print(f"  2. Call runner.run(run_check)")
-    print(f"  3. Validation executes with full V16 audit")
+        fn = lambda: campaign(runner.run_dir)
+    elif args.validation_id == 'V15a':
+        from validation.ifbo_finite_campaign import campaign
+
+        fn = lambda: campaign(runner.run_dir)
+    elif args.validation_id == 'V08':
+        from validation.population_campaign import campaign
+
+        fn = lambda: campaign(runner.run_dir)
+    elif args.validation_id in TIER1:
+        from validation.tier1_campaign import campaign
+
+        fn = lambda: campaign(args.validation_id, runner.run_dir)
+    elif args.validation_id == "V03":
+        from validation.v03_mutation_testing import campaign
+
+        fn = lambda: campaign(run=args.run_mutations, artifact_dir=runner.run_dir)
+    elif args.validation_id == "V01":
+        from validation.v01_finite_campaign import campaign
+
+        fn = lambda: campaign(runner.run_dir)
+    elif args.validation_id == "V02":
+        from validation.v02_final_campaign import campaign
+
+        fn = lambda: campaign(runner.run_dir)
+    elif args.validation_id == "V14":
+        from validation.v14_day_one_walk import campaign
+
+        fn = lambda: campaign(runner.run_dir, smoke=args.smoke)
+    else:
+        from validation.stylized_campaign import campaign
+
+        fn = lambda: campaign(args.validation_id, runner.run_dir)
+    return 0 if runner.run(fn) else 1
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    raise SystemExit(main())

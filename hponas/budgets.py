@@ -1,0 +1,184 @@
+"""Declared endpoint resource reservations and measured/uncertain attempt ledger."""
+from copy import deepcopy
+from dataclasses import asdict, dataclass
+import math
+
+
+def finite(value, *, positive=False):
+    return type(value) in (int, float) and math.isfinite(value) and (value > 0 if positive else value >= 0)
+
+
+@dataclass(frozen=True)
+class StudyBudget:
+    """Independent tuning/final work pools, in one caller-declared work unit.
+
+    Each call promises a maximum work amount. Returned meters are checked;
+    arbitrary objective code is not a hard resource sandbox. Elapsed limits
+    prevent further endpoint dispatch, with reported last-call overshoot.
+    """
+    configurations: int
+    work_unit: str
+    tuning_work: float
+    final_work: float
+    max_work_per_call: float
+    worker_capacity: int = 1
+    tuning_seconds: float | None = None
+    final_seconds: float | None = None
+    full_run_work: float | None = None
+
+    def __post_init__(self):
+        for key in ('configurations', 'worker_capacity'):
+            if type(getattr(self, key)) is not int or getattr(self, key) < 1:
+                raise ValueError('Positive integer ' + key + ' required')
+        if not isinstance(self.work_unit, str) or not self.work_unit.strip():
+            raise ValueError('Explicit work unit required')
+        for key in ('tuning_work', 'max_work_per_call'):
+            if not finite(getattr(self, key), positive=True):
+                raise ValueError('Positive finite ' + key + ' required')
+        if not finite(self.final_work) or self.tuning_work < self.max_work_per_call:
+            raise ValueError('Invalid work reservation')
+        for key in ('tuning_seconds', 'final_seconds', 'full_run_work'):
+            value = getattr(self, key)
+            if value is not None and not finite(value, positive=True):
+                raise ValueError('Positive finite ' + key + ' required')
+
+    @property
+    def contract(self):
+        return {'version': 1, **asdict(self)}
+
+    def validate_study(self, declaration, vector, workers):
+        if declaration is None:
+            raise ValueError('StudyBudget requires a declared endpoint evaluation workflow')
+        if workers > self.worker_capacity:
+            raise ValueError('Study concurrency exceeds declared worker capacity')
+        candidates = self.configurations if vector else 1
+        required = candidates * len(declaration.final_folds) * len(declaration.final_seeds) * self.max_work_per_call
+        if self.final_work < required:
+            raise ValueError('Final work reserve cannot cover the maximum frozen selection')
+
+
+class ResourceController:
+    def __init__(self, budget):
+        if not isinstance(budget, StudyBudget):
+            raise TypeError('resource_budget must be a StudyBudget')
+        self.budget = budget
+        self.state = {'version': 1, 'contract': budget.contract, 'attempts': []}
+
+    def usage(self, role):
+        attempts = [a for a in self.state['attempts'] if a['role'] == role]
+        measured = math.fsum(a['work'] for a in attempts if a['work'] is not None)
+        charged = math.fsum(a['work'] if a['work'] is not None else self.budget.max_work_per_call for a in attempts)
+        elapsed = math.fsum(a['elapsed'] for a in attempts if a['elapsed'] is not None)
+        return {'measured_work': measured, 'charged_work': charged, 'elapsed_seconds': elapsed,
+                'work_exact': all(a['work'] is not None for a in attempts),
+                'elapsed_exact': all(a['elapsed'] is not None for a in attempts),
+                'attempts': len(attempts), 'lost_attempts': sum(a['state'] == 'lost' for a in attempts),
+                'contract_breaches': sum(a['breach'] is not None for a in attempts)}
+
+    def abandon_inflight(self):
+        for a in self.state['attempts']:
+            if a['state'] == 'inflight':
+                a['state'] = 'lost'
+
+    def refusal(self, role):
+        usage = self.usage(role)
+        if usage['contract_breaches']:
+            return role + '_resource_contract_breach'
+        if usage['charged_work'] + self.budget.max_work_per_call > getattr(self.budget, role + '_work'):
+            return role + '_work_exhausted'
+        seconds = getattr(self.budget, role + '_seconds')
+        if seconds is not None and (not usage['elapsed_exact'] or usage['elapsed_seconds'] >= seconds):
+            return role + ('_elapsed_unknown' if not usage['elapsed_exact'] else '_seconds_exhausted')
+        return None
+
+    def begin(self, tid, role):
+        if self.refusal(role) or any(a['state'] == 'inflight' for a in self.state['attempts']):
+            raise ValueError('Resource reservation unavailable')
+        self.state['attempts'].append({'trial_id': tid, 'role': role, 'state': 'inflight',
+                                       'work': None, 'elapsed': None, 'breach': None})
+
+    def meter(self, result, spec):
+        if spec is not None:
+            vector = spec.validate_result(result)
+            if vector is not None and spec.contract['work_unit'] == self.budget.work_unit:
+                return vector['work']
+            return None
+        payload = result.metadata.get('resource', {})
+        if not isinstance(payload, dict) or set(payload) != {'work', 'unit'}:
+            return None
+        if payload['unit'] != self.budget.work_unit or not finite(payload['work']):
+            return None
+        return payload['work']
+
+    def complete(self, result, spec):
+        attempt = self.state['attempts'][-1]
+        if attempt['state'] != 'inflight' or attempt['trial_id'] != result.trial_id:
+            raise ValueError('Resource attempt identity differs')
+        work = self.meter(result, spec)
+        breach = ('missing_or_invalid_work_meter' if work is None else
+                  'work_exceeds_declared_call_bound' if work > self.budget.max_work_per_call else None)
+        attempt.update(state='committed', work=work, elapsed=result.metadata['execution']['elapsed_seconds'], breach=breach)
+        result.metadata['resource_attempt'] = len(self.state['attempts']) - 1
+        if breach:
+            result.metadata['resource_refusal'] = {'reason': breach, 'original_status': result.status}
+            result.status = 'failed'
+
+    def report(self):
+        roles = {}
+        for role in ('tuning', 'final'):
+            u = self.usage(role)
+            seconds = getattr(self.budget, role + '_seconds')
+            u.update(work_limit=getattr(self.budget, role + '_work'), seconds_limit=seconds,
+                     seconds_overshoot=max(0., u['elapsed_seconds'] - seconds) if seconds else 0.,
+                     full_run_equivalents=u['measured_work'] / self.budget.full_run_work if self.budget.full_run_work else None)
+            roles[role] = u
+        return {'mode': 'declared_endpoint_reservations', 'contract': self.budget.contract,
+                **roles, 'attempts': deepcopy(self.state['attempts']),
+                'enforcement': 'dispatch reservations under the declared per-call work bound; endpoint time caps can overshoot',
+                'uncertainty': 'lost or unmetered attempts consume a whole work reservation; measured work is a lower bound'}
+
+    def restore(self, saved, evaluation, spec):
+        if (not isinstance(saved, dict) or set(saved) != set(self.state) or saved['version'] != 1
+                or saved['contract'] != self.budget.contract or not isinstance(saved['attempts'], list)):
+            raise ValueError('Checkpoint resource contract differs')
+        raw = {row['result']['trial_id']: (role, row['result']) for role in ('tuning', 'final')
+               for rows in evaluation.state[role].values() for row in rows}
+        committed = set()
+        candidate = ResourceController(self.budget)
+        for i, attempt in enumerate(saved['attempts']):
+            if (not isinstance(attempt, dict) or set(attempt) != {'trial_id', 'role', 'state', 'work', 'elapsed', 'breach'}
+                    or attempt['role'] not in {'tuning', 'final'} or attempt['state'] not in {'inflight', 'committed', 'lost'}):
+                raise ValueError('Invalid resource attempt')
+            tid, role = attempt['trial_id'], attempt['role']
+            active = evaluation.state['inflight']
+            known = tid in raw and raw[tid][0] == role or active is not None and active['trial_id'] == tid and active['role'] == role
+            if not isinstance(tid, str) or not tid or not known or tid in committed or candidate.refusal(role):
+                raise ValueError('Resource attempt exceeds admission contract')
+            if attempt['state'] == 'committed':
+                if tid not in raw or tid in committed or raw[tid][0] != role:
+                    raise ValueError('Resource attempt lacks unique raw repetition')
+                from hponas.types import Result
+                result = Result(**raw[tid][1])
+                if type(result.metadata.get('resource_attempt')) is not int or result.metadata['resource_attempt'] != i:
+                    raise ValueError('Resource attempt index differs')
+                candidate.begin(tid, role)
+                candidate.complete(deepcopy(result), spec)
+                if candidate.state['attempts'][-1] != attempt:
+                    raise ValueError('Resource meter/accounting differs from raw repetition')
+                if attempt['breach'] is not None and result.status != 'failed':
+                    raise ValueError('Resource breach cannot be successful')
+                committed.add(tid)
+            else:
+                if attempt['work'] is not None or attempt['elapsed'] is not None or attempt['breach'] is not None:
+                    raise ValueError('Uncommitted work must remain unknown')
+                candidate.state['attempts'].append(deepcopy(attempt))
+                if attempt['state'] == 'inflight':
+                    active = evaluation.state['inflight']
+                    if i != len(saved['attempts']) - 1 or active is None or active['trial_id'] != tid or active['role'] != role:
+                        raise ValueError('Inflight resource and repetition ledgers differ')
+                elif tid not in evaluation.state['uncertain']:
+                    raise ValueError('Lost work lacks evaluation uncertainty')
+        for tid, (_, row) in raw.items():
+            if row['metadata']['execution']['accounting'] != 'not_dispatched' and tid not in committed:
+                raise ValueError('Dispatched repetition lacks a resource attempt')
+        self.state = deepcopy(saved)

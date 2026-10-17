@@ -1,269 +1,114 @@
+"""Interrupt a Study and restore its committed ledger and pending Sobol proposal.
+
+This is a deterministic driver-interruption demonstration, not a kill-9 test.
+The Store conformance suite separately tests process termination. No existing
+folder is deleted; each demonstration retains its own artifacts.
 """
-Crash recovery demonstration: coordinator dies after trial 8, restarts, continues without duplicates.
 
-Survey reference: Ch 15 (store contract), R1 spike charter (deliverable 2).
-
-Exit criterion: no duplicate observations, trials 9-16 continue from checkpoint.
-"""
-
+import argparse
 import json
-import sys
-import time
 from pathlib import Path
+import tempfile
 
-import numpy as np
-
-from hponas.executors import LocalExecutor
-from hponas.schedulers import ASHAConfig, ASHAScheduler
-from hponas.searchers import SobolSearcher
-from hponas.space import Knob, SearchSpace
-from hponas.store import Store, Study, Trial
+from hponas import Knob, LocalExecutor, SearchSpace, SobolSearcher, Study
+from hponas.store import Store
 
 
-def branin(x: float, y: float) -> float:
-    """2D Branin function."""
-    a = 1.0
-    b = 5.1 / (4 * np.pi**2)
-    c = 5.0 / np.pi
-    r = 6.0
-    s = 10.0
-    t = 1.0 / (8 * np.pi)
-    return a * (y - b * x**2 + c * x - r)**2 + s * (1 - t) * np.cos(x) + s
+class SimulatedCrash(KeyboardInterrupt):
+    """Interrupt the driver after earlier results have been committed."""
 
 
-def objective_fn(config: dict) -> float:
-    """Evaluate Branin at (x, y) from config."""
-    return branin(config["x"], config["y"])
+def objective_fn(config):
+    return (config["x"] - .25)**2 + (config["y"] - .75)**2
 
 
-def _restore_searcher_state(searcher: SobolSearcher, state_path: Path) -> None:
-    """
-    Restore the searcher's sequence position after a crash.
-
-    Without this, a searcher rebuilt from its seed restarts the QMC sequence and
-    silently re-proposes points that were already evaluated. Replaying observations
-    does not help: observe() carries values, not sequence position.
-    """
-    if not state_path.exists():
-        print("   WARNING: no searcher state found — resumed run will repeat pre-crash points")
-        return
-
-    with open(state_path) as f:
-        state = json.load(f)
-    searcher.load_state_dict(state)
-    print(f"   Restored searcher state: {state['n_proposed']} points already proposed")
+def _space():
+    return SearchSpace([Knob("x", "continuous", (0., 1.)),
+                        Knob("y", "continuous", (0., 1.))])
 
 
-def _setup_study_and_recover(
-    output_path: Path,
-    db_path: Path,
-    study_id: str,
-    seed: int,
-) -> tuple[Store, int, list]:
-    """
-    Setup store and recover from crash if needed.
+def run_study_with_crash(crash_after=8, n_trials=16, seed=99, output_dir=None):
+    if not 0 < crash_after < n_trials:
+        raise ValueError("crash_after must be between zero and n_trials")
+    if output_dir is None:
+        raise ValueError("Provide the same output_dir to interrupt and resume")
+    directory = Path(output_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    store = Store(directory / "study.db")
+    try:
+        snapshot = store.load_study_snapshot("recovery")
+        calls = 0
 
-    Returns: (store, start_trial, existing_trials)
-    """
-    store_exists = db_path.exists()
+        def interruptible(config):
+            nonlocal calls
+            calls += 1
+            if snapshot is None and calls == crash_after + 1:
+                raise SimulatedCrash("committed checkpoint retained")
+            return objective_fn(config)
 
-    if store_exists:
-        print("\n🔄 RESTARTING from existing store (crash recovery)")
-        store = Store(db_path)
-        existing_trials = store.read_trials(study_id)
-        n_completed = len(existing_trials)
-        print(f"   Found {n_completed} existing trials")
-        start_trial = n_completed
+        study = Study(SobolSearcher(_space(), seed=seed), LocalExecutor(), interruptible,
+                      budget=n_trials, maximize=False, study_name="recovery",
+                      store=store, checkpoint_dir=directory / "checkpoints")
+        if snapshot is not None:
+            study.load_checkpoint()
+            if study.budget != n_trials or study.searcher.seed != seed:
+                raise ValueError("Resume budget/seed differs from the saved study")
+        result = study.run()
+        trace = [(study.trials[r.trial_id].config.values, r.objective_value)
+                 for r in result.history]
+        if len(store.read_trials("recovery")) != n_trials:
+            raise AssertionError("Stored evaluation count differs from the budget")
+        return result, trace
+    finally:
+        store.close()
+
+
+def run_demo(output_dir=None, crash_after=8, n_trials=16, seed=99):
+    if output_dir is not None:
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+    directory = Path(tempfile.mkdtemp(prefix="hponas-recovery-", dir=output_dir))
+    resumed_dir = directory / "resumed"
+    try:
+        run_study_with_crash(crash_after, n_trials, seed, resumed_dir)
+    except SimulatedCrash:
+        pass
     else:
-        print("\n🚀 STARTING fresh study")
-        store = Store(db_path)
+        raise AssertionError("Interruption was not exercised")
+    store = Store(resumed_dir / "study.db")
+    try:
+        committed = store.load_study_snapshot("recovery")["results"]
+    finally:
+        store.close()
+    if len(committed) != crash_after:
+        raise AssertionError("Unexpected committed prefix at interruption")
+    result, resumed = run_study_with_crash(crash_after, n_trials, seed, resumed_dir)
+    reference = Study(SobolSearcher(_space(), seed=seed), LocalExecutor(), objective_fn,
+                      budget=n_trials, maximize=False, study_name="reference")
+    baseline = reference.run()
+    expected = [(reference.trials[r.trial_id].config.values, r.objective_value)
+                for r in baseline.history]
+    if resumed != expected:
+        raise AssertionError("Resumed proposals/results differ from uninterrupted run")
+    actual = {r.trial_id: r.to_dict() for r in result.history}
+    if any(actual[key] != value for key, value in committed.items()):
+        raise AssertionError("Previously committed results changed during recovery")
+    if len({tuple(sorted(config.items())) for config, _ in resumed}) != n_trials:
+        raise AssertionError("Recovered Sobol stream contains duplicate configurations")
+    receipt = {"kind": "interruption_demo", "scientific_acceptance": False,
+               "trials": n_trials, "committed_preserved": len(committed),
+               "exact_reference_trace": True, "artifact_dir": str(directory)}
+    (directory / "recovery-receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
+    print(f"PASSED: {n_trials} unique trials; committed prefix preserved; artifacts={directory}")
+    return receipt
 
-        # Setup space
-        space = SearchSpace()
-        space.add_knob(Knob(name="x", kind="continuous", bounds=(-5.0, 10.0)))
-        space.add_knob(Knob(name="y", kind="continuous", bounds=(0.0, 15.0)))
 
-        # Write study
-        store.write_study(Study(
-            study_id=study_id,
-            space_json=space.to_json(),
-            objective="minimize",
-            seed=seed,
-            budget=100.0,
-        ))
-
-        start_trial = 0
-        existing_trials = []
-
-    return store, start_trial, existing_trials
-
-
-def run_study_with_crash(
-    crash_after: int = 8,
-    n_trials: int = 16,
-    seed: int = 99,
-    output_dir: str = "/tmp/hponas_crash",
-):
-    """
-    Run a study that crashes after N trials, then recovers.
-
-    Args:
-        crash_after: simulate crash after this many trials
-        n_trials: total trials to run
-        seed: random seed
-        output_dir: directory for store and checkpoints
-    """
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
-
-    db_path = output_path / "study_crash.db"
-    study_id = "branin_crash_recovery"
-    searcher_state_path = output_path / "searcher_state.json"
-
-    print(f"\n{'='*80}")
-    print("CRASH RECOVERY TEST")
-    print(f"{'='*80}")
-    print(f"Plan: run {crash_after} trials, simulate crash, restart, complete {n_trials} total")
-    print(f"Store: {db_path}")
-
-    # Must be read BEFORE setup, which creates the store file.
-    # This flag decides whether we are the pre-crash run or the resumed run.
-    is_fresh_run = not db_path.exists()
-
-    # Setup store and recover if needed
-    store, start_trial, existing_trials = _setup_study_and_recover(
-        output_path, db_path, study_id, seed
-    )
-
-    # Setup components
-    space = SearchSpace()
-    space.add_knob(Knob(name="x", kind="continuous", bounds=(-5.0, 10.0)))
-    space.add_knob(Knob(name="y", kind="continuous", bounds=(0.0, 15.0)))
-
-    searcher = SobolSearcher(space, seed=seed)
-    scheduler = ASHAScheduler(ASHAConfig(eta=2, r_min=1.0, r_max=4.0))
-    executor = LocalExecutor(checkpoint_dir=output_path / "checkpoints")
-
-    # If restarting, restore searcher state and replay scheduler events
-    if existing_trials:
-        _restore_searcher_state(searcher, searcher_state_path)
-        print(f"   Replaying {len(existing_trials)} trials to scheduler")
-        for trial in existing_trials:
-            # Note: observe() is not used for recovery (state_dict handles sequence position)
-            scheduler.report(trial.trial_id, trial.fidelity, trial.value)
-
-    # Run remaining trials
-    best_value = float('inf')
-    for i in range(start_trial, n_trials):
-        trial_id = f"trial_{i}"
-
-        # Propose configuration
-        configs = searcher.propose(1)
-        config = configs[0]
-
-        # Launch trial
-        start = time.time()
-        executor.launch(trial_id, config, objective_fn, fidelity=1.0)
-        result = executor.get_result(trial_id)
-        value = result.get("value", float('inf'))
-        cost = time.time() - start
-
-        # Update best
-        if value < best_value:
-            best_value = value
-            print(f"  Trial {i}: value={value:.4f} *** NEW BEST")
-        else:
-            print(f"  Trial {i}: value={value:.4f}")
-
-        # Record in store
-        store.write_trial(
-            Trial(
-                trial_id=trial_id,
-                config=config,
-                seed=seed,
-                fidelity=1.0,
-                value=value,
-                cost=cost,
-                status="completed",
-            ),
-            study_id=study_id,
-        )
-
-        # Observe (values don't advance Sobol state, but maintained for compatibility)
-        searcher.observe({"config": config, "value": value})
-        scheduler.report(trial_id, 1.0, value)
-
-        # Persist searcher state after each trial (crash recovery contract)
-        with open(searcher_state_path, "w") as f:
-            json.dump(searcher.state_dict(), f, indent=2)
-
-        # Simulate crash after N trials
-        if is_fresh_run and i == crash_after - 1:
-            print(f"\n💥 SIMULATING CRASH after trial {i}")
-            print(f"   Store has {i+1} trials committed")
-            print(f"   Searcher state saved: {searcher_state_path}")
-            store.close()
-            print("   Restart this script to continue")
-            sys.exit(0)
-
-    store.close()
-
-    # Verification
-    print(f"\n{'='*80}")
-    print("VERIFICATION")
-    print(f"{'='*80}")
-
-    store_verify = Store(db_path)
-    final_trials = store_verify.read_trials(study_id)
-    store_verify.close()
-
-    print(f"Total trials in store: {len(final_trials)}")
-    print(f"Expected: {n_trials}")
-
-    # Check for duplicate trial IDs (weak check: IDs are assigned by the loop counter)
-    trial_ids = [t.trial_id for t in final_trials]
-    id_duplicates = len(trial_ids) - len(set(trial_ids))
-
-    # Check for duplicate CONFIGS (strong check: catches searcher state loss).
-    # A searcher rebuilt from its seed restarts the QMC sequence and silently
-    # re-proposes pre-crash points; trial IDs stay unique, so only this catches it.
-    configs = [tuple(sorted(t.config.items())) for t in final_trials]
-    config_duplicates = len(configs) - len(set(configs))
-
-    if id_duplicates > 0:
-        print(f"❌ FAILED: {id_duplicates} duplicate trial IDs found")
-        return False
-    elif len(final_trials) != n_trials:
-        print(f"❌ FAILED: expected {n_trials} trials, got {len(final_trials)}")
-        return False
-    elif config_duplicates > 0:
-        print(f"❌ FAILED: {config_duplicates} duplicate configs "
-              f"({len(set(configs))} unique in {len(configs)} trials)")
-        print("   Cause: searcher state not restored — QMC sequence restarted after crash")
-        return False
-    else:
-        print(f"✅ PASSED: {n_trials} unique trials, {len(set(configs))} unique configs")
-        print(f"Best value found: {best_value:.6f}")
-        return True
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output-dir", type=Path)
+    args = parser.parse_args(argv)
+    run_demo(args.output_dir)
+    return 0
 
 
 if __name__ == "__main__":
-    # Clean start
-    import shutil
-    crash_dir = Path("/tmp/hponas_crash")
-    if crash_dir.exists():
-        shutil.rmtree(crash_dir)
-
-    # First run: will crash after trial 8
-    try:
-        run_study_with_crash(crash_after=8, n_trials=16, seed=99)
-    except SystemExit:
-        pass
-
-    # Second run: will recover and complete
-    success = run_study_with_crash(crash_after=8, n_trials=16, seed=99)
-
-    if success:
-        print(f"\n{'='*80}")
-        print("CRASH RECOVERY DEMONSTRATION COMPLETE")
-        print(f"{'='*80}")
+    raise SystemExit(main())

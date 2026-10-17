@@ -132,6 +132,7 @@ class TestRayExecutorErrorHandling:
 
     def test_objective_exception_marked_failed(self, executor):
         """Test objective exceptions produce a failed Result."""
+
         def failing(config):
             raise ValueError("Test error")
 
@@ -159,6 +160,7 @@ class TestRayExecutorErrorHandling:
 
     def test_failure_does_not_abort_batch(self, executor):
         """Test one failing trial does not prevent others from completing."""
+
         def sometimes_fails(config):
             if config["x"] == 1.0:
                 raise RuntimeError("selective failure")
@@ -214,13 +216,33 @@ class TestRayExecutorRetry:
         The remote wrapper catches objective exceptions and returns a payload,
         so no retry occurs and no attempt counter is recorded.
         """
+
         def failing(config):
             raise ValueError("deterministic")
 
         result = executor.execute(_trial("retry_0"), failing)
 
         assert result.status == "failed"
-        assert "attempts" not in result.metadata
+        assert result.metadata["attempts"] == 1
+
+    def test_worker_crash_retry_is_counted_and_charged(self, executor, tmp_path):
+        """Ray must not hide a crashed worker's retry from the executor ledger."""
+        marker = tmp_path / "attempt"
+
+        def crash_once(config):
+            import os
+            if not marker.exists():
+                marker.write_text("started")
+                time.sleep(0.1)
+                os._exit(1)
+            return {"value": 9.0, "cost": 0.25}
+
+        result = executor.execute(_trial("worker_crash"), crash_once)
+        assert result.is_valid()
+        assert result.metadata["attempts"] == 2
+        failed_cost = result.metadata["failed_attempt_elapsed_seconds"]
+        assert failed_cost >= 0.1
+        assert result.cost == pytest.approx(0.25 + failed_cost)
 
 
 class TestRayExecutorCollectRetryUnit:

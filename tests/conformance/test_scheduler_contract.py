@@ -1,3 +1,5 @@
+# Historical bootstrap/quota regression contract, explicitly retained for compatibility.
+# Default reference ASHA is verified in test_asha_reference.py.
 """Contract conformance tests for Scheduler interface.
 
 Authority: HPO_NAS_RECOVERY_MASTER_PROGRAM.md Week 2 Day 2
@@ -16,12 +18,12 @@ import json
 import numpy as np
 import pytest
 
-from hponas.schedulers import ASHAScheduler, ASHAConfig, PASHAScheduler, PASHAConfig
+from hponas.schedulers import ASHAScheduler, ASHAConfig, BudgetedASHAScheduler, BudgetedASHAConfig
 
 
 def _asha_config():
     """Standard ASHA config for testing."""
-    return ASHAConfig(eta=3, r_min=1.0, r_max=27.0, median_stopping=False)
+    return ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=27.0, median_stopping=False)
 
 
 class TestSchedulerContractASHAReport:
@@ -56,7 +58,7 @@ class TestSchedulerContractASHAReport:
 
     def test_asha_median_stopping_kills_worse_than_median(self):
         """Test median stopping rule stops trials worse than median."""
-        config = ASHAConfig(eta=3, r_min=1.0, r_max=27.0, median_stopping=True)
+        config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=27.0, median_stopping=True)
         scheduler = ASHAScheduler(config)
 
         # Report 5 trials at fidelity 2.5 (between rungs) with values 0.1, 0.2, 0.3, 0.4, 0.5
@@ -162,7 +164,7 @@ class TestSchedulerContractASHARungLogic:
 
     def test_asha_rung_boundaries_computed_correctly(self):
         """Test rungs are computed as [r_min, r_min*η, r_min*η^2, ..., r_max]."""
-        config = ASHAConfig(eta=3, r_min=1.0, r_max=27.0)
+        config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=27.0)
         scheduler = ASHAScheduler(config)
 
         # Expected rungs: [1.0, 3.0, 9.0, 27.0]
@@ -329,10 +331,10 @@ class TestSchedulerContractASHAEdgeCases:
         scheduler.report("trial_1", fidelity=1.0, value=0.8)
         scheduler.report("trial_1", fidelity=1.0, value=0.3)  # Better value
 
-        # Rung population should have both entries (duplicates allowed)
+        # A repeated report replaces the prior score without inflating promotion quotas.
         pop = scheduler._rung_populations[0]
-        assert len(pop) == 2
-        assert ("trial_1", 0.8) in pop
+        assert len(pop) == 1
+        assert ("trial_1", 0.8) not in pop
         assert ("trial_1", 0.3) in pop
 
         # Trial state should track best value
@@ -355,7 +357,7 @@ class TestSchedulerContractASHAEdgeCases:
 
     def test_asha_rung_includes_r_max_when_not_power_of_eta(self):
         """Test r_max is included as final rung even if not exact power of eta."""
-        config = ASHAConfig(eta=3, r_min=1.0, r_max=20.0)  # 20 != 27 = 3^3
+        config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=20.0)  # 20 != 27 = 3^3
         scheduler = ASHAScheduler(config)
 
         # Should have rungs [1, 3, 9, 20]
@@ -364,7 +366,7 @@ class TestSchedulerContractASHAEdgeCases:
 
     def test_asha_median_stopping_requires_at_least_5_observations(self):
         """Test median stopping needs ≥5 observations before activating."""
-        config = ASHAConfig(eta=3, r_min=1.0, r_max=27.0, median_stopping=True)
+        config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=27.0, median_stopping=True)
         scheduler = ASHAScheduler(config)
 
         # Report 4 trials (< 5)
@@ -415,8 +417,8 @@ class TestSchedulerContractPASHA:
 
     def test_pasha_promotion_budget_constraint(self):
         """Test PASHA respects promotion budget constraint."""
-        config = PASHAConfig(eta=3, r_min=1.0, r_max=27.0, promotion_budget=10.0)
-        scheduler = PASHAScheduler(config)
+        config = BudgetedASHAConfig(eta=3, r_min=1.0, r_max=27.0, promotion_budget=10.0)
+        scheduler = BudgetedASHAScheduler(config)
 
         # Report 9 trials at first rung
         for i in range(9):
@@ -434,8 +436,8 @@ class TestSchedulerContractPASHA:
 
     def test_pasha_stops_trial_when_budget_exhausted(self):
         """Test PASHA stops trials when promotion budget exhausted."""
-        config = PASHAConfig(eta=3, r_min=1.0, r_max=9.0, promotion_budget=5.0)
-        scheduler = PASHAScheduler(config)
+        config = BudgetedASHAConfig(eta=3, r_min=1.0, r_max=9.0, promotion_budget=5.0)
+        scheduler = BudgetedASHAScheduler(config)
 
         # Report 6 trials at first rung
         for i in range(6):
@@ -464,7 +466,7 @@ class TestSchedulerContractPASHABestValueTracking:
     def _pasha(self, **kwargs):
         params = dict(eta=3, r_min=1.0, r_max=9.0, promotion_budget=100.0)
         params.update(kwargs)
-        return PASHAScheduler(PASHAConfig(**params))
+        return BudgetedASHAScheduler(BudgetedASHAConfig(**params))
 
     def test_pasha_tracks_best_value_not_latest(self):
         """Third slot holds min across reports, not the latest value."""
@@ -559,7 +561,7 @@ class TestSchedulerContractASHAMutationTargets:
 
         Mutation: math.ceil -> math.floor
         """
-        config = ASHAConfig(eta=3, r_min=1.0, r_max=27.0)
+        config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=27.0)
         scheduler = ASHAScheduler(config)
 
         # Report 10 trials: ceil(10/3)=4, floor(10/3)=3
@@ -631,7 +633,7 @@ class TestSchedulerContractASHAMutationTargets:
 
         Mutation: value > median -> value >= median
         """
-        config = ASHAConfig(eta=3, r_min=1.0, r_max=27.0, median_stopping=True)
+        config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=27.0, median_stopping=True)
         scheduler = ASHAScheduler(config)
 
         # Create history with median = 0.3: [0.1, 0.2, 0.3, 0.4, 0.5]
@@ -684,7 +686,7 @@ class TestSchedulerContractASHAMutationTargets:
 
         Mutation: r *= config.eta -> r += config.eta
         """
-        config = ASHAConfig(eta=3, r_min=1.0, r_max=27.0)
+        config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=27.0)
         scheduler = ASHAScheduler(config)
 
         # Should be [1, 3, 9, 27] (multiply), not [1, 4, 7, 10, ...] (add)
@@ -697,7 +699,7 @@ class TestSchedulerContractASHAMutationTargets:
 
         Mutation: len(history) >= 5 -> len(history) >= 4
         """
-        config = ASHAConfig(eta=3, r_min=1.0, r_max=27.0, median_stopping=True)
+        config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=27.0, median_stopping=True)
         scheduler = ASHAScheduler(config)
 
         # Report exactly 4 observations
@@ -784,7 +786,7 @@ class TestSchedulerContractASHAMutationTargets:
 
         Mutation: continue -> break
         """
-        config = ASHAConfig(eta=3, r_min=1.0, r_max=27.0)  # 4 rungs: [1, 3, 9, 27]
+        config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=27.0)  # 4 rungs: [1, 3, 9, 27]
         scheduler = ASHAScheduler(config)
 
         # Leave rung 0 empty (no trials at fidelity=1.0)
@@ -806,7 +808,7 @@ class TestSchedulerContractASHAMutationTargets:
 
         Mutation: range(len(self.rungs) - 1) -> range(len(self.rungs) - 2)
         """
-        config = ASHAConfig(eta=3, r_min=1.0, r_max=9.0)  # 3 rungs: [1, 3, 9]
+        config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=9.0)  # 3 rungs: [1, 3, 9]
         scheduler = ASHAScheduler(config)
 
         # Report at second-to-last rung (index 1)
@@ -872,7 +874,7 @@ class TestSchedulerContractASHAMutationTargets:
 
         Mutations: "eta" -> "ETA"/"XXetaXX", "r_min" -> "R_MIN", etc.
         """
-        config = ASHAConfig(eta=3, r_min=1.0, r_max=9.0)
+        config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=9.0)
         scheduler = ASHAScheduler(config)
 
         state = scheduler.state_dict()
@@ -885,7 +887,7 @@ class TestSchedulerContractASHAMutationTargets:
 
         # Check config sub-keys are exact lowercase
         config_keys = set(state["config"].keys())
-        assert config_keys == {"eta", "r_min", "r_max"}
+        assert config_keys == {"eta", "r_min", "r_max", "median_stopping", "promotion_policy", "median_min_completed", "report_grid"}
 
         # Verify values match
         assert state["config"]["eta"] == 3
@@ -944,7 +946,9 @@ class TestSchedulerContractASHABestValueTracking:
         # Regression: best must NOT move back up
         scheduler.report("trial_1", fidelity=3.0, value=0.9)
         _, _, best_3, _ = scheduler._trial_state["trial_1"]
-        assert abs(best_3 - 0.5) < 1e-6, "best should be retained, not replaced by latest"
+        assert abs(best_3 - 0.5) < 1e-6, (
+            "best should be retained, not replaced by latest"
+        )
 
     def test_asha_best_value_retained_at_same_rung(self):
         """Repeated reports at one rung keep the minimum, not the last one seen."""
@@ -972,7 +976,7 @@ class TestSchedulerContractASHABestValueTracking:
 
     def test_asha_final_rung_records_best_value(self):
         """A stop at the final rung stores best_val, not the final raw value."""
-        config = ASHAConfig(eta=3, r_min=1.0, r_max=9.0, median_stopping=False)
+        config = ASHAConfig(promotion_policy="legacy_bootstrap", eta=3, r_min=1.0, r_max=9.0, median_stopping=False)
         scheduler = ASHAScheduler(config)
 
         # Reach the final rung with a good value, then report a worse one there.
@@ -1025,5 +1029,3 @@ class TestSchedulerContractASHABestValueTracking:
 
         _, _, best_val, _ = restored._trial_state["trial_1"]
         assert abs(best_val - 0.4) < 1e-6
-
-

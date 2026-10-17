@@ -1,0 +1,4 @@
+{
+  "policy": "retain_evidence_and_private_database_until_explicit_user_cleanup",
+  "automatic_gc": false
+}

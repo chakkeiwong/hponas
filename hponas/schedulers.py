@@ -10,12 +10,58 @@ Tier 0: adds median rule, PASHA.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
-from typing import Callable, Literal, Optional
+from dataclasses import dataclass, asdict
+from typing import Any, Callable, Literal, Optional
 
 import numpy as np
 
 SchedulerDecision = Literal["continue", "stop", "pause"]
+
+
+def _validate_rungs(config):
+    if (
+        not np.isfinite([config.eta, config.r_min, config.r_max]).all()
+        or config.eta <= 1
+        or config.r_min <= 0
+        or config.r_max < config.r_min
+    ):
+        raise ValueError("Require finite eta>1 and 0<r_min<=r_max")
+
+
+def _upsert_report(population, trial_id, value):
+    for index, (tid, _) in enumerate(population):
+        if tid == trial_id:
+            population[index] = (trial_id, value)
+            return
+    population.append((trial_id, value))
+
+
+def _ceil_population_ratio(population_size, eta):
+    """Ceil(n/eta) for the exact represented reduction factor, without rounding.
+
+    Dividing integers through a float can round n/eta down to an integer and
+    under-promote. Use integer arithmetic for both integral and float eta.
+    Callers already validate positive, finite eta.
+    """
+    if isinstance(eta, (int, np.integer)):
+        numerator, denominator = int(eta), 1
+    else:
+        numerator, denominator = eta.as_integer_ratio()
+    return -(-(population_size * denominator) // numerator)
+
+
+def _promotion_cutoff(population, eta):
+    """Pinned reference's linear quantile without overflowing a subtraction.
+
+    NumPy's interpolation can form ``right - left`` and overflow for opposite
+    extreme finite losses. Convex weighted terms preserve the source policy.
+    The caller supplies at least two observations.
+    """
+    values = sorted(value for _, value in population)
+    virtual = (len(values) - 1) * (1 / eta) + 1
+    index = int(virtual)
+    fraction = virtual - index
+    return fraction * values[index] + (1 - fraction) * values[index - 1]
 
 
 @dataclass
@@ -28,10 +74,31 @@ class ASHAConfig:
     r_max: maximum fidelity (full run)
     median_stopping: enable median stopping rule (Ch 5)
     """
+
     eta: int = 3
     r_min: float = 1.0
     r_max: float = 27.0
     median_stopping: bool = False
+    promotion_policy: str = "syne_tune_0_13_0"
+    median_min_completed: int = 5
+    report_grid: tuple[float, ...] = ()
+
+    def __post_init__(self):
+        _validate_rungs(self)
+        if self.promotion_policy not in {"syne_tune_0_13_0", "legacy_bootstrap"}:
+            raise ValueError("Unknown ASHA promotion_policy")
+        if (isinstance(self.median_min_completed, bool)
+                or not isinstance(self.median_min_completed, int)
+                or self.median_min_completed < 1):
+            raise ValueError("median_min_completed must be a positive integer")
+        self.report_grid = tuple(self.report_grid)
+        if any(not np.isfinite(s) or s <= 0 or s > self.r_max for s in self.report_grid):
+            raise ValueError("report_grid must contain finite steps in (0, r_max]")
+        if tuple(sorted(set(self.report_grid))) != self.report_grid:
+            raise ValueError("report_grid must be strictly increasing")
+        if (self.median_stopping and self.promotion_policy != "legacy_bootstrap"
+                and not self.report_grid):
+            raise ValueError("Streamed median stopping requires an explicit report_grid")
 
 
 class ASHAScheduler:
@@ -42,27 +109,30 @@ class ASHAScheduler:
     Contract: scheduler impl: asha.
     Validation: V02 (async correctness), V06 (nearly-free early stopping).
 
-    Spike: async promotion, rung bookkeeping, no median stopping yet.
-    Tier 0: add median rule (~2d).
+    Reference promotion: Syne Tune 0.13.0 quantile policy. Optional median
+    pruning uses completed trials on an explicit streamed report grid.
     """
 
     def __init__(self, config: ASHAConfig):
+        _validate_rungs(config)
         self.config = config
 
         # Compute rung budgets: [r_min, r_min*η, r_min*η^2, ..., r_max]
         self.rungs: list[float] = []
         r = config.r_min
-        while r <= config.r_max:
+        while r < config.r_max:
             self.rungs.append(r)
-            r *= config.eta
-        if self.rungs[-1] < config.r_max:
-            self.rungs.append(config.r_max)
+            next_r = r * config.eta
+            if next_r <= r:
+                raise ValueError("Rung budgets must strictly increase at float precision")
+            r = next_r
+        self.rungs.append(config.r_max)
 
         # Track trials: trial_id -> (current_rung_idx, current_fidelity, best_value_so_far, status)
         self._trial_state: dict[str, tuple[int, float, Optional[float], str]] = {}
 
         # Track rung populations: rung_idx -> list of (trial_id, value) tuples
-        # Duplicates are allowed (same trial can report multiple times at same rung)
+        # Each trial occupies at most one entry at a rung
         self._rung_populations: dict[int, list[tuple[str, float]]] = {
             i: [] for i in range(len(self.rungs))
         }
@@ -70,10 +140,111 @@ class ASHAScheduler:
         # Median stopping: track all observations at each fidelity for running median
         # fidelity -> list of values
         self._fidelity_history: dict[float, list[float]] = {}
+        self._median_reports = {}
+        self._last_reports = {}
+        self._running_histories = {}
+        self._terminal = {}
 
-    def report(
-        self, trial_id: str, fidelity: float, value: float
-    ) -> SchedulerDecision:
+    def report(self, trial_id: str, fidelity: float, value: float,
+               *, is_progress: bool = False) -> SchedulerDecision:
+        """Report a normalized loss; only streamed reports enter median histories.
+
+        Endpoint completion is recorded separately by ``finish``. A rung result
+        alone never makes a trial a completed median reference.
+        """
+        if self.config.promotion_policy == "legacy_bootstrap":
+            return self._legacy_report(trial_id, fidelity, value)
+        if not np.isfinite([fidelity, value]).all() or fidelity <= 0:
+            raise ValueError("Reports require positive fidelity and a finite value")
+        previous = self._trial_state.get(trial_id)
+        if trial_id in self._terminal or (previous and previous[-1] == "stopped"):
+            return "stop"
+        last = self._last_reports.get(trial_id)
+        if last and fidelity <= last[0]:
+            if fidelity == last[0] and value != last[1]:
+                raise ValueError("Conflicting duplicate scheduler report")
+            if previous and previous[-1] == "active":
+                return "continue"
+            return last[2] if fidelity == last[0] else "continue"
+        if previous and previous[-1] == "paused":
+            # Training may resume only after an explicit promotion.
+            return "pause"
+        if is_progress:
+            history = self._running_histories.setdefault(trial_id, {})
+            history[fidelity] = value
+            if self._median_should_stop(trial_id, fidelity):
+                self._trial_state[trial_id] = (-1, fidelity, value, "stopped")
+                self._last_reports[trial_id] = (fidelity, value, "stop")
+                self._terminal[trial_id] = "pruned"
+                return "stop"
+        rung_idx = self._fidelity_to_rung(fidelity)
+        decision = "continue"
+        if rung_idx is not None:
+            _upsert_report(self._rung_populations[rung_idx], trial_id, value)
+            decision = "stop" if rung_idx == len(self.rungs) - 1 else "pause"
+            self._trial_state[trial_id] = (
+                rung_idx, fidelity, value, "stopped" if decision == "stop" else "paused"
+            )
+        self._last_reports[trial_id] = (fidelity, value, decision)
+        return decision
+
+    def _median_should_stop(self, trial_id, step):
+        if not self.config.median_stopping or step not in self.config.report_grid:
+            return False
+        prefix = [s for s in self.config.report_grid if s <= step]
+        current = self._running_histories[trial_id]
+        if any(s not in current for s in prefix):
+            return False  # Missing steps are never interpolated.
+        references = []
+        for tid, status in self._terminal.items():
+            history = self._running_histories.get(tid, {})
+            if status == "completed" and tid != trial_id and all(s in history for s in prefix):
+                references.append(float(np.mean([history[s] for s in prefix])))
+        return (len(references) >= self.config.median_min_completed
+                and np.mean([current[s] for s in prefix]) > np.median(references))
+
+    def finish(self, trial_id: str, status: str) -> None:
+        """Record terminal training status, distinct from a completed rung call."""
+        if status not in {"completed", "failed", "cancelled", "pruned"}:
+            raise ValueError("Unknown terminal trial status")
+        prior = self._terminal.get(trial_id)
+        if prior:
+            if prior != status:
+                raise ValueError("Conflicting terminal trial status")
+            return
+        if status == "completed":
+            last = self._last_reports.get(trial_id)
+            if last is None or self._fidelity_to_rung(last[0]) != len(self.rungs) - 1:
+                raise ValueError("Completion requires a full-fidelity report")
+        self._terminal[trial_id] = status
+        if trial_id in self._trial_state:
+            rung, fidelity, value, _ = self._trial_state[trial_id]
+            self._trial_state[trial_id] = (rung, fidelity, value, "stopped")
+
+    def promote(self) -> list[tuple[str, float]]:
+        """Dispatch one reference-eligible trial, preferring the highest rung.
+
+        Linear 1/eta quantile with at least two observations; ties qualify.
+        Ineligible trials remain paused and promoted trials stay in the cutoff
+        population. Repeated calls can fill multiple available worker slots.
+        """
+        if self.config.promotion_policy == "legacy_bootstrap":
+            return self._legacy_promote()
+        for rung_idx in reversed(range(len(self.rungs) - 1)):
+            population = self._rung_populations[rung_idx]
+            if len(population) < 2:
+                continue
+            cutoff = _promotion_cutoff(population, self.config.eta)
+            for tid, value in sorted(population, key=lambda entry: entry[1]):
+                state = self._trial_state[tid]
+                if (value <= cutoff and state[0] == rung_idx and state[-1] == "paused"
+                        and tid not in self._terminal):
+                    target = self.rungs[rung_idx + 1]
+                    self._trial_state[tid] = (rung_idx + 1, target, value, "active")
+                    return [(tid, target)]
+        return []
+
+    def _legacy_report(self, trial_id: str, fidelity: float, value: float) -> SchedulerDecision:
         """
         Called as metrics stream in (Ch 15 contract).
 
@@ -83,6 +254,11 @@ class ASHAScheduler:
         Tier 0: adds median stopping rule (Ch 5 roadmap-03, ch05-01).
         Median rule: stop if value > median of all values seen at this fidelity.
         """
+        if not np.isfinite([fidelity, value]).all() or fidelity <= 0:
+            raise ValueError("Reports require positive fidelity and a finite value")
+        previous = self._trial_state.get(trial_id)
+        if previous and (fidelity < previous[1] or previous[-1] == "stopped"):
+            return "stop" if previous[-1] == "stopped" else "continue"
         # Determine which rung this fidelity corresponds to
         rung_idx = self._fidelity_to_rung(fidelity)
         if rung_idx is None:
@@ -91,13 +267,18 @@ class ASHAScheduler:
             if self.config.median_stopping:
                 if fidelity not in self._fidelity_history:
                     self._fidelity_history[fidelity] = []
-                self._fidelity_history[fidelity].append(value)
+                reports = self._median_reports.setdefault(fidelity, {})
+                reports[trial_id] = value
+                self._fidelity_history[fidelity] = list(reports.values())
 
                 # Stop if worse than median (minimize objective)
                 history = self._fidelity_history[fidelity]
-                if len(history) >= 5:  # Need at least 5 observations for reliable median
+                if (
+                    len(history) >= 5
+                ):  # Need at least 5 observations for reliable median
                     median = np.median(history)
                     if value > median:
+                        self._trial_state[trial_id] = (-1, fidelity, value, "stopped")
                         return "stop"
 
             return "continue"
@@ -110,8 +291,8 @@ class ASHAScheduler:
             _, _, prev_best, _ = self._trial_state[trial_id]
             best_val = value if prev_best is None else min(value, prev_best)
 
-        # Record at rung (allow duplicates - same trial can report multiple times)
-        self._rung_populations[rung_idx].append((trial_id, value))
+        # Replace the prior report at this rung
+        _upsert_report(self._rung_populations[rung_idx], trial_id, value)
 
         # At final rung, stop
         if rung_idx == len(self.rungs) - 1:
@@ -124,7 +305,7 @@ class ASHAScheduler:
         self._trial_state[trial_id] = (rung_idx, fidelity, best_val, "paused")
         return "pause"
 
-    def promote(self) -> list[tuple[str, float]]:
+    def _legacy_promote(self) -> list[tuple[str, float]]:
         """
         Return paused trials to resume, with their next fidelity budget (Ch 15 contract).
 
@@ -146,7 +327,7 @@ class ASHAScheduler:
             if n_pop <= self.config.eta:
                 n_promote = n_pop
             else:
-                n_promote = max(1, math.ceil(n_pop / self.config.eta))
+                n_promote = _ceil_population_ratio(n_pop, self.config.eta)
 
             # Sort by value (ascending = best first)
             sorted_pop = sorted(pop, key=lambda x: x[1])
@@ -155,38 +336,74 @@ class ASHAScheduler:
             promoted_ids = {tid for tid, _ in sorted_pop[:n_promote]}
 
             # Update states and build promotion list
-            for trial_id, (trial_rung, fidelity, best_val, status) in list(self._trial_state.items()):
+            for trial_id, (trial_rung, fidelity, best_val, status) in list(
+                self._trial_state.items()
+            ):
                 if trial_rung == rung_idx and status == "paused":
                     if trial_id in promoted_ids:
                         # Promote this trial
                         next_rung = rung_idx + 1
                         next_fidelity = self.rungs[next_rung]
                         to_promote.append((trial_id, next_fidelity))
-                        self._trial_state[trial_id] = (next_rung, next_fidelity, best_val, "active")
+                        self._trial_state[trial_id] = (
+                            next_rung,
+                            next_fidelity,
+                            best_val,
+                            "active",
+                        )
                     else:
                         # Stop this trial
-                        self._trial_state[trial_id] = (trial_rung, fidelity, best_val, "stopped")
+                        self._trial_state[trial_id] = (
+                            trial_rung,
+                            fidelity,
+                            best_val,
+                            "stopped",
+                        )
 
         return to_promote
 
     def state_dict(self) -> dict[str, Any]:
         """Serialize scheduler state for checkpointing."""
         import copy
+
         return {
-            "config": {
-                "eta": self.config.eta,
-                "r_min": self.config.r_min,
-                "r_max": self.config.r_max,
-            },
+            "schema_version": 2,
+            "config": asdict(self.config),
             "rungs": copy.deepcopy(self.rungs),
             "trial_state": copy.deepcopy(self._trial_state),
             "rung_populations": copy.deepcopy(self._rung_populations),
             "fidelity_history": copy.deepcopy(self._fidelity_history),
+            "median_reports": copy.deepcopy(self._median_reports),
+            "last_reports": copy.deepcopy(self._last_reports),
+            "running_histories": copy.deepcopy(self._running_histories),
+            "terminal": copy.deepcopy(self._terminal),
         }
 
     def load_state_dict(self, state: dict[str, Any]) -> None:
+        """Validate restoration on an isolated scheduler before replacing state."""
+        import copy
+
+        candidate = copy.copy(self)
+        candidate._restore_state(state)
+        self.__dict__.update(candidate.__dict__)
+
+    def _restore_state(self, state: dict[str, Any]) -> None:
         """Restore scheduler state from checkpoint."""
-        self.rungs = state["rungs"]
+        import copy
+
+        state = copy.deepcopy(state)
+        config = dict(state["config"])
+        config.setdefault("promotion_policy", "legacy_bootstrap")
+        if config["promotion_policy"] != self.config.promotion_policy:
+            raise ValueError("Checkpoint ASHA promotion policy differs; select legacy_bootstrap explicitly for legacy recovery")
+        if state.get("schema_version", 1) not in (1, 2):
+            raise ValueError("Unsupported ASHA checkpoint schema")
+        self.config = ASHAConfig(**config)
+        if self.config.promotion_policy != "legacy_bootstrap" and state.get("schema_version") != 2:
+            raise ValueError("Reference ASHA requires a versioned checkpoint")
+        if list(state["rungs"]) != ASHAScheduler(self.config).rungs:
+            raise ValueError("Checkpoint rungs differ from scheduler configuration")
+        self.rungs = list(state["rungs"])
 
         # Convert trial_state: JSON converts tuples to lists, so convert back
         self._trial_state = {}
@@ -204,11 +421,21 @@ class ASHAScheduler:
             rung_idx = int(rung_key) if isinstance(rung_key, str) else rung_key
             # Convert lists back to tuples
             self._rung_populations[rung_idx] = [
-                tuple(item) if isinstance(item, list) else item
-                for item in pop_list
+                tuple(item) if isinstance(item, list) else item for item in pop_list
             ]
 
-        self._fidelity_history = state["fidelity_history"]
+        self._fidelity_history = {
+            float(k): list(v) for k, v in state["fidelity_history"].items()
+        }
+        self._median_reports = {
+            float(k): dict(v) for k, v in state.get("median_reports", {}).items()
+        }
+        self._last_reports = {k: tuple(v) for k, v in state.get("last_reports", {}).items()}
+        self._running_histories = {
+            tid: {float(s): v for s, v in history.items()}
+            for tid, history in state.get("running_histories", {}).items()
+        }
+        self._terminal = dict(state.get("terminal", {}))
 
     def _fidelity_to_rung(self, fidelity: float) -> Optional[int]:
         """Map a fidelity value to its rung index (or None if not at a boundary)."""
@@ -219,50 +446,61 @@ class ASHAScheduler:
 
 
 @dataclass
-class PASHAConfig:
+class BudgetedASHAConfig:
     """
-    PASHA (Promotion-based ASHA) hyperparameters (Ch 5 roadmap-03, ch05-05).
+    Shared promotion-budget controls for ASHA.
 
-    Survey verdict: include, T0, ~4 engineer-days.
-    Contract: PASHA is ASHA with promotion budget pooling.
+    This legacy policy was previously mislabeled PASHA. Progressive resource
+    allocation is implemented separately by PASHAConfig/PASHAScheduler below.
 
     η: reduction factor
     r_min: minimum fidelity
     r_max: maximum fidelity
     promotion_budget: total fidelity budget available for promotions
     """
+
     eta: int = 3
     r_min: float = 1.0
     r_max: float = 27.0
-    promotion_budget: float = 100.0
+    promotion_budget: Optional[float] = 100.0
+
+    def __post_init__(self):
+        _validate_rungs(self)
+        if self.promotion_budget is not None and (
+            isinstance(self.promotion_budget, bool)
+            or not np.isfinite(self.promotion_budget)
+            or self.promotion_budget < 0
+        ):
+            raise ValueError("promotion_budget must be finite and nonnegative or None")
 
 
-class PASHAScheduler:
+class BudgetedASHAScheduler:
     """
-    PASHA (Promotion-based ASHA) scheduler (Ch 5 roadmap-03, ch05-05).
+    ASHA with an additional shared budget for incremental promotion fidelity.
 
-    Survey verdict: include, T0, ~4 engineer-days.
-    Contract: ASHA with shared promotion budget instead of fixed rung counts.
-    Validation: V02 (async correctness).
-
-    Difference from ASHA: promotions are budget-constrained rather than
-    population-fraction based. More efficient when fidelity costs vary.
+    Retained for callers and checkpoints of the earlier budget-only policy;
+    budget pooling alone is not PASHA's ranking-stabilization algorithm.
     """
 
-    def __init__(self, config: PASHAConfig):
+    def __init__(self, config: BudgetedASHAConfig):
+        _validate_rungs(config)
         self.config = config
 
         # Compute rung budgets
         self.rungs: list[float] = []
         r = config.r_min
-        while r <= config.r_max:
+        while r < config.r_max:
             self.rungs.append(r)
-            r *= config.eta
-        if self.rungs[-1] < config.r_max:
-            self.rungs.append(config.r_max)
+            next_r = r * config.eta
+            if next_r <= r:
+                raise ValueError("Rung budgets must strictly increase at float precision")
+            r = next_r
+        self.rungs.append(config.r_max)
 
         # Track trials: trial_id -> (current_rung_idx, current_fidelity, best_value_so_far, budget_spent, status)
-        self._trial_state: dict[str, tuple[int, float, Optional[float], float, str]] = {}
+        self._trial_state: dict[
+            str, tuple[int, float, Optional[float], float, str]
+        ] = {}
 
         # Track rung populations: rung_idx -> list of (trial_id, value) tuples
         self._rung_populations: dict[int, list[tuple[str, float]]] = {
@@ -272,14 +510,17 @@ class PASHAScheduler:
         # Track total budget spent on promotions
         self._budget_spent = 0.0
 
-    def report(
-        self, trial_id: str, fidelity: float, value: float
-    ) -> SchedulerDecision:
+    def report(self, trial_id: str, fidelity: float, value: float) -> SchedulerDecision:
         """
         Report a trial observation.
 
-        PASHA: same stopping logic as ASHA, but promotion is budget-gated.
+        Same stopping logic as ASHA, with a shared promotion budget.
         """
+        if not np.isfinite([fidelity, value]).all() or fidelity <= 0:
+            raise ValueError("Reports require positive fidelity and a finite value")
+        previous = self._trial_state.get(trial_id)
+        if previous and (fidelity < previous[1] or previous[-1] == "stopped"):
+            return "stop" if previous[-1] == "stopped" else "continue"
         # Determine which rung this fidelity corresponds to
         rung_idx = self._fidelity_to_rung(fidelity)
         if rung_idx is None:
@@ -294,14 +535,20 @@ class PASHAScheduler:
             best_val = value if prev_best is None else min(value, prev_best)
 
         # Record at rung
-        self._rung_populations[rung_idx].append((trial_id, value))
+        _upsert_report(self._rung_populations[rung_idx], trial_id, value)
 
         # At final rung, stop
         if rung_idx == len(self.rungs) - 1:
-            self._trial_state[trial_id] = (rung_idx, fidelity, best_val, budget, "stopped")
+            self._trial_state[trial_id] = (
+                rung_idx,
+                fidelity,
+                best_val,
+                budget,
+                "stopped",
+            )
             return "stop"
 
-        # In async PASHA, mark everything as paused; promote() will select based on
+        # Mark everything as paused; promote() will select based on
         # ranking and budget availability.
         self._trial_state[trial_id] = (rung_idx, fidelity, best_val, budget, "paused")
         return "pause"
@@ -310,13 +557,13 @@ class PASHAScheduler:
         """
         Promote paused trials if budget allows.
 
-        PASHA: track budget consumption per promotion. Decides which paused trials
+        Track budget consumption per promotion. Decide which paused trials
         to promote based on ranking within each rung and available budget.
         """
         to_promote: list[tuple[str, float]] = []
 
         # For each rung, decide which paused trials to promote
-        for rung_idx in range(len(self.rungs) - 1):  # don't promote from final rung
+        for rung_idx in range(self._promotion_rung_limit()):
             pop = self._rung_populations[rung_idx]
             if not pop:
                 continue
@@ -327,7 +574,7 @@ class PASHAScheduler:
             if n_pop <= self.config.eta:
                 n_promote = n_pop
             else:
-                n_promote = max(1, math.ceil(n_pop / self.config.eta))
+                n_promote = _ceil_population_ratio(n_pop, self.config.eta)
 
             # Sort by value (ascending = best first)
             sorted_pop = sorted(pop, key=lambda x: x[1])
@@ -336,7 +583,9 @@ class PASHAScheduler:
             promoted_ids = {tid for tid, _ in sorted_pop[:n_promote]}
 
             # Update states and build promotion list (budget-constrained)
-            for trial_id, (trial_rung, fidelity, best_val, budget, status) in list(self._trial_state.items()):
+            for trial_id, (trial_rung, fidelity, best_val, budget, status) in list(
+                self._trial_state.items()
+            ):
                 if trial_rung == rung_idx and status == "paused":
                     if trial_id in promoted_ids:
                         # Try to promote this trial if budget allows
@@ -344,19 +593,67 @@ class PASHAScheduler:
                         next_fidelity = self.rungs[next_rung]
                         promotion_cost = next_fidelity - fidelity
 
-                        if self._budget_spent + promotion_cost <= self.config.promotion_budget:
+                        if (
+                            self.config.promotion_budget is None
+                            or self._budget_spent + promotion_cost
+                            <= self.config.promotion_budget
+                        ):
                             to_promote.append((trial_id, next_fidelity))
                             self._budget_spent += promotion_cost
                             new_budget = budget + promotion_cost
-                            self._trial_state[trial_id] = (next_rung, next_fidelity, best_val, new_budget, "active")
+                            self._trial_state[trial_id] = (
+                                next_rung,
+                                next_fidelity,
+                                best_val,
+                                new_budget,
+                                "active",
+                            )
                         else:
                             # Budget exhausted, stop this trial
-                            self._trial_state[trial_id] = (trial_rung, fidelity, best_val, budget, "stopped")
+                            self._trial_state[trial_id] = (
+                                trial_rung,
+                                fidelity,
+                                best_val,
+                                budget,
+                                "stopped",
+                            )
                     else:
                         # Not in top k, stop this trial
-                        self._trial_state[trial_id] = (trial_rung, fidelity, best_val, budget, "stopped")
+                        self._trial_state[trial_id] = (
+                            trial_rung,
+                            fidelity,
+                            best_val,
+                            budget,
+                            "stopped",
+                        )
 
         return to_promote
+
+    def _promotion_rung_limit(self):
+        return len(self.rungs) - 1
+
+    def state_dict(self):
+        import copy
+
+        return copy.deepcopy(
+            {
+                "config": asdict(self.config),
+                "rungs": self.rungs,
+                "trial_state": self._trial_state,
+                "rung_populations": self._rung_populations,
+                "budget_spent": self._budget_spent,
+            }
+        )
+
+    def load_state_dict(self, state):
+        self.config = type(self.config)(**state["config"])
+        self.rungs = list(state["rungs"])
+        self._trial_state = {k: tuple(v) for k, v in state["trial_state"].items()}
+        self._rung_populations = {
+            int(k): [tuple(v) for v in values]
+            for k, values in state["rung_populations"].items()
+        }
+        self._budget_spent = float(state["budget_spent"])
 
     def _fidelity_to_rung(self, fidelity: float) -> Optional[int]:
         """Map a fidelity value to its rung index."""
@@ -367,6 +664,193 @@ class PASHAScheduler:
 
 
 @dataclass
+class PASHAConfig(BudgetedASHAConfig):
+    """Progressive ASHA: grow resource limits only when rankings disagree.
+
+    ``ranking_epsilon=None`` estimates a soft-ranking tolerance from observed
+    reversals that reverse back (Bohdal et al., 2023). A fixed nonnegative
+    epsilon uses the same soft-ranking rule without automatic estimation.
+    An optional promotion_budget is an independent compute cap.
+    """
+
+    promotion_budget: Optional[float] = None
+    ranking_epsilon: Optional[float] = None
+
+    def __post_init__(self):
+        super().__post_init__()
+        if self.ranking_epsilon is not None and (
+            isinstance(self.ranking_epsilon, bool)
+            or not np.isfinite(self.ranking_epsilon)
+            or self.ranking_epsilon < 0
+        ):
+            raise ValueError("ranking_epsilon must be finite and nonnegative or None")
+
+
+class PASHAScheduler(BudgetedASHAScheduler):
+    """PASHA's progressive resource cap over the ASHA promotion interface.
+
+    Start at the second fidelity. Compare the same survivors at the current
+    top two rungs; an ordering change outside the previous rung's epsilon
+    groups opens one higher rung. Stable trials remain paused and eligible
+    if later observations require more resource. Sparse reports estimate
+    noise only from jointly observed fidelities; missing reports are not
+    imputed. Promotions use the pinned Syne Tune quantile rule, not the
+    legacy budget scheduler's bootstrap policy. See the SPEC-03 correction.
+    """
+
+    def __init__(self, config: PASHAConfig):
+        super().__init__(config)
+        self._current_top = min(1, len(self.rungs) - 1)
+        self._epsilon = config.ranking_epsilon or 0.0
+        self._resource_reports = {}
+
+    @property
+    def current_max_fidelity(self):
+        return self.rungs[self._current_top]
+
+    def _promotion_rung_limit(self):
+        return self._current_top
+
+    def promote(self) -> list[tuple[str, float]]:
+        """Dispatch one eligible trial below the progressive resource cap.
+
+        A rung needs two observations and uses the linear 1/eta quantile.
+        Ties qualify, and previously promoted observations stay in the cutoff
+        population. Other trials remain paused for reconsideration as results
+        arrive. The optional incremental budget is a separate compute limit.
+        """
+        for rung_idx in reversed(range(self._current_top)):
+            population = self._rung_populations[rung_idx]
+            if len(population) < 2:
+                continue
+            cutoff = _promotion_cutoff(population, self.config.eta)
+            target = self.rungs[rung_idx + 1]
+            for tid, value in sorted(population, key=lambda entry: entry[1]):
+                current, fidelity, best, spent, status = self._trial_state[tid]
+                if current != rung_idx or status != "paused" or value > cutoff:
+                    continue
+                cost = target - fidelity
+                if (self.config.promotion_budget is not None
+                        and self._budget_spent + cost > self.config.promotion_budget):
+                    continue
+                self._budget_spent += cost
+                self._trial_state[tid] = (rung_idx + 1, target, best, spent + cost, "active")
+                return [(tid, target)]
+        return []
+
+    def report(self, trial_id, fidelity, value):
+        if not np.isfinite([fidelity, value]).all() or fidelity <= 0:
+            raise ValueError("Reports require positive fidelity and a finite value")
+        previous = self._trial_state.get(trial_id)
+        reports = self._resource_reports.get(trial_id, {})
+        if previous and previous[-1] == "stopped":
+            return "stop"
+        if reports and fidelity <= max(reports):
+            if fidelity == max(reports):
+                if value != reports[fidelity]:
+                    raise ValueError("Conflicting duplicate scheduler report")
+                if previous and previous[-1] == "paused":
+                    return "pause"
+            return "continue"
+        if fidelity > self.current_max_fidelity + 1e-6:
+            raise ValueError("Report exceeds PASHA's current maximum fidelity")
+        if previous and previous[-1] == "paused":
+            return "pause"  # An explicit promotion must precede resumed training.
+        decision = super().report(trial_id, fidelity, value)
+        self._resource_reports.setdefault(trial_id, {})[float(fidelity)] = float(value)
+        if self.config.ranking_epsilon is None:
+            self._update_epsilon()
+        self._maybe_increase_resources()
+        return decision
+
+    def _update_epsilon(self):
+        # The terminal fidelity is not a promotion rung in the published
+        # reference. Keep the final nonterminal pair when the cap reaches it.
+        comparison_top = min(self._current_top, len(self.rungs) - 2)
+        if comparison_top <= 0:
+            return
+        from itertools import combinations
+
+        lower = self.rungs[comparison_top - 1]
+        upper = self.rungs[comparison_top]
+        distances = []
+        for first, second in combinations(sorted(self._resource_reports), 2):
+            a, b = self._resource_reports[first], self._resource_reports[second]
+            shared = sorted(a.keys() & b.keys(), reverse=True)
+            latest = next((r for r in shared if lower < r <= upper), None)
+            if latest is None:
+                continue
+            ordering = a[latest] > b[latest]
+            reversed_once = False
+            for resource in (r for r in shared if r < latest):
+                older_ordering = a[resource] > b[resource]
+                if older_ordering != ordering:
+                    reversed_once = True
+                elif reversed_once:
+                    distances.append(abs(a[latest] - b[latest]))
+                    break
+        if distances:
+            self._epsilon = float(np.percentile(distances, 90))
+
+    def _maybe_increase_resources(self):
+        if self._current_top == 0 or self._current_top == len(self.rungs) - 1:
+            return
+        top = self._rung_populations[self._current_top]
+        previous = dict(self._rung_populations[self._current_top - 1])
+        if len(top) < 2 or any(tid not in previous for tid, _ in top):
+            return  # No assertion of stability from unpaired observations.
+        top_ids = {tid for tid, _ in top}
+        old_order = sorted(
+            ((tid, val) for tid, val in previous.items() if tid in top_ids),
+            key=lambda item: item[1],
+        )
+        # The reference preserves arrival order among tied scores. Sorting
+        # trial IDs instead can manufacture a rank reversal and open the cap.
+        new_order = sorted(top, key=lambda item: item[1])
+        # Same positional epsilon-group criterion as the published soft ranking.
+        for (new_id, _), (_, old_value) in zip(new_order, old_order):
+            if abs(previous[new_id] - old_value) > self._epsilon:
+                self._current_top += 1
+                return
+
+    def state_dict(self):
+        import copy
+
+        return {
+            **super().state_dict(),
+            "policy": "pasha-progressive-quantile-v2",
+            "current_top": self._current_top,
+            "epsilon": self._epsilon,
+            "resource_reports": copy.deepcopy(self._resource_reports),
+        }
+
+    def load_state_dict(self, state):
+        if state.get("policy") == "pasha-progressive-v1":
+            raise ValueError("Legacy PASHA promotion policy cannot resume as quantile-v2; retain its source or restart")
+        if state.get("policy") != "pasha-progressive-quantile-v2":
+            raise ValueError("Budget-only checkpoint requires BudgetedASHAScheduler")
+        config = PASHAConfig(**state["config"])
+        restored = type(self)(config)
+        if list(state["rungs"]) != restored.rungs:
+            raise ValueError("Checkpoint rungs differ from PASHA configuration")
+        BudgetedASHAScheduler.load_state_dict(restored, state)
+        top, epsilon = state["current_top"], state["epsilon"]
+        if isinstance(top, bool) or not isinstance(top, int) or not (
+            min(1, len(restored.rungs) - 1) <= top < len(restored.rungs)
+        ):
+            raise ValueError("Invalid PASHA resource cap in checkpoint")
+        if not np.isfinite(epsilon) or epsilon < 0:
+            raise ValueError("Invalid PASHA ranking tolerance in checkpoint")
+        restored._current_top = top
+        restored._epsilon = float(epsilon)
+        restored._resource_reports = {
+            tid: {float(r): float(v) for r, v in reports.items()}
+            for tid, reports in state["resource_reports"].items()
+        }
+        self.__dict__.update(restored.__dict__)
+
+
+@dataclass
 class MOASHAConfig:
     """
     MO-ASHA hyperparameters (Tier 1 multi-objective scheduler).
@@ -374,11 +858,15 @@ class MOASHAConfig:
     Survey: Ch 7 multi-objective methods.
     Extension of ASHA to multi-objective case using hypervolume contribution.
     """
+
     r_min: float  # Minimum budget per trial
     r_max: float  # Maximum budget per trial
     eta: float = 3.0  # Reduction factor (promote top 1/eta each rung)
     objectives: list[str] = None  # Objective names (minimize all)
     reference_point: Optional[list[float]] = None  # Reference point for hypervolume
+
+    def __post_init__(self):
+        _validate_rungs(self)
 
 
 class MOASHAScheduler:
@@ -409,6 +897,7 @@ class MOASHAScheduler:
     """
 
     def __init__(self, config: MOASHAConfig):
+        _validate_rungs(config)
         self.config = config
 
         if config.objectives is None or len(config.objectives) < 2:
@@ -425,11 +914,13 @@ class MOASHAScheduler:
         # Compute rung budgets
         self.rungs: list[float] = []
         r = config.r_min
-        while r <= config.r_max:
+        while r < config.r_max:
             self.rungs.append(r)
-            r *= config.eta
-        if self.rungs[-1] < config.r_max:
-            self.rungs.append(config.r_max)
+            next_r = r * config.eta
+            if next_r <= r:
+                raise ValueError("Rung budgets must strictly increase at float precision")
+            r = next_r
+        self.rungs.append(config.r_max)
 
         # Track trials: trial_id -> (rung_idx, fidelity, objectives, status, vetoed)
         self._trial_state: dict[str, tuple[int, float, np.ndarray, str, bool]] = {}
@@ -458,8 +949,27 @@ class MOASHAScheduler:
             SchedulerDecision: continue, stop, or pause
         """
         # Extract objective values in configured order
-        obj_values = np.array([objectives[obj_name] for obj_name in self.config.objectives])
+        obj_values = np.array(
+            [objectives[obj_name] for obj_name in self.config.objectives]
+        )
 
+        if not np.isfinite(fidelity) or fidelity <= 0:
+            raise ValueError("Reports require positive finite fidelity")
+        if not np.isfinite(obj_values).all():
+            self._vetoed_trials.add(trial_id)
+            self._trial_state[trial_id] = (
+                -1,
+                fidelity,
+                np.zeros(self.n_objectives),
+                "vetoed",
+                True,
+            )
+            return "stop"
+        previous = self._trial_state.get(trial_id)
+        if previous and (
+            fidelity < previous[1] or previous[3] in ("stopped", "vetoed")
+        ):
+            return "stop" if previous[3] in ("stopped", "vetoed") else "continue"
         # Determine rung
         rung_idx = self._fidelity_to_rung(fidelity)
         if rung_idx is None:
@@ -472,7 +982,13 @@ class MOASHAScheduler:
                 if not gate_fn(trial_id, objectives):
                     # Veto this trial
                     self._vetoed_trials.add(trial_id)
-                    self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "vetoed", True)
+                    self._trial_state[trial_id] = (
+                        rung_idx,
+                        fidelity,
+                        obj_values,
+                        "vetoed",
+                        True,
+                    )
                     return "stop"
 
         # Carry forward the veto flag; a trial vetoed earlier stays vetoed.
@@ -484,15 +1000,27 @@ class MOASHAScheduler:
         # A trial vetoed at an earlier rung stays stopped and is kept out of the
         # rung population, matching the early return above on the vetoing report.
         if vetoed:
-            self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "vetoed", True)
+            self._trial_state[trial_id] = (
+                rung_idx,
+                fidelity,
+                obj_values,
+                "vetoed",
+                True,
+            )
             return "stop"
 
         # Record at rung
-        self._rung_populations[rung_idx].append((trial_id, obj_values))
+        _upsert_report(self._rung_populations[rung_idx], trial_id, obj_values)
 
         # At final rung, stop
         if rung_idx == len(self.rungs) - 1:
-            self._trial_state[trial_id] = (rung_idx, fidelity, obj_values, "stopped", vetoed)
+            self._trial_state[trial_id] = (
+                rung_idx,
+                fidelity,
+                obj_values,
+                "stopped",
+                vetoed,
+            )
             return "stop"
 
         # Pause and wait for promotion decision
@@ -524,7 +1052,7 @@ class MOASHAScheduler:
             if n_pop <= self.config.eta:
                 n_promote = n_pop
             else:
-                n_promote = max(1, math.ceil(n_pop / self.config.eta))
+                n_promote = _ceil_population_ratio(n_pop, self.config.eta)
 
             # Rank by Pareto fronts, then by hypervolume contribution within front
             ranked = self._rank_population(pop)
@@ -532,19 +1060,68 @@ class MOASHAScheduler:
             promoted_ids = set(ranked[:n_promote])
 
             # Update states and build promotion list
-            for trial_id, (trial_rung, fidelity, obj_values, status, vetoed) in list(self._trial_state.items()):
+            for trial_id, (trial_rung, fidelity, obj_values, status, vetoed) in list(
+                self._trial_state.items()
+            ):
                 if trial_rung == rung_idx and status == "paused" and not vetoed:
                     if trial_id in promoted_ids:
                         # Promote
                         next_rung = rung_idx + 1
                         next_fidelity = self.rungs[next_rung]
                         to_promote.append((trial_id, next_fidelity))
-                        self._trial_state[trial_id] = (next_rung, next_fidelity, obj_values, "active", False)
+                        self._trial_state[trial_id] = (
+                            next_rung,
+                            next_fidelity,
+                            obj_values,
+                            "active",
+                            False,
+                        )
                     else:
                         # Stop
-                        self._trial_state[trial_id] = (trial_rung, fidelity, obj_values, "stopped", False)
+                        self._trial_state[trial_id] = (
+                            trial_rung,
+                            fidelity,
+                            obj_values,
+                            "stopped",
+                            False,
+                        )
 
         return to_promote
+
+    def state_dict(self):
+        return {
+            "config": asdict(self.config),
+            "rungs": list(self.rungs),
+            "reference_point": self.reference_point.tolist(),
+            "trial_state": {
+                k: [v[0], v[1], v[2].tolist(), v[3], v[4]]
+                for k, v in self._trial_state.items()
+            },
+            "rung_populations": {
+                k: [(tid, y.tolist()) for tid, y in pop]
+                for k, pop in self._rung_populations.items()
+            },
+            "vetoed_trials": sorted(self._vetoed_trials),
+            "gate_count": len(self._gates),
+        }
+
+    def load_state_dict(self, state):
+        # Gate callables must be registered by the caller before restoring.
+        if len(self._gates) != state["gate_count"]:
+            raise ValueError("Restore requires the same registered veto gates")
+        self.config = MOASHAConfig(**state["config"])
+        self.n_objectives = len(self.config.objectives)
+        self.rungs = list(state["rungs"])
+        self.reference_point = np.asarray(state["reference_point"], dtype=float)
+        self._trial_state = {
+            k: (v[0], v[1], np.asarray(v[2]), v[3], v[4])
+            for k, v in state["trial_state"].items()
+        }
+        self._rung_populations = {
+            int(k): [(tid, np.asarray(y)) for tid, y in pop]
+            for k, pop in state["rung_populations"].items()
+        }
+        self._vetoed_trials = set(state["vetoed_trials"])
 
     def gate(self, predicate: Callable[[str, dict[str, float]], bool]) -> None:
         """
@@ -587,10 +1164,6 @@ class MOASHAScheduler:
         trial_ids = [tid for tid, _ in population]
         objectives = np.array([obj for _, obj in population])
 
-        # Adapt reference point to observed data
-        # Use worst observed value per objective + 10% margin
-        adapted_ref = np.max(objectives, axis=0) * 1.1
-
         # Non-dominated sorting (assign front indices)
         fronts = self._fast_non_dominated_sort(objectives)
 
@@ -600,20 +1173,13 @@ class MOASHAScheduler:
             if not front:
                 continue
 
-            # Compute hypervolume contributions for this front
-            front_objs = objectives[front]
-            contributions = []
-            for i, idx in enumerate(front):
-                # Dominated volume from this point to reference point
-                distances = np.maximum(0.0, adapted_ref - front_objs[i])
-                contrib = np.prod(distances)
-                contributions.append(contrib)
+            contributions = self._compute_hypervolume_contributions(
+                [(trial_ids[i], objectives[i]) for i in front]
+            )
 
             # Sort front by contribution (descending)
             front_ranked = sorted(
-                zip(front, contributions),
-                key=lambda x: x[1],
-                reverse=True
+                zip(front, contributions), key=lambda x: x[1], reverse=True
             )
 
             # Add to ranked list
@@ -678,22 +1244,17 @@ class MOASHAScheduler:
         # Extract objectives
         objectives = np.array([obj for _, obj in population])
 
-        # Compute Pareto front
-        pareto_mask = self._compute_pareto_mask(objectives)
+        from hponas.reporting_mo import hypervolume
 
-        # Contribution = hypervolume with this point - hypervolume without
-        # Simplified: use dominated hypervolume approximation
-        contributions = []
-        for i, obj in enumerate(objectives):
-            if pareto_mask[i]:
-                # On Pareto front: compute dominated volume
-                contrib = self._dominated_hypervolume(obj)
-            else:
-                # Dominated: zero contribution
-                contrib = 0.0
-            contributions.append(contrib)
-
-        return contributions
+        total = hypervolume(objectives, self.reference_point)
+        return [
+            max(
+                0.0,
+                total
+                - hypervolume(np.delete(objectives, i, axis=0), self.reference_point),
+            )
+            for i in range(len(objectives))
+        ]
 
     def _compute_pareto_mask(self, objectives: np.ndarray) -> np.ndarray:
         """

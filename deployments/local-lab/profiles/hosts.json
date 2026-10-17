@@ -1,0 +1,6 @@
+{
+  "host": "ubuntu-MZF2-AC0-00",
+  "host_count": 1,
+  "worker_processes": 2,
+  "independent_hosts": false
+}

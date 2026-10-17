@@ -6,17 +6,48 @@ Tier 1: implementation + unit tests (V12 campaign is Tier 2).
 """
 
 import tempfile
+import time
 from pathlib import Path
 
 from hponas.legacy_searchers import SobolSearcher
 from hponas.space import Knob, SearchSpace
-from hponas.store import Store, Study, Trial
+from hponas.store import Store as BaseStore, Study, Trial
+from hponas.warm_history import target_context
 from hponas.warm_start import (
     WarmStartSearcher,
     check_space_compatibility,
-    load_seed_configs,
-    load_seed_configs_from_all_studies,
+    load_seed_configs as _load_seed_configs,
+    load_seed_configs_from_all_studies as _load_seed_configs_from_all_studies,
 )
+
+
+class Store(BaseStore):
+    """Legacy test data plus the now-required explicit history declaration."""
+    def write_study(self, study):
+        study.status = "completed"
+        super().write_study(study)
+
+
+def declared_context(store, space, objective="minimize"):
+    for study in store.list_studies():
+        if any(t.status in {"running", "pending", "paused"} for t in store.read_trials(study.study_id)):
+            continue
+        store.freeze_warm_history(study.study_id, task_id="past-"+study.study_id,
+                                 model_family="linear", task_domain="synthetic",
+                                 objective_key="risk")
+    return target_context(space, study_id="new", task_id="held-out", model_family="linear",
+                          task_domain="synthetic", objective_key="risk", direction=objective,
+                          history_cutoff=time.time())
+
+
+def load_seed_configs(store, study_id, target_space, n=10, objective="minimize"):
+    return _load_seed_configs(store, study_id, target_space, n, objective,
+                             context=declared_context(store, target_space, objective))
+
+
+def load_seed_configs_from_all_studies(store, target_space, n=10, objective="minimize", exclude_study_ids=None):
+    return _load_seed_configs_from_all_studies(store, target_space, n, objective, exclude_study_ids,
+                                             context=declared_context(store, target_space, objective))
 
 
 def test_load_seed_configs_compatible():
@@ -217,9 +248,9 @@ def test_load_seed_configs_from_all_studies():
         seeds = load_seed_configs_from_all_studies(store, space, n=2, objective="minimize")
 
         assert len(seeds) == 2
-        # Best first across studies (0.1 < 0.5)
-        assert seeds[0] == {"x": 0.8}
-        assert seeds[1] == {"x": 0.2}
+        # One observation per study ties at quantile 1/2; study identity breaks ties.
+        assert seeds[0] == {"x": 0.2}
+        assert seeds[1] == {"x": 0.8}
 
         store.close()
 
@@ -407,7 +438,8 @@ def test_warm_start_searcher_from_store():
 
         base = SobolSearcher(space, seed=99)
         searcher = WarmStartSearcher.from_store(
-            base, store, space, study_id="study_1", n=1, objective="minimize"
+            base, store, space, study_id="study_1", n=1, objective="minimize",
+            context=declared_context(store, space)
         )
 
         batch = searcher.propose(1)
@@ -644,11 +676,11 @@ def test_warm_start_searcher_from_store_all_studies():
             ), study_id=study_id)
 
         base = SobolSearcher(space, seed=7)
-        searcher = WarmStartSearcher.from_store(base, store, space, n=2)
+        searcher = WarmStartSearcher.from_store(base, store, space, n=2, context=declared_context(store, space))
 
         assert searcher.n_seeds_remaining == 2
         batch = searcher.propose(2)
-        assert batch == [{"x": 0.8}, {"x": 0.2}]  # best-first across studies
+        assert batch == [{"x": 0.2}, {"x": 0.8}]  # tied within-study ranks
 
         store.close()
 

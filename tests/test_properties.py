@@ -186,13 +186,19 @@ def test_asha_straggler_stability(events):
     config = ASHAConfig(eta=3, r_min=1.0, r_max=9.0)
     scheduler = ASHAScheduler(config)
 
-    # Process events in order
+    # Retransmissions preserve the first value. A conflicting duplicate is an
+    # invalid event, and rejection must leave the scheduler unchanged.
+    seen = {}
     for trial_id, value in events:
-        try:
+        if trial_id in seen and seen[trial_id] != value:
+            before = scheduler.state_dict()
+            with pytest.raises(ValueError, match="Conflicting duplicate"):
+                scheduler.report(trial_id, fidelity=1.0, value=value)
+            assert scheduler.state_dict() == before
+        else:
             decision = scheduler.report(trial_id, fidelity=1.0, value=value)
             assert decision in ["continue", "stop", "pause"]
-        except Exception as e:
-            pytest.fail(f"Scheduler crashed on event ({trial_id}, {value}): {e}")
+            seen[trial_id] = value
 
     # Scheduler should still be callable
     try:

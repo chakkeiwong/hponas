@@ -1,3 +1,5 @@
+# Historical diagnostic only. Current gates use validation.stylized_campaign;
+# these legacy threshold calculations cannot supply current acceptance.
 """
 V04-T0 Baseline Floor Check: Random search beats pathological configurations.
 
@@ -29,11 +31,7 @@ from typing import Dict, Any, List
 IMPROVEMENT_THRESHOLD = 0.05  # 5% improvement required
 
 # Pathological configuration (per v04_t0_protocol.md lines 39-42)
-PATHOLOGICAL_CONFIG = {
-    "learning_rate": 1e-5,
-    "batch_size": 64,
-    "entropy_cost": 0.1
-}
+PATHOLOGICAL_CONFIG = {"learning_rate": 1e-5, "batch_size": 64, "entropy_cost": 0.1}
 
 # Experimental parameters (per v04_t0_protocol.md lines 66-69)
 N_TRIALS = 50
@@ -44,7 +42,9 @@ WORKLOAD_NAME = "rl_routine"
 
 def load_baseline_data() -> Dict[str, Any]:
     """Load pre-recorded baseline curves."""
-    baseline_path = Path(__file__).parent / "baselines" / f"{WORKLOAD_NAME}_baseline.json"
+    baseline_path = (
+        Path(__file__).parent / "baselines" / f"{WORKLOAD_NAME}_baseline.json"
+    )
 
     if not baseline_path.exists():
         raise FileNotFoundError(
@@ -52,13 +52,13 @@ def load_baseline_data() -> Dict[str, Any]:
             f"Run the baseline generation script first."
         )
 
-    with open(baseline_path, 'r') as f:
+    with open(baseline_path, "r") as f:
         return json.load(f)
 
 
 def compute_auc(incumbent_curve: List[float]) -> float:
     """Compute area under incumbent curve (normalized by number of trials)."""
-    return float(np.trapz(incumbent_curve) / len(incumbent_curve))
+    return float(np.trapezoid(incumbent_curve) / len(incumbent_curve))
 
 
 def extract_random_auc(data: Dict[str, Any]) -> List[float]:
@@ -117,18 +117,20 @@ def run_check() -> Dict[str, Any]:
     # Compute statistics
     random_mean = float(np.mean(random_aucs))
     pathological_mean = float(np.mean(pathological_aucs))
-    improvement = random_mean - pathological_mean
+    improvement = (
+        (random_mean - pathological_mean) / abs(pathological_mean)
+        if abs(pathological_mean) > 1e-12
+        else float("nan")
+    )
 
     # Statistical test: Mann-Whitney U (one-sided, random > pathological)
     statistic, p_value = mannwhitneyu(
-        random_aucs,
-        pathological_aucs,
-        alternative='greater'
+        random_aucs, pathological_aucs, alternative="greater"
     )
 
     # Check passing criteria
     improvement_met = improvement >= IMPROVEMENT_THRESHOLD
-    significance_met = p_value < 0.05
+    significance_met = p_value < 0.025
     passed = improvement_met and significance_met
 
     # Construct result message
@@ -149,6 +151,8 @@ def run_check() -> Dict[str, Any]:
         message = f"Check failed: {'; '.join(reasons)}"
 
     return {
+        "validation_id": "diagnostic-random-pathological-baseline",
+        "certifies_tier0": False,
         "passed": passed,
         "random_auc_mean": random_mean,
         "pathological_auc_mean": pathological_mean,
@@ -158,7 +162,7 @@ def run_check() -> Dict[str, Any]:
         "message": message,
         "n_trials": N_TRIALS,
         "n_seeds": N_SEEDS,
-        "pathological_config": PATHOLOGICAL_CONFIG
+        "pathological_config": PATHOLOGICAL_CONFIG,
     }
 
 
@@ -187,7 +191,7 @@ if __name__ == "__main__":
     output_path = Path(__file__).parent / "results" / "v04_t0_results.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         json.dump(result, f, indent=2)
 
     print(f"\nResults saved to: {output_path}")

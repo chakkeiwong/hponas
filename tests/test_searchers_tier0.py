@@ -173,7 +173,7 @@ def test_sobol_searcher_contract():
     # Test capabilities
     caps = searcher.capabilities
     assert "continuous" in caps.get("parameter_types", [])
-    assert "integer" in caps.get("parameter_types", [])
+    assert "ordinal" in caps.get("parameter_types", [])
 
 
 def test_sobol_searcher_qmc_coverage():

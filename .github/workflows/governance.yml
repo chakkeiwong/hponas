@@ -12,24 +12,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # need full history for git tags
+          fetch-depth: 1  # status comes from bound evidence, not tags
+          lfs: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
-      - name: Verify BUILD_PROGRAM covers all protocol entries
-        run: |
-          python3 tools/check_program_sync.py
-          echo "✅ BUILD_PROGRAM_v2.md covers all protocol entries"
+      - name: Verify current master, scope and evidence consistency
+        run: python3 tools/check_program_sync.py
 
-      - name: Verify progress reflects ground truth
-        run: |
-          # tools/update_progress.py deferred until Tier 0 starts
-          # For now, just verify progress.md exists and mentions R1 complete
-          grep -q "R1.*Complete" docs/progress.md
-          echo "✅ progress.md exists and shows R1 complete"
+      - name: Verify generated program views
+        run: python3 tools/update_progress.py --verify
+
+      - name: Install governance test dependency
+        run: python3 -m pip install pytest
+
+      - name: Reject invalid program and evidence fixtures
+        run: python3 -m pytest tests/test_program_governance.py -q
 
       - name: Check validation protocols
         run: |
@@ -44,14 +45,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
       - name: Install ruff
         run: pip install ruff
 
       - name: Lint with ruff
         run: |
-          ruff check tools/ src/ tests/ --select=E9,F63,F7,F82 --statistics
+          ruff check tools/ hponas/ workloads/ validation/ tests/ --select=E9,F63,F7,F82 --statistics
           echo "✅ critical lint checks passed"
 
       - name: Verify survey builds

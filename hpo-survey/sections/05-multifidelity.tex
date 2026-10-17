@@ -1,6 +1,22 @@
 \chapter{Spending less per trial: multi-fidelity methods}
 \label{sec:multifidelity}
 
+\paragraph{Prospective Tier-1 scope amendment, 2026-10-07.}
+D-TIER1-KNOWN-ANSWER supersedes the historical statistical/default rules for
+V04-T1, V06, V09, V10, V11a/V11b and V13 below, and adds V-COST.
+The current contracts check finite mathematical models, actual training work,
+method identity and recovery; exact rosters and independent references live in
+\texttt{validation/protocols.json}. Historical empirical thresholds, six-entry
+Holm family, default promotions, culling permission and broad calibration
+claims are retired prospectively, with original outcomes preserved.
+All capabilities remain opt-in. In particular, a finite V06 PASS cannot activate
+ASHA/median, V10 cannot certify experimental culling, and Gaussian V13 cannot
+establish SBC, general posterior calibration, learned transport or NUTS.
+Later V07/V08/V12/V15 retain separate evidence obligations. Historical arguments
+below are design background, not authority to change current consequences.
+No engineering test or human decision supplies scientific acceptance.
+
+
 Everything in Chapter~\ref{sec:bayesian} treats a trial as atomic: pick a
 configuration, pay full price, observe the final score. But training
 produces a stream of intermediate evidence, and most bad configurations
@@ -407,8 +423,8 @@ kadra2023dpl, rakotoarison2024ifbo}. That is not a criticism; it is
 where every young line of methods starts, and it is precisely the
 evidentiary grade at which a sensible product buys an option rather
 than installs a default. The chapter's decisions read directly off
-this scale. The always-on default rests on arithmetic, a measurable
-hazard, and an operational record; the small-budget RL pick rests on
+this scale. The default candidate rests on arithmetic, a measurable
+hazard, and an operational record; automatic shipping is not established by finite V06; the small-budget RL pick rests on
 one independent controlled study; the frontier bet rests on
 promising author-run comparisons, and is gated accordingly.
 
@@ -416,7 +432,7 @@ promising author-run comparisons, and is gated accordingly.
 \label{sec:mf-angles}
 
 The chapter's verdict is that early stopping is not optional
-equipment: ASHA with the median rule as the always-on default, DEHB
+equipment: ASHA with the median rule as the registered default candidate, kept opt-in under finite V06, with explicit opt-in available earlier; DEHB
 where a study is a few dozen full runs of RL, the learning-curve
 line as a gated bet. As in Chapter~\ref{sec:bayesian}, four
 independent lines of argument arrive at the same place, and a reader
@@ -479,7 +495,7 @@ the money is saved, so every verdict here is really a claim about
 compute bills.
 \begin{itemize}[leftmargin=1.3em, itemsep=2pt]
 \item \textbf{ASHA plus the median stopping rule} (include; days;
-tier 0). The workhorse pair. Between them they capture the bulk of the
+tier 0; automatic opt-in; finite V06 cannot activate a default). The workhorse pair. Between them they capture the bulk of the
 order-of-magnitude savings this chapter promises, compose with any
 searcher, and ask almost nothing of the training code beyond reporting
 a metric as it goes. If the package shipped only one scheduler, it

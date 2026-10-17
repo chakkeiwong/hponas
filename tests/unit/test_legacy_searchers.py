@@ -34,17 +34,17 @@ class TestRandomSearcherLogTransform:
 
     def test_log_transform_crashes_on_invalid_bounds(self):
         """Log-scale with zero or negative bounds must fail cleanly."""
-        space = SearchSpace([Knob("x", "continuous", (0.0, 1.0), transform="log")])
-        searcher = RandomSearcher(space, seed=42)
-
-        # np.log(0) produces -inf, then uniform() raises OverflowError
-        with pytest.raises(OverflowError):
-            configs = searcher.propose(10)
+        with pytest.raises(ValueError, match="Log bounds must be positive"):
+            SearchSpace([Knob("x", "continuous", (0.0, 1.0), transform="log")])
 
     def test_log_vs_linear_produces_different_distributions(self):
         """Log-scale and linear-scale must produce different distributions."""
-        space_log = SearchSpace([Knob("x", "continuous", (1.0, 100.0), transform="log")])
-        space_linear = SearchSpace([Knob("x", "continuous", (1.0, 100.0), transform="none")])
+        space_log = SearchSpace(
+            [Knob("x", "continuous", (1.0, 100.0), transform="log")]
+        )
+        space_linear = SearchSpace(
+            [Knob("x", "continuous", (1.0, 100.0), transform="none")]
+        )
 
         searcher_log = RandomSearcher(space_log, seed=42)
         searcher_linear = RandomSearcher(space_linear, seed=42)
@@ -134,11 +134,13 @@ class TestRandomSearcherStateRecovery:
 
     def test_load_state_dict_advances_rng_for_all_knob_kinds(self):
         """RNG fast-forward must handle continuous, ordinal, and categorical."""
-        space = SearchSpace([
-            Knob("x", "continuous", (0.0, 1.0)),
-            Knob("n", "ordinal", (1, 10)),
-            Knob("opt", "categorical", ["a", "b", "c"]),
-        ])
+        space = SearchSpace(
+            [
+                Knob("x", "continuous", (0.0, 1.0)),
+                Knob("n", "ordinal", (1, 10)),
+                Knob("opt", "categorical", ["a", "b", "c"]),
+            ]
+        )
 
         # Generate 5 proposals
         searcher1 = RandomSearcher(space, seed=42)
@@ -182,7 +184,9 @@ class TestSobolSearcherOrdinal:
 
         # Should see 4, 5, and 6 (small range)
         assert values.issubset({4, 5, 6}), "All values must be in bounds"
-        assert all(4 <= v <= 6 for v in [c["n"] for c in configs]), "Must clamp to bounds"
+        assert all(4 <= v <= 6 for v in [c["n"] for c in configs]), (
+            "Must clamp to bounds"
+        )
 
 
 class TestSobolSearcherLogTransform:
@@ -235,10 +239,12 @@ class TestSobolSearcherStateRecovery:
 
     def test_sobol_load_state_dict_handles_categorical_rng(self):
         """Sobol categorical RNG must be fast-forwarded on restore."""
-        space = SearchSpace([
-            Knob("x", "continuous", (0.0, 1.0)),
-            Knob("opt", "categorical", ["a", "b", "c"]),
-        ])
+        space = SearchSpace(
+            [
+                Knob("x", "continuous", (0.0, 1.0)),
+                Knob("opt", "categorical", ["a", "b", "c"]),
+            ]
+        )
 
         # Generate 10 proposals
         searcher1 = SobolSearcher(space, seed=42)

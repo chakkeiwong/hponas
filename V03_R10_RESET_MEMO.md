@@ -1,5 +1,7 @@
 # V03-R10 Reset Memo: Mutation Testing Investigation
 
+> **Correction — 2026-09-26:** The zero-kill diagnosis and reset recommendation below are superseded by the [independent codebase audit](docs/audits/2026-09-25-codebase-gap-audit.md). mutmut 3.8 hides killed results by default: `results --all true` lists 2,287 mutants including 1,699 kills. The 588 were the non-killed subset. No reset is indicated. Module and critical-path requirements still prevent a V03 PASS. This historical memo is preserved below.
+
 **Date:** 2026-09-25  
 **Phase:** V03-R10 Mutation Test Baseline Recovery  
 **Status:** BLOCKED - Recommending Reset to R8 Baseline  

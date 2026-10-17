@@ -1,0 +1,39 @@
+{
+  "kind": "v03_measured_resource_admission_v1",
+  "max_workers": 24,
+  "high_memory_limit": 8,
+  "child_budget_gib": 52,
+  "fixed_reserve_gib": 8,
+  "guard_gib": 64,
+  "high_memory_gib": 6.5,
+  "regular_memory_gib": 2.25,
+  "high_memory_test_files": [
+    "tests/integration/test_ray_cluster_ownership.py",
+    "tests/integration/test_ray_streaming.py",
+    "tests/test_executors.py"
+  ],
+  "measured_high_memory_functions": [
+    "hponas.events.x\u01c1EventLog\u01c1_load_existing",
+    "hponas.events.x\u01c1EventLog\u01c1replace_study_events",
+    "hponas.executors.ray_executor.x\u01c1RayExecutor\u01c1__init__",
+    "hponas.executors.ray_executor.x\u01c1RayExecutor\u01c1_execute_streaming",
+    "hponas.executors.ray_executor.x\u01c1RayExecutor\u01c1_initialize_ray",
+    "hponas.executors.ray_executor.x\u01c1RayExecutor\u01c1_payload_to_result",
+    "hponas.executors.ray_executor.x\u01c1RayExecutor\u01c1shutdown",
+    "hponas.legacy_executors.x\u01c1RayExecutor\u01c1copy_checkpoint",
+    "hponas.replay.x\u01c1ReplayEngine\u01c1verify_determinism",
+    "hponas.schedulers.x\u01c1ASHAScheduler\u01c1_restore_state"
+  ],
+  "resource_observation": {
+    "path": "docs/program/evidence/2026-10-09/mutation-schedule-repair-01/memory-observation.json",
+    "sha256": "2d0019c2e6ae150b32c5f30a1c88c86b96b091089abe66e9d7a3d757d6593b7b"
+  },
+  "priority": "descending clean selected-test duration, then mutant identity",
+  "admission": "first eligible job in frozen priority order; release only after a drained raw result",
+  "outcome_blind": true,
+  "sampled_bound_not_guarantee": true,
+  "calibration_controls": [
+    "hponas.searchers_gp.x\u01c1GPqLogEISearcher\u01c1_build_acqf__mutmut_2",
+    "hponas.searchers_gp.x\u01c1GPqLogEISearcher\u01c1_build_acqf__mutmut_3"
+  ]
+}

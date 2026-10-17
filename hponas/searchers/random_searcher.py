@@ -5,6 +5,7 @@ import numpy as np
 from scipy.stats import qmc
 
 from hponas.searchers.base import BaseSearcher
+from hponas.capabilities import SearcherCapabilities, MIXED
 from hponas.types import Config, SearchSpace
 
 
@@ -15,6 +16,8 @@ class RandomSearcher(BaseSearcher):
     - Sample uniformly from search space
     - Seed-deterministic for reproducibility
     """
+
+    support = SearcherCapabilities(MIXED, conditionals=True, partial_fidelity=True)
 
     def __init__(self, search_space: SearchSpace, seed: Optional[int] = None):
         """Initialize random searcher.
@@ -33,15 +36,17 @@ class RandomSearcher(BaseSearcher):
             Random configuration from search space
         """
         # Support both hponas.types.SearchSpace and hponas.space.SearchSpace
-        if hasattr(self.search_space, 'sample_random'):
+        if hasattr(self.search_space, "sample_random"):
             # Old API: hponas.types.SearchSpace
             return self.search_space.sample_random(seed=self.rng.randint(0, 2**31))
-        elif hasattr(self.search_space, 'sample_config'):
+        elif hasattr(self.search_space, "sample_config"):
             # New API: hponas.space.SearchSpace
             config_dict = self.search_space.sample_config(rng=self.rng)
             return Config(values=config_dict)
         else:
-            raise TypeError(f"SearchSpace must have either sample_random() or sample_config() method")
+            raise TypeError(
+                f"SearchSpace must have either sample_random() or sample_config() method"
+            )
 
     def get_state(self) -> Dict[str, Any]:
         """Get searcher state for serialization."""
@@ -90,6 +95,8 @@ class SobolSearcher(BaseSearcher):
     - Better than random for same sample size
     """
 
+    support = SearcherCapabilities(MIXED, conditionals=True, partial_fidelity=True)
+
     def __init__(
         self,
         search_space: SearchSpace,
@@ -107,14 +114,16 @@ class SobolSearcher(BaseSearcher):
         self.scramble = scramble
 
         # Support both hponas.types.SearchSpace and hponas.space.SearchSpace
-        if hasattr(search_space, 'parameters'):
+        if hasattr(search_space, "parameters"):
             # Old API: hponas.types.SearchSpace (dim is a method)
             self.d = search_space.dim()
-        elif hasattr(search_space, 'knobs'):
+        elif hasattr(search_space, "knobs"):
             # New API: hponas.space.SearchSpace (dim is a property)
             self.d = search_space.dim
         else:
-            raise TypeError("SearchSpace must have either parameters or knobs attribute")
+            raise TypeError(
+                "SearchSpace must have either parameters or knobs attribute"
+            )
 
         # Initialize Sobol sampler
         self.sampler = qmc.Sobol(d=self.d, scramble=scramble, seed=seed)
@@ -144,77 +153,23 @@ class SobolSearcher(BaseSearcher):
         Returns:
             Configuration
         """
-        values = {}
+        from hponas.encoding import SpaceEncoder
 
-        # Support both hponas.types.SearchSpace and hponas.space.SearchSpace
-        if hasattr(self.search_space, 'parameters'):
-            # Old API: hponas.types.SearchSpace
-            for i, (name, param) in enumerate(self.search_space.parameters.items()):
-                u = sobol_sample[i]  # Uniform in [0, 1]
-
-                if param.type.value == "continuous":
-                    low, high = param.bounds
-                    if param.log_scale:
-                        value = np.exp(np.log(low) + u * (np.log(high) - np.log(low)))
-                    else:
-                        value = low + u * (high - low)
-
-                elif param.type.value == "integer":
-                    low, high = param.bounds
-                    if param.log_scale:
-                        log_val = np.log(low) + u * (np.log(high) - np.log(low))
-                        value = int(np.exp(log_val))
-                    else:
-                        value = int(low + u * (high - low + 1))
-
-                elif param.type.value in ["discrete", "categorical"]:
-                    idx = int(u * len(param.choices))
-                    idx = min(idx, len(param.choices) - 1)  # Handle u=1.0 edge case
-                    value = param.choices[idx]
-
-                values[name] = value
-
-        elif hasattr(self.search_space, 'knobs'):
-            # New API: hponas.space.SearchSpace
-            for i, knob in enumerate(self.search_space.knobs):
-                u = sobol_sample[i]  # Uniform in [0, 1]
-
-                if knob.kind == "continuous":
-                    low, high = knob.bounds
-                    if knob.transform == "log":
-                        value = np.exp(np.log(low) + u * (np.log(high) - np.log(low)))
-                    else:
-                        value = low + u * (high - low)
-
-                elif knob.kind == "integer":
-                    low, high = knob.bounds
-                    if knob.transform == "log":
-                        log_val = np.log(low) + u * (np.log(high) - np.log(low))
-                        value = int(np.exp(log_val))
-                    else:
-                        value = int(low + u * (high - low + 1))
-
-                elif knob.kind == "categorical":
-                    idx = int(u * len(knob.bounds))
-                    idx = min(idx, len(knob.bounds) - 1)  # Handle u=1.0 edge case
-                    value = knob.bounds[idx]
-
-                values[knob.name] = value
-
-        else:
-            raise TypeError("SearchSpace must have either parameters or knobs attribute")
-
-        return Config(values=values)
+        return Config(
+            values=SpaceEncoder(self.search_space).decode(sobol_sample, sampling=True)
+        )
 
     def get_state(self) -> Dict[str, Any]:
         """Get searcher state for serialization."""
         state = super().get_state()
-        state.update({
-            "scramble": self.scramble,
-            "sample_count": self.sample_count,
-            # Note: Sobol sampler state not fully serializable in scipy
-            # For V02 validation, we'll need to track sequence position
-        })
+        state.update(
+            {
+                "scramble": self.scramble,
+                "sample_count": self.sample_count,
+                # Note: Sobol sampler state not fully serializable in scipy
+                # For V02 validation, we'll need to track sequence position
+            }
+        )
         return state
 
     def set_state(self, state: Dict[str, Any]) -> None:

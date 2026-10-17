@@ -1,259 +1,97 @@
-"""
-V14 Day-One Walk: Chapter 15 end-to-end example executes without errors.
-
-Survey reference: Ch 15 sec:day-one-walk.
-Validation claim: Tier 0 is "composition, not construction" - assemble components to run HPO.
-
-Protocol:
-1. Execute examples/v14_day_one_walk.py
-2. Verify no errors during execution
-3. Verify expected artifacts produced (trials, checkpoints, observations)
-4. Verify protected test seed never reached searcher (seed isolation)
-5. Pass if all checks succeed
-
-Success criteria:
-- executed_successfully: True (no exceptions)
-- artifacts_present: True (all expected files exist)
-- seed_isolated: True (test seed never in searcher observations)
-"""
+"""Real, bounded day-one walk using the public Study API and protected evaluation."""
 
 from __future__ import annotations
-
-import subprocess
-import sys
+from functools import partial
 from pathlib import Path
 import sqlite3
-import os
+import time
+
+from hponas import Knob, SearchSpace, RandomSearcher, LocalExecutor, Study
+from hponas.store import Store
+from hponas.events import EventLog
+from validation.evidence import digest
 
 
-def v14_day_one_walk_validation(
-    script_path: Path = None,
-    cleanup: bool = True
-) -> dict[str, any]:
-    """
-    V14: Test day-one walk reproduction.
+def campaign(run_dir, smoke=True):
+    from workloads.rl_routine import rl_routine, RLSettings, evaluate_checkpoint
 
-    Args:
-        script_path: Path to v14_day_one_walk.py (default: examples/v14_day_one_walk.py)
-        cleanup: Remove artifacts after validation
+    run_dir = Path(run_dir).resolve()
+    run_dir.mkdir(parents=True, exist_ok=True)
+    started = time.monotonic()
+    space = SearchSpace(
+        [
+            Knob("learning_rate", "continuous", (1e-5, 1e-2), transform="log"),
+            Knob("width", "ordinal", (8, 16)),
+            Knob("depth", "ordinal", (1, 2)),
+            Knob("activation", "categorical", ["relu", "tanh", "swish"]),
+        ]
+    )
+    # V14 is a 60-second integration demonstration, not a performance campaign.
+    settings = RLSettings.smoke()
 
-    Returns:
-        dict with keys: executed_successfully, artifacts_present, seed_isolated, passed
-    """
-    print(f"\n=== V14: Day-One Walk Validation ===")
-
-    if script_path is None:
-        # Use fast version with mock workload for CPU validation
-        script_path = Path(__file__).parent.parent / "examples" / "v14_day_one_walk_fast.py"
-
-    if not script_path.exists():
-        return {
-            "executed_successfully": False,
-            "artifacts_present": False,
-            "seed_isolated": False,
-            "passed": False,
-            "error": f"Script not found: {script_path}"
-        }
-
-    print(f"Script: {script_path}")
-
-    # Expected artifacts
-    db_path = Path("./v14_walk.db")
-    checkpoint_dir = Path("./v14_checkpoints")
-
-    # Clean up any existing artifacts from previous runs
-    if db_path.exists():
-        db_path.unlink()
-    if checkpoint_dir.exists():
-        import shutil
-        shutil.rmtree(checkpoint_dir)
-
-    # Execute script
-    print("\nExecuting day-one walk script...")
-    try:
-        result = subprocess.run(
-            [sys.executable, str(script_path)],
-            capture_output=True,
-            text=True,
-            timeout=60,
-            check=True
+    def objective(config, seed, trial_id):
+        return rl_routine(
+            {**config, "num_envs": 32, "batch_size": 64},
+            seed=seed,
+            settings=settings,
+            artifact_dir=run_dir / "policies",
+            trial_id=trial_id,
         )
 
-        executed_successfully = result.returncode == 0
-        print(f"  Execution: {'✓ SUCCESS' if executed_successfully else '✗ FAILED'}")
-
-        if not executed_successfully:
-            print(f"  stderr: {result.stderr[:500]}")
-
-    except subprocess.TimeoutExpired:
-        print("  ✗ TIMEOUT (>60s)")
-        return {
-            "executed_successfully": False,
-            "artifacts_present": False,
-            "seed_isolated": False,
-            "passed": False,
-            "error": "Execution timeout"
-        }
-    except subprocess.CalledProcessError as e:
-        print(f"  ✗ ERROR: {e}")
-        print(f"  stderr: {e.stderr[:500]}")
-        return {
-            "executed_successfully": False,
-            "artifacts_present": False,
-            "seed_isolated": False,
-            "passed": False,
-            "error": str(e)
-        }
-    except Exception as e:
-        print(f"  ✗ EXCEPTION: {e}")
-        return {
-            "executed_successfully": False,
-            "artifacts_present": False,
-            "seed_isolated": False,
-            "passed": False,
-            "error": str(e)
-        }
-
-    # Check artifacts
-    print("\nChecking artifacts...")
-    artifacts_present = True
-
-    if not db_path.exists():
-        print(f"  ✗ Missing: {db_path}")
-        artifacts_present = False
-    else:
-        print(f"  ✓ Found: {db_path}")
-
-    if not checkpoint_dir.exists():
-        print(f"  ✗ Missing: {checkpoint_dir}")
-        artifacts_present = False
-    else:
-        print(f"  ✓ Found: {checkpoint_dir}")
-
-    # Check seed isolation (protected test seed should never be in observations)
-    #
-    # NOTE (2026-09-02): this check previously read only "999 not in trial_seeds".
-    # On an empty trials table that is vacuously true, so V14 reported PASS after a
-    # run that executed zero trials. That is the same class of defect the R1 gate hit
-    # (asserting on trial_id, which is trivially unique). The check now requires a
-    # non-empty trials table AND the expected training seeds, so it cannot pass on
-    # an empty run.
-    print("\nChecking seed isolation...")
-    seed_isolated = True
-    trials_executed = False
-    protected_seed = 999  # From v14_day_one_walk.py
-    n_trials = 0
-
-    if db_path.exists():
-        try:
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT seed FROM trials")
-            trial_seeds = [row[0] for row in cursor.fetchall()]
-            n_trials = len(trial_seeds)
-
-            if n_trials == 0:
-                print("  ✗ VACUOUS: trials table is empty — no trial ever ran.")
-                print("     Seed isolation cannot be demonstrated by a run with no trials.")
-                seed_isolated = False
-            else:
-                trials_executed = True
-                if protected_seed in trial_seeds:
-                    print(f"  ✗ VIOLATION: Protected seed {protected_seed} found in trials")
-                    seed_isolated = False
-                else:
-                    print(
-                        f"  ✓ {n_trials} trial(s) recorded; protected seed "
-                        f"{protected_seed} never reached the searcher"
-                    )
-
-            conn.close()
-
-        except Exception as e:
-            print(f"  ✗ ERROR checking seed isolation: {e}")
-            seed_isolated = False
-    else:
-        seed_isolated = False
-
-    # Overall pass/fail. trials_executed is a separate, explicit requirement:
-    # V14 claims the day-one walk *reproduces*, which a zero-trial run does not.
-    passed = (
-        executed_successfully
-        and artifacts_present
-        and trials_executed
-        and seed_isolated
+    store = Store(run_dir / "v14_walk.db")
+    study = Study(
+        RandomSearcher(space, seed=42),
+        LocalExecutor(),
+        objective,
+        budget=1,
+        study_name="v14",
+        store=store,
+        checkpoint_dir=run_dir / "checkpoints",
+        event_log=EventLog(run_dir / "events.jsonl"),
     )
-
-    print(f"\nOverall: {'✓ PASSED' if passed else '✗ FAILED'}")
-
-    # Cleanup
-    if cleanup and passed:
-        print("\nCleaning up artifacts...")
-        if db_path.exists():
-            db_path.unlink()
-        if checkpoint_dir.exists():
-            import shutil
-            shutil.rmtree(checkpoint_dir)
-
+    try:
+        result = study.run()
+        observed = {r.trial_id: r.objective_value for r in study.searcher.history}
+        trials = []
+        for value in result.history:
+            artifacts = value.metadata["artifacts"]
+            acceptance = evaluate_checkpoint(artifacts["checkpoint"], 999)
+            trials.append(
+                {
+                    "trial_id": value.trial_id,
+                    "training_seed": value.metadata["training_seed"],
+                    "search_seed": value.metadata["search_seed"],
+                    "search_value": value.objective_value,
+                    "observed_value": observed[value.trial_id],
+                    "acceptance_value": acceptance["value"],
+                    **{
+                        k: {"path": artifacts[k], "sha256": digest(artifacts[k])}
+                        for k in ("checkpoint", "learning_curve")
+                    },
+                }
+            )
+    finally:
+        store.close()
+    database = run_dir / "v14_walk.db"
+    with sqlite3.connect(database) as db:
+        seeds = [row[0] for row in db.execute("SELECT seed FROM trials")]
+    snapshot = run_dir / "checkpoints/v14_checkpoint.json"
     return {
-        "executed_successfully": executed_successfully,
-        "artifacts_present": artifacts_present,
-        "trials_executed": trials_executed,
-        "n_trials": n_trials,
-        "seed_isolated": seed_isolated,
-        "passed": passed,
-        "script_path": str(script_path),
-        "db_path": str(db_path),
-        "checkpoint_dir": str(checkpoint_dir),
+        "validation_id": "V14",
+        "schema_version": 1,
+        "workload": "brax_ppo",
+        "real_workload": True,
+        "duration_seconds": time.monotonic() - started,
+        "protected_seed": 999,
+        "database_seeds": seeds,
+        "database": {"path": str(database), "sha256": digest(database)},
+        "study_checkpoint": {"path": str(snapshot), "sha256": digest(snapshot)},
+        "trials": trials,
     }
 
 
 if __name__ == "__main__":
-    print("="*70)
-    print("V14 Day-One Walk Validation")
-    print("="*70)
+    from validation.run_validation_with_audit import ValidationRunner
 
-    result = v14_day_one_walk_validation(cleanup=True)
-
-    print("\n" + "="*70)
-    if result["passed"]:
-        print("V14 VALIDATION: ✓ PASSED")
-        print("Day-one walk executed successfully:")
-        print("  ✓ No errors during execution")
-        print("  ✓ All artifacts produced")
-        print("  ✓ Protected test seed isolated from searcher")
-    else:
-        print("V14 VALIDATION: ✗ FAILED")
-        if not result["executed_successfully"]:
-            print("  ✗ Execution failed")
-            if "error" in result:
-                print(f"     Error: {result['error']}")
-        if not result["artifacts_present"]:
-            print("  ✗ Missing artifacts")
-        if not result["seed_isolated"]:
-            print("  ✗ Seed isolation violated")
-    print("="*70)
-
-
-if __name__ == "__main__":
-    result = v14_day_one_walk_validation()
-
-    print("\n" + "="*70)
-    if result["passed"]:
-        print("V14 VALIDATION: ✓ PASSED")
-        print("Day-one walk executed successfully:")
-        print("  ✓ No errors during execution")
-        print("  ✓ All artifacts produced")
-        print("  ✓ Protected test seed isolated from searcher")
-    else:
-        print("V14 VALIDATION: ✗ FAILED")
-        if not result["executed_successfully"]:
-            print("  ✗ Execution failed")
-            if "error" in result:
-                print(f"     Error: {result['error']}")
-        if not result["artifacts_present"]:
-            print("  ✗ Missing artifacts")
-        if not result["seed_isolated"]:
-            print("  ✗ Seed isolation violated")
-    print("="*70)
+    runner = ValidationRunner("V14")
+    raise SystemExit(0 if runner.run(lambda: campaign(runner.run_dir)) else 1)

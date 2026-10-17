@@ -1,0 +1,5 @@
+{
+  "command": "python deployments/local-lab/manage.py status",
+  "notifications": "local_output_only",
+  "unattended_alert_service": false
+}

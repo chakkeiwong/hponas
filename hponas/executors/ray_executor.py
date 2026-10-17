@@ -1,7 +1,12 @@
 """Ray executor for distributed trial execution."""
 
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, TYPE_CHECKING
+from concurrent.futures import ThreadPoolExecutor
+
+if TYPE_CHECKING:
+    import ray
 import time
+import math
 import traceback
 import numpy as np
 
@@ -37,15 +42,36 @@ class RayExecutor(BaseExecutor):
             max_retries: Number of retries for failed trials
             timeout: Timeout per trial in seconds
         """
+        if (
+            isinstance(num_workers, bool)
+            or not isinstance(num_workers, int)
+            or num_workers < 1
+        ):
+            raise ValueError("num_workers must be positive")
+        if (
+            isinstance(max_retries, bool)
+            or not isinstance(max_retries, int)
+            or max_retries < 0
+        ):
+            raise ValueError("max_retries must be nonnegative")
+        if timeout is not None and (not math.isfinite(timeout) or timeout <= 0):
+            raise ValueError("timeout must be positive")
         self.num_workers = num_workers
         self.resources_per_trial = resources_per_trial or {"num_cpus": 1}
         self.max_retries = max_retries
         self.timeout = timeout
 
         self._ray_initialized = False
+        self._owns_ray = False
+        self._cancellation_failed = False
+
+    def prepare(self) -> None:
+        self._initialize_ray()
 
     def _initialize_ray(self) -> None:
         """Initialize Ray cluster."""
+        if self._cancellation_failed:
+            raise RuntimeError("Ray executor has an unconfirmed worker cancellation")
         if self._ray_initialized:
             return
 
@@ -53,7 +79,12 @@ class RayExecutor(BaseExecutor):
             import ray
 
             if not ray.is_initialized():
-                ray.init(ignore_reinit_error=True)
+                ray.init(
+                    ignore_reinit_error=True,
+                    num_cpus=self.num_workers,
+                    include_dashboard=False,
+                )
+                self._owns_ray = True
 
             self._ray_initialized = True
 
@@ -66,7 +97,9 @@ class RayExecutor(BaseExecutor):
                 "Ray is not installed. Install with: pip install ray[default]"
             )
 
-    def execute(self, trial: Trial, objective_fn: Callable[[dict], float]) -> Result:
+    def execute(
+        self, trial: Trial, objective_fn: Callable[[dict], float], *, on_report=None
+    ) -> Result:
         """Execute single trial (synchronous).
 
         Args:
@@ -76,11 +109,15 @@ class RayExecutor(BaseExecutor):
         Returns:
             Trial result
         """
-        results = self.execute_batch([trial], objective_fn)
+        results = self.execute_batch([trial], objective_fn, on_report=on_report)
         return results[0]
 
     def execute_batch(
-        self, trials: List[Trial], objective_fn: Callable[[dict], float]
+        self,
+        trials: List[Trial],
+        objective_fn: Callable[[dict], float],
+        *,
+        on_report=None,
     ) -> List[Result]:
         """Execute batch of trials in parallel.
 
@@ -93,19 +130,150 @@ class RayExecutor(BaseExecutor):
         """
         self._initialize_ray()
 
-        # Submit all trials as remote tasks
-        futures = []
-        for trial in trials:
-            # Wrap objective function call
+        def run_one(trial):
+            if on_report is not None:
+                return self._execute_streaming(trial, objective_fn, on_report)
             future = self._submit_trial(trial, objective_fn)
-            futures.append((trial, future))
+            return self._collect_with_retry(trial, future, objective_fn)
 
-        # Collect results, retrying transient failures up to max_retries
-        results = []
-        for trial, future in futures:
-            results.append(self._collect_with_retry(trial, future, objective_fn))
+        # Each collector starts its deadline at submission. Submission is bounded,
+        # and ordered map preserves deterministic observation order for Study.
+        with ThreadPoolExecutor(max_workers=self.num_workers) as pool:
+            return list(pool.map(run_one, trials))
 
-        return results
+    def _execute_streaming(self, trial, objective_fn, on_report):
+        """Driver-owned decisions; workers wait for an acknowledgement per report.
+
+        The queues use zero-CPU actors, so a one-CPU worker cannot deadlock the
+        control channel. Every attempt has fresh channels and explicit cleanup.
+        """
+        from dataclasses import replace
+        import ray
+        from ray.util.queue import Queue, Empty
+
+        failed_cost = failed_elapsed = 0.0
+        for attempt in range(self.max_retries + 1):
+            # A previous batch worker may have failed to finish cancellation
+            # while this attempt was queued in the collector pool.
+            self._initialize_ray()
+            started = time.monotonic()
+            requests = replies = future = None
+            last_cost = 0.0
+            try:
+                requests = Queue(actor_options={"num_cpus": 0})
+                replies = Queue(actor_options={"num_cpus": 0})
+                options = dict(
+                    self.resources_per_trial, max_retries=0, retry_exceptions=False
+                )
+
+                @ray.remote(**options)
+                def evaluate_stream(trial, objective, requests, replies):
+                    from hponas.executors.base import evaluate_trial
+
+                    def report(progress):
+                        requests.put(progress)
+                        return replies.get()
+
+                    return evaluate_trial(trial, objective, report).to_dict()
+
+                future = evaluate_stream.remote(trial, objective_fn, requests, replies)
+                while True:
+                    elapsed = time.monotonic() - started
+                    if self.timeout is not None and elapsed >= self.timeout:
+                        raise ray.exceptions.GetTimeoutError()
+                    ready, _ = ray.wait([future], timeout=0)
+                    if ready:
+                        result = self._payload_to_result(trial, ray.get(future))
+                        result.cost += failed_cost
+                        result.metadata.update(
+                            attempts=attempt + 1,
+                            failed_attempt_elapsed_seconds=failed_elapsed,
+                        )
+                        result.metadata.setdefault("execution", {}).update(
+                            schema_version=1,
+                            elapsed_seconds=failed_elapsed + time.monotonic() - started,
+                            continuation=trial.continuation,
+                            resume_from=trial.resume_from,
+                        )
+                        trial.status = result.status
+                        return result
+                    wait = (
+                        0.02
+                        if self.timeout is None
+                        else min(0.02, self.timeout - elapsed)
+                    )
+                    try:
+                        progress = requests.get(timeout=wait)
+                    except Empty:
+                        continue
+                    last_cost = progress.cost
+                    decision = on_report(
+                        replace(
+                            progress,
+                            elapsed_seconds=failed_elapsed + time.monotonic() - started,
+                            cost=failed_cost + progress.cost,
+                        )
+                    )
+                    replies.put(decision)
+            except ray.exceptions.RayError as exc:
+                if future is not None:
+                    self._cancel_and_drain(future)
+                elapsed = time.monotonic() - started
+                failed_cost += max(elapsed, last_cost)
+                failed_elapsed += elapsed
+                if attempt == self.max_retries:
+                    status = (
+                        "timeout"
+                        if isinstance(exc, ray.exceptions.GetTimeoutError)
+                        else "failed"
+                    )
+                    trial.status = status
+                    return Result(
+                        trial.trial_id,
+                        float("nan"),
+                        failed_cost,
+                        trial.fidelity,
+                        {
+                            "error": str(exc),
+                            "attempts": attempt + 1,
+                            "failed_attempt_elapsed_seconds": failed_elapsed,
+                            "execution": {
+                                "schema_version": 1,
+                                "elapsed_seconds": failed_elapsed,
+                            },
+                        },
+                        status,
+                    )
+            finally:
+                try:
+                    if future is not None and not self._cancellation_failed:
+                        self._cancel_and_drain(future)
+                finally:
+                    for queue in (requests, replies):
+                        if queue is not None:
+                            queue.shutdown(force=True)
+
+    def _cancel_and_drain(self, future):
+        """Confirm task termination before releasing channels or another attempt.
+
+        Force cancellation is asynchronous. Destroying the reporting actors
+        first can unblock a worker into the pool while its forced exit is still
+        pending, killing the next trial assigned to it.
+        """
+        import ray
+
+        ready, _ = ray.wait([future], timeout=0)
+        if ready:
+            return
+        ray.cancel(future, force=True)
+        try:
+            ray.get(future, timeout=30.0)
+        except ray.exceptions.GetTimeoutError as exc:
+            self._cancellation_failed = True
+            raise RuntimeError("Ray worker cancellation did not finish within 30 seconds") from exc
+        except ray.exceptions.RayError:
+            # A cancelled task or crashed worker is the expected terminal result.
+            pass
 
     def _collect_with_retry(
         self,
@@ -131,20 +299,28 @@ class RayExecutor(BaseExecutor):
         import ray
 
         attempt = 0
+        failed_cost = 0.0
         while True:
+            attempt_started = time.monotonic()
             try:
                 payload = ray.get(future, timeout=self.timeout)
                 # Remote wrapper returns a dict; convert to the Result the
                 # BaseExecutor contract requires (Study relies on attributes).
-                return self._payload_to_result(trial, payload)
+                result = self._payload_to_result(trial, payload)
+                result.cost += failed_cost
+                result.metadata.update(
+                    attempts=attempt + 1, failed_attempt_elapsed_seconds=failed_cost
+                )
+                return result
 
             except ray.exceptions.GetTimeoutError:
-                ray.cancel(future, force=True)
+                self._cancel_and_drain(future)
+                failed_cost += time.monotonic() - attempt_started
                 if attempt >= self.max_retries:
                     return Result(
                         trial_id=trial.trial_id,
                         objective_value=float("nan"),
-                        cost=0.0,
+                        cost=failed_cost,
                         fidelity=trial.fidelity,
                         status="timeout",
                         metadata={
@@ -154,11 +330,12 @@ class RayExecutor(BaseExecutor):
                     )
 
             except Exception as e:
+                failed_cost += time.monotonic() - attempt_started
                 if attempt >= self.max_retries:
                     return Result(
                         trial_id=trial.trial_id,
                         objective_value=float("nan"),
-                        cost=0.0,
+                        cost=failed_cost,
                         fidelity=trial.fidelity,
                         status="failed",
                         metadata={"error": str(e), "attempts": attempt + 1},
@@ -204,40 +381,20 @@ class RayExecutor(BaseExecutor):
         """
         import ray
 
+        self._initialize_ray()
         # Create remote function for this trial
-        @ray.remote(**self.resources_per_trial)
+        # This executor owns retries and their cost ledger. Ray's default worker
+        # crash retries would otherwise hide attempts from _collect_with_retry.
+        remote_options = dict(
+            self.resources_per_trial, max_retries=0, retry_exceptions=False
+        )
+
+        @ray.remote(**remote_options)
         def execute_remote(config_values: dict) -> dict:
             """Execute trial remotely."""
-            start_time = time.time()
+            from hponas.executors.base import evaluate_trial
 
-            try:
-                objective_value = objective_fn(config_values)
-
-                if not np.isfinite(objective_value):
-                    status = "nan" if np.isnan(objective_value) else "inf"
-                else:
-                    status = "completed"
-
-                return {
-                    "trial_id": trial.trial_id,
-                    "objective_value": float(objective_value),
-                    "cost": time.time() - start_time,
-                    "fidelity": trial.fidelity,
-                    "status": status,
-                }
-
-            except Exception as e:
-                return {
-                    "trial_id": trial.trial_id,
-                    "objective_value": float('nan'),
-                    "cost": time.time() - start_time,
-                    "fidelity": trial.fidelity,
-                    "status": "failed",
-                    "metadata": {
-                        "error": str(e),
-                        "traceback": traceback.format_exc(),
-                    },
-                }
+            return evaluate_trial(trial, objective_fn).to_dict()
 
         # Submit task
         future = execute_remote.remote(trial.config.values)
@@ -248,7 +405,9 @@ class RayExecutor(BaseExecutor):
         if self._ray_initialized:
             try:
                 import ray
-                ray.shutdown()
+
+                if self._owns_ray:
+                    ray.shutdown()
             except Exception:
                 pass
             self._ray_initialized = False

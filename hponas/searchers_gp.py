@@ -20,6 +20,11 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+import hashlib
+import inspect
+import marshal
+from pathlib import Path
+import cloudpickle
 import numpy as np
 
 try:
@@ -71,12 +76,18 @@ class GPqLogEISearcher:
         if not BOTORCH_AVAILABLE:
             raise ImportError("GPqLogEISearcher requires botorch: pip install botorch gpytorch torch")
 
+        self._validate_controls(seed, n_fantasies, raw_samples, n_restarts, prior_beta)
+        if not space.knobs or any(
+            k.kind != "continuous" or k.condition or k.transform not in {"none", "log"}
+            for k in space.knobs
+        ):
+            raise ValueError("GPqLogEISearcher requires unconditional continuous knobs with none/log transforms")
         self.space = space
         self.seed = seed
         self.n_fantasies = n_fantasies
         self.raw_samples = raw_samples
         self.n_restarts = n_restarts
-        self.prior_beta = prior_beta
+        self.prior_beta = float(prior_beta)
         # Guard user prior at entry to guarantee nonzero density
         self.prior_fn = ensure_guarded(prior_fn, space)
 
@@ -106,7 +117,50 @@ class GPqLogEISearcher:
 
         # RNG for initial random sampling
         self._rng = np.random.default_rng(seed)
-        torch.manual_seed(seed)
+        self._torch_rng_state = torch.Generator().manual_seed(seed).get_state()
+
+    @staticmethod
+    def _validate_controls(seed, n_fantasies, raw_samples, n_restarts, prior_beta):
+        if not isinstance(seed, int) or isinstance(seed, bool) or not 0 <= seed < 2**32:
+            raise ValueError("seed must be an integer in [0, 2**32)")
+        for name, value in (("n_fantasies", n_fantasies), ("raw_samples", raw_samples),
+                            ("n_restarts", n_restarts)):
+            if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+                raise ValueError(f"{name} must be a positive integer")
+        if isinstance(prior_beta, bool) or not np.isscalar(prior_beta):
+            raise ValueError("prior_beta must be finite and nonnegative")
+        try:
+            valid_beta = np.isfinite(prior_beta) and prior_beta >= 0
+        except TypeError:
+            valid_beta = False
+        if not valid_beta:
+            raise ValueError("prior_beta must be finite and nonnegative")
+
+    def _prior_identity(self):
+        # Compare serialized callables; never execute a pickle from a checkpoint.
+        # Recovery requires the same prior recipe in the same Python environment.
+        identity = hashlib.sha256(cloudpickle.dumps(self.prior_fn))
+        raw = getattr(self.prior_fn, "user_prior", self.prior_fn)
+        # Cloudpickle can encode importable functions by module/name alone. Bind
+        # their actual code/source too, so changing that function cannot pass as
+        # an unchanged prior merely by keeping its name.
+        function = raw if inspect.isfunction(raw) else getattr(raw, "__call__", None)
+        if getattr(function, "__code__", None) is not None:
+            identity.update(marshal.dumps(function.__code__))
+            source = inspect.getsourcefile(function)
+            if source and Path(source).is_file():
+                identity.update(Path(source).read_bytes())
+        return identity.hexdigest()
+
+    @staticmethod
+    def _versions():
+        import platform
+        import scipy
+
+        return {"python": platform.python_version(), "torch": str(torch.__version__),
+                "botorch": botorch.__version__, "gpytorch": gpytorch.__version__,
+                "numpy": np.__version__, "scipy": scipy.__version__,
+                "cloudpickle": cloudpickle.__version__}
 
     def _to_unit_cube(self, config: dict[str, Any]) -> torch.Tensor:
         """
@@ -140,7 +194,11 @@ class GPqLogEISearcher:
             u = x_unit[i].item()
             low, high = knob.bounds
 
-            if knob.transform == "log":
+            if u == 0.0:
+                val = low
+            elif u == 1.0:
+                val = high
+            elif knob.transform == "log":
                 # Inverse log-warp: val = exp(log(low) + u * (log(high) - log(low)))
                 log_low, log_high = np.log(low), np.log(high)
                 val = np.exp(log_low + u * (log_high - log_low))
@@ -148,7 +206,9 @@ class GPqLogEISearcher:
                 # Inverse linear: val = low + u * (high - low)
                 val = low + u * (high - low)
 
-            config[knob.name] = float(val)
+            # Floating inverse transforms can round an exact endpoint outside
+            # its declared interval (for example exp(log(.1)) > .1).
+            config[knob.name] = float(np.clip(val, low, high))
 
         return config
 
@@ -226,6 +286,50 @@ class GPqLogEISearcher:
             self._acqf = base_acqf
 
     def propose(self, n: int) -> list[dict[str, Any]]:
+        """Propose configurations using an isolated, checkpointed CPU RNG stream."""
+        if not isinstance(n, int) or isinstance(n, bool) or n < 0:
+            raise ValueError("n must be a nonnegative integer")
+        if n == 0:
+            return []
+        # Fitting and acquisition initialization can both consume torch randomness.
+        # Preserve the caller's stream and advance only this searcher's stream.
+        with torch.random.fork_rng(devices=[]):
+            torch.set_rng_state(self._torch_rng_state)
+            configs = self._propose(n)
+            self._torch_rng_state = torch.get_rng_state().clone()
+        return configs
+
+    def log_expected_improvement(self, configs):
+        """Score a finite q=1 candidate pool on this searcher's own RNG stream.
+
+        An empty objective history uses a constant bootstrap score. Fit or
+        acquisition failures propagate; they cannot become a cost-only search.
+        """
+        if not isinstance(configs, list) or not configs:
+            raise ValueError('A nonempty candidate pool is required')
+        points = torch.stack([self._to_unit_cube(c) for c in configs]).double().unsqueeze(1)
+        if not self._X:
+            return np.zeros(len(configs), dtype=float)
+        with torch.random.fork_rng(devices=[]):
+            torch.set_rng_state(self._torch_rng_state)
+            self._build_gp()
+            self._build_acqf(batch_size=1)
+            with torch.no_grad():
+                values = self._acqf(points).reshape(-1).detach().cpu().numpy()
+            if values.shape != (len(configs),) or np.isnan(values).any() or np.isposinf(values).any():
+                raise ValueError('Invalid log expected improvement values')
+            self._torch_rng_state = torch.get_rng_state().clone()
+        return values
+
+    def validate_observations(self, rows):
+        """Cross-check a wrapping searcher's objective ledger after recovery."""
+        if len(rows) != self._n_observed:
+            raise ValueError('GP objective ledger length differs')
+        for row, x, y in zip(rows, self._X, self._Y):
+            if not torch.equal(self._to_unit_cube(row['config']), x) or row['value'] != y.item():
+                raise ValueError('GP objective ledger differs')
+
+    def _propose(self, n: int) -> list[dict[str, Any]]:
         """
         Propose n configurations via GP + qLogEI.
 
@@ -238,6 +342,8 @@ class GPqLogEISearcher:
         if self._n_observed == 0:
             from scipy.stats import qmc
             sobol = qmc.Sobol(d=self._dim, scramble=True, seed=self.seed)
+            if self._n_proposed:
+                sobol.fast_forward(self._n_proposed)
             points = sobol.random(n)
 
             for point in points:
@@ -289,6 +395,15 @@ class GPqLogEISearcher:
         """
         config = trial_result["config"]
         value = trial_result["value"]
+        self.space.validate_config(config)
+        if isinstance(value, bool) or not np.isscalar(value):
+            raise ValueError("Observation value must be a finite scalar")
+        try:
+            finite = np.isfinite(value)
+        except TypeError:
+            finite = False
+        if not finite:
+            raise ValueError("Observation value must be a finite scalar")
 
         # Transform to unit cube and store
         x_unit = self._to_unit_cube(config)
@@ -307,51 +422,112 @@ class GPqLogEISearcher:
         """Serialize state for crash recovery."""
         return {
             "kind": "gp_qlogei",
+            "schema_version": 2,
             "seed": self.seed,
             "n_proposed": self._n_proposed,
             "n_observed": self._n_observed,
             "X": [x.tolist() for x in self._X],
             "Y": [y.item() for y in self._Y],
             "knob_names": [k.name for k in self.cont_knobs],
+            "space": self.space.to_dict(),
+            "options": {"n_fantasies": self.n_fantasies, "raw_samples": self.raw_samples,
+                        "n_restarts": self.n_restarts, "prior_beta": self.prior_beta},
+            "prior_identity": self._prior_identity(),
+            "versions": self._versions(),
+            "torch_rng_state": self._torch_rng_state.tolist(),
         }
 
     def load_state_dict(self, state: dict[str, Any]) -> None:
-        """Restore state after crash."""
+        """Validate the complete recipe before replacing live state.
+
+        Old snapshots omit the RNG/space/prior recipe and require explicit migration.
+        Arbitrary prior callables must be reconstructed by the caller, not unpickled
+        from checkpoint data. No cross-version reproducibility is claimed.
+        """
         if state.get("kind") != "gp_qlogei":
             raise ValueError(f"GPqLogEISearcher cannot load state of kind {state.get('kind')!r}")
-
-        # Verify knob structure matches
-        expected = [k.name for k in self.cont_knobs]
-        if state.get("knob_names") != expected:
-            raise ValueError(
-                f"Searcher state does not match space: state has {state.get('knob_names')}, "
-                f"space has {expected}"
-            )
-
+        if state.get("schema_version") != 2:
+            raise ValueError("Incomplete legacy GP checkpoint; explicit migration required")
+        if (state.get("space") != self.space.to_dict()
+                or state.get("knob_names") != [k.name for k in self.cont_knobs]):
+            raise ValueError("Searcher state does not match space")
+        if state.get("prior_identity") != self._prior_identity():
+            raise ValueError("Checkpoint prior recipe differs")
+        if state.get("versions") != self._versions():
+            raise ValueError("Checkpoint dependency versions differ")
+        try:
+            options = state["options"]
+            expected_options = {"n_fantasies", "raw_samples", "n_restarts", "prior_beta"}
+            if set(options) != expected_options:
+                raise ValueError("Incomplete acquisition options")
+            self._validate_controls(state["seed"], **options)
+            for key in ("n_observed", "n_proposed"):
+                if type(state[key]) is not int or state[key] < 0:
+                    raise ValueError("Invalid checkpoint counts")
+            observed = state["n_observed"]
+            if len(state["X"]) != observed or len(state["Y"]) != observed:
+                raise ValueError("Checkpoint observation counts differ")
+            xs = [torch.tensor(x, dtype=torch.float64) for x in state["X"]]
+            ys = [torch.tensor(y, dtype=torch.float64) for y in state["Y"]]
+            if any(x.shape != (self._dim,) or not torch.isfinite(x).all()
+                   or (x < 0).any() or (x > 1).any() for x in xs):
+                raise ValueError("Invalid checkpoint coordinates")
+            if any(y.ndim != 0 or not torch.isfinite(y) for y in ys):
+                raise ValueError("Invalid checkpoint objectives")
+            values = state["torch_rng_state"]
+            if not isinstance(values, list) or not values or any(
+                type(v) is not int or not 0 <= v <= 255 for v in values
+            ):
+                raise ValueError("Invalid checkpoint RNG state")
+            rng = torch.tensor(values, dtype=torch.uint8)
+            torch.Generator().set_state(rng)  # Validate without touching global state.
+        except (KeyError, TypeError, RuntimeError) as exc:
+            raise ValueError("Invalid GP checkpoint") from exc
         self.seed = state["seed"]
-        self._n_proposed = state["n_proposed"]
-        self._n_observed = state["n_observed"]
-
-        # Restore observations
-        self._X = [torch.tensor(x, dtype=torch.float64) for x in state["X"]]
-        self._Y = [torch.tensor(y, dtype=torch.float64) for y in state["Y"]]
-
-        # Model will rebuild on next propose()
+        self._n_proposed, self._n_observed = state["n_proposed"], observed
+        self._X, self._Y, self._torch_rng_state = xs, ys, rng
+        for key, value in options.items():
+            setattr(self, key, value)
         self._model = None
         self._acqf = None
 
-        torch.manual_seed(self.seed)
+    @property
+    def support(self):
+        from hponas.capabilities import SearcherCapabilities
+        return SearcherCapabilities(('continuous',), max_dimensions=20,
+                                    prior='density_function')
 
     @property
     def capabilities(self) -> dict[str, Any]:
         """Declare GP capabilities."""
-        return {
-            "knob_kinds": ["continuous"],  # Tier 0: continuous only
-            "conditionals": False,
-            "multi_objective": False,  # Tier 1: qLogNEHVI
-            "prior": self.prior_fn is not None,  # Tier 1: πBO
-            "max_dim": 20,  # Reasonable for standard GP without trust regions
-        }
+        return self.support.report()
+
+
+# The public prior API accepts Python/scipy callables, which do not carry a torch
+# graph. Supply the log-density derivative numerically while retaining the exact
+# autograd derivative of the (much more expensive) GP acquisition.
+class _LogPrior(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, X, evaluate):
+        ctx.save_for_backward(X)
+        ctx.evaluate = evaluate
+        return evaluate(X)
+
+    @staticmethod
+    @torch.autograd.function.once_differentiable
+    def backward(ctx, grad_output):
+        (X,) = ctx.saved_tensors
+        step = torch.finfo(X.dtype).eps ** (1 / 3)
+        gradient = torch.empty_like(X)
+        for j in range(X.shape[-1]):
+            lower, upper = X.clone(), X.clone()
+            lower[..., j] = (X[..., j] - step).clamp(min=0.0)
+            upper[..., j] = (X[..., j] + step).clamp(max=1.0)
+            # At the box boundary this becomes a one-sided difference. Priors
+            # are never evaluated outside the declared search space.
+            width = upper[..., j] - lower[..., j]
+            gradient[..., j] = (ctx.evaluate(upper) - ctx.evaluate(lower)) / width
+        return grad_output.unsqueeze(-1) * gradient, None
 
 
 # Tier 1: πBO prior-weighted acquisition
@@ -399,6 +575,22 @@ class PriorWeightedAcquisition(AcquisitionFunction):
         # Compute exponent once (constant for this acquisition build)
         self.prior_exponent = beta / max(n_observed, 1)  # Avoid division by zero
 
+    def _log_density(self, X: torch.Tensor) -> torch.Tensor:
+        """Evaluate scalar Python priors in the original knob coordinates."""
+        log_priors = []
+        lows, highs = self.bounds_low.tolist(), self.bounds_high.tolist()
+        for point in X.detach().cpu().reshape(-1, X.shape[-1]).tolist():
+            config = {}
+            for u, knob, low, high in zip(point, self.cont_knobs, lows, highs):
+                if knob.transform == "log":
+                    val = np.exp(np.log(low) + u * np.log(high / low))
+                else:
+                    val = low + u * (high - low)
+                config[knob.name] = float(val)
+            prior_val = max(float(self.prior_fn(config)), MIN_DENSITY)
+            log_priors.append(np.log(prior_val))
+        return X.new_tensor(log_priors).reshape(X.shape[:-1])
+
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         """
         Evaluate prior-weighted acquisition at candidate points X.
@@ -426,41 +618,20 @@ class PriorWeightedAcquisition(AcquisitionFunction):
                log-priors are averaged so the prior term keeps a fixed scale relative to
                the base acquisition as q varies (a sum would grow with q and let the
                prior swamp the acquisition for large batches).
+
+            3. Python prior callables use bounded finite differences for their
+               first derivatives. The base acquisition retains its analytical
+               gradient. As with other local optimizers, discontinuous priors
+               can have flat regions; raw restart samples also use prior values.
         """
         # Base acquisition values (log-scale), shape (batch_size,) for (batch_size, q, dim) input
         base_values = self.base_acqf(X)
 
-        # X may be (batch_size, q, dim) or (batch_size, dim); batch dimension is always first
-        X_2d = X.reshape(-1, X.shape[-1])  # flatten to (n_points, dim)
-
-        # Evaluate log-prior at each candidate point
-        log_priors = torch.zeros(X_2d.shape[0], dtype=base_values.dtype, device=X.device)
-        for i in range(X_2d.shape[0]):
-            # Denormalize to original space (matching _from_unit_cube transform)
-            config = {}
-            for j, knob in enumerate(self.cont_knobs):
-                u = float(X_2d[i, j].item())
-                low, high = self.bounds_low[j].item(), self.bounds_high[j].item()
-
-                if knob.transform == "log":
-                    # Log-warped inverse: exp(log(low) + u * (log(high) - log(low)))
-                    log_low, log_high = np.log(low), np.log(high)
-                    val = np.exp(log_low + u * (log_high - log_low))
-                else:
-                    # Linear inverse: low + u * (high - low)
-                    val = low + u * (high - low)
-
-                config[knob.name] = float(val)
-
-            # Guarded priors never return 0; floor anyway so a directly-constructed
-            # PriorWeightedAcquisition with a raw prior cannot produce log(0) = -inf.
-            prior_val = max(float(self.prior_fn(config)), MIN_DENSITY)
-            log_priors[i] = np.log(prior_val)
+        log_priors = _LogPrior.apply(X, self._log_density).to(base_values)
 
         # Average the per-point log-priors over q, then scale by the decayed exponent
         if X.ndim >= 3:
-            q = X.shape[-2]
-            log_prior_term = log_priors.reshape(-1, q).mean(dim=-1)
+            log_prior_term = log_priors.mean(dim=-1)
         else:
             log_prior_term = log_priors
         log_prior_term = self.prior_exponent * log_prior_term

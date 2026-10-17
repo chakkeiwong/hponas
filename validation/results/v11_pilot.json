@@ -1,0 +1,1438 @@
+{
+  "mode": "pilot",
+  "n_replicates": 5,
+  "n_trials": 25,
+  "manifest_digest": null,
+  "voided": false,
+  "void_reason": null,
+  "elapsed_s": 1073.3996856212616,
+  "family": {
+    "name": "tier1_gate",
+    "declared_size": 6,
+    "tested_here": [
+      "V11a",
+      "V11b"
+    ],
+    "alpha_family": 0.05
+  },
+  "holm": [
+    {
+      "entry_id": "V11b",
+      "p_value": 0.017198280171982803,
+      "rank": 1,
+      "adjusted_alpha": 0.008333333333333333,
+      "reject": false
+    },
+    {
+      "entry_id": "V11a",
+      "p_value": 0.019498050194980503,
+      "rank": 2,
+      "adjusted_alpha": 0.01,
+      "reject": false
+    }
+  ],
+  "entries": {
+    "V11a": {
+      "entry_id": "V11a",
+      "test": "superiority_one_sided",
+      "point_estimate": 0.06044215557270306,
+      "threshold": 0.0,
+      "p_value": 0.019498050194980503,
+      "alpha_used": 0.01,
+      "lower_bound": -0.00013347292813302355,
+      "clears": false,
+      "n_clusters": 8,
+      "n_blocks": 40,
+      "draws": 10000,
+      "verdict": "inconclusive",
+      "clusters": [
+        {
+          "cluster": "branin_2d::pibo",
+          "n_blocks": 5,
+          "mean": -0.0001363090934057664
+        },
+        {
+          "cluster": "branin_2d::priorband",
+          "n_blocks": 5,
+          "mean": -0.0003788463476863122
+        },
+        {
+          "cluster": "hartmann_3d::pibo",
+          "n_blocks": 5,
+          "mean": -4.092066079496217e-05
+        },
+        {
+          "cluster": "hartmann_3d::priorband",
+          "n_blocks": 5,
+          "mean": 0.1489510376714587
+        },
+        {
+          "cluster": "rl_proxy_3d::pibo",
+          "n_blocks": 5,
+          "mean": 1.1017811043558368e-05
+        },
+        {
+          "cluster": "rl_proxy_3d::priorband",
+          "n_blocks": 5,
+          "mean": 0.18212311522685562
+        },
+        {
+          "cluster": "sampler_proxy_2d::pibo",
+          "n_blocks": 5,
+          "mean": 5.920103485412302e-06
+        },
+        {
+          "cluster": "sampler_proxy_2d::priorband",
+          "n_blocks": 5,
+          "mean": 0.15300222987066828
+        }
+      ],
+      "missingness": {
+        "planned": 40,
+        "complete": 40,
+        "loss_fraction": 0.0,
+        "dropped": [],
+        "voids_campaign": false
+      }
+    },
+    "V11b": {
+      "entry_id": "V11b",
+      "test": "non_inferiority_one_sided",
+      "point_estimate": -0.02485500355491992,
+      "threshold": -0.1,
+      "p_value": 0.017198280171982803,
+      "alpha_used": 0.008333333333333333,
+      "lower_bound": -0.11251324838263935,
+      "clears": false,
+      "n_clusters": 8,
+      "n_blocks": 40,
+      "draws": 10000,
+      "verdict": "inconclusive",
+      "clusters": [
+        {
+          "cluster": "branin_2d::pibo",
+          "n_blocks": 5,
+          "mean": 2.5846974180311387e-05
+        },
+        {
+          "cluster": "branin_2d::priorband",
+          "n_blocks": 5,
+          "mean": -8.410679233099363e-05
+        },
+        {
+          "cluster": "hartmann_3d::pibo",
+          "n_blocks": 5,
+          "mean": -0.14829117020883822
+        },
+        {
+          "cluster": "hartmann_3d::priorband",
+          "n_blocks": 5,
+          "mean": 0.02191965120823306
+        },
+        {
+          "cluster": "rl_proxy_3d::pibo",
+          "n_blocks": 5,
+          "mean": -1.1378376765833308e-05
+        },
+        {
+          "cluster": "rl_proxy_3d::priorband",
+          "n_blocks": 5,
+          "mean": -0.021202003312688233
+        },
+        {
+          "cluster": "sampler_proxy_2d::pibo",
+          "n_blocks": 5,
+          "mean": -3.1530447529708262e-06
+        },
+        {
+          "cluster": "sampler_proxy_2d::priorband",
+          "n_blocks": 5,
+          "mean": -0.05119371488639646
+        }
+      ],
+      "missingness": {
+        "planned": 40,
+        "complete": 40,
+        "loss_fraction": 0.0,
+        "dropped": [],
+        "voids_campaign": false
+      }
+    }
+  },
+  "prior_support": [
+    {
+      "task_id": "branin_2d",
+      "arm": "folklore_prior",
+      "density_at_optimum": 8.60123729362492,
+      "mean_density": 1.0012719092547475,
+      "ratio_to_mean": 8.590311197311896,
+      "guard_floor": 0.050000000000000044,
+      "has_support": true
+    },
+    {
+      "task_id": "branin_2d",
+      "arm": "wrong_prior",
+      "density_at_optimum": 0.05000000356424307,
+      "mean_density": 0.9190509574780269,
+      "ratio_to_mean": 0.05440395133415493,
+      "guard_floor": 0.050000000000000044,
+      "has_support": true
+    },
+    {
+      "task_id": "hartmann_3d",
+      "arm": "folklore_prior",
+      "density_at_optimum": 27.153169567185614,
+      "mean_density": 0.9413352162823241,
+      "ratio_to_mean": 28.845377393213205,
+      "guard_floor": 0.050000000000000044,
+      "has_support": true
+    },
+    {
+      "task_id": "hartmann_3d",
+      "arm": "wrong_prior",
+      "density_at_optimum": 0.0500000000007649,
+      "mean_density": 1.2339521417062893,
+      "ratio_to_mean": 0.04052021007202573,
+      "guard_floor": 0.050000000000000044,
+      "has_support": true
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "arm": "folklore_prior",
+      "density_at_optimum": 27.483143781253325,
+      "mean_density": 0.9515369291301332,
+      "ratio_to_mean": 28.88289769938577,
+      "guard_floor": 0.050000000000000044,
+      "has_support": true
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "arm": "wrong_prior",
+      "density_at_optimum": 0.05000000000706158,
+      "mean_density": 1.3184389772493963,
+      "ratio_to_mean": 0.03792363611046639,
+      "guard_floor": 0.050000000000000044,
+      "has_support": true
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "arm": "folklore_prior",
+      "density_at_optimum": 6.668433777560852,
+      "mean_density": 1.0038546326007722,
+      "ratio_to_mean": 6.642828115744577,
+      "guard_floor": 0.050000000000000044,
+      "has_support": true
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "arm": "wrong_prior",
+      "density_at_optimum": 0.05000494647387118,
+      "mean_density": 1.0511680444578881,
+      "ratio_to_mean": 0.04757083963645403,
+      "guard_floor": 0.050000000000000044,
+      "has_support": true
+    }
+  ],
+  "studies": [
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9000,
+      "best_value": 0.4093663527766864,
+      "n_trials": 25,
+      "elapsed_s": 13.444259643554688,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9001,
+      "best_value": 0.4163601179565539,
+      "n_trials": 25,
+      "elapsed_s": 13.325067043304443,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9002,
+      "best_value": 0.4255971117443629,
+      "n_trials": 25,
+      "elapsed_s": 13.152376413345337,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9003,
+      "best_value": 0.41377820320233916,
+      "n_trials": 25,
+      "elapsed_s": 15.385516166687012,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9004,
+      "best_value": 0.40048242283962665,
+      "n_trials": 25,
+      "elapsed_s": 12.804047107696533,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9000,
+      "best_value": 0.3997321093506834,
+      "n_trials": 25,
+      "elapsed_s": 16.445581912994385,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9001,
+      "best_value": 0.519353335785377,
+      "n_trials": 25,
+      "elapsed_s": 16.691043615341187,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9002,
+      "best_value": 0.5197988442257913,
+      "n_trials": 25,
+      "elapsed_s": 16.615710020065308,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9003,
+      "best_value": 0.43010120319459055,
+      "n_trials": 25,
+      "elapsed_s": 17.45818591117859,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9004,
+      "best_value": 0.4063314610920141,
+      "n_trials": 25,
+      "elapsed_s": 7.018921852111816,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9000,
+      "best_value": 0.39964567010187046,
+      "n_trials": 25,
+      "elapsed_s": 17.93856716156006,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9001,
+      "best_value": 0.42476455906215804,
+      "n_trials": 25,
+      "elapsed_s": 16.383013486862183,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9002,
+      "best_value": 0.3985878839957717,
+      "n_trials": 25,
+      "elapsed_s": 16.62834095954895,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9003,
+      "best_value": 0.3999110771158314,
+      "n_trials": 25,
+      "elapsed_s": 16.05691385269165,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9004,
+      "best_value": 0.40290542758299,
+      "n_trials": 25,
+      "elapsed_s": 15.440510511398315,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9000,
+      "best_value": 1.4093634239275215,
+      "n_trials": 24,
+      "elapsed_s": 0.001020193099975586,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9001,
+      "best_value": 2.510663195988549,
+      "n_trials": 24,
+      "elapsed_s": 0.0007524490356445312,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9002,
+      "best_value": 0.8341318954083476,
+      "n_trials": 24,
+      "elapsed_s": 0.0007638931274414062,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9003,
+      "best_value": 0.43781310959101205,
+      "n_trials": 24,
+      "elapsed_s": 0.0007085800170898438,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9004,
+      "best_value": 2.064323390602193,
+      "n_trials": 24,
+      "elapsed_s": 0.0007252693176269531,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9000,
+      "best_value": 0.400813497323357,
+      "n_trials": 24,
+      "elapsed_s": 0.016985654830932617,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9001,
+      "best_value": 2.318135461180857,
+      "n_trials": 24,
+      "elapsed_s": 0.021233797073364258,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9002,
+      "best_value": 2.127843509409555,
+      "n_trials": 24,
+      "elapsed_s": 0.02341318130493164,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9003,
+      "best_value": 1.0114660723972086,
+      "n_trials": 24,
+      "elapsed_s": 0.015661239624023438,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9004,
+      "best_value": 1.980950516354115,
+      "n_trials": 24,
+      "elapsed_s": 0.016768217086791992,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9000,
+      "best_value": 0.400813497323357,
+      "n_trials": 24,
+      "elapsed_s": 0.016736507415771484,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9001,
+      "best_value": 0.7469287413953545,
+      "n_trials": 24,
+      "elapsed_s": 0.021394968032836914,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9002,
+      "best_value": 0.4252422910925624,
+      "n_trials": 24,
+      "elapsed_s": 0.023647785186767578,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9003,
+      "best_value": 1.0114660723972086,
+      "n_trials": 24,
+      "elapsed_s": 0.01567673683166504,
+      "error": null
+    },
+    {
+      "task_id": "branin_2d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9004,
+      "best_value": 4.801255797383524,
+      "n_trials": 24,
+      "elapsed_s": 0.016787290573120117,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9000,
+      "best_value": -3.862770338107063,
+      "n_trials": 25,
+      "elapsed_s": 22.550037384033203,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9001,
+      "best_value": -3.8626864073917098,
+      "n_trials": 25,
+      "elapsed_s": 25.627054691314697,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9002,
+      "best_value": -3.8626392258526794,
+      "n_trials": 25,
+      "elapsed_s": 19.60543656349182,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9003,
+      "best_value": -3.8627211987265455,
+      "n_trials": 25,
+      "elapsed_s": 22.573278427124023,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9004,
+      "best_value": -3.862568401448826,
+      "n_trials": 25,
+      "elapsed_s": 21.409515619277954,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9000,
+      "best_value": -3.862500303896355,
+      "n_trials": 25,
+      "elapsed_s": 28.803343772888184,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9001,
+      "best_value": -3.8622292229978687,
+      "n_trials": 25,
+      "elapsed_s": 27.864503860473633,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9002,
+      "best_value": -3.862452579823517,
+      "n_trials": 25,
+      "elapsed_s": 23.95827293395996,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9003,
+      "best_value": -3.8626577659767474,
+      "n_trials": 25,
+      "elapsed_s": 23.64669394493103,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9004,
+      "best_value": -3.862755361281808,
+      "n_trials": 25,
+      "elapsed_s": 25.25258731842041,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9000,
+      "best_value": -3.8619145363816143,
+      "n_trials": 25,
+      "elapsed_s": 22.429380655288696,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9001,
+      "best_value": -3.8627654650341006,
+      "n_trials": 25,
+      "elapsed_s": 24.3672878742218,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9002,
+      "best_value": -3.8621769237231676,
+      "n_trials": 25,
+      "elapsed_s": 24.605863094329834,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9003,
+      "best_value": -1.0006752969717285,
+      "n_trials": 25,
+      "elapsed_s": 24.46452522277832,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9004,
+      "best_value": -3.861772517119732,
+      "n_trials": 25,
+      "elapsed_s": 18.848236322402954,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9000,
+      "best_value": -3.6345202153302965,
+      "n_trials": 24,
+      "elapsed_s": 0.001352548599243164,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9001,
+      "best_value": -2.9771772789477238,
+      "n_trials": 24,
+      "elapsed_s": 0.0011897087097167969,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9002,
+      "best_value": -3.5164655847932917,
+      "n_trials": 24,
+      "elapsed_s": 0.001169443130493164,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9003,
+      "best_value": -3.579252627727228,
+      "n_trials": 24,
+      "elapsed_s": 0.0010881423950195312,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9004,
+      "best_value": -2.004974352241369,
+      "n_trials": 24,
+      "elapsed_s": 0.0010709762573242188,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9000,
+      "best_value": -3.720676641454353,
+      "n_trials": 24,
+      "elapsed_s": 0.02711009979248047,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9001,
+      "best_value": -3.4778248131169605,
+      "n_trials": 24,
+      "elapsed_s": 0.026866674423217773,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9002,
+      "best_value": -3.8536728856535305,
+      "n_trials": 24,
+      "elapsed_s": 0.02964925765991211,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9003,
+      "best_value": -3.7314401989721793,
+      "n_trials": 24,
+      "elapsed_s": 0.027059078216552734,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9004,
+      "best_value": -3.805600966325672,
+      "n_trials": 24,
+      "elapsed_s": 0.029900550842285156,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9000,
+      "best_value": -3.493396546830684,
+      "n_trials": 24,
+      "elapsed_s": 0.027044296264648438,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9001,
+      "best_value": -2.8281391133059035,
+      "n_trials": 24,
+      "elapsed_s": 0.027253389358520508,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9002,
+      "best_value": -3.4794910872617493,
+      "n_trials": 24,
+      "elapsed_s": 0.02989339828491211,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9003,
+      "best_value": -2.9288011135929164,
+      "n_trials": 24,
+      "elapsed_s": 0.026621103286743164,
+      "error": null
+    },
+    {
+      "task_id": "hartmann_3d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9004,
+      "best_value": -3.4059161495193484,
+      "n_trials": 24,
+      "elapsed_s": 0.027809858322143555,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9000,
+      "best_value": 96.2966116133416,
+      "n_trials": 25,
+      "elapsed_s": 16.445101499557495,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9001,
+      "best_value": 96.30117335499592,
+      "n_trials": 25,
+      "elapsed_s": 16.87259030342102,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9002,
+      "best_value": 96.30086421186994,
+      "n_trials": 25,
+      "elapsed_s": 15.59232234954834,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9003,
+      "best_value": 96.29483828391389,
+      "n_trials": 25,
+      "elapsed_s": 16.00973081588745,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9004,
+      "best_value": 96.30044825589535,
+      "n_trials": 25,
+      "elapsed_s": 17.1856906414032,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9000,
+      "best_value": 96.30169371692654,
+      "n_trials": 25,
+      "elapsed_s": 20.655780792236328,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9001,
+      "best_value": 96.29830831451439,
+      "n_trials": 25,
+      "elapsed_s": 20.723057746887207,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9002,
+      "best_value": 96.30024579131045,
+      "n_trials": 25,
+      "elapsed_s": 21.081666946411133,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9003,
+      "best_value": 96.29935322914847,
+      "n_trials": 25,
+      "elapsed_s": 21.197389841079712,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9004,
+      "best_value": 96.29984357363864,
+      "n_trials": 25,
+      "elapsed_s": 20.291333436965942,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9000,
+      "best_value": 96.29199574627707,
+      "n_trials": 25,
+      "elapsed_s": 16.839445114135742,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9001,
+      "best_value": 96.30159033377932,
+      "n_trials": 25,
+      "elapsed_s": 18.0712251663208,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9002,
+      "best_value": 96.29373964133333,
+      "n_trials": 25,
+      "elapsed_s": 15.573583602905273,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9003,
+      "best_value": 96.30042917596826,
+      "n_trials": 25,
+      "elapsed_s": 17.25841999053955,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9004,
+      "best_value": 96.3004916342758,
+      "n_trials": 25,
+      "elapsed_s": 16.700664520263672,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9000,
+      "best_value": 81.91049912407668,
+      "n_trials": 24,
+      "elapsed_s": 0.0009365081787109375,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9001,
+      "best_value": 56.84378227929157,
+      "n_trials": 24,
+      "elapsed_s": 0.0008671283721923828,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9002,
+      "best_value": 70.38248960107245,
+      "n_trials": 24,
+      "elapsed_s": 0.0008449554443359375,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9003,
+      "best_value": 65.11448229064808,
+      "n_trials": 24,
+      "elapsed_s": 0.0007929801940917969,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9004,
+      "best_value": 84.26234196731649,
+      "n_trials": 24,
+      "elapsed_s": 0.0008111000061035156,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9000,
+      "best_value": 94.11166111132763,
+      "n_trials": 24,
+      "elapsed_s": 0.028826236724853516,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9001,
+      "best_value": 93.27841451183276,
+      "n_trials": 24,
+      "elapsed_s": 0.02853560447692871,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9002,
+      "best_value": 90.9279438610191,
+      "n_trials": 24,
+      "elapsed_s": 0.031354665756225586,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9003,
+      "best_value": 88.61467103813052,
+      "n_trials": 24,
+      "elapsed_s": 0.028818368911743164,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9004,
+      "best_value": 82.64246235352306,
+      "n_trials": 24,
+      "elapsed_s": 0.03142213821411133,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9000,
+      "best_value": 74.9010039970478,
+      "n_trials": 24,
+      "elapsed_s": 0.02884697914123535,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9001,
+      "best_value": 62.029810869081544,
+      "n_trials": 24,
+      "elapsed_s": 0.02875685691833496,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9002,
+      "best_value": 66.18050335754802,
+      "n_trials": 24,
+      "elapsed_s": 0.03159165382385254,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9003,
+      "best_value": 62.158813028860735,
+      "n_trials": 24,
+      "elapsed_s": 0.02714991569519043,
+      "error": null
+    },
+    {
+      "task_id": "rl_proxy_3d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9004,
+      "best_value": 82.64246235352306,
+      "n_trials": 24,
+      "elapsed_s": 0.029208660125732422,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9000,
+      "best_value": 2.4154319130251233e-05,
+      "n_trials": 25,
+      "elapsed_s": 11.06760835647583,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9001,
+      "best_value": 1.5949954627170194e-06,
+      "n_trials": 25,
+      "elapsed_s": 12.714634895324707,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9002,
+      "best_value": 3.0493265892689303e-05,
+      "n_trials": 25,
+      "elapsed_s": 14.416483879089355,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9003,
+      "best_value": 4.168127636024754e-05,
+      "n_trials": 25,
+      "elapsed_s": 12.813271284103394,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "no_prior",
+      "seed": 9004,
+      "best_value": 2.956068346912644e-06,
+      "n_trials": 25,
+      "elapsed_s": 12.25861406326294,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9000,
+      "best_value": 2.7183288578722097e-05,
+      "n_trials": 25,
+      "elapsed_s": 17.417445421218872,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9001,
+      "best_value": 1.5561414199186108e-05,
+      "n_trials": 25,
+      "elapsed_s": 18.15954041481018,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9002,
+      "best_value": 1.454304952153429e-05,
+      "n_trials": 25,
+      "elapsed_s": 17.498565435409546,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9003,
+      "best_value": 8.51384180046988e-06,
+      "n_trials": 25,
+      "elapsed_s": 17.9029483795166,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "folklore_prior",
+      "seed": 9004,
+      "best_value": 3.9977877944907815e-06,
+      "n_trials": 25,
+      "elapsed_s": 13.28037405014038,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9000,
+      "best_value": 7.016645476531913e-07,
+      "n_trials": 25,
+      "elapsed_s": 16.804664850234985,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9001,
+      "best_value": 9.113366797513789e-05,
+      "n_trials": 25,
+      "elapsed_s": 15.337350606918335,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9002,
+      "best_value": 3.3176326342393425e-06,
+      "n_trials": 25,
+      "elapsed_s": 14.513334512710571,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9003,
+      "best_value": 1.790879602337203e-05,
+      "n_trials": 25,
+      "elapsed_s": 14.475788831710815,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "pibo",
+      "arm": "wrong_prior",
+      "seed": 9004,
+      "best_value": 4.371648965512121e-06,
+      "n_trials": 25,
+      "elapsed_s": 12.089200973510742,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9000,
+      "best_value": 0.43680332161339996,
+      "n_trials": 24,
+      "elapsed_s": 0.0011203289031982422,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9001,
+      "best_value": 0.4938251926789986,
+      "n_trials": 24,
+      "elapsed_s": 0.0007443428039550781,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9002,
+      "best_value": 0.30792269602860844,
+      "n_trials": 24,
+      "elapsed_s": 0.0007700920104980469,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9003,
+      "best_value": 0.3149034435434262,
+      "n_trials": 24,
+      "elapsed_s": 0.0006856918334960938,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "no_prior",
+      "seed": 9004,
+      "best_value": 0.001187236052973703,
+      "n_trials": 24,
+      "elapsed_s": 0.0007107257843017578,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9000,
+      "best_value": 0.44669727969605044,
+      "n_trials": 24,
+      "elapsed_s": 0.01880621910095215,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9001,
+      "best_value": 0.13008092250037478,
+      "n_trials": 24,
+      "elapsed_s": 0.023131847381591797,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9002,
+      "best_value": 0.00294952532124651,
+      "n_trials": 24,
+      "elapsed_s": 0.025385379791259766,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9003,
+      "best_value": 0.13217572445837042,
+      "n_trials": 24,
+      "elapsed_s": 0.01738572120666504,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "folklore_prior",
+      "seed": 9004,
+      "best_value": 0.03947673112035631,
+      "n_trials": 24,
+      "elapsed_s": 0.018555164337158203,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9000,
+      "best_value": 0.28477371394012135,
+      "n_trials": 24,
+      "elapsed_s": 0.018591642379760742,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9001,
+      "best_value": 0.24334480834592984,
+      "n_trials": 24,
+      "elapsed_s": 0.023468732833862305,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9002,
+      "best_value": 0.5276852648870879,
+      "n_trials": 24,
+      "elapsed_s": 0.025563478469848633,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9003,
+      "best_value": 0.47011067181456934,
+      "n_trials": 24,
+      "elapsed_s": 0.017538785934448242,
+      "error": null
+    },
+    {
+      "task_id": "sampler_proxy_2d",
+      "method": "priorband",
+      "arm": "wrong_prior",
+      "seed": 9004,
+      "best_value": 0.2974944340832799,
+      "n_trials": 24,
+      "elapsed_s": 0.018712282180786133,
+      "error": null
+    }
+  ]
+}

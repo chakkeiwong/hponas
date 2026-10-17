@@ -32,6 +32,7 @@ class Knob:
         prior: optional expert belief (consumed by πBO/PriorBand in T1, inert before)
         note: free text for units and meaning (documentation)
     """
+
     name: str
     kind: KnobKind
     bounds: tuple[float, float] | list[Any]
@@ -41,15 +42,37 @@ class Knob:
     note: str = ""
 
     def __post_init__(self) -> None:
+        if (
+            self.kind == "integer"
+        ):  # compatibility spelling; serialized schema uses ordinal
+            self.kind = "ordinal"
+        if self.kind not in ("continuous", "ordinal", "categorical"):
+            raise ValueError(f"Unknown knob kind: {self.kind}")
+        if self.transform not in ("none", "log", "logit"):
+            raise ValueError(f"Unknown transform: {self.transform}")
         if self.kind in ["continuous", "ordinal"]:
             if not isinstance(self.bounds, tuple) or len(self.bounds) != 2:
-                raise ValueError(f"{self.name}: continuous/ordinal requires (low, high) bounds")
+                raise ValueError(
+                    f"{self.name}: continuous/ordinal requires (low, high) bounds"
+                )
             low, high = self.bounds
-            if low >= high:
-                raise ValueError(f"{self.name}: bounds {self.bounds} invalid (low >= high)")
+            if self.kind == "ordinal" and (
+                not isinstance(low, int) or not isinstance(high, int)
+            ):
+                raise ValueError("Ordinal bounds must be integers")
+            if self.transform == "log" and low <= 0:
+                raise ValueError("Log bounds must be positive")
+            if self.transform == "logit" and not (0 < low < high < 1):
+                raise ValueError("Logit bounds must lie inside (0, 1)")
+            if not np.isfinite([low, high]).all() or low >= high:
+                raise ValueError(
+                    f"{self.name}: bounds {self.bounds} invalid (low >= high)"
+                )
         elif self.kind == "categorical":
             if not isinstance(self.bounds, list) or len(self.bounds) < 2:
-                raise ValueError(f"{self.name}: categorical requires list of >=2 values")
+                raise ValueError(
+                    f"{self.name}: categorical requires list of >=2 values"
+                )
 
     def to_dict(self) -> dict[str, Any]:
         """
@@ -109,7 +132,14 @@ class SearchSpace:
     conditional structure, and optional priors. Three typed kinds, not four; the
     fourth (conditional) is structural.
     """
+
     knobs: list[Knob] = field(default_factory=list)
+
+    def __post_init__(self):
+        initial = list(self.knobs)
+        self.knobs = []
+        for knob in initial:
+            self.add_knob(knob)
 
     def add_knob(self, knob: Knob) -> None:
         """Add a knob to the space."""
@@ -140,26 +170,9 @@ class SearchSpace:
         Sample one configuration from the space (unconditional uniform/log-uniform).
         Conditional knobs: sampled only when their parent condition holds.
         """
-        config: dict[str, Any] = {}
-        for knob in self.knobs:
-            if knob.condition:
-                parent_name, parent_value = knob.condition
-                if config.get(parent_name) != parent_value:
-                    continue  # condition not met, skip this knob
+        from hponas.encoding import SpaceEncoder
 
-            if knob.kind == "continuous":
-                low, high = knob.bounds
-                if knob.transform == "log":
-                    val = np.exp(rng.uniform(np.log(low), np.log(high)))
-                else:
-                    val = rng.uniform(low, high)
-                config[knob.name] = float(val)
-            elif knob.kind == "ordinal":
-                low, high = knob.bounds
-                config[knob.name] = int(rng.integers(low, high + 1))
-            elif knob.kind == "categorical":
-                config[knob.name] = rng.choice(knob.bounds)
-        return config
+        return SpaceEncoder(self).decode(rng.uniform(size=self.dim), sampling=True)
 
     def validate_config(self, config: dict[str, Any]) -> None:
         """
@@ -203,7 +216,9 @@ class SearchSpace:
         elif knob.kind == "ordinal":
             low, high = knob.bounds
             if not (isinstance(val, int) and low <= val <= high):
-                raise ValueError(f"{knob.name}: {val} not an integer in [{low}, {high}]")
+                raise ValueError(
+                    f"{knob.name}: {val} not an integer in [{low}, {high}]"
+                )
         elif knob.kind == "categorical":
             if val not in knob.bounds:
                 raise ValueError(f"{knob.name}: {val} not in {knob.bounds}")

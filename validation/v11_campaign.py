@@ -4,11 +4,11 @@ V11 campaign harness: three arms, two method families, paired study replicates.
 Survey reference: Ch 8 sec:priors, roadmap-10 / ch08-03. Authority:
 `validation/protocols.json` entries V11a and V11b.
 
-Both entries carry the same `implementation_requirement`: "Tests the actual piBO decay
-multiplier and the actual PriorBand rung portfolio. GP-mean substitution and top-K sampling
-are different methods and do not satisfy this entry." So the arms below drive
-`GPqLogEISearcher(prior_fn=...)` and `PriorBandSampler(prior_fn=...)` directly. No
-surrogate for the prior mechanism appears anywhere in this file.
+Both entries require the actual piBO decay multiplier and actual PriorBand rung
+portfolio. The piBO arm uses `GPqLogEISearcher` directly. The current PriorBand
+arm is only a heuristic diagnostic: artificial rung labels do not implement the
+published Hyperband policy. PRI-01 records the missing reference conformance and
+scheduler integration. This harness cannot certify that method until repaired.
 
 Design, following the register:
 
@@ -25,13 +25,10 @@ Pilot and confirmatory runs differ only in seed block and replicate count. Pilot
 sizes the confirmatory campaign; `policy.power.pilot_data_reuse` is `forbidden`, so the
 seed blocks are disjoint by construction (see `v11_tasks.PILOT_SEED_BASE`).
 
-Executing a *confirmatory* campaign is gated: `validation/protocols.json` is `status:
-DRAFT` and `docs/progress.md` records the protocols as blocked on Codex re-review, pilot
-report, and PI certification "before any campaign spend". `run_campaign` refuses
-`mode="confirmatory"` unless the register says otherwise or the caller passes
-`allow_draft=True` deliberately. The pilot is not gated — the register asks for a pilot
-report as a precondition to certification, so running one is the way forward, not a
-shortcut past it.
+Confirmatory execution requires implementation conformance, a certified protocol
+and a matching signed manifest; `allow_draft` cannot bypass these checks. Pilot
+outputs are always inconclusive for acceptance. A callable pilot interface does
+not supply the master program's missing design, authorization or resource budget.
 """
 
 from __future__ import annotations
@@ -89,8 +86,7 @@ ENTRY_ARMS = {"V11a": "folklore_prior", "V11b": "wrong_prior"}
 #: pilot's job is variance estimation, not a best-effort optimization result.
 DEFAULT_N_TRIALS = 25
 
-#: PriorBand rungs. The rung index drives the portfolio's prior→incumbent decay, which is
-#: the mechanism under test, so a single-rung run would not exercise the entry.
+#: Artificial rung labels in the retained heuristic diagnostic, not Hyperband rungs.
 DEFAULT_N_RUNGS = 3
 
 
@@ -211,24 +207,27 @@ def run_priorband_study(
     n_rungs: int = DEFAULT_N_RUNGS,
 ) -> StudyResult:
     """
-    One PriorBand study replicate: the real rung portfolio across `n_rungs` rungs.
+    One retained heuristic diagnostic, not faithful PriorBand acceptance.
 
     `PriorBandSampler.propose(n, rung_idx)` shifts weight from the prior to incumbent
-    perturbations as the rung index rises, which is the mechanism the entry names. The
+    perturbations as the artificial rung index rises; this is not the published policy. The
     sampler's `observe` treats larger as better, so minimized objectives are negated on the
     way in — the returned `best_value` stays in the task's own units.
     """
+    for name, value in (("n_trials", n_trials), ("n_rungs", n_rungs)):
+        if type(value) is not int or value < 1:
+            raise ValueError(f"{name} must be a positive integer")
     started = time.time()
     space = task.space()
     try:
         sampler = PriorBandSampler(
             space, prior_fn=_prior_for_arm(task, arm, space), seed=seed
         )
-        per_rung = max(1, n_trials // n_rungs)
+        per_rung, remainder = divmod(n_trials, n_rungs)
         best: Optional[float] = None
         spent = 0
         for rung_idx in range(n_rungs):
-            budget = min(per_rung, n_trials - spent)
+            budget = per_rung + int(rung_idx < remainder)
             if budget <= 0:
                 break
             for config in sampler.propose(budget, rung_idx=rung_idx):
@@ -310,7 +309,11 @@ def blocks_for_entry(
 def _cluster_bounds(tasks: dict[str, AcceptanceTask]) -> dict[str, Any]:
     """Scale bounds keyed by the `task::method` cluster label."""
     base = scale_bounds_by_task(tasks)
-    return {f"{task_id}::{method}": bounds for task_id, bounds in base.items() for method in METHODS}
+    return {
+        f"{task_id}::{method}": bounds
+        for task_id, bounds in base.items()
+        for method in METHODS
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -346,6 +349,8 @@ class CampaignResult:
         """
         if self.voided:
             return "void"
+        if self.mode != "confirmatory" or self.manifest_digest is None:
+            return "inconclusive"
         decision = next((d for d in self.holm if d.entry_id == entry_id), None)
         if decision is None:
             return "not_tested"
@@ -359,6 +364,9 @@ class CampaignResult:
             "n_replicates": self.n_replicates,
             "n_trials": self.n_trials,
             "manifest_digest": self.manifest_digest,
+            "implementation_notes": {
+                "priorband": "Heuristic diagnostic; published portfolio and real scheduler conformance unresolved under PRI-01."
+            },
             "voided": self.voided,
             "void_reason": self.void_reason,
             "elapsed_s": self.elapsed_s,
@@ -373,7 +381,11 @@ class CampaignResult:
                 entry_id: {
                     **test.to_dict(
                         alpha=next(
-                            (d.adjusted_alpha for d in self.holm if d.entry_id == entry_id),
+                            (
+                                d.adjusted_alpha
+                                for d in self.holm
+                                if d.entry_id == entry_id
+                            ),
                             DEFAULT_ALPHA,
                         )
                     ),
@@ -395,9 +407,9 @@ def _register_permits_confirmatory() -> tuple[bool, str]:
     """
     Whether the protocol register permits confirmatory spend.
 
-    The register's own `status_note` is the gate: while it reads DRAFT and names Codex
-    re-review, a pilot report, and PI certification as outstanding, a confirmatory campaign
-    would be spending against protocols that are not yet certified.
+    The register status is an administrative prerequisite, not scientific evidence.
+    D-OBJECTIVE-EVIDENCE forbids approval from overriding method/design failures;
+    the surrounding conformance and inference guards still determine readiness.
     """
     if not PROTOCOLS_PATH.exists():
         return False, f"protocol register not found at {PROTOCOLS_PATH}"
@@ -422,6 +434,7 @@ def run_campaign(
     bootstrap_seed: int = 0,
     allow_draft: bool = False,
     progress: bool = False,
+    manifest_path: Optional[Path] = None,
 ) -> CampaignResult:
     """
     Run the V11 campaign end to end and decide V11a and V11b.
@@ -434,29 +447,76 @@ def run_campaign(
             which should instead be sized from pilot variance via
             `validation.stats.size_by_simulation`.
         n_trials: trial budget per replicate; the declared endpoint.
-        allow_draft: run confirmatorily against a non-certified register anyway. Present so
-            the refusal is a deliberate override rather than an obstacle, and recorded in
-            the artifact when used.
+        allow_draft: retained for compatibility; cannot override confirmatory certification.
+        manifest_path: required frozen recipe for confirmatory execution.
 
     Raises:
         RuntimeError: for `mode="confirmatory"` while the register is not certified and
-            `allow_draft` is False.
+            the source/task/seed manifest cannot be verified.
     """
     if mode not in ("pilot", "confirmatory"):
-        raise ValueError(f"run_campaign: mode must be 'pilot' or 'confirmatory', got {mode!r}")
+        raise ValueError(
+            f"run_campaign: mode must be 'pilot' or 'confirmatory', got {mode!r}"
+        )
 
-    if mode == "confirmatory" and not allow_draft:
-        permitted, why = _register_permits_confirmatory()
-        if not permitted:
-            raise RuntimeError(
-                "Refusing confirmatory V11 campaign: " + why + ". "
-                "Run mode='pilot' to produce the pilot report the certification needs, or "
-                "pass allow_draft=True to override deliberately."
-            )
-
+    if mode == "confirmatory" and allow_draft:
+        raise ValueError("Draft overrides cannot certify a campaign; use pilot mode")
+    if mode == "confirmatory":
+        if len(methods) != len(METHODS) or set(methods) != set(METHODS):
+            raise ValueError("V11 requires both piBO and PriorBand; partial methods cannot certify the entries")
+        raise RuntimeError(
+            "Refusing confirmatory V11 campaign: faithful PriorBand portfolio and "
+            "scheduler conformance remain unresolved (PRI-01 / D-PROTOCOL)."
+        )
     tasks = tasks if tasks is not None else V11_ACCEPTANCE_TASKS
     n_replicates = n_replicates if n_replicates is not None else 5
-    seeds = pilot_seeds(n_replicates) if mode == "pilot" else confirmatory_seeds(n_replicates)
+    seeds = (
+        pilot_seeds(n_replicates)
+        if mode == "pilot"
+        else confirmatory_seeds(n_replicates)
+    )
+    manifest_digest = None
+    if mode == "confirmatory":
+        permitted, why = _register_permits_confirmatory()
+        if not permitted:
+            raise RuntimeError("Refusing confirmatory V11 campaign: " + why)
+        if manifest_path is None:
+            raise ValueError("Confirmatory execution requires a frozen manifest")
+        from tools import verify_manifest as verifier
+        from validation.evidence import source_digest, digest
+        import subprocess
+
+        manifest_path = Path(manifest_path)
+        manifest = verifier.load_manifest(manifest_path)
+        verifier.check_required_fields(manifest)
+        verifier.check_commit_sha(manifest["commit_sha"])
+        verifier.check_registry_digest(manifest)
+        verifier.check_entry_ids(manifest, verifier.load_protocols())
+        verifier.check_scale_bounds(manifest)
+        verifier.check_seed_disjointness(manifest)
+        verifier.check_timestamp(manifest)
+        verifier.check_signature(manifest)
+        head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+        if (
+            manifest["commit_sha"] != head
+            or manifest.get("source_digest") != source_digest()
+        ):
+            raise ValueError(
+                "Manifest must freeze the current commit and source fingerprint"
+            )
+        if manifest["task_registry"] != _cluster_bounds(tasks):
+            raise ValueError("Executed tasks differ from the manifest")
+        if set(manifest["entry_ids"]) != set(ENTRY_ARMS):
+            raise ValueError("Manifest entries differ")
+        for entry, arm in ENTRY_ARMS.items():
+            expected = {"no_prior": seeds, arm: seeds}
+            if manifest["seed_sets"].get(entry) != expected:
+                raise ValueError("Executed seeds differ from manifest")
+        if manifest.get("n_trials") != n_trials or manifest.get("methods") != list(
+            methods
+        ):
+            raise ValueError("Executed budget/methods differ from manifest")
+        manifest_digest = digest(manifest_path)
 
     started = time.time()
     study_results: list[StudyResult] = []
@@ -469,9 +529,7 @@ def run_campaign(
             runner = STUDY_RUNNERS[method]
             for arm in ARMS:
                 for seed in seeds:
-                    study_results.append(
-                        runner(task, arm, seed, n_trials=n_trials)
-                    )
+                    study_results.append(runner(task, arm, seed, n_trials=n_trials))
                     done += 1
                     if progress:
                         print(
@@ -527,6 +585,7 @@ def run_campaign(
         voided=voided,
         void_reason=void_reason,
         elapsed_s=time.time() - started,
+        manifest_digest=manifest_digest,
     )
 
 
@@ -550,11 +609,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="V11 Prior Recovery Campaign")
     parser.add_argument("--mode", choices=["pilot", "confirmatory"], default="pilot")
+    parser.add_argument("--manifest", type=Path)
     parser.add_argument("--replicates", type=int, default=None)
-    parser.add_argument("--output", type=Path, default=Path("validation/results/v11_campaign.json"))
+    parser.add_argument(
+        "--output", type=Path, default=Path("validation/results/v11_campaign.json")
+    )
     args = parser.parse_args()
 
-    result = run_campaign(mode=args.mode, n_replicates=args.replicates)
+    result = run_campaign(
+        mode=args.mode, n_replicates=args.replicates, manifest_path=args.manifest
+    )
     output_path = write_artifact(result, args.output)
     print(f"Campaign completed. Results written to: {output_path}")
-    return path

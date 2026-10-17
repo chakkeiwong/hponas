@@ -73,7 +73,7 @@ class ScaleBounds:
     direction: Direction = "minimize"
 
     def __post_init__(self) -> None:
-        if not self.high > self.low:
+        if not np.isfinite([self.low, self.high]).all() or not self.high > self.low:
             raise ValueError(f"ScaleBounds: high ({self.high}) must exceed low ({self.low})")
         if self.direction not in ("minimize", "maximize"):
             raise ValueError(f"ScaleBounds: unknown direction {self.direction!r}")
@@ -182,13 +182,20 @@ def build_clusters(
     """
     by_task: dict[str, list[float]] = {}
     dropped: list[tuple[str, int]] = []
+    seen = set()
 
     for block in blocks:
+        key = (block.task, block.seed)
+        if key in seen:
+            raise ValueError("Duplicate paired task/seed block")
+        seen.add(key)
         if block.task not in bounds_by_task:
             raise KeyError(f"No declared scale bounds for task {block.task!r}")
         if not block.complete:
             dropped.append((block.task, block.seed))
             continue
+        if not np.isfinite([block.arm_value, block.comparator_value]).all():
+            raise ValueError("Nonfinite paired observation")
         diff = bounds_by_task[block.task].normalized_difference(
             block.arm_value, block.comparator_value  # type: ignore[arg-type]
         )
@@ -272,6 +279,11 @@ def paired_cluster_bootstrap(
     """
     if not clusters:
         raise ValueError("paired_cluster_bootstrap: no clusters")
+    if len({c.task for c in clusters}) != len(clusters):
+        raise ValueError("Duplicate task clusters")
+    if any(c.differences.ndim != 1 or not c.n_blocks or not np.isfinite(c.differences).all()
+           for c in clusters):
+        raise ValueError("Empty or nonfinite cluster")
     if draws < 1:
         raise ValueError(f"paired_cluster_bootstrap: draws must be positive, got {draws}")
 
@@ -447,6 +459,8 @@ def holm_bonferroni(
         larger p-value fails too — that step-down property is what holds the family-wise
         rate at alpha.
     """
+    if not 0 < alpha < 1 or any(not np.isfinite(p) or not 0 <= p <= 1 for p in p_values.values()):
+        raise ValueError("Invalid family alpha or p-value")
     if family_size is not None:
         if family_size < len(p_values):
             raise ValueError(
@@ -504,7 +518,7 @@ def variance_upper_bound(
     (policy.power.pilot_variance_treatment).
     """
     arr = np.asarray(values, dtype=float)
-    if arr.size < 2:
+    if arr.ndim != 1 or not np.isfinite(arr).all() or arr.size < 2:
         raise ValueError("variance_upper_bound: need at least 2 observations")
     if not 0.0 < confidence < 1.0:
         raise ValueError(f"variance_upper_bound: confidence must be in (0, 1), got {confidence}")

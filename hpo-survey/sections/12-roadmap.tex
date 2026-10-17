@@ -1,6 +1,49 @@
 \chapter{What to build, in what order}
 \label{sec:roadmap}
 
+\paragraph{Prospective V07 scope amendment, 2026-10-08.}
+D-DEHB-FINITE replaces the historical RL ranking and default rules with six
+finite owned DEHB method, mathematical training, work and recovery cases.
+The exact contract is in \texttt{validation/protocols.json}. Historical rules
+and outcomes remain archived; a finite PASS establishes only opt-in serial
+conformance. Selective GP robustness remains a separate implementation stage.
+
+
+\paragraph{Prospective V15 scope amendment, 2026-10-08.}
+D-IFBO-FINITE supersedes the historical V15 statistical comparison below.
+Six explicit known-answer tuning cases compare the original pretrained ifBO
+reference with ASHA at equal physical gradient-update budgets. Every case must
+be no worse within the fixed numerical envelope before integration is enabled.
+FAIL or INCONCLUSIVE cancels V15b. No fallback surrogate, calibration, general
+effectiveness or default claim follows. Originals remain archived.
+
+
+\paragraph{Prospective V08 scope amendment, 2026-10-08.}
+D-POPULATION-KNOWN-ANSWER supersedes the historical V08 superiority,
+non-inferiority, 4/16-worker and default rules below. Current V08 checks ten
+exposed finite local PBT/PB2-Mix/BG-PBT mathematical, transfer, recovery and
+physical-work controls. Exact rules are in \texttt{validation/protocols.json}.
+Original designs/outcomes remain archived; none is reclassified as a success.
+Any PASS permits only finite local opt-in conformance. Statistical performance,
+simulator adapters and distributed readiness require separate evidence.
+
+
+\paragraph{Prospective Tier-1 scope amendment, 2026-10-07.}
+D-TIER1-KNOWN-ANSWER supersedes the historical statistical/default rules for
+V04-T1, V06, V09, V10, V11a/V11b and V13 below, and adds V-COST.
+The current contracts check finite mathematical models, actual training work,
+method identity and recovery; exact rosters and independent references live in
+\texttt{validation/protocols.json}. Historical empirical thresholds, six-entry
+Holm family, default promotions, culling permission and broad calibration
+claims are retired prospectively, with original outcomes preserved.
+All capabilities remain opt-in. In particular, a finite V06 PASS cannot activate
+ASHA/median, V10 cannot certify experimental culling, and Gaussian V13 cannot
+establish SBC, general posterior calibration, learned transport or NUTS.
+Later V07/V08/V12/V15 retain separate evidence obligations. Historical arguments
+below are design background, not authority to change current consequences.
+No engineering test or human decision supplies scientific acceptance.
+
+
 The survey supports a fairly confident ordering of implementation work. The
 principle behind the ordering: ship the methods with the strongest
 evidence-per-line-of-code first, and let each tier's infrastructure carry
@@ -28,7 +71,7 @@ Capability & What it buys us & When it applies & Cost & Verdict & Ch. \\
 \midrule
 Sobol + log sampling & honest coverage of every axis & always; also the GP's opening phase & days & T0 & \ref{sec:modelfree} \\
 Random-search baseline & the bar every searcher must clear & validation suite & days & T0 & \ref{sec:modelfree} \\
-ASHA + median rule & kills bad trials early; the biggest single saving & any workload with learning curves & days & T0 & \ref{sec:multifidelity} \\
+ASHA + median rule & kills bad trials early; the biggest single saving & any workload with learning curves; opt-in; finite V06 cannot activate a default & days & T0 & \ref{sec:multifidelity} \\
 TPE (wrap Optuna) & conditional and categorical spaces from few trials & mixed spaces, cheaper trials & days & T0 & \ref{sec:bayesian} \\
 GP + qLogEI (BoTorch) & the most information per expensive trial & costly, noisy trials & weeks & T0 & \ref{sec:bayesian} \\
 Dimension-scaled priors & reliability past ten dimensions & always on & hours & T0 & \ref{sec:bayesian} \\

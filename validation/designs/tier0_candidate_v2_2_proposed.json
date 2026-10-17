@@ -1,0 +1,4391 @@
+{
+  "schema_version": 2,
+  "kind": "tier0-comparison-design",
+  "version": "2.2-proposed",
+  "status": "candidate",
+  "source_digest": null,
+  "arms": {
+    "V04-T0": [
+      "gp_log",
+      "tpe_log",
+      "sobol_log",
+      "random_log"
+    ],
+    "V05": [
+      "gp_log",
+      "gp_linear"
+    ]
+  },
+  "endpoints": {
+    "V04-T0": [
+      "final_win",
+      "anytime_win"
+    ],
+    "V05": [
+      "final_win"
+    ]
+  },
+  "entry_tasks": {
+    "V04-T0": [
+      "brax-ant-ppo-100k-v1",
+      "brax-halfcheetah-ppo-100k-v1",
+      "brax-hopper-ppo-100k-v1"
+    ],
+    "V05": [
+      "brax-ant-ppo-100k-v1",
+      "brax-halfcheetah-ppo-100k-v1",
+      "brax-hopper-ppo-100k-v1"
+    ]
+  },
+  "tasks": {
+    "brax-ant-ppo-100k-v1": {
+      "adapter": "brax_ppo",
+      "cluster_id": "ant",
+      "version": "brax-0.14.2-ppo-100k-v1",
+      "provenance": {
+        "source": "Brax PPO environment assets and package versions must be pinned before freeze",
+        "selection": "Candidate environments from the registered real-PPO scope; no performance screening",
+        "installed_source": {
+          "url": "https://github.com/google/brax.git",
+          "vcs_info": {
+            "commit_id": "57d5b863fcc66a29a2e043182c07a14a3dee3a7c",
+            "vcs": "git"
+          }
+        },
+        "freeze_note": "Read-only asset/version snapshot and frozen initialization; no PPO evaluation or selection by observed performance."
+      },
+      "data_sha256": "f80475fac2af5afffabfbdecedd559e582ac69f1f130eade2450c291369d544a",
+      "artifact": {
+        "path": "workloads/rl_routine.py",
+        "sha256": "53915059dd417aa4811a566d6bb5693d284fa86890cd6d21c44347ab702a1b15"
+      },
+      "space": [
+        {
+          "name": "learning_rate",
+          "kind": "continuous",
+          "bounds": [
+            1e-05,
+            0.01
+          ],
+          "transform": "log"
+        },
+        {
+          "name": "batch_size",
+          "kind": "ordinal",
+          "bounds": [
+            64,
+            512
+          ],
+          "transform": "none"
+        },
+        {
+          "name": "entropy_cost",
+          "kind": "continuous",
+          "bounds": [
+            0.0,
+            0.1
+          ],
+          "transform": "none"
+        }
+      ],
+      "initial_configs": {
+        "10000": [
+          {
+            "learning_rate": 1.0858260194278443e-05,
+            "batch_size": 86,
+            "entropy_cost": 0.0011208167299628258
+          },
+          {
+            "learning_rate": 0.007652662374575247,
+            "batch_size": 483,
+            "entropy_cost": 0.09749256111681462
+          },
+          {
+            "learning_rate": 0.000981568529398392,
+            "batch_size": 227,
+            "entropy_cost": 0.039047627616673714
+          },
+          {
+            "learning_rate": 0.0001226041919375635,
+            "batch_size": 398,
+            "entropy_cost": 0.05966253643855453
+          },
+          {
+            "learning_rate": 0.0001336329763638643,
+            "batch_size": 275,
+            "entropy_cost": 0.08203004878014326
+          }
+        ],
+        "10001": [
+          {
+            "learning_rate": 0.009394398791718698,
+            "batch_size": 207,
+            "entropy_cost": 0.0011626057326793672
+          },
+          {
+            "learning_rate": 5.3098000630792536e-05,
+            "batch_size": 507,
+            "entropy_cost": 0.07992857648059726
+          },
+          {
+            "learning_rate": 0.00017589305918674304,
+            "batch_size": 141,
+            "entropy_cost": 0.037903825752437115
+          },
+          {
+            "learning_rate": 0.000987373202769011,
+            "batch_size": 300,
+            "entropy_cost": 0.06852526487782598
+          },
+          {
+            "learning_rate": 0.0004101682978101679,
+            "batch_size": 93,
+            "entropy_cost": 0.09314648816362024
+          }
+        ],
+        "10002": [
+          {
+            "learning_rate": 0.001123117386519018,
+            "batch_size": 104,
+            "entropy_cost": 0.08291396740823985
+          },
+          {
+            "learning_rate": 8.560900746692688e-05,
+            "batch_size": 472,
+            "entropy_cost": 0.04459540713578463
+          },
+          {
+            "learning_rate": 1.3619140329790171e-05,
+            "batch_size": 240,
+            "entropy_cost": 0.06273584896698595
+          },
+          {
+            "learning_rate": 0.005538026139975306,
+            "batch_size": 335,
+            "entropy_cost": 0.002714373264461756
+          },
+          {
+            "learning_rate": 0.0018753634075391616,
+            "batch_size": 224,
+            "entropy_cost": 0.02668829057365656
+          }
+        ],
+        "10003": [
+          {
+            "learning_rate": 0.003889193963232551,
+            "batch_size": 479,
+            "entropy_cost": 0.06127986060455442
+          },
+          {
+            "learning_rate": 5.4259935678715596e-05,
+            "batch_size": 285,
+            "entropy_cost": 0.001610694918781519
+          },
+          {
+            "learning_rate": 0.00011410318351789867,
+            "batch_size": 378,
+            "entropy_cost": 0.09235173622146249
+          },
+          {
+            "learning_rate": 0.0014956168120976348,
+            "batch_size": 122,
+            "entropy_cost": 0.04553895639255643
+          },
+          {
+            "learning_rate": 0.0006502383542062464,
+            "batch_size": 299,
+            "entropy_cost": 0.022837241832166913
+          }
+        ],
+        "10004": [
+          {
+            "learning_rate": 3.2243251528139784e-05,
+            "batch_size": 436,
+            "entropy_cost": 0.09103063084185124
+          },
+          {
+            "learning_rate": 0.0006092952782695824,
+            "batch_size": 107,
+            "entropy_cost": 0.0021788078360259534
+          },
+          {
+            "learning_rate": 0.0021568812057430405,
+            "batch_size": 304,
+            "entropy_cost": 0.05852799713611603
+          },
+          {
+            "learning_rate": 0.00022900107686616686,
+            "batch_size": 186,
+            "entropy_cost": 0.047385945077985527
+          },
+          {
+            "learning_rate": 0.00011974003464068212,
+            "batch_size": 397,
+            "entropy_cost": 0.016814784798771142
+          }
+        ],
+        "20000": [
+          {
+            "learning_rate": 0.009016103841686735,
+            "batch_size": 234,
+            "entropy_cost": 0.081938542611897
+          },
+          {
+            "learning_rate": 0.00022691408356280125,
+            "batch_size": 325,
+            "entropy_cost": 0.01009012833237648
+          },
+          {
+            "learning_rate": 3.103485538844648e-05,
+            "batch_size": 81,
+            "entropy_cost": 0.053686334379017354
+          },
+          {
+            "learning_rate": 0.0008909310959551428,
+            "batch_size": 506,
+            "entropy_cost": 0.025574425607919695
+          },
+          {
+            "learning_rate": 0.0003383952146136719,
+            "batch_size": 140,
+            "entropy_cost": 0.02139157531782985
+          }
+        ],
+        "20001": [
+          {
+            "learning_rate": 0.0011757656428666818,
+            "batch_size": 465,
+            "entropy_cost": 0.09615055602043868
+          },
+          {
+            "learning_rate": 4.148668491576283e-05,
+            "batch_size": 137,
+            "entropy_cost": 0.015580185875296594
+          },
+          {
+            "learning_rate": 0.00013237209581431586,
+            "batch_size": 370,
+            "entropy_cost": 0.07116689644753933
+          },
+          {
+            "learning_rate": 0.0037516283086743638,
+            "batch_size": 239,
+            "entropy_cost": 0.04058907609432936
+          },
+          {
+            "learning_rate": 0.007209223813391522,
+            "batch_size": 306,
+            "entropy_cost": 0.005847470555454493
+          }
+        ],
+        "20002": [
+          {
+            "learning_rate": 0.0012662857129567483,
+            "batch_size": 65,
+            "entropy_cost": 0.07886469103395939
+          },
+          {
+            "learning_rate": 0.00017951157245093738,
+            "batch_size": 437,
+            "entropy_cost": 0.01463454719632864
+          },
+          {
+            "learning_rate": 1.2197042709466924e-05,
+            "batch_size": 278,
+            "entropy_cost": 0.05755154918879271
+          },
+          {
+            "learning_rate": 0.004126746083670935,
+            "batch_size": 372,
+            "entropy_cost": 0.04991282038390637
+          },
+          {
+            "learning_rate": 0.008817126174085385,
+            "batch_size": 202,
+            "entropy_cost": 0.004257501102983952
+          }
+        ],
+        "20003": [
+          {
+            "learning_rate": 0.00043146076552507285,
+            "batch_size": 378,
+            "entropy_cost": 0.028363304398953917
+          },
+          {
+            "learning_rate": 1.2184682212057798e-05,
+            "batch_size": 230,
+            "entropy_cost": 0.08600381202995777
+          },
+          {
+            "learning_rate": 0.0002593465976926041,
+            "batch_size": 482,
+            "entropy_cost": 0.009596164617687464
+          },
+          {
+            "learning_rate": 0.007325841562272038,
+            "batch_size": 69,
+            "entropy_cost": 0.05474801538512111
+          },
+          {
+            "learning_rate": 0.0018884982440841391,
+            "batch_size": 407,
+            "entropy_cost": 0.09589325198903681
+          }
+        ],
+        "20004": [
+          {
+            "learning_rate": 0.0020722046044300314,
+            "batch_size": 262,
+            "entropy_cost": 0.008049959875643253
+          },
+          {
+            "learning_rate": 9.357091461769122e-05,
+            "batch_size": 423,
+            "entropy_cost": 0.07963905530050397
+          },
+          {
+            "learning_rate": 5.0252649694184796e-05,
+            "batch_size": 160,
+            "entropy_cost": 0.035742892418056726
+          },
+          {
+            "learning_rate": 0.0010543567092604772,
+            "batch_size": 306,
+            "entropy_cost": 0.05194650422781706
+          },
+          {
+            "learning_rate": 0.00035240593022516455,
+            "batch_size": 98,
+            "entropy_cost": 0.0922267658635974
+          }
+        ],
+        "20005": [
+          {
+            "learning_rate": 0.0009412733515843139,
+            "batch_size": 323,
+            "entropy_cost": 0.05456357188522816
+          },
+          {
+            "learning_rate": 4.076469280027686e-05,
+            "batch_size": 271,
+            "entropy_cost": 0.011250986624509096
+          },
+          {
+            "learning_rate": 0.0003143928985198937,
+            "batch_size": 497,
+            "entropy_cost": 0.08504096167162062
+          },
+          {
+            "learning_rate": 0.0046617903408486825,
+            "batch_size": 101,
+            "entropy_cost": 0.03079802878201008
+          },
+          {
+            "learning_rate": 0.003070264693982167,
+            "batch_size": 454,
+            "entropy_cost": 0.017895410116761924
+          }
+        ],
+        "20006": [
+          {
+            "learning_rate": 0.0008740043576511991,
+            "batch_size": 483,
+            "entropy_cost": 0.07203335389494896
+          },
+          {
+            "learning_rate": 0.0002456477317229338,
+            "batch_size": 142,
+            "entropy_cost": 0.04951200317591429
+          },
+          {
+            "learning_rate": 1.0080182828933879e-05,
+            "batch_size": 343,
+            "entropy_cost": 0.09248904185369611
+          },
+          {
+            "learning_rate": 0.002991028105097756,
+            "batch_size": 227,
+            "entropy_cost": 0.01655649272724986
+          },
+          {
+            "learning_rate": 0.008245848954175754,
+            "batch_size": 395,
+            "entropy_cost": 0.037139848060905936
+          }
+        ],
+        "20007": [
+          {
+            "learning_rate": 0.0013694992121759272,
+            "batch_size": 290,
+            "entropy_cost": 0.027979646716266873
+          },
+          {
+            "learning_rate": 1.0841966534820868e-05,
+            "batch_size": 163,
+            "entropy_cost": 0.061138379853218794
+          },
+          {
+            "learning_rate": 7.561701853645288e-05,
+            "batch_size": 401,
+            "entropy_cost": 0.008675229083746672
+          },
+          {
+            "learning_rate": 0.009561578649015377,
+            "batch_size": 277,
+            "entropy_cost": 0.080112446192652
+          },
+          {
+            "learning_rate": 0.003412142315759839,
+            "batch_size": 501,
+            "entropy_cost": 0.07112600486725569
+          }
+        ],
+        "20008": [
+          {
+            "learning_rate": 0.0001901233648183595,
+            "batch_size": 105,
+            "entropy_cost": 0.07691550729796291
+          },
+          {
+            "learning_rate": 0.0014666336576253632,
+            "batch_size": 385,
+            "entropy_cost": 0.019931063801050187
+          },
+          {
+            "learning_rate": 0.003017209627040816,
+            "batch_size": 282,
+            "entropy_cost": 0.05068865567445755
+          },
+          {
+            "learning_rate": 1.1896107437289164e-05,
+            "batch_size": 451,
+            "entropy_cost": 0.046145702432841065
+          },
+          {
+            "learning_rate": 4.734786713649528e-05,
+            "batch_size": 178,
+            "entropy_cost": 0.0061414834111928945
+          }
+        ],
+        "20009": [
+          {
+            "learning_rate": 0.00047787854227219253,
+            "batch_size": 161,
+            "entropy_cost": 0.017992838844656946
+          },
+          {
+            "learning_rate": 3.135718937285521e-05,
+            "batch_size": 451,
+            "entropy_cost": 0.06921969056129455
+          },
+          {
+            "learning_rate": 6.526912065086595e-05,
+            "batch_size": 221,
+            "entropy_cost": 0.039615712221711875
+          },
+          {
+            "learning_rate": 0.004282570126231106,
+            "batch_size": 378,
+            "entropy_cost": 0.09778836918994785
+          },
+          {
+            "learning_rate": 0.0034491606917052367,
+            "batch_size": 263,
+            "entropy_cost": 0.05207301247864962
+          }
+        ],
+        "20010": [
+          {
+            "learning_rate": 2.153412545106179e-05,
+            "batch_size": 271,
+            "entropy_cost": 0.06904268432408571
+          },
+          {
+            "learning_rate": 0.001511871937624341,
+            "batch_size": 431,
+            "entropy_cost": 0.032004778087139134
+          },
+          {
+            "learning_rate": 0.0019876556801328533,
+            "batch_size": 130,
+            "entropy_cost": 0.096453473623842
+          },
+          {
+            "learning_rate": 0.00013958638873913612,
+            "batch_size": 293,
+            "entropy_cost": 0.009269386995583773
+          },
+          {
+            "learning_rate": 5.752818448676495e-05,
+            "batch_size": 79,
+            "entropy_cost": 0.044456967152655125
+          }
+        ],
+        "20011": [
+          {
+            "learning_rate": 2.2218746770346677e-05,
+            "batch_size": 451,
+            "entropy_cost": 0.07479150304570795
+          },
+          {
+            "learning_rate": 0.0029840079237333397,
+            "batch_size": 108,
+            "entropy_cost": 0.04526995224878192
+          },
+          {
+            "learning_rate": 0.0006052313459778921,
+            "batch_size": 307,
+            "entropy_cost": 0.08647967139258982
+          },
+          {
+            "learning_rate": 0.00010379036571595953,
+            "batch_size": 203,
+            "entropy_cost": 0.007006936799734831
+          },
+          {
+            "learning_rate": 0.00023123351172831487,
+            "batch_size": 355,
+            "entropy_cost": 0.030791581608355045
+          }
+        ],
+        "20012": [
+          {
+            "learning_rate": 6.358202484515817e-05,
+            "batch_size": 362,
+            "entropy_cost": 0.04394624810665846
+          },
+          {
+            "learning_rate": 0.0015417210768223204,
+            "batch_size": 264,
+            "entropy_cost": 0.09620952662080527
+          },
+          {
+            "learning_rate": 0.006981310808347325,
+            "batch_size": 468,
+            "entropy_cost": 0.008869312703609467
+          },
+          {
+            "learning_rate": 1.4044646560842532e-05,
+            "batch_size": 173,
+            "entropy_cost": 0.056445188075304034
+          },
+          {
+            "learning_rate": 5.431245853139614e-05,
+            "batch_size": 410,
+            "entropy_cost": 0.08600644962862135
+          }
+        ],
+        "20013": [
+          {
+            "learning_rate": 1.5065549643465859e-05,
+            "batch_size": 412,
+            "entropy_cost": 0.02327726110816002
+          },
+          {
+            "learning_rate": 0.0007076151326940908,
+            "batch_size": 282,
+            "entropy_cost": 0.07570902565494181
+          },
+          {
+            "learning_rate": 0.007678392159857786,
+            "batch_size": 332,
+            "entropy_cost": 0.035451627988368276
+          },
+          {
+            "learning_rate": 0.00015205154575624626,
+            "batch_size": 124,
+            "entropy_cost": 0.06270715333521366
+          },
+          {
+            "learning_rate": 5.9143925211377665e-05,
+            "batch_size": 366,
+            "entropy_cost": 0.08868568828329444
+          }
+        ],
+        "20014": [
+          {
+            "learning_rate": 9.616707456574537e-05,
+            "batch_size": 473,
+            "entropy_cost": 0.055774542875587946
+          },
+          {
+            "learning_rate": 0.0048660478964952895,
+            "batch_size": 130,
+            "entropy_cost": 0.04627230549231172
+          },
+          {
+            "learning_rate": 0.0013049154971322707,
+            "batch_size": 304,
+            "entropy_cost": 0.08401986751705409
+          },
+          {
+            "learning_rate": 1.0602806603590592e-05,
+            "batch_size": 186,
+            "entropy_cost": 0.018618974182754756
+          },
+          {
+            "learning_rate": 2.4906843652787528e-05,
+            "batch_size": 398,
+            "entropy_cost": 0.03177809873595834
+          }
+        ],
+        "20015": [
+          {
+            "learning_rate": 8.568480142179303e-05,
+            "batch_size": 221,
+            "entropy_cost": 0.07147642793133856
+          },
+          {
+            "learning_rate": 0.0023559059652076687,
+            "batch_size": 476,
+            "entropy_cost": 0.04163889363408089
+          },
+          {
+            "learning_rate": 0.0004913856925390592,
+            "batch_size": 163,
+            "entropy_cost": 0.08837283486500383
+          },
+          {
+            "learning_rate": 1.7928470884739162e-05,
+            "batch_size": 306,
+            "entropy_cost": 0.024363284930586815
+          },
+          {
+            "learning_rate": 3.917715456358254e-05,
+            "batch_size": 102,
+            "entropy_cost": 0.02938287975266576
+          }
+        ],
+        "20016": [
+          {
+            "learning_rate": 1.096842712487523e-05,
+            "batch_size": 308,
+            "entropy_cost": 0.09009198276326061
+          },
+          {
+            "learning_rate": 0.00433308967271761,
+            "batch_size": 242,
+            "entropy_cost": 0.029398357123136522
+          },
+          {
+            "learning_rate": 0.000341656890217707,
+            "batch_size": 457,
+            "entropy_cost": 0.06102517955005169
+          },
+          {
+            "learning_rate": 0.0001358566139285672,
+            "batch_size": 88,
+            "entropy_cost": 0.019472273346036673
+          },
+          {
+            "learning_rate": 8.746427549854827e-05,
+            "batch_size": 431,
+            "entropy_cost": 0.044510899949818855
+          }
+        ],
+        "20017": [
+          {
+            "learning_rate": 1.6916665031885137e-05,
+            "batch_size": 339,
+            "entropy_cost": 0.09446089509874583
+          },
+          {
+            "learning_rate": 0.005399619823043418,
+            "batch_size": 69,
+            "entropy_cost": 0.04185188971459866
+          },
+          {
+            "learning_rate": 0.0006611304209059607,
+            "batch_size": 414,
+            "entropy_cost": 0.050025618821382525
+          },
+          {
+            "learning_rate": 0.00013708933169646642,
+            "batch_size": 218,
+            "entropy_cost": 0.010505889169871808
+          },
+          {
+            "learning_rate": 8.365628731555821e-05,
+            "batch_size": 506,
+            "entropy_cost": 0.03490821858868003
+          }
+        ],
+        "20018": [
+          {
+            "learning_rate": 0.0026580233301554445,
+            "batch_size": 437,
+            "entropy_cost": 0.08122490188106896
+          },
+          {
+            "learning_rate": 3.326166331156326e-05,
+            "batch_size": 178,
+            "entropy_cost": 0.04554653149098158
+          },
+          {
+            "learning_rate": 0.00019388823909711388,
+            "batch_size": 330,
+            "entropy_cost": 0.05349786262959242
+          },
+          {
+            "learning_rate": 0.00048296681023795375,
+            "batch_size": 69,
+            "entropy_cost": 0.020121057238429788
+          },
+          {
+            "learning_rate": 0.0007624278909712579,
+            "batch_size": 390,
+            "entropy_cost": 0.036404017452150585
+          }
+        ],
+        "20019": [
+          {
+            "learning_rate": 1.338459203004592e-05,
+            "batch_size": 263,
+            "entropy_cost": 0.05345427021384239
+          },
+          {
+            "learning_rate": 0.002209068372538485,
+            "batch_size": 448,
+            "entropy_cost": 0.014624906517565251
+          },
+          {
+            "learning_rate": 0.0011109372137369418,
+            "batch_size": 156,
+            "entropy_cost": 0.08675215505063534
+          },
+          {
+            "learning_rate": 0.0001860497477087577,
+            "batch_size": 341,
+            "entropy_cost": 0.04519459139555693
+          },
+          {
+            "learning_rate": 0.00013168307481545443,
+            "batch_size": 96,
+            "entropy_cost": 0.00824657017365098
+          }
+        ],
+        "30000": [
+          {
+            "learning_rate": 0.0009524805328160686,
+            "batch_size": 277,
+            "entropy_cost": 0.013915684912353754
+          },
+          {
+            "learning_rate": 0.00011130845747652953,
+            "batch_size": 312,
+            "entropy_cost": 0.09784774379804731
+          },
+          {
+            "learning_rate": 4.5489332458436145e-05,
+            "batch_size": 124,
+            "entropy_cost": 0.033796419855207205
+          },
+          {
+            "learning_rate": 0.0023108218498473507,
+            "batch_size": 440,
+            "entropy_cost": 0.05601561991497875
+          },
+          {
+            "learning_rate": 0.005730319849465702,
+            "batch_size": 112,
+            "entropy_cost": 0.07815501568838955
+          }
+        ],
+        "30001": [
+          {
+            "learning_rate": 0.0030715184368063546,
+            "batch_size": 503,
+            "entropy_cost": 0.01945363208651543
+          },
+          {
+            "learning_rate": 2.1171024875265155e-05,
+            "batch_size": 222,
+            "entropy_cost": 0.06596374269574881
+          },
+          {
+            "learning_rate": 8.067682176151817e-05,
+            "batch_size": 376,
+            "entropy_cost": 0.030082528665661815
+          },
+          {
+            "learning_rate": 0.0003421246693414193,
+            "batch_size": 94,
+            "entropy_cost": 0.08284032735973597
+          },
+          {
+            "learning_rate": 0.0016545168208508155,
+            "batch_size": 333,
+            "entropy_cost": 0.06086467914283276
+          }
+        ],
+        "30002": [
+          {
+            "learning_rate": 0.0012416674836366393,
+            "batch_size": 151,
+            "entropy_cost": 0.06908482732251287
+          },
+          {
+            "learning_rate": 3.211197003977675e-05,
+            "batch_size": 477,
+            "entropy_cost": 0.01363907502964139
+          },
+          {
+            "learning_rate": 0.00017093085766262822,
+            "batch_size": 237,
+            "entropy_cost": 0.08649624697864056
+          },
+          {
+            "learning_rate": 0.006626004716424966,
+            "batch_size": 392,
+            "entropy_cost": 0.031005487218499186
+          },
+          {
+            "learning_rate": 0.004037349503600406,
+            "batch_size": 228,
+            "entropy_cost": 0.007733047101646662
+          }
+        ],
+        "30003": [
+          {
+            "learning_rate": 0.002898114968750533,
+            "batch_size": 190,
+            "entropy_cost": 0.06580769028514624
+          },
+          {
+            "learning_rate": 0.00031405902750781286,
+            "batch_size": 392,
+            "entropy_cost": 0.027349935937672855
+          },
+          {
+            "learning_rate": 1.1347828304722371e-05,
+            "batch_size": 100,
+            "entropy_cost": 0.09422199754044414
+          },
+          {
+            "learning_rate": 0.0009568934203777868,
+            "batch_size": 470,
+            "entropy_cost": 0.01221754252910614
+          },
+          {
+            "learning_rate": 0.0007014533006417012,
+            "batch_size": 140,
+            "entropy_cost": 0.043661809619516136
+          }
+        ],
+        "30004": [
+          {
+            "learning_rate": 0.0011212262205393326,
+            "batch_size": 132,
+            "entropy_cost": 0.08223923286423088
+          },
+          {
+            "learning_rate": 0.00026414217518430736,
+            "batch_size": 319,
+            "entropy_cost": 0.047404768317937857
+          },
+          {
+            "learning_rate": 2.988240550423352e-05,
+            "batch_size": 279,
+            "entropy_cost": 0.07263595573604108
+          },
+          {
+            "learning_rate": 0.009780189546579712,
+            "batch_size": 422,
+            "entropy_cost": 0.0070828373543918135
+          },
+          {
+            "learning_rate": 0.0020079144595647595,
+            "batch_size": 216,
+            "entropy_cost": 0.03285884018987417
+          }
+        ],
+        "30005": [
+          {
+            "learning_rate": 0.004706844075937938,
+            "batch_size": 254,
+            "entropy_cost": 0.08089488204568625
+          },
+          {
+            "learning_rate": 1.1187847462748558e-05,
+            "batch_size": 305,
+            "entropy_cost": 0.01589952567592263
+          },
+          {
+            "learning_rate": 0.00015358520202084135,
+            "batch_size": 165,
+            "entropy_cost": 0.07185523882508278
+          },
+          {
+            "learning_rate": 0.0003621518187004576,
+            "batch_size": 451,
+            "entropy_cost": 0.031383708026260136
+          },
+          {
+            "learning_rate": 0.0011473569704248305,
+            "batch_size": 84,
+            "entropy_cost": 0.0013635794632136822
+          }
+        ],
+        "30006": [
+          {
+            "learning_rate": 8.980671165686205e-05,
+            "batch_size": 249,
+            "entropy_cost": 0.06679206676781178
+          },
+          {
+            "learning_rate": 0.003887453073526777,
+            "batch_size": 387,
+            "entropy_cost": 0.020277511887252332
+          },
+          {
+            "learning_rate": 0.001464403146172847,
+            "batch_size": 106,
+            "entropy_cost": 0.08709978368133307
+          },
+          {
+            "learning_rate": 4.225639518581893e-05,
+            "batch_size": 417,
+            "entropy_cost": 0.02809523604810238
+          },
+          {
+            "learning_rate": 1.755311340354478e-05,
+            "batch_size": 158,
+            "entropy_cost": 0.003645772207528353
+          }
+        ],
+        "30007": [
+          {
+            "learning_rate": 0.0005230504530400281,
+            "batch_size": 178,
+            "entropy_cost": 0.049841337185353045
+          },
+          {
+            "learning_rate": 0.00026363417039883215,
+            "batch_size": 289,
+            "entropy_cost": 0.05799231929704547
+          },
+          {
+            "learning_rate": 1.4550113558814002e-05,
+            "batch_size": 141,
+            "entropy_cost": 0.021508196182549
+          },
+          {
+            "learning_rate": 0.0049589663187044565,
+            "batch_size": 474,
+            "entropy_cost": 0.08628273550421
+          },
+          {
+            "learning_rate": 0.003684174855184819,
+            "batch_size": 71,
+            "entropy_cost": 0.06865936806425453
+          }
+        ],
+        "30008": [
+          {
+            "learning_rate": 0.005407268035455689,
+            "batch_size": 250,
+            "entropy_cost": 0.07855779407545925
+          },
+          {
+            "learning_rate": 7.729169394144692e-05,
+            "batch_size": 417,
+            "entropy_cost": 0.03975284155458212
+          },
+          {
+            "learning_rate": 1.2803895451964433e-05,
+            "batch_size": 74,
+            "entropy_cost": 0.06510972874239088
+          },
+          {
+            "learning_rate": 0.0010322384879899813,
+            "batch_size": 355,
+            "entropy_cost": 0.004079443216323852
+          },
+          {
+            "learning_rate": 0.000626998385835831,
+            "batch_size": 157,
+            "entropy_cost": 0.03111567609012127
+          }
+        ],
+        "30009": [
+          {
+            "learning_rate": 0.006437073186470129,
+            "batch_size": 280,
+            "entropy_cost": 0.022037529200315476
+          },
+          {
+            "learning_rate": 4.454066920295849e-05,
+            "batch_size": 512,
+            "entropy_cost": 0.06186093995347619
+          },
+          {
+            "learning_rate": 0.0002975415120962766,
+            "batch_size": 74,
+            "entropy_cost": 0.0471761123277247
+          },
+          {
+            "learning_rate": 0.0008653699107006804,
+            "batch_size": 293,
+            "entropy_cost": 0.08708950355648995
+          },
+          {
+            "learning_rate": 0.0003278658332730564,
+            "batch_size": 156,
+            "entropy_cost": 0.07426922917366029
+          }
+        ],
+        "30010": [
+          {
+            "learning_rate": 0.00839088757519631,
+            "batch_size": 369,
+            "entropy_cost": 0.03644185569137335
+          },
+          {
+            "learning_rate": 0.00018304418919389933,
+            "batch_size": 288,
+            "entropy_cost": 0.09024020591750742
+          },
+          {
+            "learning_rate": 1.8851024505381678e-05,
+            "batch_size": 509,
+            "entropy_cost": 0.0027942180633544924
+          },
+          {
+            "learning_rate": 0.0003692133953507363,
+            "batch_size": 141,
+            "entropy_cost": 0.07399655943736434
+          },
+          {
+            "learning_rate": 0.001434859324649115,
+            "batch_size": 419,
+            "entropy_cost": 0.07895315513014795
+          }
+        ],
+        "30011": [
+          {
+            "learning_rate": 1.2342123266050878e-05,
+            "batch_size": 423,
+            "entropy_cost": 0.02595293512567878
+          },
+          {
+            "learning_rate": 0.00038575002664928274,
+            "batch_size": 184,
+            "entropy_cost": 0.06918477239087224
+          },
+          {
+            "learning_rate": 0.005692598427199187,
+            "batch_size": 319,
+            "entropy_cost": 0.01618690835312009
+          },
+          {
+            "learning_rate": 0.00018217392573958676,
+            "batch_size": 109,
+            "entropy_cost": 0.08519924795255066
+          },
+          {
+            "learning_rate": 5.9605358898983215e-05,
+            "batch_size": 393,
+            "entropy_cost": 0.06241045184433461
+          }
+        ],
+        "30012": [
+          {
+            "learning_rate": 0.00013547473253929396,
+            "batch_size": 478,
+            "entropy_cost": 0.020590671058744195
+          },
+          {
+            "learning_rate": 0.0006055257629983852,
+            "batch_size": 130,
+            "entropy_cost": 0.08864739136770368
+          },
+          {
+            "learning_rate": 0.005239616193099693,
+            "batch_size": 331,
+            "entropy_cost": 0.035209161508828406
+          },
+          {
+            "learning_rate": 1.5625890398705396e-05,
+            "batch_size": 208,
+            "entropy_cost": 0.05487530296668411
+          },
+          {
+            "learning_rate": 2.5422936505932836e-05,
+            "batch_size": 399,
+            "entropy_cost": 0.07906317403540015
+          }
+        ],
+        "30013": [
+          {
+            "learning_rate": 3.591170938347687e-05,
+            "batch_size": 481,
+            "entropy_cost": 0.026159930787980557
+          },
+          {
+            "learning_rate": 0.002970451042042258,
+            "batch_size": 128,
+            "entropy_cost": 0.0975473907776177
+          },
+          {
+            "learning_rate": 0.0011706058846332082,
+            "batch_size": 360,
+            "entropy_cost": 0.00039824899286031726
+          },
+          {
+            "learning_rate": 7.962674920785106e-05,
+            "batch_size": 239,
+            "entropy_cost": 0.0727607456035912
+          },
+          {
+            "learning_rate": 0.0003033425907776702,
+            "batch_size": 323,
+            "entropy_cost": 0.08299994599074126
+          }
+        ],
+        "30014": [
+          {
+            "learning_rate": 0.006614733952834971,
+            "batch_size": 316,
+            "entropy_cost": 0.011297037638723851
+          },
+          {
+            "learning_rate": 0.0002853784023110542,
+            "batch_size": 286,
+            "entropy_cost": 0.07688407246023417
+          },
+          {
+            "learning_rate": 4.751944863100728e-05,
+            "batch_size": 439,
+            "entropy_cost": 0.02787845442071557
+          },
+          {
+            "learning_rate": 0.0013349313877573947,
+            "batch_size": 163,
+            "entropy_cost": 0.06226722011342645
+          },
+          {
+            "learning_rate": 0.0005011517343484725,
+            "batch_size": 459,
+            "entropy_cost": 0.0899523625150323
+          }
+        ],
+        "30015": [
+          {
+            "learning_rate": 3.89075832839685e-05,
+            "batch_size": 282,
+            "entropy_cost": 0.05534688709303737
+          },
+          {
+            "learning_rate": 0.0006402621256514635,
+            "batch_size": 304,
+            "entropy_cost": 0.042966363951563835
+          },
+          {
+            "learning_rate": 0.0021891655864928698,
+            "batch_size": 88,
+            "entropy_cost": 0.09916034368798138
+          },
+          {
+            "learning_rate": 0.00020416893561734666,
+            "batch_size": 499,
+            "entropy_cost": 0.011559989675879479
+          },
+          {
+            "learning_rate": 8.955556260000759e-05,
+            "batch_size": 152,
+            "entropy_cost": 0.02781823817640543
+          }
+        ],
+        "30016": [
+          {
+            "learning_rate": 2.912596174073307e-05,
+            "batch_size": 255,
+            "entropy_cost": 0.031361615471541884
+          },
+          {
+            "learning_rate": 0.001967984807756446,
+            "batch_size": 387,
+            "entropy_cost": 0.07668190971016885
+          },
+          {
+            "learning_rate": 0.000510887503582774,
+            "batch_size": 116,
+            "entropy_cost": 0.01647238088771701
+          },
+          {
+            "learning_rate": 0.00023883785450346703,
+            "batch_size": 414,
+            "entropy_cost": 0.07428619088605047
+          },
+          {
+            "learning_rate": 7.361329731146114e-05,
+            "batch_size": 172,
+            "entropy_cost": 0.09793434087187053
+          }
+        ],
+        "30017": [
+          {
+            "learning_rate": 0.0017742627366508096,
+            "batch_size": 445,
+            "entropy_cost": 0.09726385520771147
+          },
+          {
+            "learning_rate": 0.0001583230910387003,
+            "batch_size": 235,
+            "entropy_cost": 0.008178466837853194
+          },
+          {
+            "learning_rate": 3.7854048481602576e-05,
+            "batch_size": 399,
+            "entropy_cost": 0.06153386626392603
+          },
+          {
+            "learning_rate": 0.005360249646178633,
+            "batch_size": 76,
+            "entropy_cost": 0.0443723063915968
+          },
+          {
+            "learning_rate": 0.0030094820417302477,
+            "batch_size": 304,
+            "entropy_cost": 0.014177329745143652
+          }
+        ],
+        "30018": [
+          {
+            "learning_rate": 1.1654114623215457e-05,
+            "batch_size": 253,
+            "entropy_cost": 0.029788739047944546
+          },
+          {
+            "learning_rate": 0.0008293629391144169,
+            "batch_size": 334,
+            "entropy_cost": 0.09959795018658042
+          },
+          {
+            "learning_rate": 0.009071741401906898,
+            "batch_size": 157,
+            "entropy_cost": 0.0025579022243618966
+          },
+          {
+            "learning_rate": 0.0001148194308286004,
+            "batch_size": 409,
+            "entropy_cost": 0.07039567781612277
+          },
+          {
+            "learning_rate": 0.0002762866110784876,
+            "batch_size": 111,
+            "entropy_cost": 0.07536499099805952
+          }
+        ],
+        "30019": [
+          {
+            "learning_rate": 0.0008681593683526394,
+            "batch_size": 289,
+            "entropy_cost": 0.04947378030046821
+          },
+          {
+            "learning_rate": 7.257276556786981e-05,
+            "batch_size": 128,
+            "entropy_cost": 0.09592026714235545
+          },
+          {
+            "learning_rate": 3.9518079018333675e-05,
+            "batch_size": 454,
+            "entropy_cost": 0.0023907616734504702
+          },
+          {
+            "learning_rate": 0.004099318376211665,
+            "batch_size": 280,
+            "entropy_cost": 0.05516302483156324
+          },
+          {
+            "learning_rate": 0.004577364472356612,
+            "batch_size": 504,
+            "entropy_cost": 0.07693346505984665
+          }
+        ]
+      },
+      "settings": {
+        "environment": "ant",
+        "backend": "generalized",
+        "max_timesteps": 100000,
+        "episode_length": 1000,
+        "eval_episodes": 10,
+        "num_evals": 5,
+        "unroll_length": 10,
+        "num_minibatches": 32,
+        "num_updates_per_batch": 2
+      },
+      "fixed_config": {
+        "num_envs": 32,
+        "discounting": 0.99,
+        "reward_scaling": 1.0,
+        "gae_lambda": 0.95,
+        "normalize_observations": true,
+        "activation": "relu",
+        "hidden_layer_sizes": [
+          256,
+          256
+        ]
+      },
+      "budget": {
+        "seconds": null,
+        "max_overshoot_seconds": null,
+        "trial_limit": 50,
+        "protected_policy_cap_seconds": null
+      },
+      "data_artifacts": [
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/envs/ant.py",
+          "sha256": "5281e8c34429ca7989022986f36690c93f64213f09063717ac5aa09d338ccbc9"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/envs/assets/ant.xml",
+          "sha256": "2edb5f3fb33541e852fed27db08af6d2e05baa47144caee75f7d368bb9d5a15b"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/envs/base.py",
+          "sha256": "d14f2cc0ff1b968a78e16fb6dcfecc4cd1398f7c137d9f271b8dd7b0be0a6ad9"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/envs/wrappers/training.py",
+          "sha256": "ba841eea1c59c9c5f899171d3ef28739ee49ea8cd52c30108122dbc04943342b"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/training/agents/ppo/train.py",
+          "sha256": "e0ae6009669011bd907e8c66131a7b7c05337baf46023dda8f9df7a27a820398"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/training/agents/ppo/networks.py",
+          "sha256": "69eb0406855fb72c1192a80ce0f668a22ae7ae1bc369ebe4e3a930c5a4a9a1b7"
+        }
+      ],
+      "stream_task_index": 0,
+      "objective_direction": "maximize",
+      "role": "acceptance"
+    },
+    "brax-halfcheetah-ppo-100k-v1": {
+      "adapter": "brax_ppo",
+      "cluster_id": "halfcheetah",
+      "version": "brax-0.14.2-ppo-100k-v1",
+      "provenance": {
+        "source": "Brax PPO environment assets and package versions must be pinned before freeze",
+        "selection": "Candidate environments from the registered real-PPO scope; no performance screening",
+        "installed_source": {
+          "url": "https://github.com/google/brax.git",
+          "vcs_info": {
+            "commit_id": "57d5b863fcc66a29a2e043182c07a14a3dee3a7c",
+            "vcs": "git"
+          }
+        },
+        "freeze_note": "Read-only asset/version snapshot and frozen initialization; no PPO evaluation or selection by observed performance."
+      },
+      "data_sha256": "1bef871da669895318c615395f8eb6fc16f580c358fe78f7f8873e3b3eb4cd53",
+      "artifact": {
+        "path": "workloads/rl_routine.py",
+        "sha256": "53915059dd417aa4811a566d6bb5693d284fa86890cd6d21c44347ab702a1b15"
+      },
+      "space": [
+        {
+          "name": "learning_rate",
+          "kind": "continuous",
+          "bounds": [
+            1e-05,
+            0.01
+          ],
+          "transform": "log"
+        },
+        {
+          "name": "batch_size",
+          "kind": "ordinal",
+          "bounds": [
+            64,
+            512
+          ],
+          "transform": "none"
+        },
+        {
+          "name": "entropy_cost",
+          "kind": "continuous",
+          "bounds": [
+            0.0,
+            0.1
+          ],
+          "transform": "none"
+        }
+      ],
+      "initial_configs": {
+        "10000": [
+          {
+            "learning_rate": 0.00016579415426135944,
+            "batch_size": 271,
+            "entropy_cost": 0.008598080184310675
+          },
+          {
+            "learning_rate": 0.0005936336375883585,
+            "batch_size": 338,
+            "entropy_cost": 0.07057755561545491
+          },
+          {
+            "learning_rate": 0.005729900634380784,
+            "batch_size": 98,
+            "entropy_cost": 0.04591908240690828
+          },
+          {
+            "learning_rate": 1.7202104568786886e-05,
+            "batch_size": 502,
+            "entropy_cost": 0.0840376208536327
+          },
+          {
+            "learning_rate": 4.417220993824312e-05,
+            "batch_size": 159,
+            "entropy_cost": 0.05938391145318747
+          }
+        ],
+        "10001": [
+          {
+            "learning_rate": 6.39912356363898e-05,
+            "batch_size": 461,
+            "entropy_cost": 0.08643601564690472
+          },
+          {
+            "learning_rate": 0.003996800970019978,
+            "batch_size": 83,
+            "entropy_cost": 0.025678316224366428
+          },
+          {
+            "learning_rate": 0.0012067934770613514,
+            "batch_size": 370,
+            "entropy_cost": 0.06138298735022545
+          },
+          {
+            "learning_rate": 3.2271372073803764e-05,
+            "batch_size": 189,
+            "entropy_cost": 0.0007229564711451531
+          },
+          {
+            "learning_rate": 2.3115628565707274e-05,
+            "batch_size": 327,
+            "entropy_cost": 0.04908376587554813
+          }
+        ],
+        "10002": [
+          {
+            "learning_rate": 0.001223692614292414,
+            "batch_size": 309,
+            "entropy_cost": 0.09679658934473992
+          },
+          {
+            "learning_rate": 0.00023218880879345016,
+            "batch_size": 169,
+            "entropy_cost": 0.015148000605404378
+          },
+          {
+            "learning_rate": 4.42881923259492e-05,
+            "batch_size": 466,
+            "entropy_cost": 0.06237059039995074
+          },
+          {
+            "learning_rate": 0.006772588995464078,
+            "batch_size": 208,
+            "entropy_cost": 0.030714085791260004
+          },
+          {
+            "learning_rate": 0.0031648733351686133,
+            "batch_size": 456,
+            "entropy_cost": 0.007977833412587643
+          }
+        ],
+        "10003": [
+          {
+            "learning_rate": 0.0001810049632882356,
+            "batch_size": 343,
+            "entropy_cost": 0.08021183665841819
+          },
+          {
+            "learning_rate": 0.0018955239072385405,
+            "batch_size": 183,
+            "entropy_cost": 0.02507699215784669
+          },
+          {
+            "learning_rate": 0.001494222240457307,
+            "batch_size": 465,
+            "entropy_cost": 0.054841406643390656
+          },
+          {
+            "learning_rate": 1.561455840433822e-05,
+            "batch_size": 164,
+            "entropy_cost": 0.00039220741018652916
+          },
+          {
+            "learning_rate": 3.962663991997266e-05,
+            "batch_size": 407,
+            "entropy_cost": 0.04838003553450108
+          }
+        ],
+        "10004": [
+          {
+            "learning_rate": 1.2843521772863065e-05,
+            "batch_size": 494,
+            "entropy_cost": 0.06096547599881888
+          },
+          {
+            "learning_rate": 0.00122191203908912,
+            "batch_size": 259,
+            "entropy_cost": 0.042818919755518436
+          },
+          {
+            "learning_rate": 0.002959633231739796,
+            "batch_size": 327,
+            "entropy_cost": 0.0920760739594698
+          },
+          {
+            "learning_rate": 0.00017346814913480547,
+            "batch_size": 86,
+            "entropy_cost": 0.010243814438581467
+          },
+          {
+            "learning_rate": 0.00010526448211432103,
+            "batch_size": 345,
+            "entropy_cost": 0.03705524047836661
+          }
+        ],
+        "20000": [
+          {
+            "learning_rate": 0.002280374571731938,
+            "batch_size": 425,
+            "entropy_cost": 0.0022932644002139567
+          },
+          {
+            "learning_rate": 0.00027928060197179497,
+            "batch_size": 220,
+            "entropy_cost": 0.07160109337419272
+          },
+          {
+            "learning_rate": 1.3529685615032958e-05,
+            "batch_size": 296,
+            "entropy_cost": 0.043660176638513806
+          },
+          {
+            "learning_rate": 0.0014881728467574273,
+            "batch_size": 98,
+            "entropy_cost": 0.08646196015179158
+          },
+          {
+            "learning_rate": 0.0003725263659790193,
+            "batch_size": 358,
+            "entropy_cost": 0.061868298798799515
+          }
+        ],
+        "20001": [
+          {
+            "learning_rate": 0.0005525158590385465,
+            "batch_size": 89,
+            "entropy_cost": 0.047173790819942954
+          },
+          {
+            "learning_rate": 3.786226820993718e-05,
+            "batch_size": 488,
+            "entropy_cost": 0.08563617039471866
+          },
+          {
+            "learning_rate": 8.829748761984261e-05,
+            "batch_size": 220,
+            "entropy_cost": 0.006941981986165047
+          },
+          {
+            "learning_rate": 0.0074833105304650815,
+            "batch_size": 356,
+            "entropy_cost": 0.06962305791676045
+          },
+          {
+            "learning_rate": 0.0018752607504021813,
+            "batch_size": 240,
+            "entropy_cost": 0.09056103080511094
+          }
+        ],
+        "20002": [
+          {
+            "learning_rate": 4.1793612363502365e-05,
+            "batch_size": 166,
+            "entropy_cost": 0.07092971336096525
+          },
+          {
+            "learning_rate": 0.0025537373438331078,
+            "batch_size": 362,
+            "entropy_cost": 0.0031989908777177336
+          },
+          {
+            "learning_rate": 0.0003669248559990298,
+            "batch_size": 255,
+            "entropy_cost": 0.09127737330272795
+          },
+          {
+            "learning_rate": 0.0002989674239322822,
+            "batch_size": 506,
+            "entropy_cost": 0.03283620290458202
+          },
+          {
+            "learning_rate": 6.208153996252913e-05,
+            "batch_size": 189,
+            "entropy_cost": 0.013607402704656124
+          }
+        ],
+        "20003": [
+          {
+            "learning_rate": 2.6098830177615864e-05,
+            "batch_size": 327,
+            "entropy_cost": 0.039890944305807356
+          },
+          {
+            "learning_rate": 0.0005815453103086165,
+            "batch_size": 80,
+            "entropy_cost": 0.09231707267463207
+          },
+          {
+            "learning_rate": 0.005379317187572598,
+            "batch_size": 460,
+            "entropy_cost": 0.00039380658417940143
+          },
+          {
+            "learning_rate": 0.00012005550726848217,
+            "batch_size": 283,
+            "entropy_cost": 0.05440684920176864
+          },
+          {
+            "learning_rate": 0.0002032228720999646,
+            "batch_size": 433,
+            "entropy_cost": 0.08062786413356662
+          }
+        ],
+        "20004": [
+          {
+            "learning_rate": 0.0001428904123326455,
+            "batch_size": 90,
+            "entropy_cost": 0.0629097692668438
+          },
+          {
+            "learning_rate": 0.002206104564118742,
+            "batch_size": 413,
+            "entropy_cost": 0.01799784591421485
+          },
+          {
+            "learning_rate": 0.0003982032945465038,
+            "batch_size": 243,
+            "entropy_cost": 0.07785904286429286
+          },
+          {
+            "learning_rate": 3.457323449895684e-05,
+            "batch_size": 371,
+            "entropy_cost": 0.02824426479637623
+          },
+          {
+            "learning_rate": 1.6999137146783565e-05,
+            "batch_size": 231,
+            "entropy_cost": 0.006489500775933266
+          }
+        ],
+        "20005": [
+          {
+            "learning_rate": 0.00034638014181446016,
+            "batch_size": 197,
+            "entropy_cost": 0.075354496948421
+          },
+          {
+            "learning_rate": 1.2356607387348562e-05,
+            "batch_size": 408,
+            "entropy_cost": 0.03276154492050409
+          },
+          {
+            "learning_rate": 0.00027029906863098213,
+            "batch_size": 104,
+            "entropy_cost": 0.07195080053061247
+          },
+          {
+            "learning_rate": 0.009628172376585592,
+            "batch_size": 343,
+            "entropy_cost": 0.016808156110346317
+          },
+          {
+            "learning_rate": 0.002200510854844055,
+            "batch_size": 167,
+            "entropy_cost": 0.047531984746456146
+          }
+        ],
+        "20006": [
+          {
+            "learning_rate": 0.0005399978512624522,
+            "batch_size": 439,
+            "entropy_cost": 0.04842572929337621
+          },
+          {
+            "learning_rate": 4.384086198506525e-05,
+            "batch_size": 162,
+            "entropy_cost": 0.06558106252923608
+          },
+          {
+            "learning_rate": 0.00011208841944774524,
+            "batch_size": 354,
+            "entropy_cost": 0.013826831430196763
+          },
+          {
+            "learning_rate": 0.009101440910205478,
+            "batch_size": 195,
+            "entropy_cost": 0.0998030710965395
+          },
+          {
+            "learning_rate": 0.001971795117983514,
+            "batch_size": 313,
+            "entropy_cost": 0.05209551174193621
+          }
+        ],
+        "20007": [
+          {
+            "learning_rate": 1.1837429977211463e-05,
+            "batch_size": 412,
+            "entropy_cost": 0.08135861344635487
+          },
+          {
+            "learning_rate": 0.0018440601133981153,
+            "batch_size": 69,
+            "entropy_cost": 0.008611192833632231
+          },
+          {
+            "learning_rate": 0.0006966790056185275,
+            "batch_size": 337,
+            "entropy_cost": 0.05548564363270998
+          },
+          {
+            "learning_rate": 0.00011454140776595096,
+            "batch_size": 220,
+            "entropy_cost": 0.028233828861266377
+          },
+          {
+            "learning_rate": 0.00013608012362180584,
+            "batch_size": 390,
+            "entropy_cost": 0.024417647346854213
+          }
+        ],
+        "20008": [
+          {
+            "learning_rate": 0.0005294800464883756,
+            "batch_size": 104,
+            "entropy_cost": 0.053762479033321146
+          },
+          {
+            "learning_rate": 1.1485500814208185e-05,
+            "batch_size": 500,
+            "entropy_cost": 0.010951323155313731
+          },
+          {
+            "learning_rate": 0.00020611505860442916,
+            "batch_size": 238,
+            "entropy_cost": 0.09075401881709695
+          },
+          {
+            "learning_rate": 0.004971030450056458,
+            "batch_size": 310,
+            "entropy_cost": 0.049213062878698116
+          },
+          {
+            "learning_rate": 0.0030497766354970596,
+            "batch_size": 187,
+            "entropy_cost": 0.017640411760658028
+          }
+        ],
+        "20009": [
+          {
+            "learning_rate": 9.643835317123287e-05,
+            "batch_size": 302,
+            "entropy_cost": 0.06062101759016514
+          },
+          {
+            "learning_rate": 0.0019111991910947975,
+            "batch_size": 64,
+            "entropy_cost": 0.0058241796679794795
+          },
+          {
+            "learning_rate": 0.0008452581977032502,
+            "batch_size": 456,
+            "entropy_cost": 0.0793137681670487
+          },
+          {
+            "learning_rate": 4.204434360287603e-05,
+            "batch_size": 219,
+            "entropy_cost": 0.0370413426309824
+          },
+          {
+            "learning_rate": 1.9762116382670457e-05,
+            "batch_size": 459,
+            "entropy_cost": 0.013936349097639323
+          }
+        ],
+        "20010": [
+          {
+            "learning_rate": 3.520039906101181e-05,
+            "batch_size": 118,
+            "entropy_cost": 0.08091710321605206
+          },
+          {
+            "learning_rate": 0.00041305149006715754,
+            "batch_size": 403,
+            "entropy_cost": 0.020754482783377173
+          },
+          {
+            "learning_rate": 0.008178160283809988,
+            "batch_size": 280,
+            "entropy_cost": 0.056267358083277944
+          },
+          {
+            "learning_rate": 0.00013265529846069845,
+            "batch_size": 354,
+            "entropy_cost": 0.04142931355163455
+          },
+          {
+            "learning_rate": 0.00026013056321069023,
+            "batch_size": 197,
+            "entropy_cost": 0.011296612583100796
+          }
+        ],
+        "20011": [
+          {
+            "learning_rate": 0.0005644281568705893,
+            "batch_size": 147,
+            "entropy_cost": 0.028106444515287876
+          },
+          {
+            "learning_rate": 3.27863106694724e-05,
+            "batch_size": 402,
+            "entropy_cost": 0.08775499165058137
+          },
+          {
+            "learning_rate": 0.0001534411155984487,
+            "batch_size": 232,
+            "entropy_cost": 0.017789903841912747
+          },
+          {
+            "learning_rate": 0.00381527452186832,
+            "batch_size": 314,
+            "entropy_cost": 0.05424500070512295
+          },
+          {
+            "learning_rate": 0.007278383977580293,
+            "batch_size": 207,
+            "entropy_cost": 0.08556873798370362
+          }
+        ],
+        "20012": [
+          {
+            "learning_rate": 0.002227969579973315,
+            "batch_size": 257,
+            "entropy_cost": 0.06052839681506157
+          },
+          {
+            "learning_rate": 3.1004292419592125e-05,
+            "batch_size": 366,
+            "entropy_cost": 0.03808663804084063
+          },
+          {
+            "learning_rate": 0.0001321566787340034,
+            "batch_size": 117,
+            "entropy_cost": 0.08650243915617467
+          },
+          {
+            "learning_rate": 0.0016903765159265085,
+            "batch_size": 451,
+            "entropy_cost": 0.014846297912299633
+          },
+          {
+            "learning_rate": 0.0004739257525391517,
+            "batch_size": 166,
+            "entropy_cost": 0.025804257672280076
+          }
+        ],
+        "20013": [
+          {
+            "learning_rate": 3.745753055861993e-05,
+            "batch_size": 501,
+            "entropy_cost": 0.010666558332741261
+          },
+          {
+            "learning_rate": 0.009209103966155423,
+            "batch_size": 114,
+            "entropy_cost": 0.07505240328609944
+          },
+          {
+            "learning_rate": 0.0017612982602024571,
+            "batch_size": 303,
+            "entropy_cost": 0.044920836016535765
+          },
+          {
+            "learning_rate": 0.00022663348760157227,
+            "batch_size": 255,
+            "entropy_cost": 0.06624056044965983
+          },
+          {
+            "learning_rate": 0.0001318290668205832,
+            "batch_size": 379,
+            "entropy_cost": 0.09676959300413729
+          }
+        ],
+        "20014": [
+          {
+            "learning_rate": 1.702134992758909e-05,
+            "batch_size": 160,
+            "entropy_cost": 0.008396251779049636
+          },
+          {
+            "learning_rate": 0.00046296731622027913,
+            "batch_size": 435,
+            "entropy_cost": 0.05411198884248734
+          },
+          {
+            "learning_rate": 0.0030027104011604417,
+            "batch_size": 182,
+            "entropy_cost": 0.0344751738011837
+          },
+          {
+            "learning_rate": 8.426213522004508e-05,
+            "batch_size": 345,
+            "entropy_cost": 0.07801801217719913
+          },
+          {
+            "learning_rate": 0.0001547454001543952,
+            "batch_size": 261,
+            "entropy_cost": 0.07121462654322386
+          }
+        ],
+        "20015": [
+          {
+            "learning_rate": 0.0030013963272907257,
+            "batch_size": 209,
+            "entropy_cost": 0.0992418272420764
+          },
+          {
+            "learning_rate": 6.690095242345561e-05,
+            "batch_size": 342,
+            "entropy_cost": 0.015637517254799605
+          },
+          {
+            "learning_rate": 3.0236195833537195e-05,
+            "batch_size": 163,
+            "entropy_cost": 0.059425037726759916
+          },
+          {
+            "learning_rate": 0.0015982607801376886,
+            "batch_size": 493,
+            "entropy_cost": 0.030529601965099573
+          },
+          {
+            "learning_rate": 0.0006341293504453741,
+            "batch_size": 119,
+            "entropy_cost": 0.007386084459722043
+          }
+        ],
+        "20016": [
+          {
+            "learning_rate": 1.820297372412853e-05,
+            "batch_size": 112,
+            "entropy_cost": 0.03690748680382967
+          },
+          {
+            "learning_rate": 0.0006257612099681849,
+            "batch_size": 493,
+            "entropy_cost": 0.055467329919338226
+          },
+          {
+            "learning_rate": 0.0042024997853501575,
+            "batch_size": 198,
+            "entropy_cost": 0.011935668531805277
+          },
+          {
+            "learning_rate": 8.813098448700594e-05,
+            "batch_size": 351,
+            "entropy_cost": 0.08009420586749912
+          },
+          {
+            "learning_rate": 0.0003024775966365785,
+            "batch_size": 278,
+            "entropy_cost": 0.07071833107620477
+          }
+        ],
+        "20017": [
+          {
+            "learning_rate": 0.0054088748347439295,
+            "batch_size": 398,
+            "entropy_cost": 0.07997096357867123
+          },
+          {
+            "learning_rate": 0.0001853171796075571,
+            "batch_size": 277,
+            "entropy_cost": 0.017639813385903837
+          },
+          {
+            "learning_rate": 1.9384281383146607e-05,
+            "batch_size": 455,
+            "entropy_cost": 0.054164168238639836
+          },
+          {
+            "learning_rate": 0.0007019200458018745,
+            "batch_size": 106,
+            "entropy_cost": 0.04188336925581098
+          },
+          {
+            "learning_rate": 0.001037306451486671,
+            "batch_size": 483,
+            "entropy_cost": 0.003161230962723494
+          }
+        ],
+        "20018": [
+          {
+            "learning_rate": 0.002666247699562212,
+            "batch_size": 275,
+            "entropy_cost": 0.0395201912149787
+          },
+          {
+            "learning_rate": 3.1283886998551104e-05,
+            "batch_size": 298,
+            "entropy_cost": 0.07173811169341207
+          },
+          {
+            "learning_rate": 0.00016023213539509247,
+            "batch_size": 109,
+            "entropy_cost": 0.024076905939728024
+          },
+          {
+            "learning_rate": 0.0003478694616685166,
+            "batch_size": 464,
+            "entropy_cost": 0.09343061838299037
+          },
+          {
+            "learning_rate": 0.0017213531239212696,
+            "batch_size": 173,
+            "entropy_cost": 0.06132303159683943
+          }
+        ],
+        "20019": [
+          {
+            "learning_rate": 0.005477941857038266,
+            "batch_size": 472,
+            "entropy_cost": 0.009594276640564205
+          },
+          {
+            "learning_rate": 0.00016146004988173724,
+            "batch_size": 254,
+            "entropy_cost": 0.09861478842794896
+          },
+          {
+            "learning_rate": 3.35698921253476e-05,
+            "batch_size": 342,
+            "entropy_cost": 0.03050004988908768
+          },
+          {
+            "learning_rate": 0.0007972615233581642,
+            "batch_size": 110,
+            "entropy_cost": 0.06677098171785474
+          },
+          {
+            "learning_rate": 0.0005734960480916775,
+            "batch_size": 373,
+            "entropy_cost": 0.07873982647433878
+          }
+        ],
+        "30000": [
+          {
+            "learning_rate": 0.00939119560963731,
+            "batch_size": 258,
+            "entropy_cost": 0.08390988158062102
+          },
+          {
+            "learning_rate": 1.96484547353494e-05,
+            "batch_size": 359,
+            "entropy_cost": 0.0044239588081836706
+          },
+          {
+            "learning_rate": 0.0002802526276842943,
+            "batch_size": 70,
+            "entropy_cost": 0.05206867000088096
+          },
+          {
+            "learning_rate": 0.0007334765218654805,
+            "batch_size": 408,
+            "entropy_cost": 0.03470438737422228
+          },
+          {
+            "learning_rate": 0.0016982877023244242,
+            "batch_size": 144,
+            "entropy_cost": 0.01858047377318144
+          }
+        ],
+        "30001": [
+          {
+            "learning_rate": 0.00010791423968920308,
+            "batch_size": 407,
+            "entropy_cost": 0.050642226543277505
+          },
+          {
+            "learning_rate": 0.004169607316827486,
+            "batch_size": 215,
+            "entropy_cost": 0.011483709421008827
+          },
+          {
+            "learning_rate": 0.00031742958520488665,
+            "batch_size": 325,
+            "entropy_cost": 0.09378453986719251
+          },
+          {
+            "learning_rate": 1.2264823553958932e-05,
+            "batch_size": 65,
+            "entropy_cost": 0.04251665966585279
+          },
+          {
+            "learning_rate": 3.1671041438542616e-05,
+            "batch_size": 391,
+            "entropy_cost": 0.016366477869451047
+          }
+        ],
+        "30002": [
+          {
+            "learning_rate": 0.004253639284027474,
+            "batch_size": 129,
+            "entropy_cost": 0.03253971850499511
+          },
+          {
+            "learning_rate": 0.0001714068065449587,
+            "batch_size": 453,
+            "entropy_cost": 0.08497819406911732
+          },
+          {
+            "learning_rate": 1.019007811563679e-05,
+            "batch_size": 226,
+            "entropy_cost": 0.011955935135483743
+          },
+          {
+            "learning_rate": 0.0004105826306003533,
+            "batch_size": 357,
+            "entropy_cost": 0.05795443579554558
+          },
+          {
+            "learning_rate": 0.0009521705798671135,
+            "batch_size": 251,
+            "entropy_cost": 0.0985803933814168
+          }
+        ],
+        "30003": [
+          {
+            "learning_rate": 0.00035946358713144554,
+            "batch_size": 288,
+            "entropy_cost": 0.04030351070687175
+          },
+          {
+            "learning_rate": 0.00013413611759708358,
+            "batch_size": 248,
+            "entropy_cost": 0.08486094474792481
+          },
+          {
+            "learning_rate": 1.8780861864726156e-05,
+            "batch_size": 490,
+            "entropy_cost": 0.0008845467120409012
+          },
+          {
+            "learning_rate": 0.007199877507629021,
+            "batch_size": 110,
+            "entropy_cost": 0.07356036519631744
+          },
+          {
+            "learning_rate": 0.003365921266860626,
+            "batch_size": 426,
+            "entropy_cost": 0.09795296825468541
+          }
+        ],
+        "30004": [
+          {
+            "learning_rate": 1.457774593744948e-05,
+            "batch_size": 401,
+            "entropy_cost": 0.014857364911586048
+          },
+          {
+            "learning_rate": 0.00032569106247031535,
+            "batch_size": 285,
+            "entropy_cost": 0.06768622733652592
+          },
+          {
+            "learning_rate": 0.003929414106989664,
+            "batch_size": 358,
+            "entropy_cost": 0.04307122277095914
+          },
+          {
+            "learning_rate": 9.018837662866636e-05,
+            "batch_size": 103,
+            "entropy_cost": 0.08947313241660595
+          },
+          {
+            "learning_rate": 0.00020255581415679378,
+            "batch_size": 290,
+            "entropy_cost": 0.05817683460190892
+          }
+        ],
+        "30005": [
+          {
+            "learning_rate": 0.00044060865348807013,
+            "batch_size": 405,
+            "entropy_cost": 0.09149302439764143
+          },
+          {
+            "learning_rate": 5.201164284694892e-05,
+            "batch_size": 69,
+            "entropy_cost": 0.029810070991516113
+          },
+          {
+            "learning_rate": 6.55472378755769e-05,
+            "batch_size": 374,
+            "entropy_cost": 0.06918211625888944
+          },
+          {
+            "learning_rate": 0.0074290096136328575,
+            "batch_size": 263,
+            "entropy_cost": 0.009160967171192169
+          },
+          {
+            "learning_rate": 0.0023402544662464897,
+            "batch_size": 343,
+            "entropy_cost": 0.04037066157907248
+          }
+        ],
+        "30006": [
+          {
+            "learning_rate": 0.0003706158799258821,
+            "batch_size": 129,
+            "entropy_cost": 0.06676780274137854
+          },
+          {
+            "learning_rate": 5.7242718020238554e-05,
+            "batch_size": 353,
+            "entropy_cost": 0.034891576133668424
+          },
+          {
+            "learning_rate": 1.4689747745171351e-05,
+            "batch_size": 222,
+            "entropy_cost": 0.09052618779242039
+          },
+          {
+            "learning_rate": 0.002395186712224637,
+            "batch_size": 446,
+            "entropy_cost": 0.007814451772719623
+          },
+          {
+            "learning_rate": 0.009252496234117684,
+            "batch_size": 283,
+            "entropy_cost": 0.042347587645053864
+          }
+        ],
+        "30007": [
+          {
+            "learning_rate": 0.0008044805486242526,
+            "batch_size": 464,
+            "entropy_cost": 0.08938577016815544
+          },
+          {
+            "learning_rate": 0.00022593286361575975,
+            "batch_size": 80,
+            "entropy_cost": 0.008587784878909589
+          },
+          {
+            "learning_rate": 1.0658357748355645e-05,
+            "batch_size": 312,
+            "entropy_cost": 0.05051588658243418
+          },
+          {
+            "learning_rate": 0.0029933071296106774,
+            "batch_size": 233,
+            "entropy_cost": 0.043942045699805025
+          },
+          {
+            "learning_rate": 0.005838306275555516,
+            "batch_size": 366,
+            "entropy_cost": 0.017937160935252907
+          }
+        ],
+        "30008": [
+          {
+            "learning_rate": 0.0022334906611395505,
+            "batch_size": 169,
+            "entropy_cost": 0.08821302596479655
+          },
+          {
+            "learning_rate": 0.0001202120899788807,
+            "batch_size": 323,
+            "entropy_cost": 0.01790295960381627
+          },
+          {
+            "learning_rate": 1.9779905706742265e-05,
+            "batch_size": 272,
+            "entropy_cost": 0.05981975113973022
+          },
+          {
+            "learning_rate": 0.00044998200596180573,
+            "batch_size": 455,
+            "entropy_cost": 0.033259314298629765
+          },
+          {
+            "learning_rate": 0.0013481607814758176,
+            "batch_size": 191,
+            "entropy_cost": 0.011579099763184787
+          }
+        ],
+        "30009": [
+          {
+            "learning_rate": 1.2363895352887763e-05,
+            "batch_size": 461,
+            "entropy_cost": 0.07187403636053205
+          },
+          {
+            "learning_rate": 0.004495721593899365,
+            "batch_size": 225,
+            "entropy_cost": 0.0338518725708127
+          },
+          {
+            "learning_rate": 0.00041368579147334255,
+            "batch_size": 295,
+            "entropy_cost": 0.08652366800233723
+          },
+          {
+            "learning_rate": 0.0001866657874155629,
+            "batch_size": 166,
+            "entropy_cost": 0.023764522001147273
+          },
+          {
+            "learning_rate": 0.00010060638681712171,
+            "batch_size": 368,
+            "entropy_cost": 0.04532012837007642
+          }
+        ],
+        "30010": [
+          {
+            "learning_rate": 0.00040231075068087045,
+            "batch_size": 287,
+            "entropy_cost": 0.01960059087723494
+          },
+          {
+            "learning_rate": 0.0001351255550663006,
+            "batch_size": 363,
+            "entropy_cost": 0.07050688369199634
+          },
+          {
+            "learning_rate": 1.8819790148502174e-05,
+            "batch_size": 145,
+            "entropy_cost": 0.04510258128866554
+          },
+          {
+            "learning_rate": 0.00999837101587064,
+            "batch_size": 505,
+            "entropy_cost": 0.09575877282768488
+          },
+          {
+            "learning_rate": 0.002637934669036648,
+            "batch_size": 86,
+            "entropy_cost": 0.05684958659112454
+          }
+        ],
+        "30011": [
+          {
+            "learning_rate": 0.0053883617835081225,
+            "batch_size": 199,
+            "entropy_cost": 0.09589511454105377
+          },
+          {
+            "learning_rate": 4.541480765443118e-05,
+            "batch_size": 330,
+            "entropy_cost": 0.03010785896331072
+          },
+          {
+            "learning_rate": 0.00019428801116938874,
+            "batch_size": 162,
+            "entropy_cost": 0.05327220065519214
+          },
+          {
+            "learning_rate": 0.001637872440632926,
+            "batch_size": 480,
+            "entropy_cost": 0.01877263868227601
+          },
+          {
+            "learning_rate": 0.0003411691973864169,
+            "batch_size": 78,
+            "entropy_cost": 0.048350927885621786
+          }
+        ],
+        "30012": [
+          {
+            "learning_rate": 0.00011559332190901625,
+            "batch_size": 397,
+            "entropy_cost": 0.03773510968312621
+          },
+          {
+            "learning_rate": 0.0030246589720024004,
+            "batch_size": 173,
+            "entropy_cost": 0.07652596887201071
+          },
+          {
+            "learning_rate": 0.001088316520853774,
+            "batch_size": 421,
+            "entropy_cost": 0.003316296823322773
+          },
+          {
+            "learning_rate": 2.7021096686870723e-05,
+            "batch_size": 196,
+            "entropy_cost": 0.06682017771527171
+          },
+          {
+            "learning_rate": 2.1304854972916755e-05,
+            "batch_size": 479,
+            "entropy_cost": 0.09918125094845892
+          }
+        ],
+        "30013": [
+          {
+            "learning_rate": 6.235655610498315e-05,
+            "batch_size": 316,
+            "entropy_cost": 0.00894885091111064
+          },
+          {
+            "learning_rate": 0.007019962146773136,
+            "batch_size": 274,
+            "entropy_cost": 0.0552412667311728
+          },
+          {
+            "learning_rate": 0.0004518691220279171,
+            "batch_size": 491,
+            "entropy_cost": 0.034991361666470766
+          },
+          {
+            "learning_rate": 5.0550446526023434e-05,
+            "batch_size": 99,
+            "entropy_cost": 0.07580816140398383
+          },
+          {
+            "learning_rate": 2.1925590628383164e-05,
+            "batch_size": 425,
+            "entropy_cost": 0.07228906704112888
+          }
+        ],
+        "30014": [
+          {
+            "learning_rate": 0.0009356770293927909,
+            "batch_size": 416,
+            "entropy_cost": 0.057232390623539686
+          },
+          {
+            "learning_rate": 0.00023331919044408613,
+            "batch_size": 114,
+            "entropy_cost": 0.04729198291897774
+          },
+          {
+            "learning_rate": 4.3875478438167525e-05,
+            "batch_size": 326,
+            "entropy_cost": 0.0799444410018623
+          },
+          {
+            "learning_rate": 0.005563618183457818,
+            "batch_size": 176,
+            "entropy_cost": 0.0153243325650692
+          },
+          {
+            "learning_rate": 0.003930313545938213,
+            "batch_size": 395,
+            "entropy_cost": 0.02982941418886185
+          }
+        ],
+        "30015": [
+          {
+            "learning_rate": 1.492919101187068e-05,
+            "batch_size": 234,
+            "entropy_cost": 0.08014832912012936
+          },
+          {
+            "learning_rate": 0.001541229637503486,
+            "batch_size": 292,
+            "entropy_cost": 0.007539983186870814
+          },
+          {
+            "learning_rate": 0.0022792775744758776,
+            "batch_size": 136,
+            "entropy_cost": 0.06751586524769664
+          },
+          {
+            "learning_rate": 0.0002944036618408053,
+            "batch_size": 419,
+            "entropy_cost": 0.044806429836899045
+          },
+          {
+            "learning_rate": 9.643478395223263e-05,
+            "batch_size": 77,
+            "entropy_cost": 0.023910825420171023
+          }
+        ],
+        "30016": [
+          {
+            "learning_rate": 0.0015938478133385775,
+            "batch_size": 298,
+            "entropy_cost": 0.06842263191938401
+          },
+          {
+            "learning_rate": 0.00011921568510949448,
+            "batch_size": 259,
+            "entropy_cost": 0.039776242524385455
+          },
+          {
+            "learning_rate": 3.0109596844915293e-05,
+            "batch_size": 479,
+            "entropy_cost": 0.08944714469835163
+          },
+          {
+            "learning_rate": 0.0022633995061311324,
+            "batch_size": 75,
+            "entropy_cost": 0.017978872638195753
+          },
+          {
+            "learning_rate": 0.005865587833454414,
+            "batch_size": 453,
+            "entropy_cost": 0.03550611240789294
+          }
+        ],
+        "30017": [
+          {
+            "learning_rate": 0.004900969599492683,
+            "batch_size": 401,
+            "entropy_cost": 0.0885679429396987
+          },
+          {
+            "learning_rate": 0.00013583178112087737,
+            "batch_size": 136,
+            "entropy_cost": 0.019396052323281766
+          },
+          {
+            "learning_rate": 1.1165510728842951e-05,
+            "batch_size": 346,
+            "entropy_cost": 0.05576452808454633
+          },
+          {
+            "learning_rate": 0.0003262920429708455,
+            "batch_size": 191,
+            "entropy_cost": 0.03666583197191358
+          },
+          {
+            "learning_rate": 0.0014763902048440156,
+            "batch_size": 329,
+            "entropy_cost": 0.011768694315105677
+          }
+        ],
+        "30018": [
+          {
+            "learning_rate": 1.0104190709454959e-05,
+            "batch_size": 333,
+            "entropy_cost": 0.0016937858425080778
+          },
+          {
+            "learning_rate": 0.0023783924882746096,
+            "batch_size": 168,
+            "entropy_cost": 0.06438925499096514
+          },
+          {
+            "learning_rate": 0.0006219915107429184,
+            "batch_size": 459,
+            "entropy_cost": 0.039266418851912024
+          },
+          {
+            "learning_rate": 9.570858484551947e-05,
+            "batch_size": 181,
+            "entropy_cost": 0.07657097317278386
+          },
+          {
+            "learning_rate": 0.00030513803147360177,
+            "batch_size": 403,
+            "entropy_cost": 0.0550219101831317
+          }
+        ],
+        "30019": [
+          {
+            "learning_rate": 0.0017038366449235,
+            "batch_size": 172,
+            "entropy_cost": 0.08570167524740101
+          },
+          {
+            "learning_rate": 8.978552835233296e-05,
+            "batch_size": 369,
+            "entropy_cost": 0.01871226103976369
+          },
+          {
+            "learning_rate": 5.547266695874456e-05,
+            "batch_size": 244,
+            "entropy_cost": 0.06814100546762347
+          },
+          {
+            "learning_rate": 0.002758101804221593,
+            "batch_size": 494,
+            "entropy_cost": 0.035526781994849446
+          },
+          {
+            "learning_rate": 0.008728411318657568,
+            "batch_size": 193,
+            "entropy_cost": 0.01243913657963276
+          }
+        ]
+      },
+      "settings": {
+        "environment": "halfcheetah",
+        "backend": "generalized",
+        "max_timesteps": 100000,
+        "episode_length": 1000,
+        "eval_episodes": 10,
+        "num_evals": 5,
+        "unroll_length": 10,
+        "num_minibatches": 32,
+        "num_updates_per_batch": 2
+      },
+      "fixed_config": {
+        "num_envs": 32,
+        "discounting": 0.99,
+        "reward_scaling": 1.0,
+        "gae_lambda": 0.95,
+        "normalize_observations": true,
+        "activation": "relu",
+        "hidden_layer_sizes": [
+          256,
+          256
+        ]
+      },
+      "budget": {
+        "seconds": null,
+        "max_overshoot_seconds": null,
+        "trial_limit": 50,
+        "protected_policy_cap_seconds": null
+      },
+      "data_artifacts": [
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/envs/half_cheetah.py",
+          "sha256": "756ae4a6954bbc7e95e0ff568c3c8215690c515b3ffeb161e3f94cbd5a3330f1"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/envs/assets/half_cheetah.xml",
+          "sha256": "4f4a2c6568442331d7ea9478da3c5b7a8664772f756339b384d3e74c0eeee344"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/envs/base.py",
+          "sha256": "d14f2cc0ff1b968a78e16fb6dcfecc4cd1398f7c137d9f271b8dd7b0be0a6ad9"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/envs/wrappers/training.py",
+          "sha256": "ba841eea1c59c9c5f899171d3ef28739ee49ea8cd52c30108122dbc04943342b"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/training/agents/ppo/train.py",
+          "sha256": "e0ae6009669011bd907e8c66131a7b7c05337baf46023dda8f9df7a27a820398"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/training/agents/ppo/networks.py",
+          "sha256": "69eb0406855fb72c1192a80ce0f668a22ae7ae1bc369ebe4e3a930c5a4a9a1b7"
+        }
+      ],
+      "stream_task_index": 1,
+      "objective_direction": "maximize",
+      "role": "acceptance"
+    },
+    "brax-hopper-ppo-100k-v1": {
+      "adapter": "brax_ppo",
+      "cluster_id": "hopper",
+      "version": "brax-0.14.2-ppo-100k-v1",
+      "provenance": {
+        "source": "Brax PPO environment assets and package versions must be pinned before freeze",
+        "selection": "Candidate environments from the registered real-PPO scope; no performance screening",
+        "installed_source": {
+          "url": "https://github.com/google/brax.git",
+          "vcs_info": {
+            "commit_id": "57d5b863fcc66a29a2e043182c07a14a3dee3a7c",
+            "vcs": "git"
+          }
+        },
+        "freeze_note": "Read-only asset/version snapshot and frozen initialization; no PPO evaluation or selection by observed performance."
+      },
+      "data_sha256": "23a04c6160352d5b0b83eb62f0b6f58a9439c914c7ec93db3264c7f935ef2de0",
+      "artifact": {
+        "path": "workloads/rl_routine.py",
+        "sha256": "53915059dd417aa4811a566d6bb5693d284fa86890cd6d21c44347ab702a1b15"
+      },
+      "space": [
+        {
+          "name": "learning_rate",
+          "kind": "continuous",
+          "bounds": [
+            1e-05,
+            0.01
+          ],
+          "transform": "log"
+        },
+        {
+          "name": "batch_size",
+          "kind": "ordinal",
+          "bounds": [
+            64,
+            512
+          ],
+          "transform": "none"
+        },
+        {
+          "name": "entropy_cost",
+          "kind": "continuous",
+          "bounds": [
+            0.0,
+            0.1
+          ],
+          "transform": "none"
+        }
+      ],
+      "initial_configs": {
+        "10000": [
+          {
+            "learning_rate": 0.0010459312770506172,
+            "batch_size": 435,
+            "entropy_cost": 0.03322926443070173
+          },
+          {
+            "learning_rate": 0.0002840120697076783,
+            "batch_size": 139,
+            "entropy_cost": 0.07138710152357818
+          },
+          {
+            "learning_rate": 1.734236800150842e-05,
+            "batch_size": 292,
+            "entropy_cost": 0.02373245004564524
+          },
+          {
+            "learning_rate": 0.0019925786169569634,
+            "batch_size": 279,
+            "entropy_cost": 0.08713405821472407
+          },
+          {
+            "learning_rate": 0.005967479034180616,
+            "batch_size": 360,
+            "entropy_cost": 0.061564387101680045
+          }
+        ],
+        "10001": [
+          {
+            "learning_rate": 0.00035065193305771193,
+            "batch_size": 407,
+            "entropy_cost": 0.053598730452358724
+          },
+          {
+            "learning_rate": 0.00030753580645074185,
+            "batch_size": 86,
+            "entropy_cost": 0.03832294708117843
+          },
+          {
+            "learning_rate": 1.600808742438476e-05,
+            "batch_size": 319,
+            "entropy_cost": 0.0892151651903987
+          },
+          {
+            "learning_rate": 0.005876360634126729,
+            "batch_size": 220,
+            "entropy_cost": 0.0059710125438869
+          },
+          {
+            "learning_rate": 0.0031041174875909992,
+            "batch_size": 370,
+            "entropy_cost": 0.034360481146723035
+          }
+        ],
+        "10002": [
+          {
+            "learning_rate": 0.003778815754293407,
+            "batch_size": 114,
+            "entropy_cost": 0.05432513915002346
+          },
+          {
+            "learning_rate": 0.000109082808918004,
+            "batch_size": 454,
+            "entropy_cost": 0.009558895975351334
+          },
+          {
+            "learning_rate": 4.679121771699755e-05,
+            "batch_size": 254,
+            "entropy_cost": 0.09055665712803602
+          },
+          {
+            "learning_rate": 0.0015251033437363353,
+            "batch_size": 370,
+            "entropy_cost": 0.0455951014533639
+          },
+          {
+            "learning_rate": 0.0005812405803175854,
+            "batch_size": 183,
+            "entropy_cost": 0.021604462247341874
+          }
+        ],
+        "10003": [
+          {
+            "learning_rate": 0.0019340890778245553,
+            "batch_size": 494,
+            "entropy_cost": 0.07940027136355639
+          },
+          {
+            "learning_rate": 0.00023990944059748074,
+            "batch_size": 158,
+            "entropy_cost": 0.020574029069393873
+          },
+          {
+            "learning_rate": 1.2829245596261398e-05,
+            "batch_size": 340,
+            "entropy_cost": 0.06226850086823106
+          },
+          {
+            "learning_rate": 0.0017732255234718325,
+            "batch_size": 227,
+            "entropy_cost": 0.03769673481583596
+          },
+          {
+            "learning_rate": 0.0006002827145458758,
+            "batch_size": 357,
+            "entropy_cost": 0.0032690834254026414
+          }
+        ],
+        "10004": [
+          {
+            "learning_rate": 0.006604057343919317,
+            "batch_size": 505,
+            "entropy_cost": 0.009849091339856387
+          },
+          {
+            "learning_rate": 2.051558465826841e-05,
+            "batch_size": 79,
+            "entropy_cost": 0.05400673998519778
+          },
+          {
+            "learning_rate": 7.535410535472337e-05,
+            "batch_size": 377,
+            "entropy_cost": 0.03668548744171858
+          },
+          {
+            "learning_rate": 0.0007683440410311908,
+            "batch_size": 176,
+            "entropy_cost": 0.08070885688066483
+          },
+          {
+            "learning_rate": 0.0003898666179249993,
+            "batch_size": 336,
+            "entropy_cost": 0.07224474865943194
+          }
+        ],
+        "20000": [
+          {
+            "learning_rate": 0.0013425818625119605,
+            "batch_size": 275,
+            "entropy_cost": 0.05274676904082298
+          },
+          {
+            "learning_rate": 7.306008602369524e-05,
+            "batch_size": 496,
+            "entropy_cost": 0.024831217620521786
+          },
+          {
+            "learning_rate": 2.01213595788259e-05,
+            "batch_size": 69,
+            "entropy_cost": 0.09712355546653272
+          },
+          {
+            "learning_rate": 0.004932811500362717,
+            "batch_size": 312,
+            "entropy_cost": 0.025090937782078982
+          },
+          {
+            "learning_rate": 0.0040489051004938,
+            "batch_size": 147,
+            "entropy_cost": 0.0021615429781377316
+          }
+        ],
+        "20001": [
+          {
+            "learning_rate": 0.00011879013010717816,
+            "batch_size": 372,
+            "entropy_cost": 0.017639470752328634
+          },
+          {
+            "learning_rate": 0.0004098303834653724,
+            "batch_size": 215,
+            "entropy_cost": 0.08772405227646232
+          },
+          {
+            "learning_rate": 0.004263669717127683,
+            "batch_size": 463,
+            "entropy_cost": 0.03266662852838636
+          },
+          {
+            "learning_rate": 3.882542883857609e-05,
+            "batch_size": 110,
+            "entropy_cost": 0.061759230215102434
+          },
+          {
+            "learning_rate": 1.8099194306356755e-05,
+            "batch_size": 437,
+            "entropy_cost": 0.07889522276818753
+          }
+        ],
+        "20002": [
+          {
+            "learning_rate": 0.009212086742767658,
+            "batch_size": 66,
+            "entropy_cost": 0.0973365543410182
+          },
+          {
+            "learning_rate": 4.6062721641902716e-05,
+            "batch_size": 453,
+            "entropy_cost": 0.01412249468266964
+          },
+          {
+            "learning_rate": 9.66575418170914e-05,
+            "batch_size": 176,
+            "entropy_cost": 0.058942315820604566
+          },
+          {
+            "learning_rate": 0.0004934117812230187,
+            "batch_size": 338,
+            "entropy_cost": 0.029658920597285032
+          },
+          {
+            "learning_rate": 0.0007995829500704198,
+            "batch_size": 245,
+            "entropy_cost": 0.005863564647734166
+          }
+        ],
+        "20003": [
+          {
+            "learning_rate": 0.0047753206980409735,
+            "batch_size": 144,
+            "entropy_cost": 0.08393157869577408
+          },
+          {
+            "learning_rate": 3.4274630334851546e-05,
+            "batch_size": 429,
+            "entropy_cost": 0.015376784931868316
+          },
+          {
+            "learning_rate": 6.568846601821044e-05,
+            "batch_size": 223,
+            "entropy_cost": 0.07498069573193789
+          },
+          {
+            "learning_rate": 0.0004490678462709328,
+            "batch_size": 357,
+            "entropy_cost": 0.030644866172224283
+          },
+          {
+            "learning_rate": 0.0007828156500249408,
+            "batch_size": 287,
+            "entropy_cost": 0.004072938952594996
+          }
+        ],
+        "20004": [
+          {
+            "learning_rate": 0.0003265725280831712,
+            "batch_size": 447,
+            "entropy_cost": 0.03271315190941095
+          },
+          {
+            "learning_rate": 0.00012752971264576966,
+            "batch_size": 122,
+            "entropy_cost": 0.06747995791956783
+          },
+          {
+            "learning_rate": 2.4749683905691227e-05,
+            "batch_size": 383,
+            "entropy_cost": 0.020031175576150417
+          },
+          {
+            "learning_rate": 0.009730408587749314,
+            "batch_size": 199,
+            "entropy_cost": 0.07979574194177985
+          },
+          {
+            "learning_rate": 0.0033639230744230996,
+            "batch_size": 288,
+            "entropy_cost": 0.05276197073981166
+          }
+        ],
+        "20005": [
+          {
+            "learning_rate": 0.0008217053388240859,
+            "batch_size": 236,
+            "entropy_cost": 0.08229175619781018
+          },
+          {
+            "learning_rate": 1.780882557304601e-05,
+            "batch_size": 408,
+            "entropy_cost": 0.03224109979346395
+          },
+          {
+            "learning_rate": 0.0001259631102638291,
+            "batch_size": 151,
+            "entropy_cost": 0.06011711228638888
+          },
+          {
+            "learning_rate": 0.0058119405627424766,
+            "batch_size": 324,
+            "entropy_cost": 0.010066834371536972
+          },
+          {
+            "learning_rate": 0.002245030588933679,
+            "batch_size": 82,
+            "entropy_cost": 0.04576071258634329
+          }
+        ],
+        "20006": [
+          {
+            "learning_rate": 0.0057787021997129885,
+            "batch_size": 405,
+            "entropy_cost": 0.05882279789075256
+          },
+          {
+            "learning_rate": 0.00023388964071962128,
+            "batch_size": 201,
+            "entropy_cost": 0.03753813961520791
+          },
+          {
+            "learning_rate": 1.992213728976467e-05,
+            "batch_size": 378,
+            "entropy_cost": 0.09213424045592547
+          },
+          {
+            "learning_rate": 0.00038151108430203607,
+            "batch_size": 174,
+            "entropy_cost": 0.011456284299492837
+          },
+          {
+            "learning_rate": 0.0012270136303305782,
+            "batch_size": 314,
+            "entropy_cost": 0.033231721539050345
+          }
+        ],
+        "20007": [
+          {
+            "learning_rate": 3.5452138716195525e-05,
+            "batch_size": 442,
+            "entropy_cost": 0.042947571724653244
+          },
+          {
+            "learning_rate": 0.0008426910169603133,
+            "batch_size": 66,
+            "entropy_cost": 0.07983109643682838
+          },
+          {
+            "learning_rate": 0.00309513603706553,
+            "batch_size": 357,
+            "entropy_cost": 0.009035270009189845
+          },
+          {
+            "learning_rate": 0.00012715435715194556,
+            "batch_size": 263,
+            "entropy_cost": 0.07130946721881629
+          },
+          {
+            "learning_rate": 0.00014088981831118016,
+            "batch_size": 324,
+            "entropy_cost": 0.0972166351042688
+          }
+        ],
+        "20008": [
+          {
+            "learning_rate": 1.9538567151590474e-05,
+            "batch_size": 210,
+            "entropy_cost": 0.006720567960292101
+          },
+          {
+            "learning_rate": 0.0006468751720865228,
+            "batch_size": 300,
+            "entropy_cost": 0.07325646495446562
+          },
+          {
+            "learning_rate": 0.009707116089322466,
+            "batch_size": 166,
+            "entropy_cost": 0.03547874754294753
+          },
+          {
+            "learning_rate": 0.0002892694867444392,
+            "batch_size": 483,
+            "entropy_cost": 0.09391845138743521
+          },
+          {
+            "learning_rate": 9.204232362585757e-05,
+            "batch_size": 78,
+            "entropy_cost": 0.05016297791153193
+          }
+        ],
+        "20009": [
+          {
+            "learning_rate": 0.008159771085410024,
+            "batch_size": 495,
+            "entropy_cost": 0.02765351012349129
+          },
+          {
+            "learning_rate": 0.0001271640315224454,
+            "batch_size": 170,
+            "entropy_cost": 0.06729313200339675
+          },
+          {
+            "learning_rate": 1.350321655292957e-05,
+            "batch_size": 370,
+            "entropy_cost": 0.015279291383922101
+          },
+          {
+            "learning_rate": 0.001077046222410408,
+            "batch_size": 239,
+            "entropy_cost": 0.08030293295159936
+          },
+          {
+            "learning_rate": 0.0006026737530009653,
+            "batch_size": 320,
+            "entropy_cost": 0.05057281060144306
+          }
+        ],
+        "20010": [
+          {
+            "learning_rate": 4.421591609764038e-05,
+            "batch_size": 220,
+            "entropy_cost": 0.0003593704663217068
+          },
+          {
+            "learning_rate": 0.0018435856707821852,
+            "batch_size": 500,
+            "entropy_cost": 0.053667903412133455
+          },
+          {
+            "learning_rate": 0.00046933266070456575,
+            "batch_size": 171,
+            "entropy_cost": 0.03491577794775367
+          },
+          {
+            "learning_rate": 0.00026099409057157527,
+            "batch_size": 338,
+            "entropy_cost": 0.0816073370166123
+          },
+          {
+            "learning_rate": 9.885725006862384e-05,
+            "batch_size": 108,
+            "entropy_cost": 0.0745199359022081
+          }
+        ],
+        "20011": [
+          {
+            "learning_rate": 0.0005569056186657941,
+            "batch_size": 477,
+            "entropy_cost": 0.07052539670839907
+          },
+          {
+            "learning_rate": 0.00016439804946690234,
+            "batch_size": 192,
+            "entropy_cost": 0.0372591438703239
+          },
+          {
+            "learning_rate": 3.447851366163089e-05,
+            "batch_size": 292,
+            "entropy_cost": 0.08094621924683452
+          },
+          {
+            "learning_rate": 0.004093643287694433,
+            "batch_size": 122,
+            "entropy_cost": 0.014381856564432383
+          },
+          {
+            "learning_rate": 0.00701809346218094,
+            "batch_size": 361,
+            "entropy_cost": 0.03910149093717337
+          }
+        ],
+        "20012": [
+          {
+            "learning_rate": 0.006699123112087689,
+            "batch_size": 101,
+            "entropy_cost": 0.07733229147270322
+          },
+          {
+            "learning_rate": 6.569340128890958e-05,
+            "batch_size": 488,
+            "entropy_cost": 0.04746290119364858
+          },
+          {
+            "learning_rate": 1.4998014970871068e-05,
+            "batch_size": 262,
+            "entropy_cost": 0.07423377977684141
+          },
+          {
+            "learning_rate": 0.0015912576318285138,
+            "batch_size": 327,
+            "entropy_cost": 0.0009535637684166432
+          },
+          {
+            "learning_rate": 0.0007206818620913596,
+            "batch_size": 226,
+            "entropy_cost": 0.025493939686566592
+          }
+        ],
+        "20013": [
+          {
+            "learning_rate": 1.2118917422126067e-05,
+            "batch_size": 409,
+            "entropy_cost": 0.07251212438568473
+          },
+          {
+            "learning_rate": 0.0005690288506476896,
+            "batch_size": 163,
+            "entropy_cost": 0.04062909055501223
+          },
+          {
+            "learning_rate": 0.002768972618329448,
+            "batch_size": 295,
+            "entropy_cost": 0.08313212227076293
+          },
+          {
+            "learning_rate": 6.048568615403185e-05,
+            "batch_size": 288,
+            "entropy_cost": 0.0021275657229125502
+          },
+          {
+            "learning_rate": 0.00016708167275198714,
+            "batch_size": 359,
+            "entropy_cost": 0.036373061873018746
+          }
+        ],
+        "20014": [
+          {
+            "learning_rate": 0.0005256877932569847,
+            "batch_size": 441,
+            "entropy_cost": 0.003612030763179064
+          },
+          {
+            "learning_rate": 8.147766873247032e-05,
+            "batch_size": 67,
+            "entropy_cost": 0.09536774158477784
+          },
+          {
+            "learning_rate": 2.335624038967454e-05,
+            "batch_size": 350,
+            "entropy_cost": 0.04139488581568003
+          },
+          {
+            "learning_rate": 0.0017797416568047894,
+            "batch_size": 271,
+            "entropy_cost": 0.05815977668389678
+          },
+          {
+            "learning_rate": 0.006090820727545212,
+            "batch_size": 339,
+            "entropy_cost": 0.07730501601472498
+          }
+        ],
+        "20015": [
+          {
+            "learning_rate": 0.0003795612770314219,
+            "batch_size": 370,
+            "entropy_cost": 0.053681286796927456
+          },
+          {
+            "learning_rate": 1.9366463875212036e-05,
+            "batch_size": 130,
+            "entropy_cost": 0.023730240389704706
+          },
+          {
+            "learning_rate": 7.999517018185115e-05,
+            "batch_size": 460,
+            "entropy_cost": 0.08165136761963368
+          },
+          {
+            "learning_rate": 0.0030258695638708485,
+            "batch_size": 248,
+            "entropy_cost": 0.03938638307154179
+          },
+          {
+            "learning_rate": 0.005250348998126135,
+            "batch_size": 408,
+            "entropy_cost": 0.009440163429826499
+          }
+        ],
+        "20016": [
+          {
+            "learning_rate": 0.0003606967303502814,
+            "batch_size": 403,
+            "entropy_cost": 0.039356344006955625
+          },
+          {
+            "learning_rate": 0.00018242604354206583,
+            "batch_size": 191,
+            "entropy_cost": 0.09133367436006666
+          },
+          {
+            "learning_rate": 2.2257921639275213e-05,
+            "batch_size": 386,
+            "entropy_cost": 0.019532190170139074
+          },
+          {
+            "learning_rate": 0.007013567747529955,
+            "batch_size": 173,
+            "entropy_cost": 0.07463436536490918
+          },
+          {
+            "learning_rate": 0.001853456108302223,
+            "batch_size": 318,
+            "entropy_cost": 0.07512602964416147
+          }
+        ],
+        "20017": [
+          {
+            "learning_rate": 8.692309709508141e-05,
+            "batch_size": 287,
+            "entropy_cost": 0.0062509323470294476
+          },
+          {
+            "learning_rate": 0.006640668544755628,
+            "batch_size": 384,
+            "entropy_cost": 0.07436470128595829
+          },
+          {
+            "learning_rate": 0.0006661086996487893,
+            "batch_size": 119,
+            "entropy_cost": 0.049998537916690115
+          },
+          {
+            "learning_rate": 4.9701317442988986e-05,
+            "batch_size": 441,
+            "entropy_cost": 0.08188505340367556
+          },
+          {
+            "learning_rate": 1.7490416255784006e-05,
+            "batch_size": 132,
+            "entropy_cost": 0.05930204344913364
+          }
+        ],
+        "20018": [
+          {
+            "learning_rate": 0.0002065245043521616,
+            "batch_size": 426,
+            "entropy_cost": 0.09570118570700288
+          },
+          {
+            "learning_rate": 0.00146540378307047,
+            "batch_size": 128,
+            "entropy_cost": 0.025362807512283328
+          },
+          {
+            "learning_rate": 0.0065987101571336184,
+            "batch_size": 325,
+            "entropy_cost": 0.05689196726307273
+          },
+          {
+            "learning_rate": 4.5902116779595036e-05,
+            "batch_size": 285,
+            "entropy_cost": 0.014733550511300564
+          },
+          {
+            "learning_rate": 1.5219170069772563e-05,
+            "batch_size": 399,
+            "entropy_cost": 0.038736771885305644
+          }
+        ],
+        "20019": [
+          {
+            "learning_rate": 0.007240113444416388,
+            "batch_size": 185,
+            "entropy_cost": 0.08934096237644554
+          },
+          {
+            "learning_rate": 0.00012142832623524608,
+            "batch_size": 430,
+            "entropy_cost": 0.03604981806129217
+          },
+          {
+            "learning_rate": 4.205087715670152e-05,
+            "batch_size": 68,
+            "entropy_cost": 0.0665349799208343
+          },
+          {
+            "learning_rate": 0.0007049634438622583,
+            "batch_size": 328,
+            "entropy_cost": 0.007293275929987431
+          },
+          {
+            "learning_rate": 0.0012164080884023848,
+            "batch_size": 122,
+            "entropy_cost": 0.04355503888800741
+          }
+        ],
+        "30000": [
+          {
+            "learning_rate": 0.0018054043654507107,
+            "batch_size": 215,
+            "entropy_cost": 0.071611762419343
+          },
+          {
+            "learning_rate": 9.29577831285215e-05,
+            "batch_size": 465,
+            "entropy_cost": 0.044777344260364775
+          },
+          {
+            "learning_rate": 1.3354004536776099e-05,
+            "batch_size": 122,
+            "entropy_cost": 0.09916922496631742
+          },
+          {
+            "learning_rate": 0.0006139993581811657,
+            "batch_size": 322,
+            "entropy_cost": 0.021944718062877656
+          },
+          {
+            "learning_rate": 0.0012380203171824238,
+            "batch_size": 98,
+            "entropy_cost": 0.036428968887776136
+          }
+        ],
+        "30001": [
+          {
+            "learning_rate": 0.003917035443479338,
+            "batch_size": 326,
+            "entropy_cost": 0.022733599320054056
+          },
+          {
+            "learning_rate": 1.90694331467678e-05,
+            "batch_size": 185,
+            "entropy_cost": 0.05369418067857623
+          },
+          {
+            "learning_rate": 0.00022162229265834218,
+            "batch_size": 404,
+            "entropy_cost": 0.03340689949691296
+          },
+          {
+            "learning_rate": 0.0014517551713929724,
+            "batch_size": 96,
+            "entropy_cost": 0.09014014033600688
+          },
+          {
+            "learning_rate": 0.0004740625686035659,
+            "batch_size": 487,
+            "entropy_cost": 0.06953256772831083
+          }
+        ],
+        "30002": [
+          {
+            "learning_rate": 0.0001639790173261796,
+            "batch_size": 71,
+            "entropy_cost": 0.005785412807017565
+          },
+          {
+            "learning_rate": 0.0033670114696936386,
+            "batch_size": 371,
+            "entropy_cost": 0.06683295853435993
+          },
+          {
+            "learning_rate": 0.000634590220170869,
+            "batch_size": 223,
+            "entropy_cost": 0.02730561513453722
+          },
+          {
+            "learning_rate": 3.0908441108008474e-05,
+            "batch_size": 488,
+            "entropy_cost": 0.08759632660076022
+          },
+          {
+            "learning_rate": 1.0341104553628669e-05,
+            "batch_size": 286,
+            "entropy_cost": 0.06048901462927461
+          }
+        ],
+        "30003": [
+          {
+            "learning_rate": 1.3860983673355533e-05,
+            "batch_size": 164,
+            "entropy_cost": 0.003426844067871571
+          },
+          {
+            "learning_rate": 0.0014643849825672565,
+            "batch_size": 447,
+            "entropy_cost": 0.0709023304283619
+          },
+          {
+            "learning_rate": 0.004750223797838935,
+            "batch_size": 268,
+            "entropy_cost": 0.029032075032591823
+          },
+          {
+            "learning_rate": 8.834153258543994e-05,
+            "batch_size": 329,
+            "entropy_cost": 0.09651666786521673
+          },
+          {
+            "learning_rate": 0.00022405941740474443,
+            "batch_size": 204,
+            "entropy_cost": 0.05370640326291323
+          }
+        ],
+        "30004": [
+          {
+            "learning_rate": 0.0006457287559767427,
+            "batch_size": 182,
+            "entropy_cost": 0.08786352872848512
+          },
+          {
+            "learning_rate": 1.7238151155029736e-05,
+            "batch_size": 421,
+            "entropy_cost": 0.0493123721331358
+          },
+          {
+            "learning_rate": 8.511782938529458e-05,
+            "batch_size": 163,
+            "entropy_cost": 0.059894301742315297
+          },
+          {
+            "learning_rate": 0.0018283689903485973,
+            "batch_size": 373,
+            "entropy_cost": 0.002940662577748299
+          },
+          {
+            "learning_rate": 0.005165195869545668,
+            "batch_size": 85,
+            "entropy_cost": 0.02898447783663869
+          }
+        ],
+        "30005": [
+          {
+            "learning_rate": 1.5270315411196653e-05,
+            "batch_size": 480,
+            "entropy_cost": 0.02774446662515402
+          },
+          {
+            "learning_rate": 0.0030926563032997916,
+            "batch_size": 256,
+            "entropy_cost": 0.07578945411369205
+          },
+          {
+            "learning_rate": 0.0003388565006288552,
+            "batch_size": 325,
+            "entropy_cost": 0.01744643896818161
+          },
+          {
+            "learning_rate": 0.00011262927312151005,
+            "batch_size": 102,
+            "entropy_cost": 0.06627549948170781
+          },
+          {
+            "learning_rate": 0.00024636773883421223,
+            "batch_size": 379,
+            "entropy_cost": 0.09698958564549685
+          }
+        ],
+        "30006": [
+          {
+            "learning_rate": 3.201552311972982e-05,
+            "batch_size": 251,
+            "entropy_cost": 0.019224691204726696
+          },
+          {
+            "learning_rate": 0.0011865587148806114,
+            "batch_size": 424,
+            "entropy_cost": 0.0775248990394175
+          },
+          {
+            "learning_rate": 0.008372828738671921,
+            "batch_size": 102,
+            "entropy_cost": 0.04384080180898309
+          },
+          {
+            "learning_rate": 0.00014639513023347788,
+            "batch_size": 376,
+            "entropy_cost": 0.052920736186206345
+          },
+          {
+            "learning_rate": 0.00010941964798941423,
+            "batch_size": 156,
+            "entropy_cost": 0.09370736135169865
+          }
+        ],
+        "30007": [
+          {
+            "learning_rate": 3.915290949229377e-05,
+            "batch_size": 218,
+            "entropy_cost": 0.0027594755403697493
+          },
+          {
+            "learning_rate": 0.006099232597488881,
+            "batch_size": 505,
+            "entropy_cost": 0.06464431276544928
+          },
+          {
+            "learning_rate": 0.0008850518149487017,
+            "batch_size": 101,
+            "entropy_cost": 0.03340730294585228
+          },
+          {
+            "learning_rate": 0.00026258160179634866,
+            "batch_size": 383,
+            "entropy_cost": 0.09683985523879529
+          },
+          {
+            "learning_rate": 8.811065672555567e-05,
+            "batch_size": 160,
+            "entropy_cost": 0.05062178624793887
+          }
+        ],
+        "30008": [
+          {
+            "learning_rate": 0.003677401536475954,
+            "batch_size": 348,
+            "entropy_cost": 0.01686519617214799
+          },
+          {
+            "learning_rate": 8.963737698739023e-05,
+            "batch_size": 244,
+            "entropy_cost": 0.05480843782424927
+          },
+          {
+            "learning_rate": 1.500505866485463e-05,
+            "batch_size": 481,
+            "entropy_cost": 0.04211787721142173
+          },
+          {
+            "learning_rate": 0.00035839536896852935,
+            "batch_size": 136,
+            "entropy_cost": 0.0799588879570365
+          },
+          {
+            "learning_rate": 0.001597417895505424,
+            "batch_size": 440,
+            "entropy_cost": 0.06867127157747746
+          }
+        ],
+        "30009": [
+          {
+            "learning_rate": 7.684724979186413e-05,
+            "batch_size": 488,
+            "entropy_cost": 0.03201865749433637
+          },
+          {
+            "learning_rate": 0.002353692797033251,
+            "batch_size": 240,
+            "entropy_cost": 0.05254150405526162
+          },
+          {
+            "learning_rate": 0.00043171612008023337,
+            "batch_size": 325,
+            "entropy_cost": 0.0034649741835892202
+          },
+          {
+            "learning_rate": 1.3264193404293764e-05,
+            "batch_size": 68,
+            "entropy_cost": 0.08736710995435715
+          },
+          {
+            "learning_rate": 4.437667860018066e-05,
+            "batch_size": 399,
+            "entropy_cost": 0.0748983034864068
+          }
+        ],
+        "30010": [
+          {
+            "learning_rate": 0.0024401650909967897,
+            "batch_size": 183,
+            "entropy_cost": 0.07403049329295755
+          },
+          {
+            "learning_rate": 1.1770138738215222e-05,
+            "batch_size": 488,
+            "entropy_cost": 0.009548240900039674
+          },
+          {
+            "learning_rate": 0.00015001800619298086,
+            "batch_size": 91,
+            "entropy_cost": 0.07673570010811091
+          },
+          {
+            "learning_rate": 0.0009804095819612182,
+            "batch_size": 397,
+            "entropy_cost": 0.03809292865917087
+          },
+          {
+            "learning_rate": 0.00038298623377409625,
+            "batch_size": 132,
+            "entropy_cost": 0.018330224603414536
+          }
+        ],
+        "30011": [
+          {
+            "learning_rate": 0.0038456464497757647,
+            "batch_size": 271,
+            "entropy_cost": 0.090603203792125
+          },
+          {
+            "learning_rate": 0.00012483190033484422,
+            "batch_size": 453,
+            "entropy_cost": 0.006572204176336527
+          },
+          {
+            "learning_rate": 1.5946398854607758e-05,
+            "batch_size": 167,
+            "entropy_cost": 0.05607393449172378
+          },
+          {
+            "learning_rate": 0.0004912543346487314,
+            "batch_size": 322,
+            "entropy_cost": 0.047140519600361586
+          },
+          {
+            "learning_rate": 0.0008960442797882102,
+            "batch_size": 91,
+            "entropy_cost": 0.012959787901490927
+          }
+        ],
+        "30012": [
+          {
+            "learning_rate": 2.0801970792349865e-05,
+            "batch_size": 94,
+            "entropy_cost": 0.03290224345400929
+          },
+          {
+            "learning_rate": 0.0038160235366728593,
+            "batch_size": 447,
+            "entropy_cost": 0.08684618826955558
+          },
+          {
+            "learning_rate": 0.0007662636593083413,
+            "batch_size": 202,
+            "entropy_cost": 0.006345739215612412
+          },
+          {
+            "learning_rate": 0.00016391718979983543,
+            "batch_size": 296,
+            "entropy_cost": 0.060290399473160505
+          },
+          {
+            "learning_rate": 6.511559327356687e-05,
+            "batch_size": 274,
+            "entropy_cost": 0.0882188381627202
+          }
+        ],
+        "30013": [
+          {
+            "learning_rate": 0.0011193375765071617,
+            "batch_size": 143,
+            "entropy_cost": 0.02996702864766121
+          },
+          {
+            "learning_rate": 7.661994698537199e-05,
+            "batch_size": 390,
+            "entropy_cost": 0.08029141733422876
+          },
+          {
+            "learning_rate": 1.3045935447499457e-05,
+            "batch_size": 210,
+            "entropy_cost": 0.0028136352077126506
+          },
+          {
+            "learning_rate": 0.005901193164539581,
+            "batch_size": 408,
+            "entropy_cost": 0.052366686146706344
+          },
+          {
+            "learning_rate": 0.00288173371671693,
+            "batch_size": 264,
+            "entropy_cost": 0.09976038988679647
+          }
+        ],
+        "30014": [
+          {
+            "learning_rate": 0.00014916667110324467,
+            "batch_size": 195,
+            "entropy_cost": 0.02683719666674733
+          },
+          {
+            "learning_rate": 0.000755628619754606,
+            "batch_size": 411,
+            "entropy_cost": 0.05307194450870156
+          },
+          {
+            "learning_rate": 0.0026874060011361596,
+            "batch_size": 167,
+            "entropy_cost": 0.009782230854034424
+          },
+          {
+            "learning_rate": 1.350488483781268e-05,
+            "batch_size": 386,
+            "entropy_cost": 0.08530863933265209
+          },
+          {
+            "learning_rate": 4.829867095120965e-05,
+            "batch_size": 104,
+            "entropy_cost": 0.07145823072642088
+          }
+        ],
+        "30015": [
+          {
+            "learning_rate": 0.000387084728515925,
+            "batch_size": 198,
+            "entropy_cost": 0.08493109270930291
+          },
+          {
+            "learning_rate": 5.7766406773678884e-05,
+            "batch_size": 299,
+            "entropy_cost": 0.0011951421387493611
+          },
+          {
+            "learning_rate": 1.6646845483339678e-05,
+            "batch_size": 78,
+            "entropy_cost": 0.05590243795886636
+          },
+          {
+            "learning_rate": 0.0031665785782041154,
+            "batch_size": 405,
+            "entropy_cost": 0.03339762501418591
+          },
+          {
+            "learning_rate": 0.006969991850829853,
+            "batch_size": 138,
+            "entropy_cost": 0.01777993692085147
+          }
+        ],
+        "30016": [
+          {
+            "learning_rate": 0.0013851595588837712,
+            "batch_size": 234,
+            "entropy_cost": 0.061965396348387006
+          },
+          {
+            "learning_rate": 1.0274954428428602e-05,
+            "batch_size": 384,
+            "entropy_cost": 0.04147604797035456
+          },
+          {
+            "learning_rate": 0.00016790198319706275,
+            "batch_size": 68,
+            "entropy_cost": 0.09725755117833615
+          },
+          {
+            "learning_rate": 0.00412782957603036,
+            "batch_size": 438,
+            "entropy_cost": 0.004868598189204931
+          },
+          {
+            "learning_rate": 0.004910807123793254,
+            "batch_size": 160,
+            "entropy_cost": 0.0325666693970561
+          }
+        ],
+        "30017": [
+          {
+            "learning_rate": 1.3169569673861934e-05,
+            "batch_size": 160,
+            "entropy_cost": 0.05575152421370149
+          },
+          {
+            "learning_rate": 0.0037878234260934865,
+            "batch_size": 330,
+            "entropy_cost": 0.043064449541270734
+          },
+          {
+            "learning_rate": 0.0003464897421690425,
+            "batch_size": 223,
+            "entropy_cost": 0.0838642131537199
+          },
+          {
+            "learning_rate": 9.997343358603096e-05,
+            "batch_size": 505,
+            "entropy_cost": 0.021177137922495606
+          },
+          {
+            "learning_rate": 0.0001503718055544094,
+            "batch_size": 234,
+            "entropy_cost": 0.03466923274099827
+          }
+        ],
+        "30018": [
+          {
+            "learning_rate": 3.118369564844621e-05,
+            "batch_size": 347,
+            "entropy_cost": 0.08417379967868328
+          },
+          {
+            "learning_rate": 0.0005273801963088367,
+            "batch_size": 77,
+            "entropy_cost": 0.02420676201581955
+          },
+          {
+            "learning_rate": 0.008091959003067138,
+            "batch_size": 510,
+            "entropy_cost": 0.06815122049301862
+          },
+          {
+            "learning_rate": 5.770665520871321e-05,
+            "batch_size": 219,
+            "entropy_cost": 0.02693417984992266
+          },
+          {
+            "learning_rate": 0.00020940489153774863,
+            "batch_size": 436,
+            "entropy_cost": 0.004437281563878059
+          }
+        ],
+        "30019": [
+          {
+            "learning_rate": 0.0027973187855601465,
+            "batch_size": 196,
+            "entropy_cost": 0.04703317219391465
+          },
+          {
+            "learning_rate": 0.0002062991193205548,
+            "batch_size": 477,
+            "entropy_cost": 0.06948534604161978
+          },
+          {
+            "learning_rate": 3.669750338225557e-05,
+            "batch_size": 94,
+            "entropy_cost": 0.016155656054615976
+          },
+          {
+            "learning_rate": 0.000497599959023727,
+            "batch_size": 374,
+            "entropy_cost": 0.08783802492544056
+          },
+          {
+            "learning_rate": 0.0009626412617422134,
+            "batch_size": 140,
+            "entropy_cost": 0.05842547230422497
+          }
+        ]
+      },
+      "settings": {
+        "environment": "hopper",
+        "backend": "generalized",
+        "max_timesteps": 100000,
+        "episode_length": 1000,
+        "eval_episodes": 10,
+        "num_evals": 5,
+        "unroll_length": 10,
+        "num_minibatches": 32,
+        "num_updates_per_batch": 2
+      },
+      "fixed_config": {
+        "num_envs": 32,
+        "discounting": 0.99,
+        "reward_scaling": 1.0,
+        "gae_lambda": 0.95,
+        "normalize_observations": true,
+        "activation": "relu",
+        "hidden_layer_sizes": [
+          256,
+          256
+        ]
+      },
+      "budget": {
+        "seconds": null,
+        "max_overshoot_seconds": null,
+        "trial_limit": 50,
+        "protected_policy_cap_seconds": null
+      },
+      "data_artifacts": [
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/envs/hopper.py",
+          "sha256": "3d5c16eb5e94f2036b1d0733b33baf363a57584984deb42d623f4f341eb9d662"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/envs/assets/hopper.xml",
+          "sha256": "0fe1b2b922b677f60603da4fc8b9165f4ad98f61ce7f836e13e9a53bc690922d"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/envs/base.py",
+          "sha256": "d14f2cc0ff1b968a78e16fb6dcfecc4cd1398f7c137d9f271b8dd7b0be0a6ad9"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/envs/wrappers/training.py",
+          "sha256": "ba841eea1c59c9c5f899171d3ef28739ee49ea8cd52c30108122dbc04943342b"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/training/agents/ppo/train.py",
+          "sha256": "e0ae6009669011bd907e8c66131a7b7c05337baf46023dda8f9df7a27a820398"
+        },
+        {
+          "path": "/home/ubuntu/miniforge3/lib/python3.13/site-packages/brax/training/agents/ppo/networks.py",
+          "sha256": "69eb0406855fb72c1192a80ce0f668a22ae7ae1bc369ebe4e3a930c5a4a9a1b7"
+        }
+      ],
+      "stream_task_index": 2,
+      "objective_direction": "maximize",
+      "role": "acceptance"
+    }
+  },
+  "seed_sets": {
+    "pilot": [
+      10000,
+      10001,
+      10002,
+      10003,
+      10004
+    ],
+    "confirmation": [
+      20000,
+      20001,
+      20002,
+      20003,
+      20004,
+      20005,
+      20006,
+      20007,
+      20008,
+      20009,
+      20010,
+      20011,
+      20012,
+      20013,
+      20014,
+      20015,
+      20016,
+      20017,
+      20018,
+      20019
+    ],
+    "replication": [
+      30000,
+      30001,
+      30002,
+      30003,
+      30004,
+      30005,
+      30006,
+      30007,
+      30008,
+      30009,
+      30010,
+      30011,
+      30012,
+      30013,
+      30014,
+      30015,
+      30016,
+      30017,
+      30018,
+      30019
+    ]
+  },
+  "initialization": "shared_frozen_physical_v05_charged_to_each_arm",
+  "gp_options": {
+    "initial_random_samples": 5,
+    "num_restarts": 10,
+    "kernel": "matern52"
+  },
+  "accounting": "sequential_elapsed_seconds_including_optimizer",
+  "budget_grid": [
+    0.0,
+    0.01,
+    0.02,
+    0.03,
+    0.04,
+    0.05,
+    0.06,
+    0.07,
+    0.08,
+    0.09,
+    0.1,
+    0.11,
+    0.12,
+    0.13,
+    0.14,
+    0.15,
+    0.16,
+    0.17,
+    0.18,
+    0.19,
+    0.2,
+    0.21,
+    0.22,
+    0.23,
+    0.24,
+    0.25,
+    0.26,
+    0.27,
+    0.28,
+    0.29,
+    0.3,
+    0.31,
+    0.32,
+    0.33,
+    0.34,
+    0.35,
+    0.36,
+    0.37,
+    0.38,
+    0.39,
+    0.4,
+    0.41,
+    0.42,
+    0.43,
+    0.44,
+    0.45,
+    0.46,
+    0.47,
+    0.48,
+    0.49,
+    0.5,
+    0.51,
+    0.52,
+    0.53,
+    0.54,
+    0.55,
+    0.56,
+    0.57,
+    0.58,
+    0.59,
+    0.6,
+    0.61,
+    0.62,
+    0.63,
+    0.64,
+    0.65,
+    0.66,
+    0.67,
+    0.68,
+    0.69,
+    0.7,
+    0.71,
+    0.72,
+    0.73,
+    0.74,
+    0.75,
+    0.76,
+    0.77,
+    0.78,
+    0.79,
+    0.8,
+    0.81,
+    0.82,
+    0.83,
+    0.84,
+    0.85,
+    0.86,
+    0.87,
+    0.88,
+    0.89,
+    0.9,
+    0.91,
+    0.92,
+    0.93,
+    0.94,
+    0.95,
+    0.96,
+    0.97,
+    0.98,
+    0.99,
+    1.0
+  ],
+  "auc_rule": "left_rectangle_paired_win_on_fixed_grid",
+  "margins": {
+    "V04-T0": {
+      "final_win": 0.0,
+      "anytime_win": 0.0
+    },
+    "V05": {
+      "final_win": 0.0
+    }
+  },
+  "planning_effects": {
+    "V04-T0": {
+      "final_win": null,
+      "anytime_win": null
+    },
+    "V05": {
+      "final_win": null
+    }
+  },
+  "missingness": "retain_all_planned_vectors_lower_bounds_void_above_10pct_unresolved_per_arm",
+  "family": {
+    "members": [
+      "V04-T0",
+      "V05"
+    ],
+    "alpha": 0.05,
+    "combination": "intersection_union_then_holm"
+  },
+  "analysis": {
+    "method": "fixed_count_bounded_mean_mixture_e_v1",
+    "unit": "complete_seed_vector",
+    "mixture": "uniform_0_1",
+    "count": "fixed",
+    "missingness": "coordinatewise_lower_bounds",
+    "power_target": 0.8,
+    "max_sample": 20
+  },
+  "resource": {
+    "workers": 1,
+    "allocation_id": null,
+    "owner": null,
+    "campaign_cap_seconds": null,
+    "protected_cap_seconds": null
+  },
+  "notes": [
+    "Proposed scope only: known development exposure and trusted local chronology, no unseen-task or external-history assertion.",
+    "The current five-vector pilot fails the ideal-data sizing screen and must not be launched for confirmation sizing.",
+    "Task budgets, resource allocation, phase freeze and source freeze remain unfilled. No workload inference is authorized by this candidate.",
+    "Existing v2.1 is unchanged; scope authorization is required before this proposed path can execute."
+  ],
+  "dependencies": {
+    "Flask": "3.1.3",
+    "Jinja2": "3.1.6",
+    "Mako": "1.4.1",
+    "MarkupSafe": "3.0.3",
+    "PyOpenGL": "3.1.10",
+    "PyYAML": "6.0.3",
+    "Pygments": "2.21.0",
+    "SQLAlchemy": "2.0.52",
+    "Werkzeug": "3.1.8",
+    "absl-py": "2.5.0",
+    "aiofiles": "25.1.0",
+    "alembic": "1.19.1",
+    "blinker": "1.9.0",
+    "botorch": "0.18.1",
+    "brax": "0.14.2",
+    "click": "8.5.0",
+    "colorlog": "6.12.0",
+    "cuda-bindings": "13.3.1",
+    "cuda-pathfinder": "1.8.0",
+    "cuda-toolkit": "13.0.3.0",
+    "etils": "1.14.0",
+    "filelock": "3.32.4",
+    "flask-cors": "6.0.5",
+    "flax": "0.12.9",
+    "fsspec": "2026.7.0",
+    "glfw": "2.10.2",
+    "gpytorch": "1.15.2",
+    "greenlet": "3.5.5",
+    "humanize": "4.16.0",
+    "itsdangerous": "2.2.0",
+    "jax": "0.11.1",
+    "jaxlib": "0.11.1",
+    "jaxopt": "0.8.5",
+    "joblib": "1.5.3",
+    "linear_operator": "0.6.1",
+    "markdown-it-py": "4.2.0",
+    "mdurl": "0.1.2",
+    "ml_collections": "1.1.0",
+    "ml_dtypes": "0.6.0",
+    "mpmath": "1.3.0",
+    "msgpack": "1.1.2",
+    "mujoco": "3.12.0",
+    "mujoco-mjx": "3.12.0",
+    "multipledispatch": "1.0.0",
+    "mypy_extensions": "1.1.0",
+    "narwhals": "2.25.0",
+    "networkx": "3.6.1",
+    "ninja": "1.13.2",
+    "numpy": "2.5.2",
+    "nvidia-cublas": "13.1.1.3",
+    "nvidia-cuda-nvrtc": "13.0.88",
+    "nvidia-cudnn-cu13": "9.20.0.48",
+    "nvidia-cusparselt-cu13": "0.8.1",
+    "nvidia-nccl-cu13": "2.29.7",
+    "nvidia-nvshmem-cu13": "3.4.5",
+    "opt_einsum": "3.4.0",
+    "optax": "0.2.8",
+    "optuna": "4.9.0",
+    "orbax-checkpoint": "0.12.4",
+    "packaging": "26.2",
+    "pillow": "12.3.0",
+    "prometheus_client": "0.26.0",
+    "protobuf": "7.36.0",
+    "psutil": "7.2.2",
+    "pyre-extensions": "0.0.32",
+    "rich": "15.0.0",
+    "scikit-learn": "1.9.0",
+    "scipy": "1.18.1",
+    "setuptools": "82.0.1",
+    "simplejson": "4.1.2",
+    "sympy": "1.14.0",
+    "tensorboardX": "2.6.5",
+    "tensorstore": "0.1.85",
+    "threadpoolctl": "3.6.0",
+    "torch": "2.13.0",
+    "tqdm": "4.67.3",
+    "treescope": "0.1.10",
+    "trimesh": "5.1.0",
+    "triton": "3.7.1",
+    "typing-inspect": "0.9.0",
+    "typing_extensions": "4.16.0",
+    "uvloop": "0.22.1"
+  },
+  "protocol_register_sha256": "e447c276094e5b90d47b48291ab790c8dbad6d2d78f2e99d785f8d81b25113a5",
+  "selected_counts": {
+    "pilot": {
+      "V04-T0": 5,
+      "V05": 5
+    },
+    "confirmation": {
+      "V04-T0": null,
+      "V05": null
+    },
+    "replication": {
+      "V04-T0": null,
+      "V05": null
+    }
+  },
+  "sizing_receipt": null,
+  "random_stream_policy": "task_offset_20_slots_per_phase_v1",
+  "claim_contract": "protected_paired_rank_finite_suite_v1",
+  "scope": "conditional_named_finite_suite",
+  "outcome_approval": {
+    "path": "docs/program/evidence/2026-09-29/stat-03/outcome-scope-approval.json",
+    "sha256": "f86db6a696b549e15ed1200a4d3a93b8cb28bc405afac3344b673506be43178c"
+  },
+  "protected_evaluation": {
+    "selection": "search_score_only_earliest_tie_no_future_observations",
+    "seed_policy": "study_slot_offsets_10000_to_99999",
+    "all_search_frozen_before_test": true,
+    "reuse_same_selected_policy": true,
+    "cost": "separate_measured_elapsed_seconds",
+    "feeds_searcher": false
+  },
+  "sampling": {
+    "unit": "complete_seed_vector",
+    "task_weights": "equal",
+    "selection_algorithm": "prospective_named_suite_local_v1",
+    "assumptions": {
+      "scope": "conditional_named_finite_suite",
+      "exposure": "known_development_exposure_retained",
+      "selection": "all_named_tasks_no_population_inference",
+      "randomness": "independent_stationary_seed_vectors_conditional_on_fixed_experiment",
+      "chronology": "trusted_local_write_once_freeze_before_execution",
+      "isolation": "fresh_interpreter_bound_jobs_v1",
+      "unseen_task_claim": false,
+      "external_chronology_claim": false
+    },
+    "suite_manifest": {
+      "path": "docs/program/evidence/2026-09-30/phase-sequence/proposed-suite.json",
+      "sha256": "59cf1e504cdb23a625647cf52c2480f05462023b87464398610518c908125762"
+    }
+  },
+  "stopping": {
+    "confirmation": "one_fixed_count",
+    "replication": "unused"
+  },
+  "sizing_policy": {
+    "method": "independent_pilot_bounded_kl_v1",
+    "planning_error": 0.05,
+    "confidence_components": 11,
+    "count_rule": "smallest_sufficient_fixed_count_5_to_20",
+    "pilot_use": "sizing_only_no_confirmation_reuse",
+    "operational_bound": "binomial_tail_for_ten_percent_vector_loss_cap",
+    "cost_scope": "conditional_on_frozen_resource_envelope_no_cost_veto"
+  },
+  "phase_freeze": null,
+  "run_schedule": {
+    "pilot": {
+      "V04-T0": "validation/artifacts/V04-T0/prospective-v22-pilot-01",
+      "V05": "validation/artifacts/V05/prospective-v22-pilot-01"
+    },
+    "confirmation": {
+      "V04-T0": "validation/artifacts/V04-T0/prospective-v22-confirmation-01",
+      "V05": "validation/artifacts/V05/prospective-v22-confirmation-01"
+    }
+  }
+}

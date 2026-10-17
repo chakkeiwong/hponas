@@ -6,7 +6,7 @@ BUILD_PROGRAM_v2.md: Tier 1 MO stack, MO reporting utilities.
 
 This module reports on MO results; it does not optimize. It is deliberately
 independent of the store schema, whose Trial row carries a single `value` and
-cannot represent named objective vectors without a migration. Callers pass
+can persist named objective vectors through Store.write_objectives. Callers pass
 objective vectors directly.
 
 Conventions:
@@ -38,6 +38,8 @@ def pareto_mask(objectives: np.ndarray) -> np.ndarray:
         Boolean array of length n_points, True where non-dominated
     """
     objectives = np.atleast_2d(np.asarray(objectives, dtype=float))
+    if objectives.ndim != 2 or objectives.shape[1] < 1 or not np.isfinite(objectives).all():
+        raise ValueError("Finite objective matrix required")
     n = len(objectives)
     if n == 0:
         return np.zeros(0, dtype=bool)
@@ -75,10 +77,8 @@ def hypervolume(objectives: np.ndarray, reference_point: np.ndarray) -> float:
     """
     Hypervolume of the region dominated by `objectives` and bounded by the reference.
 
-    Exact for 2 objectives (sort-and-sweep) and for 3+ objectives via
-    inclusion-exclusion over the dominated boxes. Inclusion-exclusion is
-    exponential in the size of the front, so 3+ objective fronts are capped;
-    see `_hypervolume_inclusion_exclusion`.
+    Exact for 2 objectives (sort-and-sweep) and 3 objectives (disjoint slabs).
+    Higher dimensions use bounded inclusion-exclusion.
 
     Points not dominating the reference point contribute nothing. This is the
     measure V09 tracks, and unlike the rectangular per-point approximation used
@@ -94,6 +94,9 @@ def hypervolume(objectives: np.ndarray, reference_point: np.ndarray) -> float:
     """
     objectives = np.atleast_2d(np.asarray(objectives, dtype=float))
     reference_point = np.asarray(reference_point, dtype=float)
+    if (objectives.ndim != 2 or reference_point.ndim != 1 or not len(reference_point)
+            or not np.isfinite(objectives).all() or not np.isfinite(reference_point).all()):
+        raise ValueError("Finite objective matrix and reference point required")
 
     if objectives.size == 0:
         return 0.0
@@ -118,6 +121,14 @@ def hypervolume(objectives: np.ndarray, reference_point: np.ndarray) -> float:
         return float(reference_point[0] - np.min(front[:, 0]))
     if n_obj == 2:
         return _hypervolume_2d(front, reference_point)
+    if n_obj == 3:
+        # General-coordinate slabs avoid both exponential subsets and a
+        # reference translation that could lose precision near the origin.
+        unique = np.unique(front, axis=0)
+        cuts = sorted(set(unique[:, 0]) | {reference_point[0]})
+        return float(sum((right-left)*_hypervolume_2d(
+            pareto_front(unique[unique[:, 0] <= left, 1:]), reference_point[1:])
+            for left, right in zip(cuts, cuts[1:])))
     return _hypervolume_inclusion_exclusion(front, reference_point)
 
 
@@ -139,7 +150,9 @@ def _hypervolume_2d(front: np.ndarray, reference_point: np.ndarray) -> float:
     for i in range(len(sorted_front)):
         f1, f2 = sorted_front[i]
         # Width extends to the next point, or to the reference for the last one.
-        next_f1 = sorted_front[i + 1][0] if i + 1 < len(sorted_front) else reference_point[0]
+        next_f1 = (
+            sorted_front[i + 1][0] if i + 1 < len(sorted_front) else reference_point[0]
+        )
         width = next_f1 - f1
         height = reference_point[1] - f2
         if width > 0 and height > 0:
@@ -191,11 +204,12 @@ def _hypervolume_inclusion_exclusion(
     return volume
 
 
-def default_reference_point(
-    objectives: np.ndarray, margin: float = 0.1
-) -> np.ndarray:
+def default_reference_point(objectives: np.ndarray, margin: float = 0.1) -> np.ndarray:
     """
-    Reference point derived from observed objectives.
+    Exploratory reference derived from observed objectives.
+
+    This helper cannot freeze a comparative metric. Use declared domain bounds
+    with ObjectiveSpec for comparable study or campaign results.
 
     Takes the worst observed value per objective and pushes it away from the
     front by `margin`. A fixed reference point silently yields zero hypervolume
@@ -245,14 +259,12 @@ def hypervolume_over_budget(
     At each grid point the hypervolume covers every trial finished within that
     budget, so the curve is monotonically non-decreasing.
 
-    The reference point is computed once over ALL objectives rather than
-    per-budget. A reference that moved with the data would make hypervolumes at
-    different budgets incomparable, which is exactly the comparison V09 makes.
+    Supply the same reference declared before observations for every arm.
 
     Args:
         objectives: (n_trials, n_objectives) array, minimized, in completion order
         costs: (n_trials,) per-trial cost
-        reference_point: Fixed reference; derived from all objectives when None
+        reference_point: Required fixed reference declared before observations
         n_points: Number of budget grid points
 
     Returns:
@@ -262,23 +274,22 @@ def hypervolume_over_budget(
     costs = np.asarray(costs, dtype=float)
 
     if len(objectives) != len(costs):
-        raise ValueError(
-            f"Got {len(objectives)} objective rows but {len(costs)} costs"
-        )
+        raise ValueError(f"Got {len(objectives)} objective rows but {len(costs)} costs")
     if len(objectives) == 0:
         raise ValueError("Cannot compute a hypervolume curve from zero trials")
-    if np.any(costs < 0):
-        raise ValueError("Trial costs must be non-negative")
-
-    if reference_point is None:
-        reference_point = default_reference_point(objectives)
-    else:
-        reference_point = np.asarray(reference_point, dtype=float)
+    if costs.ndim != 1 or not np.isfinite(costs).all() or np.any(costs < 0):
+        raise ValueError("Trial costs must be finite and non-negative")
+    if type(n_points) is not int or n_points < 1:
+        raise ValueError("Positive integer grid size required")
 
     cumulative = np.cumsum(costs)
     total = cumulative[-1]
     if total <= 0:
         raise ValueError("Total budget is zero; hypervolume curve is undefined")
+    if reference_point is None:
+        raise ValueError("A fixed reference point declared before observations is required")
+    reference_point = np.asarray(reference_point, dtype=float)
+    hypervolume(objectives, reference_point)  # Validate all rows, including later budgets.
 
     budgets = np.linspace(total / n_points, total, n_points)
 
@@ -305,7 +316,7 @@ def summarize_front(
     Args:
         objectives: (n_trials, n_objectives) array, minimized
         objective_names: Names in the same column order as `objectives`
-        reference_point: Fixed reference; derived from observations when None
+        reference_point: Required fixed reference declared before observations
 
     Returns:
         dict with keys: n_trials, n_front, front_indices, front, hypervolume,
@@ -321,7 +332,7 @@ def summarize_front(
         )
 
     if reference_point is None:
-        reference_point = default_reference_point(objectives)
+        raise ValueError("A fixed reference point declared before observations is required")
     else:
         reference_point = np.asarray(reference_point, dtype=float)
 

@@ -1,0 +1,5 @@
+{
+  "root": "/home/ubuntu/workspace/hponas/.hponas-runtime/deployments/local-lab/artifacts",
+  "immutable_publication": "write_once_and_retained_sha256",
+  "shared_remote_storage": false
+}

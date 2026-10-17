@@ -24,7 +24,9 @@ VERIFIER = "tools/verify_manifest.py"
 def canonical_digest(task_registry: dict, seed_sets: dict) -> str:
     """Recompute the registry digest the way the verifier does."""
     payload = {"task_registry": task_registry, "seed_sets": seed_sets}
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    canonical = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    )
     return f"sha256:{hashlib.sha256(canonical.encode('utf-8')).hexdigest()}"
 
 
@@ -341,16 +343,11 @@ def test_signature_without_public_key_is_refused():
     assert "signature but no public_key" in result.stderr
 
 
-def test_signature_with_key_warns_but_passes():
-    """
-    Tier 1 checks the signature block's structure only.
-
-    Choosing a signature scheme and key custody is part of the certification milestone,
-    so the verifier says so out loud rather than implying the manifest is authenticated.
-    """
+def test_invalid_signature_with_key_is_rejected():
+    """A signature-shaped string must never be accepted without verification."""
     manifest = valid_manifest()
     manifest["signature"] = "dGVzdF9zaWduYXR1cmU="
     manifest["public_key"] = "cHVibGljX2tleV9kdW1teQ=="
     result = run_verify(manifest)
-    assert result.returncode == 0
-    assert "not yet implemented" in result.stderr
+    assert result.returncode == 1
+    assert "signature verification failed" in result.stderr

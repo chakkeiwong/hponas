@@ -133,6 +133,10 @@ class TestCheckpointResumeSeamless:
             )
             searcher1.observe(result)
 
+        # Capture the actual complete checkpoint before continuing. Truncating
+        # a later history would retain future RNG/suggestion/trial state.
+        state_at_5 = json.loads(json.dumps(searcher1.get_state()))
+
         # Continue for 3 more
         configs_before_checkpoint = []
         for i in range(5, 8):
@@ -147,11 +151,6 @@ class TestCheckpointResumeSeamless:
                 status="completed",
             )
             searcher1.observe(result)
-
-        # Now checkpoint after 5 iterations and resume
-        state_at_5 = searcher1.get_state()
-        # Restore to state with only 5 observations
-        state_at_5["history"] = state_at_5["history"][:5]
 
         searcher2 = GPSearcher(space, seed=42)
         searcher2.set_state(state_at_5)
@@ -171,12 +170,10 @@ class TestCheckpointResumeSeamless:
             )
             searcher2.observe(result)
 
-        # First 5 configs (random phase) should match exactly
-        # GP phase may have small numerical differences
-        for c1, c2 in zip(configs_before_checkpoint[:2], configs_after_resume[:2]):
-            if c1 and c2:  # If both exist
-                assert abs(c1.values["x"] - c2.values["x"]) < 0.1
-                assert abs(c1.values["y"] - c2.values["y"]) < 0.1
+        assert len(configs_before_checkpoint) == len(configs_after_resume) == 3
+        assert [c.values for c in configs_before_checkpoint] == [
+            c.values for c in configs_after_resume
+        ]
 
     def test_no_duplicate_evaluations(self):
         """Test resume doesn't re-evaluate completed trials."""

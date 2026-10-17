@@ -1,0 +1,10 @@
+{
+  "commit": "3f7475b5afaaacdace56f25357ddfbf0e5616157",
+  "repository": "https://github.com/automl/neps",
+  "directory": "src/neps/search_spaces/hyperparameters",
+  "files": {
+    "float.py": "6b837f9e0e140519c62671bf4eca0c046b9e7adc210e84997dbf612179642293",
+    "integer.py": "45789afca10798c6cea6926ec5667aa72dac134f2e602c267313fc3feb4be5da",
+    "numerical.py": "7ceec2a55848bcc4444cb317fa6ff2d608f4df09080f8f6480ced7405ec2c449"
+  }
+}

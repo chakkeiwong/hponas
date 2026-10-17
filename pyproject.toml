@@ -7,7 +7,7 @@ name = "hponas"
 version = "0.1.0"
 description = "Hyperparameter and Neural Architecture Search"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
     {name = "HPO-NAS Team"},
@@ -18,23 +18,36 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
 dependencies = [
-    "numpy>=1.24.0,<2.0.0",
-    "scipy>=1.10.0,<2.0.0",
-    "pandas>=2.0.0,<3.0.0",
-    "scikit-learn>=1.3.0,<2.0.0",
-    "botorch>=0.9.0,<1.0.0",
-    "gpytorch>=1.11.0,<2.0.0",
-    "torch>=2.0.0,<3.0.0",
+    "numpy>=2.0,<3",
+    "scipy>=1.13,<2",
+    "cloudpickle>=3,<4",
+    "botorch>=0.18,<0.19",
+    "gpytorch>=1.15,<1.16",
+    "torch>=2.4,<3",
 ]
 
+[tool.setuptools.packages.find]
+include = ["hponas*", "workloads*", "validation*", "tools*"]
+exclude = ["validation.artifacts*", "validation.results*"]
+
+[tool.setuptools]
+license-files = ["LICENSE*", "licenses/*.txt"]
+
+[tool.setuptools.package-data]
+validation = ["protocols.json", "protocols/*.md", "designs/*.json"]
+
 [project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.2.10,<4"]
+ray = ["ray>=2.40,<3"]
+rl = ["jax>=0.11.1,<0.12", "jaxlib>=0.11.1,<0.12", "brax @ git+https://github.com/google/brax.git@57d5b863fcc66a29a2e043182c07a14a3dee3a7c"]
+tpe = ["optuna>=4,<5"]
+cmaes = ["optuna>=4,<5", "cmaes>=0.12,<0.13"]
+validation = ["optuna>=4,<5", "cryptography>=43", "pandas>=2", "scikit-learn>=1.5"]
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
@@ -49,37 +62,88 @@ test = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "hypothesis>=6.0.0",
-    "mutmut>=3.0.0",
+    "mutmut==3.8.0",
 ]
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
 
 [tool.mutmut]
+# Keep the coordinator free of test/runtime imports after the observed fork crash.
+process_isolation = "forkserver"
+forkserver_warmup = "none"
+max_forkserver_restarts = 0
+log_to_file = true
+# Clean selected Ray runs take up to 21.01 seconds including startup.
+# The pinned runner uses ceil(2 * (test_seconds + 22) * 3) / 2 wall seconds.
+# This prospectively replaces defaults (1, 15); retain the six-hour campaign cap.
+timeout_constant = 22.0
+timeout_multiplier = 3.0
+# Copy package roots and non-mutated dependencies before generating mutants.
+also_copy = [
+    "hponas",
+    "workloads",
+    "validation",
+    "tools",
+    "examples",
+    "requirements.txt",
+    "docs/program/program.json",
+    "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_16.md",
+    "docs/program/evidence/2026-09-28/spec-01/syne_tune_0_13_pasha_reference.py",
+    "docs/program/evidence/2026-09-29/stat-03/task-sources",
+    "docs/program/evidence/2026-09-29/stat-03/v02-proposed-population.json",
+    "docs/program/evidence/2026-09-30/v01-adoption/missing-cells-final.json",
+    "docs/program/evidence/2026-09-30/phase-sequence/development-profile-plan.json",
+    "docs/program/evidence/2026-10-01/scope-adoption/run_retained_study_evaluations.py",
+    "docs/program/evidence/2026-10-06/censored-cost-candidate-01/plan.json",
+    "docs/program/evidence/2026-10-06/trust-controller-candidate-01/plan.json",
+    "docs/program/evidence/2026-10-06/trust-controller-candidate-01/verify_controller.py",
+    "docs/program/evidence/2026-10-07/trust-implementation-01/reference",
+    "docs/program/evidence/2026-10-01/scope-adoption/prospective-scope-authorization.json",
+    "docs/program/evidence/2026-10-01/scope-adoption/prospective-scope-rebinding.json",
+    "docs/program/evidence/2026-10-01/scope-adoption/prospective-scope-runtime-rebinding.json",
+    "docs/program/evidence/2026-10-01/phase-readiness/conditional-pilot-scope-binding.json",
+    "docs/program/evidence/2026-10-05/attempt11-repair-01/post-attempt12-pilot-readiness-01/conditional-pilot-scope-binding.json",
+    "docs/program/evidence/2026-10-01/scope-adoption/suite-after-runtime-preparation.json",
+    "docs/program/evidence/2026-09-30/phase-refresh/exposure-r3/history.json",
+    "docs/program/evidence/2026-09-30/phase-sequence/halfcheetah-complete-seed0.csv",
+    "docs/program/evidence/2026-10-01/scope-adoption/v01-scope-authorization.json",
+    "docs/program/V01_DATA_COVERAGE_PROPOSAL_2026_09_30.md",
+]
 source_paths = [
-    "hponas/searchers/",
-    "hponas/executors/",
+    "hponas/searchers/base.py",
+    "hponas/searchers/gp_searcher.py",
+    "hponas/searchers/random_searcher.py",
+    "hponas/executors/local_executor.py",
+    "hponas/executors/ray_executor.py",
     "hponas/legacy_searchers.py",
+    "hponas/searchers_tpe.py",
+    "hponas/searchers_gp.py",
+    "hponas/architecture.py",
+    "hponas/priors.py",
     "hponas/legacy_executors.py",
     "hponas/schedulers.py",
     "hponas/space.py",
     "hponas/types.py",
+    "hponas/study.py",
+    "hponas/replay.py",
+    "hponas/events.py",
+    "hponas/encoding.py",
+    "hponas/persistence.py",
+    "hponas/executors/base.py",
+    "hponas/executors/reporting.py",
+    "hponas/searchers/adapter.py",
+    "hponas/searchers/cmaes_searcher.py",
+    "hponas/store.py",
 ]
-timeout = 120.0
 pytest_add_cli_args = [
-    "--ignore=tests/test_cost_efficiency.py",
-    "--ignore=tests/test_prior_recovery_pibo.py",
-    "--ignore=tests/test_prior_recovery_priorband.py",
-    "--ignore=tests/test_verify_manifest.py",
-    "--ignore=tests/scale/test_distributed.py",
-    "--ignore=tests/property/test_invariants.py",
-    "--ignore=tests/integration/test_study_baseline.py",
-    "--ignore=tests/integration/test_study_gp.py",
-    "-k",
-    "not (test_sample_random_config or test_categorical_knob_stores_choices or test_continuous_sample_within_bounds or test_ordinal_sample_within_range or test_categorical_sample_in_choices or test_invalid_kind_raises or test_ordinal_bounds_must_be_integers)",
-    "--tb=no",
-    "--no-header",
-    "-q",
+    "-p", "tools.v03_test_order",
+    "--ignore=tests/scale", "--ignore=tests/unit/test_ray_executor_tier0.py",
+    "--ignore=tests/test_ray_executor.py", "-m", "not slow", "--tb=short", "-q",
 ]
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82"]

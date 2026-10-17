@@ -37,7 +37,7 @@ from pathlib import Path
 PROGRAM_GATE_ASSIGNMENT: dict[str, list[str]] = {
     'tier0_remediation': ['V16'],
     'tier0': ['V01', 'V02', 'V03', 'V04-T0', 'V05', 'V14'],
-    'tier1': ['V04-T1', 'V06', 'V09', 'V10', 'V11a', 'V11b', 'V13'],
+    'tier1': ['V04-T1', 'V06', 'V09', 'V10', 'V11a', 'V11b', 'V13', 'V-COST'],
     'tier2': ['V08'],
     'dist_beta': ['V12'],
     'tier3': ['V07', 'V15a', 'V15b'],
@@ -737,6 +737,13 @@ _Future amendments will be logged here with explicit deltas._
 
 
 def main():
+    # Preserve the historical renderer's helpers for review tools, but do not
+    # allow its old v2 projection to overwrite the current execution authority.
+    print("Historical v2 generator retired. Use python tools/update_progress.py for current program views.")
+    return 1
+
+
+def historical_main():
     parser = argparse.ArgumentParser(description="Generate BUILD_PROGRAM_v2.md")
     parser.add_argument(
         '--verify',
@@ -791,4 +798,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

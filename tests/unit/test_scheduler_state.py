@@ -104,7 +104,7 @@ class TestASHASchedulerStateSerialization:
         s1 = ASHAScheduler(config)
         s1._trial_state = {"t1": (0, 1.0, 0.5, "paused")}
         s1._rung_populations[0] = [("t1", 0.5)]
-        s1._fidelity_history = {"t1": [1.0]}
+        s1._fidelity_history = {1.0: [0.5]}
 
         state = s1.state_dict()
 

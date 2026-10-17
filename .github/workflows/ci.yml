@@ -1,107 +1,66 @@
 name: CI
-
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      run_mutation_campaign:
+        description: 'Run an independently allocated full mutation campaign'
+        type: boolean
+        default: false
+        required: false
 
 jobs:
   test:
-    name: Test Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
-
+        python-version: ['3.12', '3.13']
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e ".[dev,test]"
-
-    - name: Lint with ruff
-      run: |
-        ruff check hponas/
-
-    - name: Format check with black
-      run: |
-        black --check hponas/ tests/
-
-    - name: Type check with mypy
-      run: |
-        mypy hponas/
-      continue-on-error: true  # Don't fail on type errors during Tier 0
-
-    - name: Run unit tests
-      run: |
-        pytest tests/unit/ -v --cov=hponas --cov-report=xml --cov-report=term
-
-    - name: Run conformance tests
-      run: |
-        pytest tests/conformance/ -v
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        files: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e '.[dev,test,ray,tpe,cmaes,validation]'
+      - run: python -m compileall -q hponas workloads validation tools examples
+      - run: ruff check hponas workloads validation tools
+      - run: python -m pytest tests -m 'not slow' --ignore=tests/scale -q
+      - run: python -m pip wheel --no-deps --no-build-isolation . -w dist
+      - name: Verify isolated wheel and maintained examples
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/hponas-wheel"
+          "$RUNNER_TEMP/hponas-wheel/bin/python" -m pip install 'torch>=2.4,<3' --index-url https://download.pytorch.org/whl/cpu
+          "$RUNNER_TEMP/hponas-wheel/bin/python" -m pip install dist/*.whl
+          "$RUNNER_TEMP/hponas-wheel/bin/python" -m pip check
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/hponas-wheel/bin/python" -m tools.check_installed --output "$GITHUB_WORKSPACE/dist/installed-receipt.json"
+          "$RUNNER_TEMP/hponas-wheel/bin/python" "$GITHUB_WORKSPACE/examples/spike_branin.py" --executor local
+          "$RUNNER_TEMP/hponas-wheel/bin/python" "$GITHUB_WORKSPACE/examples/spike_crash_recovery.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wheel-${{ matrix.python-version }}
+          path: dist/*.whl
   mutation-test:
-    name: Mutation Testing
+    if: github.event_name == 'workflow_dispatch' && inputs.run_mutation_campaign
     runs-on: ubuntu-latest
-
+    timeout-minutes: 360
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e ".[test]"
-
-    - name: Run mutation tests
-      run: |
-        mutmut run --paths-to-mutate hponas/ || true
-        mutmut results
-        mutmut junitxml > mutation-results.xml
-      continue-on-error: true  # Don't fail CI on mutation score during early development
-
-    - name: Upload mutation results
-      uses: actions/upload-artifact@v3
-      with:
-        name: mutation-results
-        path: mutation-results.xml
-
-  integration-test:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e ".[dev,test]"
-
-    - name: Run integration tests
-      run: |
-        pytest tests/integration/ -v
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -e '.[test,ray,tpe,cmaes,validation]'
+      - run: python -m validation.run_validation_with_audit V03 --run-mutations
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-evidence
+          path: validation/artifacts/V03

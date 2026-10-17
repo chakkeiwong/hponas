@@ -32,6 +32,7 @@ from hponas.types import Parameter, ParameterType
 def simple_space():
     """Simple 2D search space for testing."""
     from hponas.space import Knob
+
     space = SearchSpace()
     space.add_knob(Knob(name="x", kind="continuous", bounds=(0.0, 1.0)))
     space.add_knob(Knob(name="y", kind="continuous", bounds=(0.0, 1.0)))
@@ -41,10 +42,12 @@ def simple_space():
 @pytest.fixture
 def objective_fn():
     """Simple objective function for testing."""
+
     def f(config):
         x = config.values["x"]
         y = config.values["y"]
         return x**2 + y**2
+
     return f
 
 
@@ -67,18 +70,22 @@ class TestV02Replay:
                 objective_fn=objective_fn,
                 n_trials=n_trials,
                 event_log=event_log,
-                batch_size=n_trials  # Single batch
+                batch_size=n_trials,  # Single batch
             )
 
             # Verify event log non-empty (V02 non-vacuity)
             assert not event_log.is_empty()
-            assert event_log.count() >= n_trials * 2  # n_trials suggestions + n_trials observations
+            assert (
+                event_log.count() >= n_trials * 2
+            )  # n_trials suggestions + n_trials observations
 
             # Replay run
             searcher2 = RandomSearcher(simple_space, seed=seed)
             engine = ReplayEngine(searcher2, event_log, seed)
 
-            passed, message, orig, replayed = engine.verify_determinism(n_trials, batch_size=n_trials)
+            passed, message, orig, replayed = engine.verify_determinism(
+                n_trials, batch_size=n_trials
+            )
 
             assert passed, f"Replay failed: {message}"
             assert len(orig) == n_trials
@@ -104,14 +111,16 @@ class TestV02Replay:
                 objective_fn=objective_fn,
                 n_trials=n_trials,
                 event_log=event_log,
-                batch_size=1  # Sequential
+                batch_size=1,  # Sequential
             )
 
             # Replay run
             searcher2 = RandomSearcher(simple_space, seed=seed)
             engine = ReplayEngine(searcher2, event_log, seed)
 
-            passed, message, orig, replayed = engine.verify_determinism(n_trials, batch_size=1)
+            passed, message, orig, replayed = engine.verify_determinism(
+                n_trials, batch_size=1
+            )
 
             assert passed, f"Replay failed: {message}"
             assert len(orig) == n_trials
@@ -138,7 +147,7 @@ class TestV02Replay:
                 objective_fn=objective_fn,
                 n_trials=n_trials,
                 event_log=event_log,
-                batch_size=1
+                batch_size=1,
             )
 
             # Checkpoint-resume run
@@ -152,7 +161,7 @@ class TestV02Replay:
                 objective_fn=objective_fn,
                 n_trials=checkpoint_at,
                 event_log=event_log2,
-                batch_size=1
+                batch_size=1,
             )
 
             # Save checkpoint
@@ -160,9 +169,9 @@ class TestV02Replay:
             state = searcher2.get_state()
 
             event_log2.record_checkpoint(
-                trial_id=f"trial_{checkpoint_at-1}",
+                trial_id=f"trial_{checkpoint_at - 1}",
                 checkpoint_path=str(checkpoint_path),
-                metadata={"n_trials": checkpoint_at}
+                metadata={"n_trials": checkpoint_at},
             )
 
             # Phase 2: Resume from checkpoint
@@ -175,28 +184,28 @@ class TestV02Replay:
                 trial_id = f"trial_{trial_idx}"
 
                 event_log2.record_suggest(
-                    trial_id=trial_id,
-                    config=config.to_dict(),
-                    seed=seed
+                    trial_id=trial_id, config=config.to_dict(), seed=seed
                 )
 
                 value = objective_fn(config)
                 cost = 100.0
 
                 event_log2.record_observe(
-                    trial_id=trial_id,
-                    fidelity=1.0,
-                    value=value,
-                    cost=cost
+                    trial_id=trial_id, fidelity=1.0, value=value, cost=cost
                 )
 
                 searcher3.observe(
-                    result=type('Result', (), {
-                        'config': config,
-                        'objective_value': value,
-                        'cost': cost,
-                        'is_valid': lambda: True
-                    })()
+                    result=type(
+                        "Result",
+                        (),
+                        {
+                            "trial_id": trial_id,
+                            "config": config,
+                            "objective_value": value,
+                            "cost": cost,
+                            "is_valid": lambda: True,
+                        },
+                    )()
                 )
 
                 phase1_suggestions.append(config)
@@ -204,9 +213,12 @@ class TestV02Replay:
             # Compare: checkpoint-resume should match straight-through
             assert len(original_suggestions) == len(phase1_suggestions)
 
-            for i, (orig, resumed) in enumerate(zip(original_suggestions, phase1_suggestions)):
-                assert orig.values == resumed.values, \
+            for i, (orig, resumed) in enumerate(
+                zip(original_suggestions, phase1_suggestions)
+            ):
+                assert orig.values == resumed.values, (
                     f"Trial {i} mismatch after checkpoint-resume: {orig.values} != {resumed.values}"
+                )
 
     def test_empty_log_raises(self, simple_space):
         """Empty event log raises ValueError (V02 non-vacuity)."""
@@ -236,7 +248,7 @@ class TestV02Replay:
                 objective_fn=objective_fn,
                 n_trials=n_trials,
                 event_log=event_log,
-                batch_size=1
+                batch_size=1,
             )
 
             # Replay with different seed=999
@@ -244,7 +256,9 @@ class TestV02Replay:
             searcher2 = RandomSearcher(simple_space, seed=seed2)
             engine = ReplayEngine(searcher2, event_log, seed2)
 
-            passed, message, orig, replayed = engine.verify_determinism(n_trials, batch_size=1)
+            passed, message, orig, replayed = engine.verify_determinism(
+                n_trials, batch_size=1
+            )
 
             # Should fail - different seed produces different suggestions
             assert not passed, "Replay with different seed should fail"
@@ -267,7 +281,7 @@ class TestV02Replay:
                 objective_fn=objective_fn,
                 n_trials=n_trials,
                 event_log=event_log,
-                batch_size=2  # Batch of 2
+                batch_size=2,  # Batch of 2
             )
 
             # Verify observations recorded
@@ -278,6 +292,8 @@ class TestV02Replay:
             searcher2 = RandomSearcher(simple_space, seed=seed)
             engine = ReplayEngine(searcher2, event_log, seed)
 
-            passed, message, orig, replayed = engine.verify_determinism(n_trials, batch_size=2)
+            passed, message, orig, replayed = engine.verify_determinism(
+                n_trials, batch_size=2
+            )
 
             assert passed, f"Replay with observations failed: {message}"

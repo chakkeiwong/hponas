@@ -181,14 +181,14 @@ def test_hypervolume_3d_matches_2d_when_third_objective_constant():
     )
 
 
-def test_hypervolume_3d_rejects_oversized_front():
-    """The inclusion-exclusion cap fails loudly instead of hanging."""
+def test_hypervolume_3d_large_front_matches_exact_staircase_volume():
+    """Three-objective slab calculation stays bounded beyond the old cap."""
     # Build a guaranteed oversized Pareto front by constructing points that
     # don't dominate each other. Use (i, 25-i, 0) for i=0..24 -> 25 front points.
     front = np.array([[float(i), float(25 - i), 0.0] for i in range(25)])
 
-    with pytest.raises(ValueError, match="capped"):
-        hypervolume(front, np.array([26.0, 26.0, 1.0]))
+    # Width one for heights 1..24, then width two at height 25.
+    assert hypervolume(front, np.array([26.0, 26.0, 1.0])) == sum(range(1, 25))+50
 
 
 def test_default_reference_point_is_dominated_by_all_points():
@@ -241,7 +241,7 @@ def test_hypervolume_over_budget_is_nondecreasing():
     objectives = rng.uniform(0, 1, size=(30, 2))
     costs = np.ones(30)
 
-    budgets, hvs = hypervolume_over_budget(objectives, costs, n_points=10)
+    budgets, hvs = hypervolume_over_budget(objectives, costs, reference_point=np.ones(2), n_points=10)
 
     assert len(budgets) == 10
     assert np.all(np.diff(hvs) >= -1e-12)
@@ -308,7 +308,7 @@ def test_summarize_front_reports_counts_and_extremes():
         [6.0, 6.0],  # dominated
     ])
 
-    summary = summarize_front(objectives, ["loss", "latency"])
+    summary = summarize_front(objectives, ["loss", "latency"], reference_point=np.array([7., 7.]))
 
     assert summary["n_trials"] == 3
     assert summary["n_front"] == 2
@@ -324,10 +324,15 @@ def test_summarize_front_is_json_serializable():
 
     objectives = np.array([[1.0, 2.0], [2.0, 1.0]])
 
-    summary = summarize_front(objectives, ["f1", "f2"])
-
+    summary = summarize_front(objectives, ["f1", "f2"], reference_point=np.array([3., 3.]))
     json.dumps(summary)  # raises TypeError on numpy scalars
 
+
+def test_reporting_requires_reference_before_observations():
+    with pytest.raises(ValueError, match="declared before"):
+        summarize_front(np.array([[.1, .2]]), ["a", "b"])
+    with pytest.raises(ValueError, match="declared before"):
+        hypervolume_over_budget(np.array([[.1, .2]]), np.array([1.]))
 
 def test_summarize_front_rejects_name_mismatch():
     with pytest.raises(ValueError, match="objective names"):

@@ -36,9 +36,12 @@ try:
     from gpytorch.mlls import ExactMarginalLogLikelihood
     from botorch.fit import fit_gpytorch_mll
     import torch
+
     BOTORCH_AVAILABLE = True
     BOTORCH_IMPORT_ERROR: str | None = None
-except ImportError as _e:  # record why, so a silent False is never mistaken for "not installed"
+except (
+    ImportError
+) as _e:  # record why, so a silent False is never mistaken for "not installed"
     BOTORCH_AVAILABLE = False
     BOTORCH_IMPORT_ERROR = f"{type(_e).__name__}: {_e}"
 
@@ -65,7 +68,7 @@ class qLogNEHVISearcher(Searcher):
         space: SearchSpace,
         objectives: list[str],
         reference_point: Optional[np.ndarray] = None,
-        seed: int = 0
+        seed: int = 0,
     ):
         """
         Initialize qLogNEHVI searcher.
@@ -106,12 +109,13 @@ class qLogNEHVISearcher(Searcher):
 
         # Random state
         self.rng = np.random.RandomState(seed)
-        torch.manual_seed(seed)
 
         # Check knob support
         for knob in space.knobs:
             if knob.kind == "categorical":
-                raise ValueError(f"Tier 1: qLogNEHVI doesn't support categorical knobs yet")
+                raise ValueError(
+                    f"Tier 1: qLogNEHVI doesn't support categorical knobs yet"
+                )
 
     @property
     def capabilities(self) -> dict[str, Any]:
@@ -161,6 +165,11 @@ class qLogNEHVISearcher(Searcher):
         return configs
 
     def _propose_bo(self, n: int) -> list[dict[str, Any]]:
+        with torch.random.fork_rng(devices=[]):
+            torch.manual_seed(int(self.rng.randint(0, 2**31 - 1)))
+            return self._propose_bo_impl(n)
+
+    def _propose_bo_impl(self, n: int) -> list[dict[str, Any]]:
         """Bayesian optimization via qLogNEHVI."""
         # Convert data to tensors
         X_train = torch.tensor(np.array(self._X), dtype=torch.float64)
@@ -169,7 +178,7 @@ class qLogNEHVISearcher(Searcher):
         # Fit GP model for each objective
         models = []
         for obj_idx in range(self.n_objectives):
-            y_obj = Y_train[:, obj_idx].unsqueeze(-1)
+            y_obj = -Y_train[:, obj_idx].unsqueeze(-1)
 
             model = SingleTaskGP(X_train, y_obj)
             mll = ExactMarginalLogLikelihood(model.likelihood, model)
@@ -182,7 +191,7 @@ class qLogNEHVISearcher(Searcher):
         pareto_Y = Y_train[pareto_mask]
 
         # qLogNEHVI acquisition function with ModelListGP
-        ref_point_tensor = torch.tensor(self.reference_point, dtype=torch.float64)
+        ref_point_tensor = -torch.tensor(self.reference_point, dtype=torch.float64)
 
         model_list = ModelListGP(*models)
 
@@ -194,7 +203,10 @@ class qLogNEHVISearcher(Searcher):
         )
 
         # Optimize acquisition
-        bounds = torch.tensor([[0.0] * len(self.space.knobs), [1.0] * len(self.space.knobs)], dtype=torch.float64)
+        bounds = torch.tensor(
+            [[0.0] * len(self.space.knobs), [1.0] * len(self.space.knobs)],
+            dtype=torch.float64,
+        )
 
         candidates, _ = optimize_acqf(
             acq_function=acq,
@@ -257,7 +269,9 @@ class qLogNEHVISearcher(Searcher):
         objectives = result["objectives"]  # dict mapping objective name -> value
 
         # Normalize config
-        x = np.array([self._normalize_knob(config[knob.name], knob) for knob in self.space.knobs])
+        x = np.array(
+            [self._normalize_knob(config[knob.name], knob) for knob in self.space.knobs]
+        )
 
         # Extract objective values
         y = np.array([objectives[obj_name] for obj_name in self.objectives])
@@ -269,15 +283,18 @@ class qLogNEHVISearcher(Searcher):
         """Normalize a knob value to [0, 1], inverting the declared transform."""
         low, high = knob.bounds
         if knob.transform == "log":
-            return float(
-                (np.log(val) - np.log(low)) / (np.log(high) - np.log(low))
-            )
+            return float((np.log(val) - np.log(low)) / (np.log(high) - np.log(low)))
         return float((val - low) / (high - low))
 
     def state_dict(self) -> dict[str, Any]:
         """Serialize state."""
         return {
             "kind": "qLogNEHVI",
+            "rng_state": [
+                self.rng.get_state()[0],
+                self.rng.get_state()[1].tolist(),
+                *self.rng.get_state()[2:],
+            ],
             "seed": self.seed,
             "objectives": self.objectives,
             "reference_point": self.reference_point.tolist(),
@@ -293,7 +310,13 @@ class qLogNEHVISearcher(Searcher):
         self._X = [np.array(x) for x in state["X"]]
         self._Y = [np.array(y) for y in state["Y"]]
         self.rng = np.random.RandomState(self.seed)
-        torch.manual_seed(self.seed)
+        if "rng_state" not in state:
+            raise ValueError("Checkpoint missing RNG position")
+        rng_state = state["rng_state"]
+        self.rng.set_state(
+            (rng_state[0], np.array(rng_state[1], dtype=np.uint32), *rng_state[2:])
+        )
+        self.n_objectives = len(self.objectives)
 
 
 class ChebyshevSearcher(Searcher):
@@ -309,7 +332,7 @@ class ChebyshevSearcher(Searcher):
     - Reference point adaptation from observed data
 
     Method:
-        Chebyshev scalarization: max_i w_i * |y_i - r_i|
+        Chebyshev scalarization: max_i w_i * (y_i - r_i)
         where w_i are weights, y_i objectives, r_i reference point
 
     This is a fallback when qLogNEHVI fails or BoTorch unavailable.
@@ -322,7 +345,7 @@ class ChebyshevSearcher(Searcher):
         weights: Optional[np.ndarray] = None,
         reference_point: Optional[np.ndarray] = None,
         base_searcher: str = "random",
-        seed: int = 0
+        seed: int = 0,
     ):
         """
         Initialize Chebyshev searcher.
@@ -331,7 +354,7 @@ class ChebyshevSearcher(Searcher):
             space: Search space
             objectives: List of objective names (minimize all)
             weights: Weights for Chebyshev (default: uniform)
-            reference_point: Reference point (default: anti-ideal from data)
+            reference_point: Reference point (default: fixed 1.1 on each coordinate)
             base_searcher: Base searcher ("random", "gp", "tpe")
             seed: Random seed
         """
@@ -367,12 +390,15 @@ class ChebyshevSearcher(Searcher):
             # Legacy propose()-based interface: must come from legacy_searchers,
             # not the new hponas.searchers package (which is suggest()-based).
             from .legacy_searchers import RandomSearcher
+
             self.base_searcher = RandomSearcher(self.space, seed=self.seed)
         elif self.base_searcher_type == "gp":
-            from .searchers_gp import GPqLogEISearcher
-            self.base_searcher = GPqLogEISearcher(self.space, seed=self.seed)
+            from .searchers import GPSearcher
+
+            self.base_searcher = GPSearcher(self.space, seed=self.seed)
         elif self.base_searcher_type == "tpe":
             from .searchers_tpe import TPESearcher
+
             self.base_searcher = TPESearcher(self.space, seed=self.seed)
         else:
             raise ValueError(f"Unknown base searcher: {self.base_searcher_type}")
@@ -387,8 +413,8 @@ class ChebyshevSearcher(Searcher):
         Returns:
             Scalarized value (minimize)
         """
-        # Chebyshev: max_i w_i * |y_i - r_i|
-        deviations = np.abs(objectives - self.reference_point)
+        # Chebyshev: max_i w_i * (y_i - r_i)
+        deviations = objectives - self.reference_point
         weighted = self.weights * deviations
         return np.max(weighted)
 
@@ -398,6 +424,8 @@ class ChebyshevSearcher(Searcher):
 
         Delegates to base searcher (scalarized objective).
         """
+        if self.base_searcher_type == "gp":
+            return [self.base_searcher.suggest().values for _ in range(n)]
         return self.base_searcher.propose(n)
 
     def observe(self, result: dict[str, Any]) -> None:
@@ -411,7 +439,9 @@ class ChebyshevSearcher(Searcher):
         objectives_dict = result["objectives"]
 
         # Extract objective values
-        objectives = np.array([objectives_dict[obj_name] for obj_name in self.objectives])
+        objectives = np.array(
+            [objectives_dict[obj_name] for obj_name in self.objectives]
+        )
 
         # Scalarize
         scalarized_value = self._scalarize(objectives)
@@ -421,18 +451,30 @@ class ChebyshevSearcher(Searcher):
         self._objectives.append(objectives)
         self._scalarized.append(scalarized_value)
 
-        # Update reference point (anti-ideal: worst on each objective)
-        if len(self._objectives) > 0:
-            all_objs = np.array(self._objectives)
-            self.reference_point = np.max(all_objs, axis=0) * 1.1
+        # The canonical GP covers the same mixed architecture space as the MO methods.
+        if self.base_searcher_type == "gp":
+            from .types import Config, Result
 
-        # Observe scalarized value in base searcher
-        self.base_searcher.observe({
-            "config": config,
-            "value": scalarized_value,
-            "fidelity": result.get("fidelity", 1.0),
-            "cost": result.get("cost", 1.0)
-        })
+            trial_id = f"chebyshev_{len(self._configs) - 1}"
+            self.base_searcher.trials[trial_id] = Config(config)
+            self.base_searcher.observe(
+                Result(
+                    trial_id,
+                    float(-scalarized_value),
+                    result.get("cost", 1.0),
+                    result.get("fidelity", 1.0),
+                )
+            )
+            return
+        # Legacy random/TPE wrappers also expose maximization.
+        self.base_searcher.observe(
+            {
+                "config": config,
+                "value": -scalarized_value,
+                "fidelity": result.get("fidelity", 1.0),
+                "cost": result.get("cost", 1.0),
+            }
+        )
 
     def state_dict(self) -> dict[str, Any]:
         """Serialize state."""
@@ -491,7 +533,7 @@ class NSGAIISearcher(Searcher):
         mutation_prob: float = 0.1,
         crossover_eta: float = 15.0,
         mutation_eta: float = 20.0,
-        seed: int = 0
+        seed: int = 0,
     ):
         """
         Initialize NSGA-II searcher.
@@ -509,7 +551,9 @@ class NSGAIISearcher(Searcher):
         self.space = space
         self.objectives = objectives
         self.n_objectives = len(objectives)
-        self.population_size = population_size if population_size % 2 == 0 else population_size + 1
+        self.population_size = (
+            population_size if population_size % 2 == 0 else population_size + 1
+        )
         self.crossover_prob = crossover_prob
         self.mutation_prob = mutation_prob
         self.crossover_eta = crossover_eta
@@ -521,7 +565,9 @@ class NSGAIISearcher(Searcher):
         # Storage
         self._population: list[dict] = []  # Current population configs
         self._objectives_pop: list[np.ndarray] = []  # Objectives for population
-        self._archive: list[tuple[dict, np.ndarray]] = []  # All evaluated (config, objectives)
+        self._archive: list[
+            tuple[dict, np.ndarray]
+        ] = []  # All evaluated (config, objectives)
 
         # Continuous knobs only for now (categorical deferred to Tier 2)
         self._continuous_knobs = [
@@ -533,9 +579,7 @@ class NSGAIISearcher(Searcher):
         """Check if obj_a dominates obj_b (minimize all objectives)."""
         return np.all(obj_a <= obj_b) and np.any(obj_a < obj_b)
 
-    def _fast_non_dominated_sort(
-        self, objectives: list[np.ndarray]
-    ) -> list[list[int]]:
+    def _fast_non_dominated_sort(self, objectives: list[np.ndarray]) -> list[list[int]]:
         """
         Fast non-dominated sorting.
 
@@ -604,7 +648,8 @@ class NSGAIISearcher(Searcher):
             # Interior points
             for i in range(1, n - 1):
                 distances[sorted_indices[i]] += (
-                    obj_values[sorted_indices[i + 1]] - obj_values[sorted_indices[i - 1]]
+                    obj_values[sorted_indices[i + 1]]
+                    - obj_values[sorted_indices[i - 1]]
                 ) / obj_range
 
         return distances
@@ -627,7 +672,9 @@ class NSGAIISearcher(Searcher):
             # Same front: use crowding distance
             return i if crowding[i] > crowding[j] else j
 
-    def _sbx_crossover(self, parent1: np.ndarray, parent2: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def _sbx_crossover(
+        self, parent1: np.ndarray, parent2: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Simulated binary crossover (SBX).
 
@@ -793,7 +840,9 @@ class NSGAIISearcher(Searcher):
         objectives_dict = result["objectives"]
 
         # Extract objective values
-        objectives = np.array([objectives_dict[obj_name] for obj_name in self.objectives])
+        objectives = np.array(
+            [objectives_dict[obj_name] for obj_name in self.objectives]
+        )
 
         # Add to archive
         self._archive.append((config, objectives))
@@ -833,6 +882,11 @@ class NSGAIISearcher(Searcher):
         """Serialize state."""
         return {
             "kind": "NSGA-II",
+            "rng_state": [
+                self.rng.get_state()[0],
+                self.rng.get_state()[1].tolist(),
+                *self.rng.get_state()[2:],
+            ],
             "seed": self.seed,
             "objectives": self.objectives,
             "population_size": self.population_size,
@@ -856,6 +910,13 @@ class NSGAIISearcher(Searcher):
         self.mutation_eta = state["mutation_eta"]
 
         self.rng = np.random.RandomState(self.seed)
+        if "rng_state" not in state:
+            raise ValueError("Checkpoint missing RNG position")
+        rng_state = state["rng_state"]
+        self.rng.set_state(
+            (rng_state[0], np.array(rng_state[1], dtype=np.uint32), *rng_state[2:])
+        )
+        self.n_objectives = len(self.objectives)
 
         self._population = state["population"]
         self._objectives_pop = [np.array(obj) for obj in state["objectives_pop"]]

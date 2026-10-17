@@ -16,12 +16,15 @@ mixes the user prior with a uniform component:
 
     π_guarded(x) = α · π̂_user(x) + (1 - α) · 1
 
-where π̂_user is the user prior rescaled to unit mean over the space, so that α is a
-genuine mixture weight rather than a function of the user prior's arbitrary scale.
+where π̂_user is rescaled by a deterministic Monte Carlo estimate of its mean
+under `space.sample_config`. This is an acquisition score with a positive floor;
+the estimated normalizer does not establish an exactly normalized density.
 The result is bounded below by (1 - α) > 0 everywhere, so no region is ever ruled
 out and a wrong prior can still be overcome by data.
 
-Default α = 0.95: 95% user prior, 5% uniform escape mass.
+Default α = 0.95 sets a score floor of 0.05. Exact mixture mass is claimed only
+when the supplied normalizer is exact. Maintained PriorBand searchers use their
+own declared sampling laws instead of drawing from this estimated score.
 """
 
 from __future__ import annotations
@@ -65,8 +68,8 @@ def estimate_prior_mean(
     """
     Monte Carlo estimate of E_uniform[π_user(x)] over the search space.
 
-    Used to put the user prior on the same scale as the uniform component so the
-    mixture weight α means what it says. Sampling uses `space.sample_config`, so
+    Used to calibrate the user prior against the base score. This finite estimate
+    is not an exact density normalization. Sampling uses `space.sample_config`, so
     log-transformed knobs are sampled log-uniformly and conditional knobs are
     respected — the estimate is taken under the same base measure the searchers use.
 
@@ -157,9 +160,9 @@ def make_nonzero_guarded_prior(
     Args:
         user_prior: User's prior density π_user(x); any nonnegative callable
         space: Search space, used for the uniform component and rescaling
-        alpha: Mixture weight on the user prior, in (0, 1). Lower = more escape mass
-        normalize: Rescale the user prior to unit mean before mixing (recommended;
-            makes α scale-free). Set False if the prior is already unit-mean
+        alpha: Score weight in (0, 1); the base-score floor is 1-alpha
+        normalize: Rescale by a Monte Carlo mean estimate. Set False when an
+            explicitly normalized score is supplied; no exact normalization is inferred
         n_samples: Monte Carlo samples for the rescaling estimate
         seed: RNG seed for the rescaling estimate
 

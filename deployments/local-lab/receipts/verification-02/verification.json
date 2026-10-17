@@ -1,0 +1,89 @@
+{
+  "passed": true,
+  "controls": {
+    "verified_tls": {
+      "enabled": true,
+      "version": "TLSv1.3",
+      "cipher": "TLS_AES_256_GCM_SHA384"
+    },
+    "runtime_identity_write_refused": true,
+    "runtime_schema_write_refused": true,
+    "wrong_hostname_refused": true,
+    "untrusted_certificate_refused": true,
+    "plaintext_refused": true,
+    "wrong_password_refused": true,
+    "monitor_write_refused": true,
+    "historical_restore_dispatch_refused": true
+  },
+  "known_answer": {
+    "passed": true,
+    "gradient_updates": 24,
+    "reconstruction_updates": 0,
+    "metrics": {
+      "capacity": 24,
+      "unit": "gradient_update",
+      "charged_units": 24,
+      "completed_units": 24,
+      "uncertain_units": 0,
+      "remaining_units": 0,
+      "events": 24
+    },
+    "best_loss": 5.651239655848202e-10,
+    "known_optimal_eta": 0.5,
+    "known_optimal_loss": 0,
+    "regret": 5.651239655848202e-10,
+    "ray": true,
+    "distributed_service_accepted": false
+  },
+  "backup": {
+    "sha256": "7c5c2a2a36f8177274a5fbf62d0d98b50f2926784bb5fdce9db5f9ed042844ed",
+    "bytes": 48803,
+    "artifact_bytes": 2195,
+    "total_bytes": 50998,
+    "artifact_count": 6,
+    "table_counts": {
+      "identity": 1,
+      "studies": 1,
+      "snapshots": 1,
+      "trials": 6,
+      "observations": 0,
+      "artifacts": 6,
+      "objectives": 0,
+      "warm_history": 0,
+      "budgets": 1,
+      "charges": 24
+    },
+    "dispatch_after_restore": false
+  },
+  "restored": {
+    "schema": "lab_ce216916788d_restored",
+    "dispatch_enabled": false,
+    "table_counts": {
+      "artifacts": 6,
+      "budgets": 1,
+      "charges": 24,
+      "identity": 1,
+      "objectives": 0,
+      "observations": 0,
+      "snapshots": 1,
+      "studies": 1,
+      "trials": 6,
+      "warm_history": 0
+    },
+    "artifact_count": 6
+  },
+  "ray_nodes": [
+    {
+      "node_id": "af5bd15285954acd3d42a00483048539b82474bf32f7f105354733e1",
+      "address": "192.168.70.46"
+    }
+  ],
+  "ray_cpus": 2.0,
+  "installed_origin": "/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-08/service-repair-01/integrated-repair-installation-01/py313/lib/python3.13/site-packages",
+  "python": "3.13.13",
+  "psycopg": "3.2.10",
+  "physical_hosts": 1,
+  "independent_host_fault_tested": false,
+  "service_accepted": false,
+  "ended_utc": "2026-10-08T11:58:05.119182+00:00"
+}

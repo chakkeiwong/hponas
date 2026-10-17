@@ -157,12 +157,27 @@ class TestExecutorContractFailureModes:
         assert result.status == "inf"
 
     def test_objective_timeout_handled(self):
-        """Test executor handles timeouts if supported."""
-        pytest.skip("Timeout support implementation-defined")
+        """A hard deadline returns a timeout and stops the objective worker."""
+        executor = LocalExecutor(timeout=0.1)
+        trial = Trial(Config({"x": 1.}), "deadline", fidelity=2.)
+        started = time.monotonic()
+        result = executor.execute(trial, lambda config: time.sleep(10))
+        assert result.status == trial.status == "timeout"
+        assert result.trial_id == "deadline" and result.fidelity == 2.
+        assert np.isnan(result.objective_value)
+        assert result.cost >= 0.1 and time.monotonic() - started < 5.
 
     def test_objective_oom_handled(self):
-        """Test executor handles OOM if supported."""
-        pytest.skip("OOM handling implementation-defined")
+        """Python MemoryError is captured; host OOM recovery is an OPS-01 obligation."""
+        def exhausted(config):
+            raise MemoryError("objective allocation failed")
+
+        trial = Trial(Config({}), "memory-error")
+        result = LocalExecutor().execute(trial, exhausted)
+        assert result.status == trial.status == "failed"
+        assert np.isnan(result.objective_value)
+        assert result.metadata["error"] == "objective allocation failed"
+        assert "MemoryError" in result.metadata["traceback"]
 
 
 class TestExecutorContractShutdown:

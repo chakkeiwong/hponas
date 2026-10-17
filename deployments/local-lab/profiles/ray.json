@@ -1,0 +1,6 @@
+{
+  "mode": "owned_local_cluster_per_verification",
+  "address": "127.0.0.1",
+  "cpus": 2,
+  "object_store_bytes": 104857600
+}

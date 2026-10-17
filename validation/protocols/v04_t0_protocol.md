@@ -1,253 +1,78 @@
-# V04-T0 Protocol: Random Baseline Floor
+# V04-T0: finite self-contained known-answer conformance
 
-**Version:** 1.0  
-**Created:** 2026-09-09  
-**Status:** Preregistered  
-**Tier:** 0  
+**Version:** 4.0, 2026-10-05. Prospective amendment under D-SELF-CONTAINED-VALIDATION.
 
----
+The specified model outputs, legal search traces, best-result selection and accounting conform on eight fixed self-contained known-answer fixtures.
 
-## Claim
+## Fixed scope and mathematical answers
 
-Random search beats pathological configurations on real workloads, establishing that random is a valid baseline comparator.
+Eight fixed cases x Random/Sobol/GP/TPE x two fixed seeds x sixteen proposals = 1,024 objective calls, plus thirty-two reference probes. The four model families are ridge regression, quadratic gradient descent, constant-gain filtering and linear bottleneck architecture selection. Each has a fixed base and variant.
 
-**Operational requirement:** If random search is worse than doing nothing, it cannot serve as a floor for other methods.
+The maintained corpus is `workloads/stylized.py:case_specs`. The independent
+oracles are `validation/stylized_reference.py`; derivations are in
+`docs/program/STYLIZED_TUNING_DESIGN_2026_10_05.md`. The ridge optimum follows
+an exact nonnegative regret identity; quadratic worst-direction error follows
+the extreme eigenvalues; filter risk follows the stationary Lyapunov/Riccati
+solution; bottleneck error and size follow the rank/SVD bound and complete
+width enumeration. These statements apply to the declared equations only.
 
----
+## Freeze and evidence
 
-## Hypothesis
+`validation/stylized_contract.py` fixes seeds 510501/510502, counts and caps.
+`validation/stylized_campaign.py` writes the source/protocol/corpus/method/seed
+manifest before objective calls. No sibling checkout, download, GPU, data
+service or external model is used. All planned study slots, including failed
+or interrupted ones, are retained. Raw trial records bind the physical config,
+encoded/decoded coordinates, numerical intermediate outputs, objective, work
+units and timings. Method identity is reconstructed by replaying every proposal
+from its declared seed and prior observations. Independent analytic formulas
+and intermediate-output reconstruction check each numerical result. This is
+trusted local chronology and measurement, not remote attestation.
 
-### H0 (Null Hypothesis)
-Random search does not improve over a pathological default configuration on real RL workload.
+## Objective decision and resources
 
-### H1 (Alternative Hypothesis)
-Random search improves over pathological default by at least δ margin.
+PASS requires all planned slots and probes, legal coordinates, exact proposal
+replay, correct first-tie best-result selection, work accounting and model
+outputs within the declared binary64 envelope. The envelope is gamma(4096)
+times the documented conditioning/scale factor; these tiny dense operations
+are below that rounding-operation allowance. It is a conservative engineering
+conformance envelope, not an interval-arithmetic theorem or a search-regret
+threshold. Exact rational identities separately validate the analytic optima.
 
-### Test Type
-**Superiority test** (one-sided) - random must beat pathological default.
+Report each regret curve and final selection against its known optimum in its
+own units. Do not average different units or gate on a favored method winning.
+An observed implementation failure is FAIL; missing completion is INCONCLUSIVE;
+changed or malformed identities, hashes or summaries are integrity rejections.
+No failed slot can be replaced, and no supplied PASS field determines a verdict.
+No statistical alpha, power, pilot, human success threshold or confirmation
+sample calculation applies to this finite correctness claim.
 
----
+One CPU thread; no GPU. Generation is capped at 300 seconds;
+each of the two independent decision reconstructions has the same cap. Caps
+include acquisition work and Python overhead; timer delivery/OS scheduling are
+not a physical hard-real-time guarantee. Raw work and measured wall time are
+reported separately. The existing continuous repair authorization covers this
+bounded local verification. Run via `python -m validation.run_validation_with_audit V04-T0`.
 
-## Preregistration
+## Release consequence and prospective retirement
 
-### Task
-**Benchmark:** rl_routine (simplified 3-knob version for Tier 0)
-- learning_rate ∈ [1e-5, 1e-2] (log scale)
-- batch_size ∈ [64, 512] (ordinal)
-- entropy_cost ∈ [0.0, 0.1] (continuous)
+Finite correctness obligation satisfied. Does not promote a searcher or transform to a performance-backed default. All other current-source gates and requirement dispositions remain mandatory. Failure or incomplete evidence blocks
+this gate. Exposed cases and two seeds cannot support a population ranking,
+a universal log-warping advantage or default promotion. Existing APIs remain
+available; caller-declared transforms express modeling choices.
 
-**Pathological default:** Worst known configuration
-- learning_rate = 1e-5 (too low, learning stalls)
-- batch_size = 64 (too small, high variance)
-- entropy_cost = 0.1 (too high, exploration dominates)
-
-**Objective:** Synthetic RL objective (proxy for real Brax/JAX evaluation)
-
-### Seeds
-Preregistered seeds: 0, 1, 2, 3, 4 (5 seeds)
-
-### Margin
-**Superiority margin:** δ = 0.05 (5% improvement required)
-
-**Justification:** 5% improvement over pathological config is minimal bar for "random search works."
-
-### Alpha
-α = 0.05 (one-sided test)
-
-**Family correction:** Per protocols.json lines 19-26, V04-T0 is in tier0_gate family with V05 (m=2).
-- Holm-Bonferroni corrected α: α₁ = 0.05/2 = 0.025 (most significant), α₂ = 0.05/1 = 0.05
-
-### Power
-- Target: 0.80
-- Method: Simulation under task hierarchy (per protocols.json lines 85-86)
-- Pilot: 5 replicates minimum (per protocols.json line 87)
-
-### Sample Size
-**Preregistered:**
-- n_trials = 50 per seed
-- n_seeds = 5
-- Total studies = 5
-
-**Rationale:** 50 trials sufficient for random search to explore 3D space.
-
-### Analysis
-
-**Primary endpoint:** Area under incumbent curve (AUC) - measures convergence speed.
-
-**Statistical test:** Mann-Whitney U test (one-sided)
-- Compare random_auc vs pathological_auc
-- Alternative: 'greater' (random > pathological)
-
-**Pass criteria:**
-- Improvement = (mean(random_auc) - mean(pathological_auc)) / mean(pathological_auc)
-- Improvement ≥ 0.05 (5% margin)
-- p-value < α_corrected (0.025 after Holm-Bonferroni)
-
----
-
-## Decision States
-
-### PASS
-**All of the following must be true:**
-1. Improvement ≥ 5%
-2. p < 0.025 (Holm-Bonferroni corrected, assuming V04-T0 tests first)
-3. V16 audit: non-vacuous, threshold preregistered (not post-hoc tuned)
-
-### FAIL
-**Any of the following:**
-1. Improvement < 5%
-2. p ≥ 0.025
-3. V16 audit fails (post-hoc tuning detected)
-
-### INCONCLUSIVE
-**Any of the following:**
-1. Power < 0.80 at max sample
-2. Pilot variance too high to size confirmatory
-3. Real RL workload not available (proxy only)
-
----
-
-## Immutable Artifacts
-
-### Protocol (This File)
-- **Path:** validation/protocols/v04_t0_protocol.md
-- **Status:** Immutable after campaign starts
-- **Hash:** (git commit hash when frozen)
-
-### Results
-- **Path:** validation/results/v04_t0_results.json
-- **Format:** JSON with structure:
-  ```json
-  {
-    "validation_id": "v04_t0",
-    "timestamp": "ISO8601",
-    "random_auc_mean": float,
-    "pathological_auc_mean": float,
-    "improvement": float,
-    "p_value": float,
-    "alpha_corrected": 0.025,
-    "passed": bool,
-    "n_trials": 50,
-    "n_seeds": 5,
-    "margin": 0.05,
-    "random_auc": [float, ...],
-    "pathological_auc": [float, ...],
-    "v16_audit": {"passed": bool, "checks": [...]}
-  }
-  ```
-- **Write policy:** Write once, never modified
-
-### Log
-- **Path:** validation/results/v04_t0_log.txt
-- **Format:** Append-only text log
-
----
-
-## Implementation
-
-### Scripts
-- **Main:** validation/v04_performance_check.py (modify for pathological baseline)
-- **Validator:** validation/validators/v04_t0_validator.py (V16-compliant)
-
-### Execution
-```python
-# Pathological config
-pathological_config = {
-    "learning_rate": 1e-5,
-    "batch_size": 64,
-    "entropy_cost": 0.1
-}
-
-# Run random search
-random_auc = run_optimization(RandomSearcher, space, objective, n_trials=50, seeds=[0,1,2,3,4])
-
-# Run pathological baseline (fixed config, repeated n_trials times)
-pathological_auc = run_pathological(pathological_config, objective, n_trials=50, seeds=[0,1,2,3,4])
-
-# Compare
-improvement, p_value = compare(random_auc, pathological_auc)
-```
-
-### Dependencies
-- hponas.searchers (RandomSearcher)
-- scipy.stats (mannwhitneyu)
-
----
+The v3.7 PPO superiority, protected-policy evaluation, pilot/sizing and
+allocation requirements are retired for this entry. They are preserved in
+`archive/program-2026-10-05/before-stylized-protocol-migration/` and historical
+artifacts. No old INCONCLUSIVE/FAIL becomes PASS. Later statistical protocols
+retain their own error/power/resource obligations pending explicit review.
 
 ## Known Issues
 
-### Issue 1: Post-Hoc Tuned Threshold
-**Problem:** BUILD_PROGRAM_REVIEW_VERDICT.md line 733 identified V04-T0 as post-hoc tuned.
-
-**Resolution:** Threshold now preregistered in protocol at 5% before any data collection.
-
-**Status:** Fixed in this protocol version.
-
-### Issue 2: Proxy Objective
-**Problem:** validation/v04_performance_check.py uses synthetic objective, not real Brax/JAX rl_routine.
-
-**Resolution:** Noted in INCONCLUSIVE criteria. Real RL validation is V05.
-
-**Status:** Acceptable for Tier 0 (V05 validates on real workload).
-
-### Issue 3: Pathological Config Definition
-**Problem:** "Pathological" is subjective.
-
-**Resolution:** Preregistered specific values known to be poor:
-- lr=1e-5 (too low)
-- batch_size=64 (too small)
-- entropy_cost=0.1 (too high)
-
-**Status:** Defined in protocol.
-
----
-
-## V16 Audit Checklist
-
-### Check 1: Non-Vacuity
-- [ ] n_trials > 0, n_seeds > 0
-- [ ] Pathological config is distinct from random samples
-- [ ] Validator fails on empty input
-
-### Check 2: No Post-Hoc Tuning
-- [ ] Threshold (5%) matches protocol exactly
-- [ ] Threshold not changed after seeing data
-- [ ] Pathological config preregistered, not selected after experiments
-
-### Check 3: Correct Reference
-- [ ] Compares to explicitly bad config, not to self
-- [ ] Pathological config justification documented
-
-### Check 4: Runnable Independently
-- [ ] Script runs without manual intervention
-- [ ] All parameters from protocol
-- [ ] Results written atomically
-
----
-
-## References
-
-**Authority:**
-- BUILD_PROGRAM_REVIEW_VERDICT.md lines 733-738 (post-hoc tuning issue)
-- HPO_NAS_RECOVERY_MASTER_PROGRAM.md lines 733-738 (V04-T0 repair)
-- protocols.json lines 19-26 (tier0_gate family with V05)
-
-**Related Protocols:**
-- V04-T1 (Sobol vs Random on real workload)
-- V05 (real RL evaluation, not proxy)
-
----
-
-## Changelog
-
-**v1.0 - 2026-09-09**
-- Initial preregistered protocol
-- Fixed post-hoc tuning: threshold preregistered at 5%
-- Pathological config preregistered: lr=1e-5, batch=64, entropy=0.1
-- Seeds preregistered: 0, 1, 2, 3, 4
-- Sample size: n_trials=50, n_seeds=5
-- Holm-Bonferroni correction: α=0.025 (tier0_gate family)
-
----
-
-**END OF PROTOCOL**
+Finite conformance establishes only the declared corpus and equations. GP trace
+replay is an implementation-identity check, not an independent optimality proof.
+The GP finite-width loss in the development prototype is retained; legal finite
+domain acquisition has a separate regression. Continuous stochastic searches
+need not attain an exact real-valued optimum in sixteen calls. The SVD fixture
+isolates architecture selection and does not certify finite-budget nonlinear
+training. Source changes make earlier campaign receipts stale until revalidated.

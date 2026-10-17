@@ -1,3 +1,5 @@
+> **Historical reference — superseded for execution.** Read [CONSOLIDATED_MASTER_AUTHORITY.md](CONSOLIDATED_MASTER_AUTHORITY.md) for current scope, work and evidence. This file does not establish current approval or gate status. Its pre-reconciliation bytes are preserved in [the archive](archive/program-2026-09-28/RECOVERY_PROGRAM_STATUS.md).
+
 # Recovery Program Status Summary
 
 **Date**: 2026-09-09  

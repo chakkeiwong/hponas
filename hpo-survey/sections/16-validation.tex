@@ -1,6 +1,68 @@
 \chapter{The validation suite}
 \label{sec:validation}
 
+\paragraph{Prospective V07 scope amendment, 2026-10-08.}
+D-DEHB-FINITE replaces the historical RL ranking and default rules with six
+finite owned DEHB method, mathematical training, work and recovery cases.
+The exact contract is in \texttt{validation/protocols.json}. Historical rules
+and outcomes remain archived; a finite PASS establishes only opt-in serial
+conformance. Selective GP robustness remains a separate implementation stage.
+
+
+\paragraph{Prospective V15 scope amendment, 2026-10-08.}
+D-IFBO-FINITE supersedes the historical V15 statistical comparison below.
+Six explicit known-answer tuning cases compare the original pretrained ifBO
+reference with ASHA at equal physical gradient-update budgets. Every case must
+be no worse within the fixed numerical envelope before integration is enabled.
+FAIL or INCONCLUSIVE cancels V15b. No fallback surrogate, calibration, general
+effectiveness or default claim follows. Originals remain archived.
+
+
+\paragraph{Prospective V08 scope amendment, 2026-10-08.}
+D-POPULATION-KNOWN-ANSWER supersedes the historical V08 superiority,
+non-inferiority, 4/16-worker and default rules below. Current V08 checks ten
+exposed finite local PBT/PB2-Mix/BG-PBT mathematical, transfer, recovery and
+physical-work controls. Exact rules are in \texttt{validation/protocols.json}.
+Original designs/outcomes remain archived; none is reclassified as a success.
+Any PASS permits only finite local opt-in conformance. Statistical performance,
+simulator adapters and distributed readiness require separate evidence.
+
+
+\paragraph{Prospective Tier-1 scope amendment, 2026-10-07.}
+D-TIER1-KNOWN-ANSWER supersedes the historical statistical/default rules for
+V04-T1, V06, V09, V10, V11a/V11b and V13 below, and adds V-COST.
+The current contracts check finite mathematical models, actual training work,
+method identity and recovery; exact rosters and independent references live in
+\texttt{validation/protocols.json}. Historical empirical thresholds, six-entry
+Holm family, default promotions, culling permission and broad calibration
+claims are retired prospectively, with original outcomes preserved.
+All capabilities remain opt-in. In particular, a finite V06 PASS cannot activate
+ASHA/median, V10 cannot certify experimental culling, and Gaussian V13 cannot
+establish SBC, general posterior calibration, learned transport or NUTS.
+Later V07/V08/V12/V15 retain separate evidence obligations. Historical arguments
+below are design background, not authority to change current consequences.
+No engineering test or human decision supplies scientific acceptance.
+
+
+
+\paragraph{Self-contained Tier-0 amendment adopted on 2026-10-05.}
+D-SELF-CONTAINED-VALIDATION prospectively supersedes the earlier V04-T0/V05
+PPO ranking and pilot/sizing requirements. The v4 protocols check finite
+model, coordinate, proposal-trace and accounting conformance on local
+ridge regression, quadratic optimization, scalar filtering and linear
+bottleneck fixtures with known tuning optima. V04-T0 fixes eight cases,
+four searchers, two seeds and sixteen proposals; V05 fixes two ridge cases,
+two GP coordinate arms, two seeds and sixteen proposals, including identical
+physical initialization. Independent analytic and intermediate-output
+oracles determine numerical agreement. Observed regret and measured costs
+are descriptive; no superiority, generalized performance ranking or
+performance-backed default follows. No statistical alpha, power or pilot
+sizing applies to these finite correctness claims. All old outcomes remain
+unchanged. The v3 paired-rank amendment and conflicting later discussion of
+these two entries are historical. Later statistical entries retain their
+separate protocol/error/power obligations until explicitly reconciled.
+No human acceptance or source-code keyword scan can establish a result.
+
 A tuning product can fool its builders the same way a configuration
 fools a tuner: by being evaluated on the problems it was tuned on.
 This document has met the trap twice, as seed overfitting in
@@ -70,23 +132,24 @@ declared done until the entry is green.}
 \toprule
 ID & Claim under test & Pass rule or veto & Evid. & Gate \\
 \midrule
-V01 & each wrapped searcher/scheduler matches its reference
-implementation on tabular benchmarks & final and anytime scores
-within tolerance of reference & \ref{sec:libraries} & T0 \\
+V01 & each Tier 0 wrapper/scheduler conforms to its explicitly named
+reference on a frozen finite tabular/event corpus & zero observable
+trace discrepancies, complete trajectories and frozen exact missing-cell
+refusals; unexpected missingness remains inconclusive & \ref{sec:libraries} & T0 \\
 V02 & scheduler logic is correct under asynchrony & replayed
 decisions on recorded curves match specification; stragglers and
 drops simulated & \ref{sec:multifidelity} & T0 \\
 V03 & the suite itself catches wiring bugs & seeded defects
 (off-by-one rung, dropped seed, swapped objective sign) are caught
 by V01--V02 & \ref{sec:product} & T0 \\
-V04 & every shipped searcher earns its complexity & beats the
-log+Sobol floor at matched budget on pinned tasks, each searcher
-tested at the gate of the tier that ships it: the tier-0 GP with
-qLogEI and the wrapped TPE at the tier-0 gate, the tier-1 and later
-searchers at theirs & \ref{sec:modelfree}, \ref{sec:bayesian} &
-T0/T1 \\
-V05 & the transform matters as claimed & GP with and without
-log-warping on a pinned task; warped must not lose & \ref{sec:modelfree} & T0 \\
+V04-T0 & finite known-answer models and search traces conform & all
+fixed slots, independent numerical outputs, proposal replay, best-result
+selection and accounting conform; descriptive regret & \ref{sec:modelfree} & T0 \\
+V04-T1 & later searchers earn their complexity & separately frozen
+matched-budget performance comparison & \ref{sec:bayesian} & T1 \\
+V05 & declared log/linear coordinates conform & independent forward/inverse
+formulas, shared physical prefix and full ridge traces; no superiority claim
+& \ref{sec:modelfree} & T0 \\
 V06 & early stopping is nearly free & searcher+ASHA matches
 searcher-at-full-fidelity final quality within noise at a fraction
 of compute; rung correlations logged & \ref{sec:multifidelity} & T1 \\
@@ -213,20 +276,24 @@ drama.
 The table above uses unquantified phrases to fit on one page; this
 section pins each one to a concrete rule before any entry runs.
 
-\textbf{``Within tolerance'' (V01):} A fixed percentage band is the
-wrong instrument here, and an earlier draft of this chapter used one: it
-asked that anytime and final scores differ by no more than $0.5\%$ of
-the reference method's final value. The references are stochastic, so
-that band tests a determinism they do not have—two correct
-implementations of the same searcher differ by more than $0.5\%$ across
-seeds routinely, and a band tight enough to catch a wiring bug flags
-correct code as often as broken code. V01 instead compares the two
-implementations in distribution: final and anytime score vectors at
-shared seeds are compared by a two-sample distributional test, and the
-entry passes when the wrapper's score distribution is indistinguishable
-from the reference's. The comparison is loose on any single run and
-tight on the ensemble, which is the shape the question actually
-has—V01 gates implementation correctness, not optimizer superiority.
+\textbf{Finite reference conformance (V01):} The earlier fixed
+percentage bands, KS nonrejection and distributional-equivalence wording are
+superseded by the authorized 2026-09-30 finite-corpus amendment. A finite
+sample cannot establish equality in law by failing to reject a KS test.
+V01 now requires exact configuration-cell, decision, policy-selection and
+score traces on the prospectively frozen corpus. Each reference trajectory
+is independently rebuilt from its named source, seed and original table
+bytes. The authorized 2026-10-01 coverage amendment retains all 36 original
+cases, including nine exact missing-cell refusal obligations, and adds nine
+full trajectories on all seed-0 HalfCheetah configurations finite at every
+original fidelity. The derived geometry is explicit. Refusal is not recovered
+data or a completed original trajectory; unexpected missingness or execution
+loss remains inconclusive, and any observed discrepancy fails. The historical
+v1 INCONCLUSIVE result is preserved.
+There is no statistical tolerance, population claim or human result override.
+The PASHA reference explicitly includes the deterministic unordered-pair
+tolerance correction; this is not equivalence to the unmodified vendor.
+The finite corpus and its numerical/dependency envelope bound the claim.
 
 \textbf{``Within noise'' (V06, V11):} The claim these entries make is
 one-sided—that early stopping does not \emph{lose} quality, that a
@@ -414,9 +481,11 @@ implementation was tuned on, and the gate it anchors measures fit to
 the validation set. So each workload family carries two disjoint task
 sets. Development tasks are named in week one of tier~0, recorded in
 the validation manifest, and free to run as often as anyone likes.
-Acceptance tasks are chosen by an engineer not implementing the
-capability under test, revealed at gate time, and recorded in the
-gate manifest with their data checksums.
+Acceptance tasks follow a committed, reproducible selection algorithm,
+are revealed at gate time, and are recorded in the gate manifest with
+their data checksums. Selection/exposure/chronology evidence must be
+verified; a human selector's identity or signature establishes none of
+these facts.
 
 Both numbers are reported, and the gap between them is itself a
 diagnostic: a capability strong on development tasks and weak on
@@ -432,16 +501,17 @@ task-selection bias auditable after the fact, which matters
 precisely because the person selecting is usually the person hoping.
 
 Two details decide whether that audit can actually be performed.
-``Chosen by an engineer not implementing the capability'' is a role
-separation, and role separation is not a sampling design: it leaves the
-task universe, the eligibility filters, the stratification, and the
-tie-breaking unstated, so a selection made in good faith is still
-unreproducible. The registry therefore records the selection
+The former requirement to appoint an engineer outside implementation is
+superseded by D-OBJECTIVE-EVIDENCE. Role separation alone does not specify
+the task universe, eligibility filters, stratification or tie-breaking.
+The registry therefore records the selection
 \emph{algorithm} and the candidate set, committed by hash before the
 implementation freeze, with the selected identifiers revealed at gate
 time as before. Blinding protects against reading results early;
 committing the algorithm protects against the discretion that survives
-blinding.
+blinding. Hash consistency alone does not prove actual chronology,
+concealment or the completeness of a history. Their evidence and verifiers
+must be supplied; missing facts cannot be resolved by human acceptance.
 
 The other detail is exposure. Migrating a development task into
 acceptance carries everything the implementers learned from it while

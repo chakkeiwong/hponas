@@ -18,10 +18,7 @@ def test_chebyshev_basic():
     space.add_knob(Knob("y", kind="continuous", bounds=(0, 1)))
 
     searcher = ChebyshevSearcher(
-        space=space,
-        objectives=["obj1", "obj2"],
-        base_searcher="random",
-        seed=42
+        space=space, objectives=["obj1", "obj2"], base_searcher="random", seed=42
     )
 
     # Propose configurations
@@ -31,15 +28,14 @@ def test_chebyshev_basic():
 
     # Observe results
     for config in configs:
-        searcher.observe({
-            "config": config,
-            "objectives": {
-                "obj1": config["x"] ** 2,
-                "obj2": config["y"] ** 2
-            },
-            "fidelity": 1.0,
-            "cost": 1.0
-        })
+        searcher.observe(
+            {
+                "config": config,
+                "objectives": {"obj1": config["x"] ** 2, "obj2": config["y"] ** 2},
+                "fidelity": 1.0,
+                "cost": 1.0,
+            }
+        )
 
     # Check scalarized values computed
     assert len(searcher._scalarized) == 5
@@ -55,7 +51,7 @@ def test_chebyshev_scalarization():
         objectives=["obj1", "obj2"],
         weights=np.array([0.5, 0.5]),
         reference_point=np.array([0.0, 0.0]),
-        seed=42
+        seed=42,
     )
 
     # Test scalarization
@@ -66,34 +62,34 @@ def test_chebyshev_scalarization():
     assert abs(scalarized - 1.0) < 1e-6
 
 
-def test_chebyshev_reference_point_adaptation():
-    """ChebyshevSearcher adapts reference point from observed data."""
+def test_chebyshev_reference_point_is_fixed():
+    """Reference stays fixed so all stored scalar labels have one meaning."""
     space = SearchSpace()
     space.add_knob(Knob("x", kind="continuous", bounds=(0, 1)))
 
-    searcher = ChebyshevSearcher(
-        space=space,
-        objectives=["obj1", "obj2"],
-        seed=42
-    )
+    searcher = ChebyshevSearcher(space=space, objectives=["obj1", "obj2"], seed=42)
 
     initial_ref = searcher.reference_point.copy()
 
     # Observe some results
     configs = searcher.propose(3)
     for i, config in enumerate(configs):
-        searcher.observe({
-            "config": config,
-            "objectives": {"obj1": float(i), "obj2": float(i + 1)},
-            "fidelity": 1.0,
-            "cost": 1.0
-        })
+        searcher.observe(
+            {
+                "config": config,
+                "objectives": {"obj1": float(i), "obj2": float(i + 1)},
+                "fidelity": 1.0,
+                "cost": 1.0,
+            }
+        )
 
-    # Reference point should have updated (anti-ideal = worst on each objective)
-    assert not np.allclose(searcher.reference_point, initial_ref)
-    # Should be slightly worse than worst observed (1.1x)
-    assert searcher.reference_point[0] >= 2.0  # Worst obj1 = 2.0
-    assert searcher.reference_point[1] >= 3.0  # Worst obj2 = 3.0
+    np.testing.assert_array_equal(searcher.reference_point, initial_ref)
+    assert searcher._scalarize(np.array([-2.0, -2.0])) < searcher._scalarize(
+        np.array([-1.0, -1.0])
+    )
+    assert searcher._scalarized == [
+        searcher._scalarize(np.array([float(i), float(i + 1)])) for i in range(3)
+    ]
 
 
 def test_chebyshev_state_serialization():
@@ -101,21 +97,19 @@ def test_chebyshev_state_serialization():
     space = SearchSpace()
     space.add_knob(Knob("x", kind="continuous", bounds=(0, 1)))
 
-    searcher = ChebyshevSearcher(
-        space=space,
-        objectives=["obj1", "obj2"],
-        seed=42
-    )
+    searcher = ChebyshevSearcher(space=space, objectives=["obj1", "obj2"], seed=42)
 
     # Observe some results
     configs = searcher.propose(3)
     for config in configs:
-        searcher.observe({
-            "config": config,
-            "objectives": {"obj1": config["x"], "obj2": 1 - config["x"]},
-            "fidelity": 1.0,
-            "cost": 1.0
-        })
+        searcher.observe(
+            {
+                "config": config,
+                "objectives": {"obj1": config["x"], "obj2": 1 - config["x"]},
+                "fidelity": 1.0,
+                "cost": 1.0,
+            }
+        )
 
     # Save state
     state = searcher.state_dict()
@@ -123,11 +117,7 @@ def test_chebyshev_state_serialization():
     assert len(state["configs"]) == 3
 
     # Restore state
-    searcher2 = ChebyshevSearcher(
-        space=space,
-        objectives=["obj1", "obj2"],
-        seed=999
-    )
+    searcher2 = ChebyshevSearcher(space=space, objectives=["obj1", "obj2"], seed=999)
     searcher2.load_state_dict(state)
 
     assert len(searcher2._configs) == 3
@@ -141,24 +131,23 @@ def test_chebyshev_with_gp():
     space.add_knob(Knob("x", kind="continuous", bounds=(0, 1)))
 
     searcher = ChebyshevSearcher(
-        space=space,
-        objectives=["obj1", "obj2"],
-        base_searcher="gp",
-        seed=42
+        space=space, objectives=["obj1", "obj2"], base_searcher="gp", seed=42
     )
 
     # Observe enough data for GP
     configs = searcher.propose(10)
     for config in configs:
-        searcher.observe({
-            "config": config,
-            "objectives": {
-                "obj1": config["x"] ** 2,
-                "obj2": (1 - config["x"]) ** 2
-            },
-            "fidelity": 1.0,
-            "cost": 1.0
-        })
+        searcher.observe(
+            {
+                "config": config,
+                "objectives": {
+                    "obj1": config["x"] ** 2,
+                    "obj2": (1 - config["x"]) ** 2,
+                },
+                "fidelity": 1.0,
+                "cost": 1.0,
+            }
+        )
 
     # Propose with GP acquisition
     bo_configs = searcher.propose(3)

@@ -15,6 +15,7 @@ V02 Protocol: Given an event log, replaying from seed produces identical suggest
 from __future__ import annotations
 
 import json
+import os
 import time
 from dataclasses import dataclass, field
 from enum import Enum
@@ -24,11 +25,20 @@ from typing import Any, Optional
 
 class EventType(Enum):
     """Event types for deterministic replay."""
+
     SUGGEST = "suggest"
+    SUGGEST_PENDING = "suggest_pending"
+    SEARCH_EXHAUSTED = "search_exhausted"
+    SEARCH_BUDGET_EXHAUSTED = "search_budget_exhausted"
     OBSERVE = "observe"
     PROMOTE = "promote"
     CULL = "cull"
     CHECKPOINT = "checkpoint"
+    REPORT = "report"
+    PROMOTION_ROUND = "promotion_round"
+    PROGRESS = "progress"
+    FINISH = "finish"
+    CANCEL_REQUEST = "cancel_request"
 
 
 @dataclass
@@ -38,6 +48,7 @@ class Event:
 
     V02 Contract: Events must contain enough information to replay decisions.
     """
+
     event_id: int
     event_type: EventType
     timestamp: float
@@ -88,7 +99,7 @@ class EventLog:
         if not self.log_path.exists():
             return
 
-        with open(self.log_path, 'r') as f:
+        with open(self.log_path, "r") as f:
             for line in f:
                 if line.strip():
                     event_dict = json.loads(line)
@@ -101,7 +112,7 @@ class EventLog:
         trial_id: str,
         config: dict[str, Any],
         seed: int,
-        searcher_state: Optional[dict[str, Any]] = None
+        searcher_state: Optional[dict[str, Any]] = None,
     ) -> Event:
         """Record a searcher suggestion (propose_batch call).
 
@@ -116,17 +127,13 @@ class EventLog:
                 "config": config,
                 "seed": seed,
                 "searcher_state": searcher_state,
-            }
+            },
         )
         self._write_event(event)
         return event
 
     def record_observe(
-        self,
-        trial_id: str,
-        fidelity: float,
-        value: float,
-        cost: float
+        self, trial_id: str, fidelity: float, value: float, cost: float
     ) -> Event:
         """Record an observation (report call).
 
@@ -141,7 +148,7 @@ class EventLog:
                 "fidelity": fidelity,
                 "value": value,
                 "cost": cost,
-            }
+            },
         )
         self._write_event(event)
         return event
@@ -151,7 +158,7 @@ class EventLog:
         trial_id: str,
         from_fidelity: float,
         to_fidelity: float,
-        scheduler_state: Optional[dict[str, Any]] = None
+        scheduler_state: Optional[dict[str, Any]] = None,
     ) -> Event:
         """Record a scheduler promotion decision.
 
@@ -166,17 +173,12 @@ class EventLog:
                 "from_fidelity": from_fidelity,
                 "to_fidelity": to_fidelity,
                 "scheduler_state": scheduler_state,
-            }
+            },
         )
         self._write_event(event)
         return event
 
-    def record_cull(
-        self,
-        trial_id: str,
-        fidelity: float,
-        reason: str
-    ) -> Event:
+    def record_cull(self, trial_id: str, fidelity: float, reason: str) -> Event:
         """Record a scheduler cull decision."""
         event = Event(
             event_id=self._next_event_id,
@@ -186,7 +188,7 @@ class EventLog:
             data={
                 "fidelity": fidelity,
                 "reason": reason,
-            }
+            },
         )
         self._write_event(event)
         return event
@@ -195,7 +197,7 @@ class EventLog:
         self,
         trial_id: str,
         checkpoint_path: str,
-        metadata: Optional[dict[str, Any]] = None
+        metadata: Optional[dict[str, Any]] = None,
     ) -> Event:
         """Record a checkpoint save (V02 Scenario 3: crash-resume).
 
@@ -209,24 +211,56 @@ class EventLog:
             data={
                 "checkpoint_path": checkpoint_path,
                 "metadata": metadata or {},
-            }
+            },
         )
         self._write_event(event)
         return event
 
     def _write_event(self, event: Event) -> None:
         """Append event to disk (append-only, flush immediately for crash recovery)."""
-        with open(self.log_path, 'a') as f:
-            f.write(json.dumps(event.to_dict()) + '\n')
-            f.flush()  # Ensure durability
+        with open(self.log_path, "a") as f:
+            f.write(json.dumps(event.to_dict()) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
 
         self._events.append(event)
         self._next_event_id += 1
 
+    def replace_study_events(self, records):
+        """Materialize the authoritative checkpoint event ledger atomically.
+
+        The checkpoint transaction owns ordering and recovery. This JSONL file
+        is a replay projection, so an interrupted export can be regenerated.
+        """
+        import tempfile
+
+        events = [
+            Event(i, EventType(r["kind"]), 0.0, r["trial_id"], r["data"])
+            for i, r in enumerate(records)
+        ]
+        fd, temporary = tempfile.mkstemp(
+            dir=self.log_path.parent, prefix=self.log_path.name
+        )
+        try:
+            with os.fdopen(fd, "w") as handle:
+                for event in events:
+                    handle.write(json.dumps(event.to_dict()) + "\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, self.log_path)
+            directory_fd = os.open(self.log_path.parent, os.O_RDONLY)
+            try:
+                os.fsync(directory_fd)
+            finally:
+                os.close(directory_fd)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+        self._events = events
+        self._next_event_id = len(events)
+
     def get_events(
-        self,
-        event_type: Optional[EventType] = None,
-        trial_id: Optional[str] = None
+        self, event_type: Optional[EventType] = None, trial_id: Optional[str] = None
     ) -> list[Event]:
         """Query events by type and/or trial_id."""
         events = self._events

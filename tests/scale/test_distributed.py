@@ -61,17 +61,22 @@ class TestDistributedExecution:
                     cost=10.0,
                     status="completed",
                 )
-                store.write_trial(trial, study_id="study_1")
+                try:
+                    store.write_trial(trial, study_id="study_1")
+                finally:
+                    store.close()
 
             # Launch 20 concurrent writes
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
                 trial_ids = [f"trial_{i}" for i in range(20)]
                 futures = [pool.submit(write_trial, tid) for tid in trial_ids]
-                concurrent.futures.wait(futures)
+                for future in futures:
+                    future.result()
 
             # All trials should be written
             store = Store(db_path)
             trials = store.read_trials(study_id="study_1")
+            store.close()
             assert len(trials) == 20
 
     def test_large_batch_proposal(self):

@@ -13,9 +13,10 @@ The runner:
 
 Tier 0 gate criteria (BUILD_PROGRAM_v2.md lines 58-65):
 - All contracts pass
-- V01 (implementation parity): Sobol, TPE match references
-- V04 (performance): Sobol, GP beat random baseline
-- V05 (log-warping): demonstrates effectiveness
+- V01: complete finite-corpus conformance to nine named references
+- V04-T0: finite known-answer numerical, search trace and accounting conformance
+- V05: finite log/linear coordinate and paired physical initialization conformance
+- V02/V03: replay and mutation requirements
 - V14 (day-one walk): Chapter 15 example executes
 """
 
@@ -33,6 +34,7 @@ from .task_registry import ValidationTask, get_validation_task, list_validations
 @dataclass
 class ValidationResult:
     """Result of running one validation task."""
+
     task_id: str
     passed: bool
     metrics: dict[str, Any]
@@ -80,7 +82,7 @@ class ValidationRunner:
                     passed=False,
                     metrics={},
                     execution_time=0.0,
-                    error=f"Dependency {dep_id} not satisfied"
+                    error=f"Dependency {dep_id} not satisfied",
                 )
 
         print(f"  Objective: {task.objective}")
@@ -115,14 +117,18 @@ class ValidationRunner:
                 passed=False,
                 metrics={},
                 execution_time=execution_time,
-                error=str(e)
+                error=str(e),
             )
 
         self.results.append(result)
         return result
 
-    def _check_criteria(self, metrics: dict[str, Any], criteria: dict[str, Any]) -> bool:
+    def _check_criteria(
+        self, metrics: dict[str, Any], criteria: dict[str, Any]
+    ) -> bool:
         """Check if metrics satisfy success criteria."""
+        if not criteria or metrics.get("passed") is not True:
+            return False
         for key, threshold in criteria.items():
             if key not in metrics:
                 return False
@@ -137,13 +143,20 @@ class ValidationRunner:
             # Numeric criteria: value must meet threshold
             elif isinstance(threshold, (int, float)):
                 # For p-values and ks_statistic: lower is better
-                if key in ["p_value", "ks_statistic"]:
+                if key == "p_value" and "ks_statistic" in criteria:
+                    if value <= threshold:
+                        return False
+                elif key in ["p_value", "ks_statistic"]:
                     if value > threshold:
                         return False
                 # For improvements: higher is better
                 elif key in ["mean_improvement", "improvement"]:
                     if value < threshold:
                         return False
+                else:
+                    return False
+            else:
+                return False
 
         return True
 
@@ -158,9 +171,9 @@ class ValidationRunner:
         Returns:
             List of ValidationResult for all tasks in tier
         """
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  Tier {tier} Validation Campaign")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         tasks = list_validations(tier=tier)
         print(f"\nFound {len(tasks)} validation tasks for Tier {tier}")
@@ -177,16 +190,14 @@ class ValidationRunner:
 
         # Summary
         passed_count = sum(1 for r in tier_results if r.passed)
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  Tier {tier} Summary: {passed_count}/{len(tier_results)} passed")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         return tier_results
 
     def generate_report(
-        self,
-        results: list[ValidationResult],
-        output_path: Optional[Path] = None
+        self, results: list[ValidationResult], output_path: Optional[Path] = None
     ) -> dict[str, Any]:
         """
         Generate structured validation report.
@@ -217,7 +228,7 @@ class ValidationRunner:
                     "error": r.error,
                 }
                 for r in results
-            ]
+            ],
         }
 
         # Save report
@@ -232,47 +243,13 @@ class ValidationRunner:
         """
         Check Tier 0 gate criteria.
 
-        Per BUILD_PROGRAM_v2.md lines 58-65:
-        - All contracts pass
-        - V01 (implementation parity): Sobol, TPE
-        - V04 (performance): Sobol, GP beat random
-        - V05 (log-warping): effectiveness
-        - V14 (day-one walk): Chapter 15 example
+        Per BUILD_PROGRAM_v3: current audited V01, V02, V03, V04-T0, V05,
+        V14 and V16 evidence is required.
 
         Returns:
             (gate_passed, summary_message)
         """
-        required_tasks = [
-            "V01-T0-sobol-parity",
-            "V04-T0-sobol-vs-random",
-            "V04-T0-gp-vs-random",
-            "V05-T0-log-warping",
-            "V14-T0-day-one-walk",
-        ]
+        from tools.gate_check import check_tier0_gate
 
-        # Check each required task
-        missing = []
-        failed = []
-
-        for task_id in required_tasks:
-            result = next((r for r in self.results if r.task_id == task_id), None)
-
-            if result is None:
-                missing.append(task_id)
-            elif not result.passed:
-                failed.append(task_id)
-
-        # Generate summary
-        if not missing and not failed:
-            message = "✓ Tier 0 gate: ALL CRITERIA SATISFIED"
-            return True, message
-
-        message_parts = ["✗ Tier 0 gate: CRITERIA NOT SATISFIED"]
-
-        if missing:
-            message_parts.append(f"  Missing: {', '.join(missing)}")
-
-        if failed:
-            message_parts.append(f"  Failed: {', '.join(failed)}")
-
-        return False, "\n".join(message_parts)
+        result = check_tier0_gate()
+        return result.verdict == "pass", str(result)
