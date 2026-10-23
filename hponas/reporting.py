@@ -5,7 +5,7 @@ import math
 from pathlib import Path
 
 from hponas.diagnostics import read_rung_diagnostics
-from hponas.evaluation import (EvaluationController, StudyDeclaration,
+from hponas.evaluation import (evaluation_controller, StudyDeclaration,
                                legacy_evaluation_report)
 from hponas.types import Result
 
@@ -45,11 +45,11 @@ def study_report(state):
         declaration = StudyDeclaration.from_contract(contract)
         if declaration.identity != evaluation['identity']:
             raise ValueError('Report evaluation declaration identity differs')
-        controller = EvaluationController(declaration, maximize=state['maximize'], spec=spec)
+        controller = evaluation_controller(declaration, maximize=state['maximize'], spec=spec)
         controller.state = evaluation
         evaluated = controller.report()
     else:
-        evaluated = legacy_evaluation_report()
+        evaluated = legacy_evaluation_report(state.get('legacy_reason'))
     endpoint = state['scheduler_state']['config']['r_max'] if state.get('scheduler_state') else 1.
     raw_results = list(state['results'].values())
     metrics = spec.summarize([Result(**r) for r in raw_results], endpoint_fidelity=endpoint) if spec else None

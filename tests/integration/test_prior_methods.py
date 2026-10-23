@@ -51,14 +51,14 @@ def test_finite_prior_searcher_recovery_never_invents_trial_ids():
 @pytest.mark.parametrize('workers', [1, 3])
 def test_study_checkpoints_pending_draw_and_store_recovery(tmp_path, workers):
     baseline = Study(searcher(1000), LocalExecutor(), objective, budget=25,
-                     study_name='prior', maximize=False, max_concurrent=workers)
+                     study_name='prior', maximize=False, max_concurrent=workers, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     expected = baseline.run()
     store = Store(tmp_path/'prior.sqlite')
     interruptions = 0
     for attempt in range(200):
         target = Study(searcher(), LocalExecutor(), objective, budget=25,
                        study_name='prior', maximize=False, max_concurrent=workers,
-                       store=store, checkpoint_dir=tmp_path)
+                       store=store, checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
         if attempt:
             target.load_checkpoint()
         try:
@@ -148,14 +148,14 @@ def test_hyperband_cycles_use_bracket_start_fidelity_and_store(tmp_path):
     store = Store(tmp_path/'band.sqlite')
     study = Study(searcher(1000), LocalExecutor(), objective, budget=15, maximize=False,
                   scheduler=PriorBandScheduler(rungs=[1, 3, 9], eta=3), store=store,
-                  checkpoint_dir=tmp_path, study_name='band', continuation='resume')
+                  checkpoint_dir=tmp_path, study_name='band', continuation='resume', legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = study.run()
     roots = [t for t in study.trials.values() if not t.parent_trial_id]
     assert [t.fidelity for t in roots] == [1]*9+[3]*3+[9]*3
     assert result.n_trials == 20 and result.total_cost == 63
     resumed = Study(searcher(1000), LocalExecutor(), objective, budget=15, maximize=False,
                     scheduler=PriorBandScheduler(rungs=[1, 3, 9], eta=3), store=store,
-                    study_name='band', continuation='resume')
+                    study_name='band', continuation='resume', legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     resumed.load_checkpoint()
     assert resumed.run().n_trials == 20
     assert store.load_study_snapshot('band')['scheduler_state'] == study.scheduler.state_dict()
@@ -170,7 +170,7 @@ def test_pending_draws_and_hyperband_promotions_replay_exactly(tmp_path):
     for attempt in range(100):
         study = Study(searcher(), LocalExecutor(), objective, budget=15, maximize=False,
                       scheduler=PriorBandScheduler(rungs=[1, 3, 9], eta=3), store=store,
-                      event_log=log, study_name='replay', continuation='resume')
+                      event_log=log, study_name='replay', continuation='resume', legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
         if attempt:
             study.load_checkpoint()
         try:
@@ -192,7 +192,7 @@ def test_pending_draws_and_hyperband_promotions_replay_exactly(tmp_path):
 @pytest.mark.parametrize('damage', ['searcher', 'scheduler'])
 def test_recovery_joins_searcher_scheduler_and_study_ledgers(tmp_path, damage):
     study = Study(searcher(1000), LocalExecutor(), objective, budget=15, maximize=False,
-                  scheduler=PriorBandScheduler(rungs=[1, 3, 9], eta=3), study_name='cross')
+                  scheduler=PriorBandScheduler(rungs=[1, 3, 9], eta=3), study_name='cross', legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     study.run()
     before = deepcopy(study._snapshot())
     bad = deepcopy(before)

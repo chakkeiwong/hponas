@@ -1,0 +1,54 @@
+"""Outcome-blind resource admission for the full V03 mutant population."""
+import hashlib
+import json
+from pathlib import Path
+
+from mutmut.configuration import config
+from mutmut.state import state
+from mutmut.hponas_evidence import halt_after_saved_result
+from validation.v03_resource_scheduler import POLICY_PATH, dispatch, make_rows, policy
+
+
+def _write_once(path, value):
+    with Path(path).open('x') as handle:
+        json.dump(value, handle, indent=2)
+        handle.write('\n')
+
+
+def run_scheduled(mutants, runner, source_data, register_result, print_stats):
+    """One forkserver; freeze all selections before dispatching any job."""
+    cfg, resource_policy = config(), policy()
+    rows = make_rows(mutants, state().tests_by_mangled_function_name,
+                     state().duration_by_test, cfg, resource_policy)
+    prior = {name.replace('__init__.', ''): result for _, name, result in mutants}
+    precompleted = sorted(name for name, result in prior.items() if result is not None)
+    if precompleted != sorted(resource_policy['calibration_controls']):
+        raise ValueError('V03 sweep may reuse only its two frozen calibration controls')
+    data_by_name = {name.replace('__init__.', ''): data for data, name, _ in mutants}
+    for row in rows:
+        mutation_data = data_by_name[row['mutant']]
+        mutation_data.estimated_time_of_tests_by_mutant[row['mutant']] = row['estimated_test_seconds']
+        if not row['tests'] and row['mutant'] not in precompleted:
+            mutation_data.exit_code_by_key[row['mutant']] = 33
+            mutation_data.save()
+    path = Path('mutants/mutmut-schedule.json')
+    _write_once(path, dict(kind='v03_complete_resource_schedule_v1',
+        policy_sha256=hashlib.sha256(POLICY_PATH.read_bytes()).hexdigest(),
+        stats_sha256=hashlib.sha256(json.dumps(json.loads(Path('mutants/mutmut-stats.json').read_text()),
+                                     sort_keys=True).encode()).hexdigest(),
+        precompleted=precompleted, rows=rows))
+    runnable = [r for r in rows if r['tests'] and r['mutant'] not in precompleted]
+    trace_path = Path('mutants/mutmut-schedule-trace.jsonl')
+    with trace_path.open('x') as trace:
+        def emit(event):
+            trace.write(json.dumps(event, sort_keys=True) + '\n')
+            trace.flush()
+
+        def register(result):
+            register_result(result, data_by_name)
+            halt_after_saved_result(result, runner)
+
+        print('Running scheduled mutation testing', flush=True)
+        tried = dispatch(runnable, runner, register, emit, resource_policy)
+    print_stats(source_data, force_output=True)
+    return tried

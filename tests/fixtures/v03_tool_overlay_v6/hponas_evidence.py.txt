@@ -1,0 +1,54 @@
+"""Diagnostic output and synchronous stopping for the local mutmut overlay.
+
+This module cannot turn an exception into a kill, retry a mutant, or change a
+test selection. The coordinator calls halt_after_saved_result only after the
+original metadata write has completed.
+"""
+from contextlib import redirect_stderr, redirect_stdout
+import hashlib
+import json
+import os
+from pathlib import Path
+import sys
+import time
+import traceback
+
+from mutmut.utils.logging_utils import get_log_file_path
+
+
+def run_with_evidence(test_runner, *, mutant_name, tests):
+    directory = get_log_file_path().resolve().parent / 'worker-output'
+    directory.mkdir(parents=True, exist_ok=True)
+    token = hashlib.sha256(mutant_name.encode()).hexdigest()[:24]
+    path = directory / f'{token}-{os.getpid()}-{time.time_ns()}.log'
+    with path.open('x') as log, redirect_stdout(log), redirect_stderr(log):
+        print(json.dumps({'mutant': mutant_name, 'pid': os.getpid(), 'cpu_affinity': sorted(os.sched_getaffinity(0)), 'tests': list(tests)}), flush=True)
+        try:
+            code = test_runner.run_tests(mutant_name=mutant_name, tests=tests)
+        except BaseException:
+            traceback.print_exc(file=log)
+            log.flush()
+            raise
+        print(json.dumps({'runner_returncode': code}), flush=True)
+        return code
+
+
+def halt_after_saved_result(result, runner):
+    # These codes are ordinary outcomes under the existing phase rules. No-test
+    # results are kept as no-tests; their score consequences remain unchanged.
+    if type(result.exit_code) is int and result.exit_code in {0, 1, 5, 33, -24}:
+        return
+    record = {'kind': 'saved_abnormal_mutation_stop_v1',
+              'mutant': result.mutant_name, 'raw_exit_code': result.exit_code,
+              'pid': os.getpid(), 'recorded_ns': time.time_ns(),
+              'reason': 'abnormal_raw_outcome_cannot_pass_frozen_rules',
+              'metadata_saved_before_stop': True, 'retry': False,
+              'scientific_acceptance': False}
+    try:
+        with Path('mutants/abnormal-stop.json').open('x') as handle:
+            json.dump(record, handle, indent=2)
+            handle.write('\n')
+        print(json.dumps(record), file=sys.stderr, flush=True)
+    finally:
+        runner.stop_all_workers()
+    raise SystemExit(70)

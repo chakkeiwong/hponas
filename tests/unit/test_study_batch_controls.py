@@ -51,7 +51,7 @@ def test_joint_dispatch_respects_remaining_configuration_budget_and_optional_bat
         return (config['x'] - 2) ** 2
 
     study = Study(source, LocalExecutor(), objective, budget=7, max_concurrent=4,
-                  maximize=False, study_name='bounded', checkpoint_dir=tmp_path)
+                  maximize=False, study_name='bounded', checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = study.run()
     assert source.batch_requests == expected_batches
     assert source.proposed == result.n_trials == 7
@@ -72,7 +72,7 @@ def test_joint_proposals_leave_room_for_queued_promotions():
         return float(config['x'])
 
     result = Study(source, LocalExecutor(), objective, budget=8, max_concurrent=3,
-                   scheduler=scheduler, maximize=False, study_name='promoted').run()
+                   scheduler=scheduler, maximize=False, study_name='promoted', legacy_reason='Protocol-only regression fixture; protected evaluation tested separately').run()
     # After three roots, ASHA promotes one; only two slots remain for new roots.
     assert source.batch_requests[:2] == [3, 2]
     assert source.proposed == 8
@@ -100,7 +100,7 @@ def test_legacy_duck_searcher_without_capabilities_keeps_scalar_dispatch():
 
     source = LegacyDuck()
     result = Study(source, LocalExecutor(), lambda c: c['x'], budget=3,
-                   max_concurrent=2, maximize=False).run()
+                   max_concurrent=2, maximize=False, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately').run()
     assert result.evaluation['status'] == 'legacy_unqualified'
     assert result.n_trials == 3 and result.best_value == 0.
     assert [r.objective_value for r in source.history] == [0., 1., 2.]
@@ -124,7 +124,7 @@ def test_single_evaluation_adapter_measures_elapsed_time_without_overwriting_rep
 
     executor = Executor()
     study = Study(searcher(), executor, lambda config: 5., budget=2, max_concurrent=2,
-                  study_name="adapter", compute_budget_seconds=20.)
+                  study_name="adapter", compute_budget_seconds=20., legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = study.run()
     assert executor.closed and executor.calls == ["adapter_trial_0", "adapter_trial_1"]
     assert result.total_elapsed_seconds == 6. and result.total_cost == 14.
@@ -153,7 +153,7 @@ def test_batch_executor_prepares_once_per_dispatch_and_keeps_return_order():
 
     executor = Executor()
     study = Study(searcher(), executor, lambda config: 5., budget=3, max_concurrent=2,
-                  study_name="batch", compute_budget_seconds=20.)
+                  study_name="batch", compute_budget_seconds=20., legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = study.run()
     assert executor.calls == ["prepare", ("batch_trial_0", "batch_trial_1"),
                               "prepare", ("batch_trial_2",), "shutdown"]
@@ -173,7 +173,7 @@ def test_repeated_recovery_charges_each_acknowledged_attempt_once(tmp_path, monk
     path = tmp_path / "repeated_checkpoint.json"
     for attempt in range(2):
         study = Study(searcher(), LocalExecutor(), interrupted, budget=1,
-                      study_name="repeated", checkpoint_dir=tmp_path)
+                      study_name="repeated", checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
         if attempt:
             study.load_checkpoint(path)
         with pytest.raises(KeyboardInterrupt, match="restart after progress"):
@@ -185,7 +185,7 @@ def test_repeated_recovery_charges_each_acknowledged_attempt_once(tmp_path, monk
         assert restored.resource_report()['tuning_elapsed_seconds'] == 6.
         return {"value": 5., "cost": 3.}
 
-    restored = Study(searcher(), LocalExecutor(), complete, checkpoint_dir=tmp_path)
+    restored = Study(searcher(), LocalExecutor(), complete, checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     restored.load_checkpoint(path)
     result = restored.run()
     assert result.n_trials == 1 and result.total_cost == 9.
@@ -228,7 +228,7 @@ def test_checkpoint_interruption_releases_other_reporting_worker_with_cancellati
 
     executor = CapturingExecutor()
     study = Study(searcher(), executor, objective, budget=2, max_concurrent=2,
-                  study_name="drain", checkpoint_dir=tmp_path)
+                  study_name="drain", checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     with pytest.raises(KeyboardInterrupt, match="checkpoint interrupted"):
         study.run()
     assert len(executor.dispatched) == 2 and all(future.done() for future in executor.dispatched)
@@ -253,7 +253,7 @@ def test_exact_time_cap_stops_new_proposals_and_preserves_public_resource_report
             pass
 
     source = Study(searcher(), Clocked(), lambda config: 5., budget=4,
-                   study_name='cap', compute_budget_seconds=3.)
+                   study_name='cap', compute_budget_seconds=3., legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = source.run()
     assert calls == ['cap_trial_0'] and result.n_trials == 1
     assert result.reason == 'compute_budget_exhausted'
@@ -277,5 +277,5 @@ def test_seed_zero_dispatch_preserves_assigned_trial_seeds():
         seeds.append(seed)
         return 1.
 
-    result = Study(source, LocalExecutor(), objective, budget=3).run()
+    result = Study(source, LocalExecutor(), objective, budget=3, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately').run()
     assert result.n_trials == 3 and seeds == [0, 1, 2]

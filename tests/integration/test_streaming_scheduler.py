@@ -86,7 +86,7 @@ def test_promotions_carry_state_and_charge_repeated_work(
         continuation=continuation,
         event_log=log,
         checkpoint_dir=tmp_path,
-        study_name="continuation",
+        study_name="continuation", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
     )
     result = study.run()
     assert result.total_cost == expected_cost and result.n_trials == 6
@@ -116,7 +116,7 @@ def test_no_full_fidelity_incumbent_is_durable_incomplete(tmp_path):
             scheduler=scheduler(r_min=1),
             checkpoint_dir=tmp_path,
             store=store,
-            study_name="underfilled",
+            study_name="underfilled", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         with pytest.raises(IncompleteStudyError) as raised:
             study.run()
@@ -131,7 +131,7 @@ def test_no_full_fidelity_incumbent_is_durable_incomplete(tmp_path):
             searcher(),
             LocalExecutor(),
             lambda c: pytest.fail("repeated committed work"),
-            scheduler=scheduler(r_min=1),
+            scheduler=scheduler(r_min=1), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         restored.load_checkpoint(checkpoint)
         with pytest.raises(IncompleteStudyError):
@@ -162,7 +162,7 @@ def test_completed_references_prune_a_live_trial_and_endpoint_only_is_explicit(
         maximize=False,
         scheduler=target,
         study_name="median",
-        event_log=log,
+        event_log=log, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
     )
     outcome = study.run()
     assert [r.status for r in outcome.history] == ["completed"] * 5 + ["pruned"]
@@ -181,7 +181,7 @@ def test_completed_references_prune_a_live_trial_and_endpoint_only_is_explicit(
         LocalExecutor(),
         lambda c: 100,
         budget=6,
-        scheduler=scheduler(median_stopping=True, report_grid=(1, 2, 3, 4)),
+        scheduler=scheduler(median_stopping=True, report_grid=(1, 2, 3, 4)), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
     )
     result = endpoint.run()
     assert all(
@@ -201,7 +201,7 @@ def test_async_reports_commit_on_study_thread_with_sqlite(tmp_path):
             budget=4,
             scheduler=scheduler(),
             store=store,
-            study_name="async",
+            study_name="async", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         result = study.run()
         assert result.n_trials == 4
@@ -225,12 +225,12 @@ def test_crash_recovery_deduplicates_evidence_and_charges_restarted_prefix(tmp_p
         scheduler=scheduler(),
         checkpoint_dir=tmp_path,
         study_name="crash",
-        event_log=log,
+        event_log=log, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
     )
     with pytest.raises(KeyboardInterrupt):
         study.run()
     restored = Study(
-        searcher(), LocalExecutor(), stream, scheduler=scheduler(), event_log=log
+        searcher(), LocalExecutor(), stream, scheduler=scheduler(), event_log=log, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately'
     )
     restored.load_checkpoint(tmp_path / "crash_checkpoint.json")
     outcome = restored.run()
@@ -258,7 +258,7 @@ def test_compute_cap_is_separate_from_configuration_budget():
         objective,
         budget=10,
         scheduler=scheduler(r_min=100, r_max=100),
-        compute_budget_seconds=0.03,
+        compute_budget_seconds=0.03, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
     )
     with pytest.raises(IncompleteStudyError) as raised:
         study.run()
@@ -278,7 +278,7 @@ def test_user_cancellation_is_terminal_and_distinct_from_failure():
         calls.append("should not execute")
 
     study = Study(
-        searcher(), LocalExecutor(), objective, budget=1, scheduler=scheduler()
+        searcher(), LocalExecutor(), objective, budget=1, scheduler=scheduler(), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately'
     )
     with pytest.raises(IncompleteStudyError) as raised:
         study.run()
@@ -293,11 +293,11 @@ def test_scheduler_policy_rejection_does_not_mutate_live_study(tmp_path):
         stream,
         scheduler=scheduler(promotion_policy="legacy_bootstrap"),
         checkpoint_dir=tmp_path,
-        study_name="legacy",
+        study_name="legacy", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
     )
     source._new_trial()
     source.save_checkpoint()
-    target = Study(searcher(), LocalExecutor(), stream, scheduler=scheduler())
+    target = Study(searcher(), LocalExecutor(), stream, scheduler=scheduler(), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     before = json.loads(json.dumps(target._snapshot()))
     with pytest.raises(ValueError, match="policy differs"):
         target.load_checkpoint(tmp_path / "legacy_checkpoint.json")

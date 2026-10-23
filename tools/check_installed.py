@@ -61,7 +61,7 @@ def verify(extras=False, ray=False, rl=False):
         try:
             study = Study(GPSearcher(space, seed=42, initial_random_samples=3, num_restarts=2),
                           LocalExecutor(), interrupt, budget=7, maximize=False,
-                          store=store, study_name="installed")
+                          store=store, study_name="installed", legacy_reason='Installation conformance fixture; no application performance claim')
             try:
                 study.run()
             except KeyboardInterrupt:
@@ -70,7 +70,7 @@ def verify(extras=False, ray=False, rl=False):
                 raise AssertionError("Interruption was not exercised")
             committed = dict(study.results)
             resumed = Study(GPSearcher(space), LocalExecutor(), objective,
-                            store=store, study_name="installed")
+                            store=store, study_name="installed", legacy_reason='Installation conformance fixture; no application performance claim')
             resumed.load_checkpoint()
             result = resumed.run()
             assert result.n_trials == 7 and len(resumed.trials) == 7
@@ -81,7 +81,7 @@ def verify(extras=False, ray=False, rl=False):
             store.close()
         pasha = PASHAScheduler(PASHAConfig(r_min=1, r_max=27))
         result = Study(RandomSearcher(space, seed=3), LocalExecutor(), objective,
-                       budget=6, maximize=False, scheduler=pasha).run()
+                       budget=6, maximize=False, scheduler=pasha, legacy_reason='Installation conformance fixture; no application performance claim').run()
         assert {r.fidelity for r in result.history} == {1, 3}
         checks["pasha_stable_cap"] = pasha.current_max_fidelity
         def streamed(config, fidelity, resume_from, checkpoint, reporter):
@@ -95,14 +95,14 @@ def verify(extras=False, ray=False, rl=False):
             RandomSearcher(space, seed=3), LocalExecutor(mode="async", max_workers=2), streamed,
             budget=2, scheduler=ASHAScheduler(ASHAConfig(eta=2, r_min=1, r_max=2)),
             continuation="resume", checkpoint_dir=directory, study_name="streamed",
-        )
+         legacy_reason='Installation conformance fixture; no application performance claim')
         streamed_result = streaming_study.run()
         assert streamed_result.total_cost == 4 and streamed_result.n_trials == 4
         assert set(streaming_study.scheduler._terminal.values()) == {"completed"}
         checks["asha_streamed_resume"] = {"cost": streamed_result.total_cost, "evaluations": streamed_result.n_trials}
         from hponas import IncompleteStudyError
         underfilled = Study(RandomSearcher(space, seed=3), LocalExecutor(), objective,
-                            budget=1, scheduler=ASHAScheduler(ASHAConfig(r_min=1, r_max=3)))
+                            budget=1, scheduler=ASHAScheduler(ASHAConfig(r_min=1, r_max=3)), legacy_reason='Installation conformance fixture; no application performance claim')
         try:
             underfilled.run()
         except IncompleteStudyError as exc:
@@ -115,19 +115,19 @@ def verify(extras=False, ray=False, rl=False):
             from hponas.searchers_tpe import TPESearcher
 
             for name, searcher in [("cmaes", CMAESSearcher(space, seed=3)), ("tpe", TPESearcher(space, seed=3))]:
-                result = Study(searcher, LocalExecutor(), objective, budget=16, maximize=False).run()
+                result = Study(searcher, LocalExecutor(), objective, budget=16, maximize=False, legacy_reason='Installation conformance fixture; no application performance claim').run()
                 assert result.n_trials == 16 and all(r.is_valid() for r in result.history)
                 checks[name] = result.n_trials
         if ray:
             from hponas import RayExecutor
 
             result = Study(RandomSearcher(space, seed=2), RayExecutor(num_workers=2),
-                           objective, budget=4, maximize=False, max_concurrent=2).run()
+                           objective, budget=4, maximize=False, max_concurrent=2, legacy_reason='Installation conformance fixture; no application performance claim').run()
             assert result.n_trials == 4 and all(r.is_valid() for r in result.history)
             checks["local_ray"] = result.n_trials
             result = Study(RandomSearcher(space, seed=2), RayExecutor(num_workers=1, max_retries=0),
                            streamed, budget=2, continuation="resume",
-                           scheduler=ASHAScheduler(ASHAConfig(eta=2, r_min=1, r_max=2))).run()
+                           scheduler=ASHAScheduler(ASHAConfig(eta=2, r_min=1, r_max=2)), legacy_reason='Installation conformance fixture; no application performance claim').run()
             assert result.total_cost == 4 and result.n_trials == 4
             checks["ray_streamed_resume"] = result.total_cost
         if rl:

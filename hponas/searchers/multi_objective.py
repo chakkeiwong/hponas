@@ -1,12 +1,14 @@
 """Vector-aware baseline for the durable multi-objective Study contract."""
 from copy import deepcopy
 from importlib.metadata import version
+from itertools import product
+import math
 
 import numpy as np
 
 from hponas.encoding import as_knob_space, SpaceEncoder
 from hponas.multi_objective import ObjectiveSpec
-from hponas.searchers.base import BaseSearcher
+from hponas.searchers.base import BaseSearcher, PendingSuggestionError
 from hponas.searchers.random_searcher import RandomSearcher
 from hponas.types import Config
 from hponas.capabilities import SearcherCapabilities, MIXED
@@ -71,7 +73,9 @@ class MultiObjectiveBayesSearcher(MultiObjectiveRandomSearcher):
     Constraints are modeled separately as measured excess above frozen bounds.
     """
 
-    support = SearcherCapabilities(('continuous', 'ordinal'), objectives='vector', constraints=True, partial_fidelity=True)
+    support = SearcherCapabilities(('continuous', 'ordinal'), objectives='vector', constraints=True,
+                                   partial_fidelity=True, joint_batch=True)
+    max_batch_size = 8
 
     def __init__(self, search_space, *, objectives, constraints=None, work_unit="integer_operations", seed=0,
                  method="qlognehvi", n_initial=4, candidate_count=64, mc_samples=64,
@@ -96,10 +100,56 @@ class MultiObjectiveBayesSearcher(MultiObjectiveRandomSearcher):
         self.acquisition_trace = []
 
     def suggest(self):
+        return self.suggest_batch(1)[0]
+
+    def suggest_batch(self, count):
+        """Joint q-point score over at most 4096 sets in a sampled legal pool.
+
+        No duplicate or pending location is returned. Completed locations may
+        be replicated (the model is noisy); all-pending finite domains wait.
+        Candidate subsampling bounds work, not a global-optimality claim.
+        """
+        if type(count) is not int or not 1 <= count <= self.max_batch_size:
+            raise ValueError('Vector batch size must be an integer from 1 to 8')
+        before = deepcopy(self._sampler.rng.get_state()), len(self.acquisition_trace)
+        try:
+            return self._suggest_batch(count)
+        except BaseException:
+            self._sampler.rng.set_state(before[0])
+            del self.acquisition_trace[before[1]:]
+            raise
+
+    def _candidate_pool(self):
+        observed = {r.trial_id for r in self.history}
+        pending = [c for tid, c in self.trials.items() if tid not in observed]
+        knobs = self._encoder.space.knobs
+        finite = all(k.kind == 'ordinal' for k in knobs)
+        size = math.prod(k.bounds[1]-k.bounds[0]+1 for k in knobs) if finite else None
+        pool = []
+        if finite and size <= 4096:
+            pool = [Config(dict(zip((k.name for k in knobs), values)))
+                    for values in product(*(range(k.bounds[0], k.bounds[1]+1) for k in knobs))]
+            pool = [c for c in pool if not any(c.values == p.values for p in pending)]
+            order = self._sampler.rng.permutation(len(pool))[:self._options['candidate_count']]
+            pool = [pool[i] for i in order]
+        else:
+            for _ in range(4096):
+                c = self._sampler.suggest()
+                if not any(c.values == p.values for p in pending+pool):
+                    pool.append(c)
+                if len(pool) == self._options['candidate_count']:
+                    break
+        if not pool:
+            raise PendingSuggestionError('No nonpending vector location within the bounded domain/pool')
+        return pool, pending
+
+    def _suggest_batch(self, count):
         spec = self.multi_objective_spec
         valid = [r for r in self.history if r.status == "completed" and r.fidelity == self.model_fidelity]
+        candidates, pending_configs = self._candidate_pool()
+        q = min(count, len(candidates))
         if len(valid) < self._options["n_initial"]:
-            return super().suggest()
+            return candidates[:q]
         import torch
         from botorch.models import SingleTaskGP, ModelListGP
         from botorch.fit import fit_gpytorch_mll
@@ -110,9 +160,14 @@ class MultiObjectiveBayesSearcher(MultiObjectiveRandomSearcher):
         from botorch.optim import optimize_acqf_discrete
         from botorch.sampling.normal import SobolQMCNormalSampler
         from gpytorch.mlls import ExactMarginalLogLikelihood
+        from hponas.searchers.gp_searcher import GPSearcher
 
         seed = int(self._sampler.rng.randint(0, 2**31-1))
-        candidates = [super(MultiObjectiveBayesSearcher, self).suggest() for _ in range(self._options["candidate_count"])]
+        # Select a seeded bounded pool before scoring every unordered q-set.
+        # BoTorch's discrete q>1 optimizer is sequential greedy; it is not
+        # substituted for a joint maximization here.
+        while math.comb(len(candidates), q) > 4096:
+            candidates.pop()
         x = np.array([self._encoder.encode(self.trials[r.trial_id]) for r in valid])
         observations = [spec.validate_result(r) for r in valid]
         y = -np.array([spec.normalize(row["objectives"]) for row in observations])
@@ -125,8 +180,7 @@ class MultiObjectiveBayesSearcher(MultiObjectiveRandomSearcher):
             y = -(((-y)*weights).max(axis=1)+.05*((-y)*weights).sum(axis=1))[:, None]
         num_outputs = y.shape[1]
         training = np.column_stack([y, excess])
-        observed_ids = {r.trial_id for r in self.history}
-        pending = [self._encoder.encode(config) for tid, config in self.trials.items() if tid not in observed_ids]
+        pending = [self._encoder.encode(config) for config in pending_configs]
         with torch.random.fork_rng(devices=[]):
             torch.manual_seed(seed)
             train_x = torch.tensor(x, dtype=torch.double)
@@ -153,20 +207,32 @@ class MultiObjectiveBayesSearcher(MultiObjectiveRandomSearcher):
                 acq = qLogExpectedImprovement(**options, best_f=best,
                                               objective=GenericMCObjective(lambda samples, X=None: samples[..., 0]))
             choices = torch.tensor(np.unique(np.array([self._encoder.encode(c) for c in candidates]), axis=0), dtype=torch.double)
-            selected, value = optimize_acqf_discrete(acq, q=1, choices=choices, max_batch_size=64)
-            config = Config(self._encoder.decode(selected[0].detach().numpy()))
+            if q == 1:
+                selected, value = optimize_acqf_discrete(acq, q=1, choices=choices, max_batch_size=64)
+            else:
+                selected, value = GPSearcher._joint_finite(acq, choices, q)
+            if value.numel() != 1 or not torch.isfinite(value).all():
+                raise ValueError('Nonfinite or nonscalar vector acquisition')
+            configs = [Config(self._encoder.decode(row.detach().numpy())) for row in selected]
+            if any(c.values == other.values for i,c in enumerate(configs)
+                   for other in configs[:i]+pending_configs):
+                raise ValueError('Vector acquisition returned a duplicate or pending location')
         self.acquisition_trace.append({"method": self._options["method"], "seed": seed,
                                        "training_trial_ids": [r.trial_id for r in valid],
                                        "weights": weights.tolist() if weights is not None else None,
-                                       "config": deepcopy(config.values), "log_acquisition": float(value.item())})
-        return config
+                                       "config": deepcopy(configs[0].values) if q == 1 else None,
+                                       "configs": [deepcopy(c.values) for c in configs],
+                                       "requested": count, "q": q, "candidate_count": len(choices),
+                                       "joint_sets": math.comb(len(choices), q),
+                                       "pending_count": len(pending), "log_acquisition": float(value.item())})
+        return configs
 
     def get_state(self):
-        return {**super().get_state(), "kind": "botorch_multi_objective_v1", "options": deepcopy(self._options),
+        return {**super().get_state(), "kind": "botorch_multi_objective_v2", "options": deepcopy(self._options),
                 "versions": deepcopy(self._versions), "acquisition_trace": deepcopy(self.acquisition_trace)}
 
     def set_state(self, state):
-        if (state.get("kind") != "botorch_multi_objective_v1" or state.get("versions") != self._versions
+        if (state.get("kind") != "botorch_multi_objective_v2" or state.get("versions") != self._versions
                 or state.get("options") != self._options or state.get("metric") != self.multi_objective_spec.contract
                 or state.get("space") != as_knob_space(self.search_space).to_dict()):
             raise ValueError("Bayesian vector checkpoint identity differs")

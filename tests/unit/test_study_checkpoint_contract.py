@@ -30,7 +30,7 @@ def make_study(**kwargs):
         max_concurrent=2,
     )
     options.update(kwargs)
-    return Study(**options)
+    return Study(**options, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
 
 
 def write_state(tmp_path, state):

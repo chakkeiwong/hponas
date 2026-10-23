@@ -31,11 +31,155 @@ TARGET_KILL_SCORE = 0.90
 EQUIVALENT_MUTANT_ALLOWANCE = 0.05
 MIN_MUTANTS = 100
 MAX_TIMEOUT_RATE = 0.20
-MAX_CAMPAIGN_WALL_SECONDS = 6 * 60 * 60
+MAX_CAMPAIGN_WALL_SECONDS = 10 * 60 * 60
 MUTANT_TIMEOUT_CONSTANT = 22.0
 MUTANT_TIMEOUT_MULTIPLIER = 3.0
-CALIBRATION_WALL_SECONDS = 1500
+CALIBRATION_WALL_SECONDS = 2700
 MAX_MUTATION_WORKERS = 24
+
+# Exact reviewed v6 overlay; ordered names and bytes are part of the phase.
+REQUIRED_TOOL_SOURCES = [
+    {
+        "relative_path": "__init__.py",
+        "sha256": "e907533ddfa85ae95a5669993fe759bc08ef00a21658336202202d1e1cb61d6d"
+    },
+    {
+        "relative_path": "__main__.py",
+        "sha256": "f32efe3ef83379b013725d04f2b1d738c83d940abb8470d1e56193e9da56fc55"
+    },
+    {
+        "relative_path": "code_coverage.py",
+        "sha256": "b0d7dc9a8841dfa54e49fe5002ddb568cd7cc62b16f548554dcf52577013d970"
+    },
+    {
+        "relative_path": "configuration.py",
+        "sha256": "c9933b8da52e69604daf509ffb6f08904bdca408aefce3cfc3568c01ff6f1af7"
+    },
+    {
+        "relative_path": "core.py",
+        "sha256": "7fcc8eb26fe0e798efab4c0e03fbe3f93f5e034d3e329fa525645b7afdb6e7a7"
+    },
+    {
+        "relative_path": "hponas_evidence.py",
+        "sha256": "955d8c3dc9b83d9eb7de3770d99d8af71bc3bbda28c8675798253ea854441a94"
+    },
+    {
+        "relative_path": "hponas_scheduler.py",
+        "sha256": "0fd3d757edbd17b5581ae8280b5e2bffd8a341d55005df41f5803200b9b387d5"
+    },
+    {
+        "relative_path": "models/__init__.py",
+        "sha256": "fe1a8196124b4bb56ab9fc913febf3259a2b44cfce469ad4307a8e3ee8e03588"
+    },
+    {
+        "relative_path": "models/results.py",
+        "sha256": "d2702c2cfd3d46024c692e601fecbab61cb66abda15c36ebd78d74f46fe02583"
+    },
+    {
+        "relative_path": "mutation/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+        "relative_path": "mutation/data.py",
+        "sha256": "de6e43ecb99ac4c2197410e89dc25cbb50952d7e9e1c4216cd9e6c1e8209a6f2"
+    },
+    {
+        "relative_path": "mutation/diff_apply.py",
+        "sha256": "3dfa739a362138e885444360157cc1ef608a20b84e6eb4325a2e83f283002e39"
+    },
+    {
+        "relative_path": "mutation/file_mutation.py",
+        "sha256": "a8cf64d1a1442ed1dbdbaeb59e7893dc902dbba8c1f723ead133a237b4335364"
+    },
+    {
+        "relative_path": "mutation/mutators.py",
+        "sha256": "197eae529cde0d1f0e5dc30cb41224a2f5b92454b03f2d69777785b007a1833f"
+    },
+    {
+        "relative_path": "mutation/pragma_handling.py",
+        "sha256": "f18c5e3e9a829f54e5aaa51cdaf44317ab61640a405b6918b772f362675b89a5"
+    },
+    {
+        "relative_path": "mutation/trampoline.py",
+        "sha256": "95162d6315056960f3551ba4b532bb34deb30fec7668c61be1f7a93bb1bb42d1"
+    },
+    {
+        "relative_path": "mutation/trampoline_templates.py",
+        "sha256": "836cdd8cc881482e2ecd6f1f4fb03e8c7823a9f72b181789772f36e6e4fe3782"
+    },
+    {
+        "relative_path": "runners/__init__.py",
+        "sha256": "7985fd4e0b7abd2c5d24db79d44ca7892bf5486e3af29669cb1b3c17cd88b322"
+    },
+    {
+        "relative_path": "runners/harness.py",
+        "sha256": "667da68b2a6f7f7bccabb0fcace8392288008194df78119a7c690601104da9d1"
+    },
+    {
+        "relative_path": "state.py",
+        "sha256": "322d20e19411d34dc90744325ba9a3ef27f946dfaca89dd59a8471092b86e875"
+    },
+    {
+        "relative_path": "stats.py",
+        "sha256": "b499ec9e6e4d0bd792898b8979744b5108498201ee68f6eb7e137c498dae4bd5"
+    },
+    {
+        "relative_path": "type_checking.py",
+        "sha256": "833708742c87b61c3e2a211ffc467281c57c42fcb9315a4a8cdfcb047d95f06d"
+    },
+    {
+        "relative_path": "ui/__init__.py",
+        "sha256": "94141bfffc56085fb1a1a535cb7f9e90caaad57d76cc8aaa799d4cbdc5122f36"
+    },
+    {
+        "relative_path": "ui/browse.py",
+        "sha256": "09a34226d4093ee6856d4ecef302ba328208361e45c79fc361969e34319d7aac"
+    },
+    {
+        "relative_path": "ui/terminal.py",
+        "sha256": "03c31ef7800e806bc5900a7ea9d722a4756f848fb60fe67f9f4b9e5610661005"
+    },
+    {
+        "relative_path": "utils/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+        "relative_path": "utils/file_utils.py",
+        "sha256": "1757d79ac9d53163916eeef725c6e8fe3683447ecd818792366677a415077c63"
+    },
+    {
+        "relative_path": "utils/format_utils.py",
+        "sha256": "d88a4362a4ed21606cb74d7417654f18b44155f132c084c9774e3de93209c00e"
+    },
+    {
+        "relative_path": "utils/logging_utils.py",
+        "sha256": "de6081569bbf0882714a1cf648898e7c6e2c88ff5548784076b2c5028fca8420"
+    },
+    {
+        "relative_path": "utils/safe_setproctitle.py",
+        "sha256": "a266ee10efdd5639347a19f18f60e88956dfd9c292e65eae5d06552c9e0556a5"
+    },
+    {
+        "relative_path": "workers/__init__.py",
+        "sha256": "e2c55429239e3ec0ee46c482c6d36521b8b8a74fda30970b73d4c1bcbbd09ae8"
+    },
+    {
+        "relative_path": "workers/coordinator_cleanup.py",
+        "sha256": "963e37668f45a15fa75abf3c2b50831d31ee732ed83804586e5ab4789cfd6025"
+    },
+    {
+        "relative_path": "workers/descendant_supervisor.py",
+        "sha256": "bc4d28a7528c0492163f4ec27e14d812236ed0088f9d3c3f9102af636310d0f3"
+    },
+    {
+        "relative_path": "workers/isolation.py",
+        "sha256": "5365fef8ebcc4a9bf0f79bbffc8290072d3009c99d94d6bf29600531b548ad93"
+    },
+    {
+        "relative_path": "workers/timeout.py",
+        "sha256": "ff5027bdae778385ce4cecc6c883ee1fde78c8a7d403a4af318145451700527c"
+    }
+]
 EXECUTION_ADMISSION = {'kind': 'guarded_single_full_allocation_v1', 'complete_timing_census_required': False, 'prerequisites': ['descendant_cleanup_controls', 'exact_leaking_mutant_selected_tests', 'independent_resource_guard_controls', 'current_complete_calibration', 'python312_python313_installation', 'local_operation_change_impact', 'protocol_refusal_controls', 'six_program_checks'], 'official_runs_per_allocation': 1, 'automatic_retry': False, 'prior_scientific_outcomes_reused': False, 'incomplete_or_resource_intervention': 'INCONCLUSIVE_REPAIR_REQUIRED'}
 CALIBRATION_FUNCTION = "hponas.searchers_gp.xǁGPqLogEISearcherǁ_build_acqf"
 CALIBRATION_CONTROLS = {
@@ -84,6 +228,12 @@ DEFERRED_MODULES = {
     # Restored product contracts use finite behavioral qualification; BANK-01
     # owns their final-source integration. This is not mutation coverage.
     "hponas.evaluation": "PRD-01",
+    "hponas.evaluation_streaming": "GAP-01",
+    "hponas.population_adapter": "GAP-01",
+    "hponas.local_service": "GAP-01",
+    "hponas.backup_security": "GAP-01",
+    "hponas.rgpe": "GAP-01",
+    "hponas.quickstart": "GAP-01",
     "hponas.budgets": "PRD-01",
     "hponas.capabilities": "PRD-01",
     "hponas.diagnostics": "PRD-01",
@@ -426,7 +576,7 @@ def _binding(path):
 
 
 def test_data_inventory(root):
-    """Bind test data and explicitly selected document/reference fixtures."""
+    """Bind test data and explicitly selected document and support inputs."""
     from tools.source_identity import test_data_paths
 
     root = Path(root).resolve()
@@ -435,7 +585,7 @@ def test_data_inventory(root):
     if config_path.is_file():
         config = tomllib.loads(config_path.read_text()).get("tool", {}).get("mutmut", {})
         for name in config.get("also_copy", []):
-            if not name.startswith("docs/"):
+            if not name.startswith(("docs/", "program_operations/")):
                 continue
             selected = root / name
             if not selected.exists() or not selected.resolve().is_relative_to(root):
@@ -493,6 +643,32 @@ def library_ownership(workspace):
     return rows
 
 
+def verify_frozen_tool_sources(sources, manifest):
+    """Reconstruct the exact reviewed ordered inventory, including retained copies."""
+    if (manifest != REQUIRED_TOOL_SOURCES or len(sources) != len(REQUIRED_TOOL_SOURCES)
+            or len({row["path"] for row in sources}) != len(sources)):
+        raise ValueError("V03 tool source inventory differs from the reviewed overlay")
+    for source, expected in zip(sources, REQUIRED_TOOL_SOURCES):
+        _read_bound(source, parse=False)
+        if source["sha256"] != expected["sha256"]:
+            raise ValueError("V03 tool source bytes differ from the reviewed overlay")
+
+
+def verify_tool_overlay(tool_root):
+    """Refuse renamed, stale, missing, extra or altered runtime tool files."""
+    tool_root = Path(tool_root).resolve()
+    if tool_root.name != "mutmut" or tool_root.parent.name != "mutmut-evidence-v6":
+        raise ValueError("V03 requires the reviewed pidfd-owned mutmut overlay")
+    paths = sorted(tool_root.rglob("*.py"))
+    if any(not path.resolve().is_relative_to(tool_root) for path in paths):
+        raise ValueError("V03 tool source escapes the reviewed overlay")
+    sources = [_binding(path) for path in paths]
+    manifest = [{"relative_path": str(path.relative_to(tool_root)), "sha256": ref["sha256"]}
+                for path, ref in zip(paths, sources)]
+    verify_frozen_tool_sources(sources, manifest)
+    return sources, manifest
+
+
 def mutation_freeze(workspace):
     """Freeze the actual tool, test selection and complete population contract."""
     import mutmut
@@ -528,11 +704,10 @@ def mutation_freeze(workspace):
         raise ValueError("V03 configured source paths differ from the required modules")
     verify_proof_source_contexts(workspace)
     tool_root = Path(mutmut.__file__).resolve().parent
-    if tool_root.parent.name != "mutmut-evidence-v3":
-        raise ValueError("V03 requires the measured-admission mutmut overlay")
-    return {"kind": "v03_execution_freeze_v7", "source_digest": source_digest(workspace),
+    tool_sources, tool_manifest = verify_tool_overlay(tool_root)
+    return {"kind": "v03_execution_freeze_v8", "source_digest": source_digest(workspace),
             "recorded_ns": time.monotonic_ns(), "tool_version": version, "python": sys.executable,
-            "tool_sources": [_binding(path) for path in sorted(tool_root.rglob("*.py"))],
+            "tool_sources": tool_sources, "tool_source_manifest": tool_manifest,
             "dependencies": dependency_versions(),
             "config": config, "config_file": _binding(workspace / "pyproject.toml"),
             "protocol": _binding(workspace / "validation/protocols/v03_protocol.md"),
@@ -544,7 +719,7 @@ def mutation_freeze(workspace):
             "calibration_order_tests": list(CALIBRATION_ORDER_TESTS),
             "calibration_wall_seconds": CALIBRATION_WALL_SECONDS,
             "equivalence_rules": list(RULES),
-            "equivalence_argument": _binding(workspace / "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_16.md"),
+            "equivalence_argument": _binding(workspace / "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_18.md"),
             "raw_outcome_policy": RAW_OUTCOME_POLICY,
             "resource_policy": _binding(workspace / "validation/designs/v03_resource_policy.json"),
             "max_workers": MAX_MUTATION_WORKERS, "wall_seconds": MAX_CAMPAIGN_WALL_SECONDS}
@@ -562,7 +737,8 @@ def verify_phase_register(workspace):
                 "minimum_mutants": MIN_MUTANTS, "timeout_maximum_fraction": MAX_TIMEOUT_RATE,
                 "abnormal_or_unchecked": "INCONCLUSIVE", "equivalence_rules": list(RULES),
                 "raw_outcome_policy": RAW_OUTCOME_POLICY, "raw_kill_exit_code": 1, "raw_timeout_exit_code": -24}
-    if (entry.get("version") != "2.20" or any(decision.get(key) != value for key, value in expected.items())
+    if (entry.get("version") != "2.29" or any(decision.get(key) != value for key, value in expected.items())
+            or entry.get("tool_source_manifest") != REQUIRED_TOOL_SOURCES
             or entry.get("execution_admission") != EXECUTION_ADMISSION
             or entry.get("execution_resources") != {"workers": MAX_MUTATION_WORKERS,
                 "cpu_slots": "distinct_inherited_cpu_per_live_child",
@@ -572,7 +748,7 @@ def verify_phase_register(workspace):
             or entry.get("module_ownership") != {
                 "required": IN_SCOPE_MODULES, "outside_scope": DEFERRED_MODULES,
                 "import_facades": sorted(FACADE_MODULES)}
-            or "**Version:** 2.20" not in (workspace / "validation/protocols/v03_protocol.md").read_text()):
+            or "**Version:** 2.29" not in (workspace / "validation/protocols/v03_protocol.md").read_text()):
         raise ValueError("V03 phase register differs from the prospective executable contract")
 
 
@@ -746,7 +922,7 @@ def verify_execution_artifacts(result):
 
     read = _read_bound
     frozen = read(result["execution_freeze"])
-    if (frozen.get("kind") != "v03_execution_freeze_v7"
+    if (frozen.get("kind") != "v03_execution_freeze_v8"
             or frozen.get("raw_outcome_policy") != RAW_OUTCOME_POLICY
             or frozen.get("source_digest") != result.get("source_digest")
             or frozen.get("required_modules") != IN_SCOPE_MODULES
@@ -758,12 +934,13 @@ def verify_execution_artifacts(result):
             or frozen.get("library_ownership") != library_ownership(ROOT)
             or not frozen.get("tool_sources") or frozen.get("equivalence_rules") != list(RULES)):
         raise ValueError("V03 execution freeze differs from the current phase")
+    verify_frozen_tool_sources(frozen["tool_sources"], frozen.get("tool_source_manifest"))
     if (_read_bound(frozen["resource_policy"]) != resource_policy()
             or frozen["resource_policy"]["sha256"] != _binding(POLICY_PATH)["sha256"]):
         raise ValueError("V03 measured resource policy differs from its freeze")
     for binding in frozen["tool_sources"] + [frozen[key] for key in ("config_file", "protocol", "protocol_register", "equivalence_argument")]:
         read(binding, parse=False)
-    if frozen["equivalence_argument"]["sha256"] != _binding(ROOT / "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_16.md")["sha256"]:
+    if frozen["equivalence_argument"]["sha256"] != _binding(ROOT / "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_18.md")["sha256"]:
         raise ValueError("V03 equivalence argument differs from the frozen rules")
     # The program is a retained test-context snapshot, not executable source.
     # New master receipts may follow execution; static fixture bytes may not.

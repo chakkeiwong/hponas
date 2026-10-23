@@ -29,14 +29,14 @@ def test_actual_integer_training_and_full_replay(tmp_path,transform):
     workload=StreamingQuadratic()
     study=Study(searcher(transform=transform),LocalExecutor(),workload,budget=21,
                  study_name='product',maximize=False,scheduler=scheduler(),continuation='resume',
-                 store=store,event_log=events)
+                 store=store,event_log=events, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result=study.run()
     assert result.n_trials==33 and len(workload.updates)==result.total_cost==100
     for row in result.history:
         index=study.trials[row.trial_id].config['eta_index']
         assert row.objective_value==pytest.approx(float(value(index,int(row.fidelity))),abs=1e-12)
     restored=Study(searcher(seed=9,transform=transform),LocalExecutor(),workload,budget=21,
-        study_name='product',maximize=False,scheduler=scheduler(),continuation='resume',store=store)
+        study_name='product',maximize=False,scheduler=scheduler(),continuation='resume',store=store, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     restored.load_checkpoint()
     assert restored.searcher.get_state()==study.searcher.get_state()
     assert restored.run().total_cost==100 and len(workload.updates)==100
@@ -50,7 +50,7 @@ def test_actual_integer_training_and_full_replay(tmp_path,transform):
 @pytest.mark.parametrize('damage', ['weights','draw','rng','event','direction','policy','integer_bounds'])
 def test_recovery_reconstructs_all_draws_and_policy_atomically(tmp_path,damage):
     study=Study(searcher(),LocalExecutor(),StreamingQuadratic(),budget=21,
-                maximize=False,scheduler=scheduler(),continuation='resume')
+                maximize=False,scheduler=scheduler(),continuation='resume', legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     study.run()
     before=study._snapshot()
     bad=deepcopy(before)

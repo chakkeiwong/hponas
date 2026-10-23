@@ -2,7 +2,7 @@
 
 Reusable HPO and moderate architecture-coordinate NAS for the model families used by a universal retail bank. The [product contract](docs/program/BANK_HPO_NAS_PRODUCT_CONTRACT.md) covers prediction and forecasting, causal/policy models, financial inference, constrained neural solvers, valuation and allocation. Models, data and frameworks stay caller-owned; sibling repositories are not runtime dependencies. The initial qualified search spaces have roughly 2–10 coordinates. General cell search, supernets and weight sharing remain outside scope.
 
-**Status:** The adopted finite local HPO and coordinate NAS product program is complete on the exact source in the [16 October qualification package](docs/program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json). Foundation workflows and standalone bank profiles have current scientific, known-answer, installed and local-backend evidence. Empirical application usefulness remains unestablished. See [support and limits](docs/PRODUCT_SUPPORT.md), [the master](CONSOLIDATED_MASTER_AUTHORITY.md) and [the lineage review](docs/program/MASTER_PROGRAM_LINEAGE_REVIEW_2026_10_12.md).
+**Status:** The [16 October qualification package](docs/program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json) is the accepted finite local baseline for its original source. The current master is incomplete: [GAP-01](docs/program/GAP_CLOSURE_PROGRAM_2026_10_18.md) repairs ten historical interface gaps, followed by current-source qualification and a final independent audit of every gap. Development results do not qualify changed source. Empirical application usefulness remains unestablished. See [support and limits](docs/PRODUCT_SUPPORT.md), [the master](CONSOLIDATED_MASTER_AUTHORITY.md) and [the lineage review](docs/program/MASTER_PROGRAM_LINEAGE_REVIEW_2026_10_12.md).
 
 ## Install
 
@@ -22,6 +22,28 @@ The RL extra pins Brax to the tested Git revision because its PyPI 0.14.2 releas
 
 ## Quick start
 
+The wheel ships two plain caller-owned fitted models. Each uses the public
+Study/Store APIs, a persisted declaration, disjoint tuning/final rows and seeds,
+work reservations, model artifacts and an explicit recovery path. Run from any
+directory with the installed package:
+
+```bash
+python -m hponas.quickstart --model hinge --output /tmp/hinge-study
+python -m hponas.quickstart --model allocation --output /tmp/allocation-study
+python -m hponas.quickstart --model hinge --output /tmp/hinge-study --resume
+```
+
+Use a new empty output directory for a new run. The hinge model fits a ReLU
+readout while searching hidden width and ridge strength; the allocation model
+tunes a projected-gradient solver for an exact two-asset problem. Four
+proposals cover each small domain. The command reports actual regret against exact
+finite references, with no stochastic precision or real-bank performance claim.
+See [caller model examples](docs/CALLER_MODELS.md) for the mathematics, artifacts
+and code to adapt. No sibling project or fixture inheritance is required.
+
+The following arithmetic tutorial illustrates the explicit legacy compatibility
+path. Ordinary model studies require a declaration:
+
 ```python
 from hponas import GPSearcher, Knob, LocalExecutor, SearchSpace, Study
 
@@ -36,6 +58,7 @@ def objective(config):
 study = Study(
     GPSearcher(space, seed=42), LocalExecutor(), objective,
     budget=10, maximize=False, study_name='example', checkpoint_dir='checkpoints',
+    legacy_reason='Exposed arithmetic tutorial; no protected performance claim',
 )
 result = study.run()
 print(result.best_config.values, result.best_value)
@@ -46,14 +69,15 @@ Objectives receive a configuration dictionary. They can also declare `fidelity`,
 Resume with a fresh executor and searcher, then load the checkpoint before calling `run()`:
 
 ```python
-resumed = Study(GPSearcher(space), LocalExecutor(), objective)
+resumed = Study(GPSearcher(space), LocalExecutor(), objective,
+                legacy_reason='Exposed arithmetic tutorial; no protected performance claim')
 resumed.load_checkpoint('checkpoints/example_checkpoint.json')
 result = resumed.run()
 ```
 
-Committed results are not dispatched again. Pending work can execute again after a crash; use `trial_id` to make external side effects idempotent. Legacy checkpoints use schema 3; schema 2 endpoint ledgers remain readable under their explicit scheduler policy. Declared evaluation uses schema 4, or schema 5 with resource reservations. Older incomplete Study snapshots require explicit migration. Batch observations commit in dispatch order. A Store snapshot is authoritative if both SQLite and a JSON projection are configured; load from the Store after an interrupted projection write.
+Committed results are not dispatched again. Pending work can execute again after a crash; use `trial_id` to make external side effects idempotent. Legacy checkpoints use schema 3 and require the same persisted reason. Old snapshots without a reason require explicit migration or their retained source. Declared evaluation uses schema 4, or schema 5 with resource reservations. Batch observations commit in dispatch order. A Store snapshot is authoritative if both SQLite and a JSON projection are configured; load from the Store after an interrupted projection write.
 
-The minimal example above uses the explicit legacy compatibility path and reports `legacy_unqualified` evaluation. For a persisted objective/model/data/protocol declaration, fold/seed aggregation, frozen selection and separate final evaluation, use [the declared workflow](docs/EVALUATION.md) and [its standalone example](examples/declared_tuning.py). Final measurements stay out of searcher history; failed or incomplete evaluation remains visible.
+The arithmetic example above reports `legacy_unqualified` evaluation. The shipped model examples use declared evaluation; [the evaluation contract](docs/EVALUATION.md) and [the checkout example](examples/declared_tuning.py) explain how to adapt it. Final measurements stay out of searcher history; failed or incomplete evaluation remains visible.
 
 [StudyBudget](docs/BUDGETS.md) separately declares configuration count, work units, tuning/final reserves, elapsed caps and worker capacity. Method capabilities are checked before dispatch. Recorded work and lost-attempt reservations survive recovery; endpoint time limits report overshoot. Neither resource accounting nor a finite example establishes empirical usefulness.
 

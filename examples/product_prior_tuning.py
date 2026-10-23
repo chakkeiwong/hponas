@@ -39,7 +39,7 @@ def continuous(directory, transform):
     executor=LocalExecutor()
     study=Study(searcher,executor,workload,budget=21,maximize=False,study_name=name,
                 scheduler=PriorBandScheduler(rungs=[1,2,4,8],eta=2,default_at_target=True),
-                continuation='resume',checkpoint_dir=target)
+                continuation='resume',checkpoint_dir=target, legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
     try:
         result=study.run()
     finally:

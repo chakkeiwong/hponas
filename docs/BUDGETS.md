@@ -1,7 +1,7 @@
 # Admission and resource contracts
 
 Pass `resource_budget=StudyBudget(...)` alongside a `StudyDeclaration` to budget
-the declared endpoint workflow. For example, eight candidate configurations,
+the declared evaluation workflow. For example, eight candidate configurations,
 two seeds each, one final selection and two final seeds can use:
 
 ```python
@@ -33,6 +33,12 @@ the full reservation; their actual work remains unknown. Retrying consumes
 another reservation. This bounds admission under the declared per-call work
 contract; arbitrary objective code can violate that contract, which is detected
 and reported, not physically prevented by this Python accounting layer.
+
+For repeated streaming, each barrier segment is one call and its meter starts
+at zero. The final reserve covers every final fold/seed at every declared
+barrier, using `max_work_per_call` per segment. Acknowledged reports permit
+cooperative time cancellation; scheduler pruning waits for the complete
+repetition barrier. Checkpoints retain raw segments and reconstruct their work.
 
 Tuning and final work have independent pools. Admission checks that final work
 can cover every declared final fold/seed for one scalar winner or the maximum
@@ -71,7 +77,9 @@ and validate the corresponding models.
 
 Random/Sobol and finite-prior search can consume partial observations.
 PriorBand requires its matching scheduler. Bayesian vector methods filter
-model fitting to their declared endpoint. Scalar GP/TPE/CMA-ES do not bind a
+model fitting to their declared endpoint. TPE supports scheduling with an
+explicit matching `model_fidelity`; only completed endpoint values train its
+density, and low-rung/failed results remain in Study history. Scalar GP/CMA-ES do not bind a
 partial-fidelity model in this interface and refuse scheduled Study use.
 Trust/cost/robust GP retain their sequential restrictions. Robust GP currently
 refuses failed observations, so it cannot enter declared evaluation until

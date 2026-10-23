@@ -65,13 +65,13 @@ def test_uniform_refusal_uses_explicit_contract(field, value, space_factory, kwa
 def test_declared_prior_metadata_is_not_silently_ignored():
     space = SearchSpace([Knob('x', 'continuous', (0., 1.), prior={'mean':.5})])
     with pytest.raises(ValueError, match='explicit supported prior law'):
-        Study(RandomSearcher(space), LocalExecutor(), lambda c: 0.)
+        Study(RandomSearcher(space), LocalExecutor(), lambda c: 0., legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
 
 
 def test_scalar_gp_partial_results_refused_before_trial_creation():
     searcher = GPSearcher(continuous())
     with pytest.raises(ValueError, match='partial-fidelity'):
-        Study(searcher, LocalExecutor(), lambda c: 0., scheduler=ASHAScheduler(ASHAConfig(r_min=1,r_max=2)))
+        Study(searcher, LocalExecutor(), lambda c: 0., scheduler=ASHAScheduler(ASHAConfig(r_min=1,r_max=2)), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     assert not searcher.trials
 
 
@@ -109,10 +109,10 @@ def test_vector_support_and_constraint_counterexample():
 
 def test_architecture_coordinates_require_names_and_survive_resume(tmp_path):
     a = Study(RandomSearcher(continuous(),seed=1), LocalExecutor(), lambda c: c['x0'],
-              budget=1, architecture_coordinates=('x0',), checkpoint_dir=tmp_path, study_name='architecture')
+              budget=1, architecture_coordinates=('x0',), checkpoint_dir=tmp_path, study_name='architecture', legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     a.run()
-    b = Study(RandomSearcher(continuous(),seed=1), LocalExecutor(), lambda c: c['x0'])
+    b = Study(RandomSearcher(continuous(),seed=1), LocalExecutor(), lambda c: c['x0'], legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     with pytest.raises(ValueError, match='architecture declaration'):
         b.load_checkpoint(tmp_path/'architecture_checkpoint.json')
     with pytest.raises(ValueError, match='distinct search-space knobs'):
-        Study(RandomSearcher(continuous()), LocalExecutor(), lambda c: 0., architecture_coordinates=('missing',))
+        Study(RandomSearcher(continuous()), LocalExecutor(), lambda c: 0., architecture_coordinates=('missing',), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')

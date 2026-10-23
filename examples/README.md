@@ -1,19 +1,24 @@
 # Example support
 
-These scripts are source-checkout examples; they are not included in the wheel.
+The scripts in this directory are source-checkout examples; they are not included in the wheel.
+The independent caller examples in `hponas.quickstart` are shipped in the wheel
+and run with `python -m hponas.quickstart --model hinge` or `--model allocation`
+outside the checkout. See [caller model examples](../docs/CALLER_MODELS.md).
 The previously qualified maintained examples also run by absolute script path
 outside the checkout after installing the wheel. The Tier-1 examples were qualified against the installed wheel on Python 3.12 in
 `docs/program/evidence/2026-10-07/tier1-engineering-01/`; scientific acceptance remains separate. No script modifies `sys.path` to
 silently select checkout library code.
 
 For current interface behavior and scope, use the [product support reference](../docs/PRODUCT_SUPPORT.md).
-The declared scalar/vector examples and current Local/Ray/Store repairs have
-development evidence; their changed-source installation and scientific review
-remain part of PRD-01. The complete banking-family examples are still BANK-01
-work, and old fixture qualification does not establish application usefulness.
+The declared scalar/vector and banking-family examples were qualified on the
+16 October source. GAP-01 now repairs the historical interface gaps; repaired
+source requires BANK-01/GAP-QUALIFICATION and the final GAP-01/FINAL-AUDIT.
+Finite examples do not establish empirical application usefulness.
 
 | File | Status and dependencies | Master owner |
 |---|---|---|
+| `bank_tuning.py` | Maintained independent prediction, causal, inference, solver, decision and coordinate-NAS workflows; frozen tuning/final roles, recovery and reporting. | BANK-01 |
+| `bank_inference_handoff.py` | Maintained native numerical tuner handoff, fresh verification and all verified pairs; posterior convergence remains unassessed. | BANK-01 |
 | `declared_tuning.py` | Maintained declared scalar workflow; analytic reference, separate final evaluation, work reservations, model JSON artifacts and complete Store/export report. | PRD-01 |
 | `spike_branin.py` | Maintained; core for `--executor local`, `ray` extra for `--executor ray` or default `both`. Full proposal/fidelity/value traces compared across executors. Analytic fidelity demonstrates orchestration, not efficiency. | PKG-01 |
 | `spike_crash_recovery.py` | Maintained; core. Driver interruption, committed Store prefix and exact uninterrupted Sobol trace. This is not the separate kill-9 conformance test. | PKG-01 |
@@ -30,7 +35,8 @@ work, and old fixture qualification does not establish application usefulness.
 | `sampler_neutra_example.py` | Maintained actual learned tanh-coupling example with transformed leapfrog. Finite math only; no posterior calibration claim. | WL-01 |
 | `finance_tuning.py` | Maintained declared two-asset vector Study/Store example; exact train/evaluation moments, 64 metered updates, complete report and explicit deterministic-known-answer final opt-out. | WL-01 / PRD-01 |
 | `population_known_answer.py` | Maintained ten-update two-generation example; finite V08 acceptance is retained on the 2026-10-08 source. | T2-POP |
-| `operations_known_answer.py` | Maintained local operations example; a metered diagonal quadratic proves physical updates match the durable ledger, then verifies Store/Study recovery through an immutable SQLite backup. Distributed service acceptance remains open. | OPS-01 |
+| `population_adapters.py` | General caller model/optimizer adapter examples: scalar quadratic and vector linear fit, independent finite references, protected final evaluation and checkpoint transfer. Current development evidence; final qualification remains open. | GAP-01/POPULATION |
+| `operations_known_answer.py` | Maintained local operations example; a metered diagonal quadratic verifies the work ledger and SQLite backup/recovery. Prior local qualification is retained; broader historical operations are GAP-01 work. | OPS-01 / GAP-01 |
 | `warm_start_tuning.py` | Maintained actual synthetic-history and target training, rational within-study ranks, leakage refusal, pending recovery and scalar-power reconstruction. No empirical warm-start/default claim. | T1-WARM |
 
 From the checkout:

@@ -63,3 +63,26 @@ they do not inherit a joint-batch claim merely by wrapping GP. Robust GP keeps
 its sequential capability. Random, prior and other searchers retain their
 own proposal semantics. This feature does not promote a method default or
 transfer the retained baseline's scientific qualification to changed code.
+
+## Multi-objective batches
+
+`MultiObjectiveBayesSearcher.suggest_batch(q)` now supports one through eight
+joint locations for qLogNEHVI and augmented Chebyshev/qLogEI. Public vector
+Study uses the same durable batch registration. A seeded pool of legal,
+nonpending continuous/ordinal configurations is selected, then every unordered
+q-set in that pool is evaluated jointly. The pool is shortened before scoring
+when necessary to keep at most 4,096 sets. The trace records actual q, pool
+size, number of sets, pending count and selected configurations. This is a
+bounded candidate-pool optimum, not global optimization over a continuous domain.
+
+Completed points may be replicated; duplicates within a batch or pending
+locations are refused. A smaller available pool returns a shorter batch;
+an all-pending finite domain waits without advancing the RNG. Acquisition
+failure restores proposal RNG/trace state. New snapshots use
+`botorch_multi_objective_v2`; old v1 snapshots require their retained source.
+Scalar GP's earlier checkpoint contract is unchanged. GAP-01/MO-BATCH
+implementation, current-source qualification and final audit status are recorded
+in the [master](../CONSOLIDATED_MASTER_AUTHORITY.md) and
+[atomic gap ledger](program/gap_closure.json). The
+[guidance repair record](program/evidence/2026-10-18/gap-guidance-repair-01/plan-review.md)
+retains the replaced status sentence.

@@ -109,7 +109,7 @@ def test_progressive_study_stops_at_stable_cap_and_replays(tmp_path):
     log = EventLog(tmp_path / "pasha.jsonl")
     study = Study(RandomSearcher(SearchSpace([Knob("x", "continuous", (0., 1.))]), seed=1),
                   LocalExecutor(), lambda c, fidelity: c["x"], budget=9, maximize=False,
-                  scheduler=target, checkpoint_dir=tmp_path, event_log=log)
+                  scheduler=target, checkpoint_dir=tmp_path, event_log=log, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = study.run()
     assert result.n_trials > 9
     assert {r.fidelity for r in result.history} == {1, 3}

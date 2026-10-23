@@ -51,7 +51,7 @@ def test_reference_asha_requires_versioned_checkpoint(version):
 def live_study():
     study = Study(RandomSearcher(SearchSpace([Knob("x", "continuous", (0., 1.))]), seed=9),
                   LocalExecutor(), lambda c: 1, budget=1,
-                  scheduler=ASHAScheduler(ASHAConfig(r_min=4, r_max=4)))
+                  scheduler=ASHAScheduler(ASHAConfig(r_min=4, r_max=4)), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     study._new_trial()
     trial = next(iter(study.trials.values()))
     report = ProgressReport(trial.trial_id, trial.root_trial_id, 1, 5, 1, .5)

@@ -15,12 +15,14 @@ from validation.v03_equivalence import (
 )
 from validation.v03_mutation_testing import _binding
 
+FIXTURE_ROOT = ROOT / "tests/fixtures/v03_equivalence_2026_10_18"
+
 
 def proof_source(path):
     # Mutmut instruments hponas in its copied checkout. The proof-checker tests
     # exercise the independently bound reviewed source; the production verifier
     # still compares actual generated functions with each campaign's source.
-    fixture = ROOT / "tests/fixtures/v03_equivalence" / (path.split("/")[-1] + ".txt")
+    fixture = FIXTURE_ROOT / (path.split("/")[-1] + ".txt")
     assert _binding(fixture)["sha256"] == CONTEXTS[path]
     return fixture.read_text()
 
@@ -114,11 +116,12 @@ def test_tpe_copy_proof_is_limited_to_read_only_replay_of_serialized_events(meth
     assert lemma(original, changed, source, path, cls.name) is None
 
 
-PROSPECTIVE_CASES = json.loads((ROOT / "tests/fixtures/v03_equivalence/prospective_cases.json").read_text())
+PROSPECTIVE_CASES = json.loads((FIXTURE_ROOT / "prospective_cases.json").read_text())
 
 
 @pytest.mark.parametrize('kind',['reachable_scalar_guard','finished_true','live_finished_assignment',
-                                  'searcher_copy','retained_controller'])
+                                  'searcher_copy','retained_controller',
+                                  'both_vector_defaults','vector_true_default'])
 def test_recovery_proofs_refuse_nearby_observable_changes(kind):
     path='hponas/searchers/gp_searcher.py' if kind=='reachable_scalar_guard' else 'hponas/study.py'
     klass='GPSearcher' if kind=='reachable_scalar_guard' else 'Study'
@@ -140,6 +143,14 @@ def test_recovery_proofs_refuse_nearby_observable_changes(kind):
         statement=next(n for n in mutated.body if isinstance(n,ast.Assign)
             and any(isinstance(t,ast.Attribute) and t.attr=='_finished' for t in n.targets))
         statement.value.args[1]=ast.Constant(None)
+    elif kind in {'both_vector_defaults', 'vector_true_default'}:
+        calls = [n for n in ast.walk(mutated) if isinstance(n, ast.Call)
+                 and isinstance(n.func, ast.Name) and n.func.id == 'getattr'
+                 and len(n.args) == 3 and isinstance(n.args[1], ast.Constant)
+                 and n.args[1].value == '_vector_objectives']
+        assert len(calls) == 2
+        for call in calls if kind == 'both_vector_defaults' else calls[:1]:
+            call.args[2] = ast.Constant(None if kind == 'both_vector_defaults' else True)
     else:
         target_name='restored_searcher' if kind=='searcher_copy' else 'restored_evaluation'
         statement=next(n for n in mutated.body if isinstance(n,ast.Assign)
@@ -155,7 +166,7 @@ def prepared_certificate(tmp_path, case):
     actual.parent.mkdir(parents=True, exist_ok=True)
     actual.write_text(proof_source(path))
     for dependency, expected in CONTEXT_DEPENDENCIES.get(case["rule"], {}).items():
-        fixture = ROOT / "tests/fixtures/v03_equivalence" / (dependency.split("/")[-1] + ".txt")
+        fixture = FIXTURE_ROOT / (dependency.split("/")[-1] + ".txt")
         assert hashlib.sha256(fixture.read_bytes()).hexdigest() == expected
         destination = tmp_path / dependency
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -246,9 +257,46 @@ def copy_reviewed_contexts(root):
     for name in paths:
         target = root / name
         target.parent.mkdir(parents=True, exist_ok=True)
-        fixture = ROOT / "tests/fixtures/v03_equivalence" / (name.split("/")[-1] + ".txt")
+        fixture = FIXTURE_ROOT / (name.split("/")[-1] + ".txt")
         target.write_bytes(fixture.read_bytes())
     return paths
+
+
+@pytest.mark.parametrize('position', [0, 1], ids=['progress_cache', 'resource_admission'])
+def test_restore_vector_default_proof_changes_only_one_reviewed_truth_site(position):
+    path = 'hponas/study.py'
+    source = proof_source(path)
+    scope = next(n for n in ast.parse(source).body if isinstance(n, ast.ClassDef) and n.name == 'Study')
+    original = _normalized(next(n for n in scope.body if isinstance(n, ast.FunctionDef)
+                                and n.name == 'load_checkpoint'), 'load_checkpoint')
+    mutated = copy.deepcopy(original)
+    calls = sorted((n for n in ast.walk(mutated) if isinstance(n, ast.Call)
+                    and isinstance(n.func, ast.Name) and n.func.id == 'getattr'
+                    and len(n.args) == 3 and isinstance(n.args[1], ast.Constant)
+                    and n.args[1].value == '_vector_objectives'), key=lambda n: n.lineno)
+    assert len(calls) == 2
+    calls[position].args[2] = ast.Constant(None)
+    assert lemma(original, mutated, source, path, 'Study') == 'study_restore_falsey_default_v1'
+
+
+def test_successor_proof_controls_preserve_historical_examples_and_explicit_lineage():
+    lineage = json.loads((FIXTURE_ROOT / 'lineage.json').read_text())
+    for binding in lineage['historical_files']:
+        assert _binding(ROOT / binding['path'])['sha256'] == binding['sha256']
+    historical = json.loads((ROOT / 'tests/fixtures/v03_equivalence/prospective_cases.json').read_text())
+    inherited = [row for row in lineage['cases'] if row.get('historical_index') is not None]
+    assert len(historical) == len(inherited) == 54
+    assert {row['historical_index'] for row in inherited} == set(range(54))
+    assert {row['current_id'] for row in lineage['cases']} == {case['id'] for case in PROSPECTIVE_CASES}
+    for row in inherited:
+        old = historical[row['historical_index']]
+        assert row['historical_id'] == old['id']
+        current = next(case for case in PROSPECTIVE_CASES if case['id'] == row['current_id'])
+        assert current['role'] == 'constructed_checker_control'
+        assert current['rule'] == old['rule']
+        if 29 <= row['historical_index'] <= 31:
+            assert row['historical_method'] == 'observe'
+            assert row['current_method'] == '_tell'
 
 
 @pytest.mark.parametrize("damage", [None, "scheduler", "dependency", "missing", "fixture_only"])

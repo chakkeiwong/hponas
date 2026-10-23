@@ -49,7 +49,7 @@ def test_ray_study_continuation_and_replay(cluster, tmp_path, continuation, cost
         scheduler=scheduler,
         maximize=False,
         continuation=continuation,
-        event_log=events,
+        event_log=events, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
     )
     outcome = study.run()
     assert outcome.total_cost == cost and outcome.best_value == 5
@@ -83,7 +83,7 @@ def test_ray_median_stops_bad_trial_before_tail(cluster, tmp_path):
         objective,
         budget=1,
         scheduler=scheduler,
-        maximize=False,
+        maximize=False, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
     )
     with pytest.raises(IncompleteStudyError) as raised:
         study.run()
@@ -110,7 +110,7 @@ def test_ray_streaming_timeout_cancels_worker_and_retains_progress(cluster, tmp_
         RayExecutor(num_workers=1, max_retries=0, timeout=3),
         objective,
         budget=1,
-        scheduler=ASHAScheduler(ASHAConfig(r_min=4, r_max=4)),
+        scheduler=ASHAScheduler(ASHAConfig(r_min=4, r_max=4)), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
     )
     with pytest.raises(IncompleteStudyError) as raised:
         study.run()
@@ -139,7 +139,7 @@ def test_ray_worker_crash_retries_without_double_counting_reports(cluster, tmp_p
         RayExecutor(num_workers=1, max_retries=1),
         objective,
         budget=1,
-        scheduler=scheduler,
+        scheduler=scheduler, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
     )
     result = study.run()
     assert result.history[0].metadata["attempts"] == 2

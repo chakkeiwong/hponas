@@ -61,7 +61,7 @@ class TestStudyRandomIntegration:
             objective_fn=branin_objective,
             budget=20,
             maximize=True,
-            study_name="test_random_branin",
+            study_name="test_random_branin", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
 
         result = study.run()
@@ -90,7 +90,7 @@ class TestStudyRandomIntegration:
             objective_fn=branin_objective,
             budget=10,
             maximize=True,
-            study_name="study1",
+            study_name="study1", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         result1 = study1.run()
 
@@ -102,7 +102,7 @@ class TestStudyRandomIntegration:
             objective_fn=branin_objective,
             budget=10,
             maximize=True,
-            study_name="study2",
+            study_name="study2", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         result2 = study2.run()
 
@@ -124,7 +124,7 @@ class TestStudyRandomIntegration:
             executor=executor,
             objective_fn=branin_objective,
             budget=15,
-            maximize=False,  # Minimize
+            maximize=False, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',  # Minimize
         )
 
         result = study.run()
@@ -147,7 +147,7 @@ class TestStudySobolIntegration:
             objective_fn=branin_objective,
             budget=20,
             maximize=True,
-            study_name="test_sobol_branin",
+            study_name="test_sobol_branin", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
 
         result = study.run()
@@ -169,7 +169,7 @@ class TestStudySobolIntegration:
             objective_fn=branin_objective,
             budget=10,
             maximize=True,
-            study_name="study1",
+            study_name="study1", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         result1 = study1.run()
 
@@ -181,7 +181,7 @@ class TestStudySobolIntegration:
             objective_fn=branin_objective,
             budget=10,
             maximize=True,
-            study_name="study2",
+            study_name="study2", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         result2 = study2.run()
 
@@ -207,7 +207,7 @@ class TestStudySobolIntegration:
                 executor=executor,
                 objective_fn=branin_objective,
                 budget=budget,
-                maximize=True,
+                maximize=True, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
             )
             result = study.run()
             random_results.append(result.best_value)
@@ -221,7 +221,7 @@ class TestStudySobolIntegration:
                 executor=executor,
                 objective_fn=branin_objective,
                 budget=budget,
-                maximize=True,
+                maximize=True, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
             )
             result = study.run()
             sobol_results.append(result.best_value)
@@ -251,7 +251,7 @@ class TestStudyBaselineComparison:
             objective_fn=branin_objective,
             budget=budget,
             maximize=True,
-            study_name="random_study",
+            study_name="random_study", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         random_result = random_study.run()
 
@@ -264,7 +264,7 @@ class TestStudyBaselineComparison:
             objective_fn=branin_objective,
             budget=budget,
             maximize=True,
-            study_name="sobol_study",
+            study_name="sobol_study", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         sobol_result = sobol_study.run()
 

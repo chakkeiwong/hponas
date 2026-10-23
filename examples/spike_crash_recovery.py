@@ -48,7 +48,7 @@ def run_study_with_crash(crash_after=8, n_trials=16, seed=99, output_dir=None):
 
         study = Study(SobolSearcher(_space(), seed=seed), LocalExecutor(), interruptible,
                       budget=n_trials, maximize=False, study_name="recovery",
-                      store=store, checkpoint_dir=directory / "checkpoints")
+                      store=store, checkpoint_dir=directory / "checkpoints", legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
         if snapshot is not None:
             study.load_checkpoint()
             if study.budget != n_trials or study.searcher.seed != seed:
@@ -83,7 +83,7 @@ def run_demo(output_dir=None, crash_after=8, n_trials=16, seed=99):
         raise AssertionError("Unexpected committed prefix at interruption")
     result, resumed = run_study_with_crash(crash_after, n_trials, seed, resumed_dir)
     reference = Study(SobolSearcher(_space(), seed=seed), LocalExecutor(), objective_fn,
-                      budget=n_trials, maximize=False, study_name="reference")
+                      budget=n_trials, maximize=False, study_name="reference", legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
     baseline = reference.run()
     expected = [(reference.trials[r.trial_id].config.values, r.objective_value)
                 for r in baseline.history]

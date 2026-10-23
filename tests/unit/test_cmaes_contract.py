@@ -54,7 +54,7 @@ def test_real_vendor_parity_across_generations_failures_and_pending_recovery(max
 def test_study_selects_direction_and_checkpoint_restores_pending(tmp_path):
     study = Study(CMAESSearcher(space(), seed=1), LocalExecutor(),
                   lambda c: c["width"] ** 2, budget=12, maximize=False,
-                  checkpoint_dir=tmp_path, study_name="cma")
+                  checkpoint_dir=tmp_path, study_name="cma", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = study.run()
     assert result.n_trials == 12
     assert result.best_value == min(r.objective_value for r in result.history)

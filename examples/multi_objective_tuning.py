@@ -38,7 +38,7 @@ def run(method, directory, budget=12):
     store = Store(directory / "study.sqlite")
     try:
         study = MultiObjectiveStudy(searcher, LocalExecutor(), objective, **CONTRACT,
-                                    budget=budget, study_name=method, checkpoint_dir=directory, store=store)
+                                    budget=budget, study_name=method, checkpoint_dir=directory, store=store, legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
         result = study.run().to_dict()
         result.update(method=method, scientific_acceptance=False, task="fixed_knot_relu_output_fit",
                       architecture_encoding="seven_bit_subset_id", acquisition_domain="bounded_candidate_set")

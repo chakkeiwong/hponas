@@ -5,7 +5,7 @@ import pytest
 
 from hponas import IncompleteStudyError, LocalExecutor, RandomSearcher, Study
 from hponas.events import EventLog
-from hponas.searchers.base import SearchBudgetExhaustedError, SearchSpaceExhaustedError
+from hponas.searchers.base import PendingSuggestionError, SearchBudgetExhaustedError, SearchSpaceExhaustedError
 from hponas.space import Knob, SearchSpace
 from hponas.types import Config
 
@@ -37,7 +37,7 @@ def test_terminal_suggestion_is_not_retried_and_preserves_durable_result(
     searcher = FiniteSearcher(SearchSpace([Knob('x', 'continuous', (0., 1.))]), seed=11)
     study = Study(searcher, LocalExecutor(), objective, budget=3,
                   max_concurrent=1, study_name='terminal', checkpoint_dir=tmp_path,
-                  event_log=EventLog(tmp_path/'events.jsonl'))
+                  event_log=EventLog(tmp_path/'events.jsonl'), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     if completed_prefix:
         result = study.run()
         assert result.best_value == .25 and result.best_config.values == {'x': .25}
@@ -60,3 +60,18 @@ def test_terminal_suggestion_is_not_retried_and_preserves_durable_result(
     terminal = [row for row in events if row['event_type'] == event_type]
     assert len(terminal) == 1
     assert terminal[0]['data']['schema_version'] == 1
+    assert terminal[0]['trial_id'] == study.study_name
+
+
+def test_pending_suggestion_checkpoint_retains_its_study_identity(tmp_path):
+    class PendingSearcher(RandomSearcher):
+        def suggest(self):
+            raise PendingSuggestionError('Pending proposal')
+    target = Study(PendingSearcher(SearchSpace([Knob('x', 'continuous', (0., 1.))]), seed=11),
+                   LocalExecutor(), lambda config: 0., budget=1, study_name='pending',
+                   checkpoint_dir=tmp_path, legacy_reason='Pending proposal identity contract')
+    with pytest.raises(PendingSuggestionError):
+        target._new_trial()
+    saved = json.loads((tmp_path/'pending_checkpoint.json').read_text())
+    assert saved['events'] == [{'kind': 'suggest_pending', 'trial_id': 'pending',
+                                'data': {'schema_version': 1}}]

@@ -109,6 +109,10 @@ def evaluate_trial(trial, objective_fn, on_report=None):
             and value != reporter.last.value
         ):
             raise ValueError("Final value conflicts with the reported endpoint")
+        if reporter.last and reporter.last.metadata:
+            for key in ('multi_objective', 'resource'):
+                if key in reporter.last.metadata and metadata.get(key) != reporter.last.metadata[key]:
+                    raise ValueError('Final measurement conflicts with reported endpoint metadata')
         status = (
             "nan" if math.isnan(value) else "inf" if math.isinf(value) else "completed"
         )
@@ -120,7 +124,7 @@ def evaluate_trial(trial, objective_fn, on_report=None):
             last.value,
             last.cost,
             trial.fidelity,
-            {"checkpoint": last.checkpoint, "stop_reason": halt.decision.reason},
+            {**(last.metadata or {}), "checkpoint": last.checkpoint, "stop_reason": halt.decision.reason},
             {"pause": "paused", "stop": "pruned", "cancel": "cancelled"}[
                 halt.decision.action
             ],
@@ -136,6 +140,7 @@ def evaluate_trial(trial, objective_fn, on_report=None):
         )
         if reporter.last:
             result.cost = max(result.cost, reporter.last.cost)
+            result.metadata.update(reporter.last.metadata or {})
     result.metadata["execution"] = {
         "schema_version": 1,
         "mode": "streaming" if streamed else "endpoint",

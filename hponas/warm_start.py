@@ -1,7 +1,8 @@
 """Opt-in ranked configuration seeding from explicit, completed run-store history.
 
-Ranked initialization transfers configurations only. Surrogate transfer (RGPE)
-and the separate V12 performance/default decision remain unaccepted.
+Ranked initialization transfers configurations only. The separate opt-in
+fixed-kernel RGPE searcher lives in hponas.rgpe. Empirical transfer speedup and
+the V12 performance/default decision remain unestablished.
 """
 from __future__ import annotations
 

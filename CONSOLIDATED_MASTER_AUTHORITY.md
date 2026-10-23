@@ -1,14 +1,14 @@
 # HPO-NAS master program
 
-**Revision:** 2.397 — Scoped master complete; repository publication reconciled
+**Revision:** 2.477 — Finite campaigns and capability gates passed; V03 active
 
-**Reconciliation date:** 2026-10-17 (Asia/Shanghai)
+**Reconciliation date:** 2026-10-23 (Asia/Shanghai)
 
 **Purpose:** A reusable HPO and moderate architecture-coordinate NAS tool for a universal retail bank and the model families represented under `~/workspace`: prediction/forecasting, causal and policy models, financial inference, constrained neural solvers, valuation and allocation. The [product contract](docs/program/BANK_HPO_NAS_PRODUCT_CONTRACT.md) defines evaluation, reuse and completion; universal reuse is not a universal-optimizer claim. This document is the execution authority; mutation and Tier 0 are milestones within the full program.
 
 ## Authority, scope and result rules
 
-The user's continuing authorization covers repair, review, bounded local verification and phase-plan refresh. [NAS scope](NAS_SCOPE_DECISION.md), the [survey roadmap](hpo-survey/sections/12-roadmap.tex), [build requirements](BUILD_PROGRAM_v3.md) and [review verdict](BUILD_PROGRAM_REVIEW_VERDICT.md) retain the product obligations. The [structured register](docs/program/program.json) owns work, dependencies, decisions and exact evidence bindings; [traceability](TRACEABILITY_MATRIX_v1.md) maps 113 registered requirements, including the restored product contracts, explicit local-operations reconciliation and nine bank-product obligations.
+The user's continuing authorization covers repair, review, bounded local verification and phase-plan refresh. [NAS scope](NAS_SCOPE_DECISION.md), the [survey roadmap](hpo-survey/sections/12-roadmap.tex), [build requirements](BUILD_PROGRAM_v3.md) and [review verdict](BUILD_PROGRAM_REVIEW_VERDICT.md) retain the product obligations. The [structured register](docs/program/program.json) owns work, dependencies, decisions and exact evidence bindings; [traceability](TRACEABILITY_MATRIX_v1.md) maps the registered requirements, including the restored product contracts, explicit local-operations reconciliation and nine bank-product obligations.
 
 General cell/topology search, supernets, weight sharing and differentiable NAS remain excluded. Optional priors have finite opt-in acceptance on the retained Tier-1 source; broader effectiveness remains unestablished. Later-tier capabilities and local concurrent operations remain in the master; Tier-0 completion cannot imply their completion. The user explicitly waived separate-machine testing under D-LOCAL-OPERATIONS-SCOPE. Supported operations are trusted, supervised local research; remote host loss/partition and unattended production readiness are unqualified.
 
@@ -16,7 +16,9 @@ Scientific results follow frozen rules and raw evidence under explicit assumptio
 
 ## Current execution
 
-**Current action:** The [final qualified package](docs/program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json) binds 17 fresh passing entries, final independent gates, exact installed source and local operations. All 196 master stages and 113 requirement dispositions are complete for the adopted finite local product scope. Foundation interfaces and standalone prediction, causal, inference, solver, decision and coordinate NAS workflows have current evidence; empirical application usefulness remains unestablished. ifBO failure and cancellation remain terminal; separate-machine testing was waived, not passed. Optional methods remain opt-in, no superiority or unattended production claim is made, and no external release is performed. The execution stops because this scoped master is complete.
+**Current action:** `BANK-01/GAP-QUALIFICATION` continues in the durable service `hponas-gap-recovery-20261023-01`. The [23 October checkpoint](docs/program/evidence/2026-10-23/git-checkpoint-01/observation.json) records all 16 finite campaigns and four capability gates PASS, with V03 running on the unchanged frozen source. Mutation registration, the final Tier-0 gate, package reconstruction and `GAP-01/FINAL-AUDIT` remain. The last phase independently audits all ten historical gaps and 27 clauses; only its bound passing publication receipt can complete the master. The service continues automatically on passing evidence; failure retains evidence for bounded repair. Separate-machine testing remains waived.
+
+The [16 October package](docs/program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json) remains the accepted finite baseline for its original source. Its 37 work items and 196 stages were completed under the earlier adopted scope; they do not discharge the newly registered missing subclauses. ifBO failure/cancellation, explicit watchlists, separate-machine waiver and empirical limits remain visible. No broad campaign, external release or production readiness is inferred.
 
 Earlier preparation records and superseded operational prose are preserved in the [revision 1.51 archive](archive/program-2026-10-04/before-master-review-refresh-01/manifest.json) and [revision 1.52 archive](archive/program-2026-10-04/before-semantic-review-02/manifest.json). Attempt08 remains INCONCLUSIVE: 7,034 kills, 470 survivors, 14 timeouts and 1,026 unchecked. The original reset memo's zero-kill interpretation was disproved by the [independent audit](docs/audits/2026-09-25-codebase-gap-audit.md); no reset is indicated.
 
@@ -60,26 +62,27 @@ The [repository publication plan](docs/program/evidence/2026-10-17/git-publicati
 
 ## Current execution status
 
-Program revision: **2.397**. Current phase: **Tier 1 development**.
+Program revision: **2.477**. Current phase: **Historical gap closure**.
 
 **Release status: LOCAL BASELINE ACCEPTED.** Tier-0 acceptance applies to the retained source. Current development and later phases require their own acceptance. No external release is recorded.
 
-Executable source fingerprint: `de68ddcd7998344333c3349b0d36accf5096f618c81ab12ce6a314bd7c0a6b2c`.
+Executable source fingerprint: `d4e762924717265ddd81e3e441a7c895e0ded52d62f2cdbea68734cb064405be`.
 
 These are stored evidence verdicts. CURRENT means source and protocol match; STALE requires revalidation. A new audit cannot make a HISTORICAL DIAGNOSTIC into fresh mutation execution. Full gate recomputation is required for acceptance.
 
 | Campaign | Recorded verdict | V16 receipt | Freshness | Run |
 |---|---|---|---|---|
-| V01 | PASS | PASS | CURRENT | `validation/artifacts/V01/20261016_bank_final_08` |
-| V02 | PASS | PASS | CURRENT | `validation/artifacts/V02/20261016_bank_final_08` |
-| V03 | PASS | PASS | STALE | `validation/artifacts/V03/20261016_bank_final_08` |
-| V04-T0 | PASS | PASS | CURRENT | `validation/artifacts/V04-T0/20261016_bank_final_08` |
-| V05 | PASS | PASS | CURRENT | `validation/artifacts/V05/20261016_bank_final_08` |
-| V14 | PASS | PASS | CURRENT | `validation/artifacts/V14/20261016_bank_final_08` |
+| V01 | PASS | PASS | CURRENT | `validation/artifacts/V01/20261023_gap_final_03` |
+| V02 | PASS | PASS | CURRENT | `validation/artifacts/V02/20261023_gap_final_03` |
+| V03 | INCONCLUSIVE | PASS | STALE | `validation/artifacts/V03/20261018_gap_final_01` |
+| V04-T0 | PASS | PASS | CURRENT | `validation/artifacts/V04-T0/20261023_gap_final_03` |
+| V05 | PASS | PASS | CURRENT | `validation/artifacts/V05/20261023_gap_final_03` |
+| V14 | PASS | PASS | CURRENT | `validation/artifacts/V14/20261023_gap_final_03` |
 
-Active work item: **none**.
+Active work item: **BANK-01**.
 
-Continuation: **COMPLETE**. Stop eligible: **true**.
+Continuation: **CONTINUE**. Stop eligible: **false**.
+Current continuation step: **BANK-01/GAP-QUALIFICATION** — Continue the allocated V03 mutation run, register its terminal result, run the final Tier-0 gate and package reconstruction, then execute GAP-01/FINAL-AUDIT. On failure preserve the receipt and repair at the current master boundary..
 
 ## Work breakdown
 
@@ -123,7 +126,8 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | T1-GATE | Tier-1 finite capability reconciliation | complete | verified | REL-01 | Retain the finite Tier-1 package and completed final integrated-source qualification in E-FINAL11-20261012-PACKAGE. |
 | REL-02 | Integrated-source qualification and release disposition | complete | verified | REL-01, T1-GATE | Preserve the qualified finite local baseline; PRD-01 owns omitted original product contracts and subsequent changed-source qualification. |
 | PRD-01 | Recover and repair the complete public product contract | complete | verified | REL-02, D-PRODUCT-CONTRACT-RECOVERY, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Retain engineering readiness; BANK-01 owns all final-source foundation and profile scientific qualification. |
-| BANK-01 | Reusable universal-bank model-family HPO/NAS workflows | complete | verified | PRD-01, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Master complete for the qualified finite local scope; preserve exact source package and require a prospective amendment for new claims. |
+| BANK-01 | Reusable universal-bank model-family HPO/NAS workflows | in_progress | verified | PRD-01, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Continue the allocated V03 mutation run, register its terminal result, run the final Tier-0 gate and package reconstruction, then execute GAP-01/FINAL-AUDIT. On failure preserve the receipt and repair at the current master boundary. |
+| GAP-01 | Close historical implementation gaps and independently audit completion | planned | verified | PRD-01, D-GAP-CLOSURE-20261018 | GAP-01/FINAL-AUDIT follows BANK-01/GAP-QUALIFICATION; independently reconstruct all 27 original gap clauses and reject false completion. |
 
 ## Decisions and unresolved conflicts
 
@@ -175,6 +179,7 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | D-BANK-PRODUCT-SCOPE | accepted | Make the universal-retail-bank HPO/NAS vision executable | Preserve the finite baseline, exclusions, failed ifBO disposition and local scope; complete PRD-01 then BANK-01 with self-contained model profiles. Initial 2–10 dimensions is a qualified envelope, not a universal support bound. No large campaign or production deployment is allocated. |
 | D-SCOPED-PROGRAM-OPERATIONS | accepted | Stable exact local commands and grouped scoped approvals | Use the reviewed bounded operations manifest; preserve managed approvals and unrelated rules. Rule matching/installation does not itself prove host live reload or grant scientific acceptance. |
 | D-PRODUCT-FINAL-QUALIFICATION-ORDER | accepted | Qualify the complete product after all planned foundation and bank source repairs | PRD closes engineering readiness; BANK final review owns unchanged complete scientific obligations and exact final-source acceptance. No campaign is allocated here. |
+| D-GAP-CLOSURE-20261018 | accepted | Execute all ten historical gap closures with final independent completion audit | GAP-01 is active; BANK-01 requalification is open for the repaired source; no changed code inherits prior acceptance. |
 
 <!-- END GENERATED PROGRAM STATUS -->
 
@@ -221,4 +226,4 @@ Run `/home/ubuntu/workspace/hponas/program_operations/hponas_ops.py checks` exac
 
 The Tier-0 gate independently recomputes scientific results and release prerequisites. Its execution environment must include the scientific overlay and single-thread numerical settings. Preserve gate reports before repeating a command that writes the same date path. No live log is registered as immutable evidence until copied or closed.
 
-Stop only when the whole master is complete, the user explicitly pauses, or every remaining eligible branch depends on a concrete external blocker after independent internal work is exhausted. A running campaign, unresolved software, draft plan or completed review is not such a blocker. The adopted finite local product master is complete: PRD-01 foundation engineering, all BANK model profiles and BANK-01/INTEGRATED-REVIEW have closed on the exact source in the [final product package](docs/program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json). The package binds 17 fresh passing entries, five final gates, installation and local operations; all 196 stages and 113 requirement dispositions are accounted for, including explicit deferred and excluded scope. Mutation qualification is one gate within this product result. Historical failures, cancelled ifBO integration and the separate-machine waiver remain preserved. Empirical application usefulness, remote fault tolerance and unattended production readiness remain unestablished. Changed source or additional claims require a prospective master amendment and appropriate evidence.
+Stop only when the whole master is complete, the user explicitly pauses, or every remaining eligible branch depends on a concrete external blocker after independent internal work is exhausted. A running campaign, unresolved software, draft plan or completed review is not such a blocker. The earlier adopted finite local product scope closed on the source in the [16 October package](docs/program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json): PRD-01 foundation engineering, BANK model profiles and BANK-01/INTEGRATED-REVIEW. That historical package binds 17 fresh passing entries, five final gates, installation and local operations; its 196 stages and 113 requirement dispositions remain accounted for. GAP-01 restores the subsequently identified missing subclauses, so the current master is incomplete until repaired-source qualification and the final complete gap audit pass. Mutation qualification is one gate within this program. Historical failures, cancelled ifBO integration and the separate-machine waiver remain preserved. Empirical application usefulness, remote fault tolerance and unattended production readiness remain unestablished. Changed source or additional claims require prospective bindings and appropriate evidence.

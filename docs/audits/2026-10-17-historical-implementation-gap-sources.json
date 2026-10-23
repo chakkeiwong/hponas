@@ -1,0 +1,176 @@
+{
+  "kind": "historical_implementation_gap_audit_sources_v1",
+  "local_date": "2026-10-17",
+  "timezone": "Asia/Shanghai",
+  "audited_commit": "d766dd513d3a8c87323e547b7fa7f750ae2faaae",
+  "master_revision": "2.397",
+  "qualified_source_digest": "de68ddcd7998344333c3349b0d36accf5096f618c81ab12ce6a314bd7c0a6b2c",
+  "method": "Historical contract and current source review; retained acceptance evidence; no fresh functional acceptance or scientific campaign. The prior lineage inventory was reused, not every archived snapshot reread.",
+  "audit_path": "docs/audits/2026-10-17-historical-implementation-gap-audit.md",
+  "sources": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "0e1c4bffaa2dc1b77bba3db912ab45bd6bfab10b51493e9677c309cbb05b0a73"
+    },
+    {
+      "path": "CONSOLIDATED_MASTER_AUTHORITY.md",
+      "sha256": "edf3917da1c4638df24aa0f63de632f3039b853340f7a0d9450e832c60dccf55"
+    },
+    {
+      "path": "docs/program/program.json",
+      "sha256": "df3fb0c937a7615e1ba3056ee9c0856525755fd10d26f11ac607b667ea4c3c32"
+    },
+    {
+      "path": "docs/program/BANK_HPO_NAS_PRODUCT_CONTRACT.md",
+      "sha256": "18fa2326033e1dc09a6f3d662bf43f9e831589316986fd72e5fd730ad8b39c30"
+    },
+    {
+      "path": "docs/program/PRODUCT_REPAIR_CONTRACT_2026_10_12.md",
+      "sha256": "5d939cece5b3d547d1f710fad48827173206dc1162394971adddfd8313050282"
+    },
+    {
+      "path": "docs/program/MASTER_PROGRAM_LINEAGE_REVIEW_2026_10_12.md",
+      "sha256": "358fc232862b5a8bac5897496759a7d6ca872f0fd2a47227de1457eff8adc351"
+    },
+    {
+      "path": "docs/program/WHOLE_PROGRAM_REVIEW_2026_10_04.md",
+      "sha256": "51da5290f0e0d02870385a0bea3f62a9b318a6b9dff88682388c12819a812349"
+    },
+    {
+      "path": "docs/program/MASTER_REFRESH_REVIEW_2026_10_05.md",
+      "sha256": "874667338adf692670f728ca004575058abf1a76bae485ac127e6924c1c58935"
+    },
+    {
+      "path": "docs/program/evidence/2026-10-12/master-lineage-review-01/trace.json",
+      "sha256": "80817ba8a95daa96de13f9d63bc564dbf2510b9c7f8134d292b729c218bef87c"
+    },
+    {
+      "path": "docs/program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json",
+      "sha256": "838971ac4b3f10d3c81772cea12c724dcb54eecfd8c05bd0abd28ba83d42cf52"
+    },
+    {
+      "path": "docs/program/evidence/2026-10-16/bank-final-qualification-08/coverage-qualified.json",
+      "sha256": "e08dd199afe652f1fb3ff964a29ee74221ee630badc37c2d562c8efe748a4a87"
+    },
+    {
+      "path": "BUILD_PROGRAM_v2.md",
+      "sha256": "1b2c7499e76261275f3d889089963678e024dc195260e113ef0aa893040460d2"
+    },
+    {
+      "path": "BUILD_PROGRAM_v3.md",
+      "sha256": "656846a496872dcb64c48da015468b137154c74383d8ee0c4ec4f3a444568c65"
+    },
+    {
+      "path": "BUILD_PROGRAM_REVIEW_VERDICT.md",
+      "sha256": "32a6fafbd7c425f7c980b5dae6dd4fa8042863ef7b17804d3e9a2b1b19080ffd"
+    },
+    {
+      "path": "archive/program-2026-09-28/BUILD_PROGRAM_v3.md",
+      "sha256": "ed1a3688c01b90bc16c4770432f943cf6e1064a6a76b1c67bb596b5df40d2e59"
+    },
+    {
+      "path": "HPO_NAS_RECOVERY_MASTER_PROGRAM.md",
+      "sha256": "2d6a4c7a498739e4897e83d2c6ff1569dd30c451d45cfd6535aa7f256d72bc81"
+    },
+    {
+      "path": "V03_R10_RESET_MEMO.md",
+      "sha256": "d7cb65676a33bad5a66d60fba41bd0f7dc777614e61dc47d387251859ba6a939"
+    },
+    {
+      "path": "hpo-survey/sections/11-architecture.tex",
+      "sha256": "9f94d0f3c61e2b4abccecbf788e507f59477ef6a6aca7aa13c4e1e2be06793b9"
+    },
+    {
+      "path": "hpo-survey/sections/12-roadmap.tex",
+      "sha256": "9d69f7e049b8453e55dd3e063568e069c54b079c63c3491d9fc05cf68d9e72d9"
+    },
+    {
+      "path": "hpo-survey/sections/14-product.tex",
+      "sha256": "1484bb738652a91cc3e1ad9aa07ee405c2cd3b7570b208d5b26b0ab5f835b275"
+    },
+    {
+      "path": "hpo-survey/sections/15-contracts.tex",
+      "sha256": "b70801ccd3f82065a5a479799b39e51465f74d6fbd6edc04ba3c2d69d0d3ca54"
+    },
+    {
+      "path": "docs/PRODUCT_SUPPORT.md",
+      "sha256": "641662d3b443d15cce64d27ef77f351d16cd339d1fbb17c08be6756637668d6e"
+    },
+    {
+      "path": "docs/EVALUATION.md",
+      "sha256": "ff4936851d02ab3cf722e16adaac97a9b9e008c35b60d20f62582d3797561a92"
+    },
+    {
+      "path": "docs/OPERATIONS.md",
+      "sha256": "e4b46ed4ae7362a30a470361c006c08779b30e11e1107d4d4f501e0d0abfa0f2"
+    },
+    {
+      "path": "docs/WORKLOADS.md",
+      "sha256": "69bd6828cd38e385cd4fccdb604b8cf952f676d1ef17717d25b42c99beb2f747"
+    },
+    {
+      "path": "docs/GP_BATCH.md",
+      "sha256": "44bb2e5d841d7cdbed343f28c38002dbf71fd41c9b079720a5009f2ed6070e07"
+    },
+    {
+      "path": "examples/README.md",
+      "sha256": "7e9d72a995bef54bc13616267b0b58927880a6fdd5271c4fe9478032680548f3"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "3848864035f3ec3eb5c320b3dffdf177f1e5416d582981814dc58fd2b05d6530"
+    },
+    {
+      "path": "hponas/searchers/multi_objective.py",
+      "sha256": "89db97c9028543f3f4a75fe225a7c6d3968cb676e643fad6a67519b1300101fe"
+    },
+    {
+      "path": "hponas/searchers_mo.py",
+      "sha256": "08deb7629d7bfd590d25894801e860ac596b28857f98e90aa0382403647617a4"
+    },
+    {
+      "path": "hponas/searchers/adapter.py",
+      "sha256": "c512a2abc3384bfeaea722f933a1038f2bbce37b7f85ae57cbdc263c6c88f458"
+    },
+    {
+      "path": "hponas/study.py",
+      "sha256": "06cdb66d96e086dd33a0eaf94be220d77c0a084d981c4da97a79d3c0af2f9c8e"
+    },
+    {
+      "path": "hponas/evaluation.py",
+      "sha256": "66adc6055aa4bd2f639a6e4f28c4a8656b44932bd48483eb17845e6db90a4fc0"
+    },
+    {
+      "path": "hponas/capabilities.py",
+      "sha256": "5aa5a71637f92e295da4558c646bb84e9b5d9d59f5f683630a344958684faa6a"
+    },
+    {
+      "path": "hponas/searchers/robust_gp_searcher.py",
+      "sha256": "f602d400e7e761cdd0858cb1ce009c2821c3c43772b83aa6a0b7af357cf63e86"
+    },
+    {
+      "path": "hponas/population.py",
+      "sha256": "b7074591dc6276f8b67c7cf66dff08ac0bfe69ebe3a0764d48d14d7d202c431b"
+    },
+    {
+      "path": "hponas/population_search.py",
+      "sha256": "c7c7ceaba1eb78cb8c7cbe9408e0022176dc5604cd0b956d0d879046f6234b46"
+    },
+    {
+      "path": "hponas/bg_pbt.py",
+      "sha256": "b1866e7f3df002d38961fd35c1b58f1bd2d850cb6695e98bab18d7f8f479934e"
+    },
+    {
+      "path": "hponas/warm_start.py",
+      "sha256": "c7c6f2f43f6e7edb2286039f943af3518c92317074fbba554a64bd28a6885d71"
+    },
+    {
+      "path": "tools/product_trace.py",
+      "sha256": "03fe7872c9bddabd25ee5e8b21855a9846b50d7fe743b9579c922b900a4bcb82"
+    },
+    {
+      "path": "docs/audits/2026-10-17-historical-implementation-gap-audit.md",
+      "sha256": "f0db0e7d23b32c60d8be02530209b42fbbe72134385e175afb5868349e3d9c83"
+    }
+  ]
+}

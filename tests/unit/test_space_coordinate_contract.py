@@ -50,6 +50,24 @@ def test_invalid_coordinate_refusal_is_specific(coordinates, message):
     assert str(raised.value) == message
 
 
+def test_default_decode_is_an_inverse_coordinate_not_a_sampling_bin():
+    encoder = SpaceEncoder(SearchSpace([Knob('count', 'ordinal', (2, 4)),
+                                       Knob('choice', 'categorical', ['a', 'b', 'c'])]))
+    assert encoder.decode([.3, .2]) == {'count': 3, 'choice': 'b'}
+    assert encoder.decode([.3, .2], sampling=True) == {'count': 2, 'choice': 'a'}
+
+
+@pytest.mark.parametrize('raw', [-.5, float('-inf')])
+def test_negative_categorical_coordinate_clamps_before_indexing(raw):
+    encoder = SpaceEncoder(SearchSpace([Knob('choice', 'categorical', ['a', 'b', 'c'])]))
+    assert encoder.decode([raw]) == {'choice': 'a'}
+
+
+def test_infinite_positive_coordinate_is_clamped_before_numeric_validation():
+    encoder = SpaceEncoder(SearchSpace([Knob('value', 'continuous', (2., 4.))]))
+    assert encoder.decode([float('inf')]) == {'value': 4.}
+
+
 @pytest.mark.parametrize("kind,bounds,transform,message", [
     ("unknown", (0., 1.), "none", "Unknown knob kind: unknown"),
     ("continuous", (0., 1.), "unknown", "Unknown transform: unknown"),

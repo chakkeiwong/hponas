@@ -1,11 +1,14 @@
 """Public streaming controls, promotion provenance and recovery diagnostics."""
 
 import json
+from copy import deepcopy
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
 
 from hponas import IncompleteStudyError, LocalExecutor, RandomSearcher, Study
+from hponas import MultiObjectiveRandomSearcher, MultiObjectiveStudy
 from hponas.events import EventLog
 from hponas.executors import reporting
 from hponas.schedulers import ASHAConfig, ASHAScheduler, BudgetedASHAConfig, BudgetedASHAScheduler
@@ -19,7 +22,7 @@ def make_study(objective, tmp_path, **kwargs):
                    event_log=EventLog(tmp_path / "events.jsonl"),
                    scheduler=ASHAScheduler(ASHAConfig(r_min=2, r_max=2)))
     options.update(kwargs)
-    return Study(**options)
+    return Study(**options, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
 
 
 def events(tmp_path, kind):
@@ -243,3 +246,79 @@ def test_duplicate_promotion_identity_does_not_drop_later_promotion(tmp_path):
     assert [row["trial_id"] for row in study._events if row["kind"] == "promote"] == [
         "progress_trial_0_fidelity_2", "progress_trial_1_fidelity_2"
     ]
+
+
+def vector_progress_study(tmp_path):
+    objectives = [dict(name='loss', direction='min', lower=0., upper=10.),
+                  dict(name='gain', direction='max', lower=0., upper=10.)]
+    constraints = {'risk': 3.}
+    space = SearchSpace([Knob('x', 'continuous', (0., 1.))])
+
+    def endpoint(config):
+        return dict(objectives={'loss': 2., 'gain': 7.},
+                    constraints={'risk': 1.}, work=1)
+
+    return MultiObjectiveStudy(
+        MultiObjectiveRandomSearcher(space, objectives=objectives, constraints=constraints, seed=17),
+        LocalExecutor(), endpoint, objectives=objectives, constraints=constraints,
+        budget=1, study_name='metric', checkpoint_dir=tmp_path,
+        legacy_reason='Protocol-only progress/recovery fixture; protected evaluation tested separately')
+
+
+@pytest.mark.parametrize('recovered', [False, True])
+@pytest.mark.parametrize('field', ['loss', 'gain', 'constraint', 'work'])
+def test_duplicate_vector_carrier_cannot_hide_changed_metric(tmp_path, field, recovered):
+    study = vector_progress_study(tmp_path)
+    study._new_trial()
+    tid = study._pending[0]
+    metric = study.spec.observation(objectives={'loss': 2., 'gain': 7.},
+                                    constraints={'risk': 1.}, work=1)
+    report = reporting.ProgressReport(tid, tid, 1., 0., 1., .5,
+                                      metadata={'multi_objective': metric})
+    first = study._on_progress(report)
+    if recovered:
+        restored = vector_progress_study(tmp_path)
+        restored.load_checkpoint(tmp_path/'metric_checkpoint.json')
+        study = restored
+    before = deepcopy(study._snapshot())
+    before_file = (tmp_path/'metric_checkpoint.json').read_bytes()
+    damaged = deepcopy(metric)
+    if field in ('loss', 'gain'):
+        damaged['objectives'][field] += 1.
+    elif field == 'constraint':
+        damaged['constraints']['risk'] += 1.
+    else:
+        damaged['work'] += 1
+    # All are individually valid vector observations, with identical scalar
+    # carrier and fidelity. Equality of the whole retained metric is required.
+    study.spec.validate_observation(damaged)
+    with pytest.raises(ValueError, match='^Conflicting duplicate progress value$'):
+        study._on_progress(replace(report, metadata={'multi_objective': damaged}))
+    assert study._snapshot() == before
+    assert (tmp_path/'metric_checkpoint.json').read_bytes() == before_file
+    assert study._report_cache[tid][1.]['metric'] == metric
+    assert study._on_progress(report) == first
+    assert study._report_cache[tid][1.]['metric'] == metric
+
+
+@pytest.mark.parametrize('maximize', [False, True])
+def test_legacy_scalar_cache_without_metric_recovers_idempotently(tmp_path, maximize):
+    study = make_study(lambda config: 5., tmp_path, maximize=maximize)
+    study._new_trial()
+    tid = study._pending[0]
+    report = reporting.ProgressReport(tid, tid, 1., 5., 1., .5)
+    first = study._on_progress(report)
+    saved = deepcopy(study._snapshot())
+    del saved['report_cache'][tid][1.]['metric']
+    path = tmp_path/'legacy-cache.json'
+    path.write_text(json.dumps(saved))
+    restored = make_study(lambda config: 5., tmp_path, maximize=maximize)
+    restored.load_checkpoint(path)
+    scheduler = deepcopy(restored.scheduler.state_dict())
+    assert restored._on_progress(report) == first
+    assert restored.scheduler.state_dict() == scheduler
+    progress = [e for e in restored._events if e['kind'] == 'progress']
+    assert len(progress) == 2 and progress[-1]['data']['scheduler_applied'] is False
+    assert progress[-1]['data']['normalized_value'] == (-5. if maximize else 5.)
+    with pytest.raises(ValueError, match='^Conflicting duplicate progress value$'):
+        restored._on_progress(replace(report, value=6.))

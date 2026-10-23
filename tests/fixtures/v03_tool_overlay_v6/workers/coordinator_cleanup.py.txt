@@ -1,0 +1,52 @@
+"""Bounded shutdown of only a forkserver's unreaped owned descendants."""
+import ctypes
+import os
+from pathlib import Path
+import signal
+import time
+
+
+def enable_subreaper():
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.prctl(36, 1, 0, 0, 0) != 0:
+        raise OSError(ctypes.get_errno(), 'Cannot retain forkserver descendants')
+
+
+def _children():
+    return [int(pid) for pid in Path(
+        f'/proc/{os.getpid()}/task/{os.getpid()}/children').read_text().split()]
+
+
+def _reap():
+    while True:
+        try:
+            pid, _ = os.waitpid(-1, os.WNOHANG)
+        except ChildProcessError:
+            return
+        if pid == 0:
+            return
+
+
+def shutdown_owned(grace_seconds=6., kill_seconds=2.):
+    """Let child subreapers drain, then reap any adopted descendants.
+
+    Only this process calls waitpid. A direct unreaped child's PID cannot be
+    reused between enumeration and signalling. No process-group signalling or
+    ancestry guessing can include unrelated sibling work.
+    """
+    started = time.monotonic()
+    deadline = started + grace_seconds + kill_seconds
+    while time.monotonic() < deadline:
+        _reap()
+        children = _children()
+        if not children:
+            return True
+        sig = signal.SIGTERM if time.monotonic() - started < grace_seconds else signal.SIGKILL
+        for pid in children:
+            try:
+                os.kill(pid, sig)
+            except ProcessLookupError:
+                pass
+        time.sleep(.025)
+    _reap()
+    return not _children()

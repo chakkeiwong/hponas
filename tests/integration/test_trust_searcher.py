@@ -87,7 +87,7 @@ def test_exact_gp_posterior_matches_independent_gaussian_conditioning():
 def test_trust_searcher_actual_training_updates_and_recovery(tmp_path):
     workload = FullQuadratic()
     source = Study(searcher(), LocalExecutor(), workload, budget=12, study_name='trust', maximize=False,
-                   checkpoint_dir=tmp_path)
+                   checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = source.run()
     assert result.n_trials == 12 and result.total_cost == len(workload.updates) == 96
     for row in result.history:
@@ -95,7 +95,7 @@ def test_trust_searcher_actual_training_updates_and_recovery(tmp_path):
         assert row.objective_value == pytest.approx(float(value(index, 8)), abs=1e-12)
         assert row.fidelity == 1 and row.metadata['training_steps'] == 8
     restored = Study(searcher(seed=9), LocalExecutor(), workload, budget=12, study_name='trust', maximize=False,
-                     checkpoint_dir=tmp_path)
+                     checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     restored.load_checkpoint(tmp_path/'trust_checkpoint.json')
     assert restored.searcher.get_state() == source.searcher.get_state()
     assert restored.run().total_cost == 96 and len(workload.updates) == 96
@@ -177,7 +177,7 @@ def test_finite_exhaustion_stops_study_with_actual_work_and_replays(tmp_path):
     event_log = EventLog(tmp_path/'events.jsonl')
     workload = FullQuadratic()
     study = Study(factory(), LocalExecutor(), workload, budget=20, maximize=False,
-                  study_name='exhaust', checkpoint_dir=tmp_path, event_log=event_log)
+                  study_name='exhaust', checkpoint_dir=tmp_path, event_log=event_log, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = study.run()
     assert result.n_trials == 5 and result.total_cost == len(workload.updates) == 40
     assert result.reason == result.status == 'search_space_exhausted'
@@ -185,7 +185,7 @@ def test_finite_exhaustion_stops_study_with_actual_work_and_replays(tmp_path):
     assert study._n_suggested < study.budget
     assert ReplayEngine(factory(), event_log, 0).verify_determinism(5)[0]
     resumed = Study(factory(), LocalExecutor(), workload, budget=20, maximize=False,
-                    study_name='exhaust', checkpoint_dir=tmp_path)
+                    study_name='exhaust', checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     resumed.load_checkpoint(tmp_path/'exhaust_checkpoint.json')
     assert resumed.run().total_cost == 40 and len(workload.updates) == 40
     with pytest.raises(SearchSpaceExhaustedError): resumed.searcher.suggest()
@@ -219,13 +219,13 @@ def test_modes_and_study_controls_refused_before_objective_work(tmp_path):
     space = SearchSpace([Knob('x', 'continuous', (0., 1.))])
     with pytest.raises(ValueError): TrustRegionSearcher(space, allow_batch=True)
     with pytest.raises(ValueError): TrustRegionSearcher(space, allow_noisy=True)
-    with pytest.raises(ValueError): Study(searcher(), LocalExecutor(), FullQuadratic(), budget=5, max_concurrent=2)
+    with pytest.raises(ValueError): Study(searcher(), LocalExecutor(), FullQuadratic(), budget=5, max_concurrent=2, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     from hponas.schedulers import ASHAScheduler, ASHAConfig
     with pytest.raises(ValueError):
         Study(searcher(), LocalExecutor(), FullQuadratic(), budget=5,
-              scheduler=ASHAScheduler(ASHAConfig(r_min=1, r_max=4, eta=2)))
+              scheduler=ASHAScheduler(ASHAConfig(r_min=1, r_max=4, eta=2)), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     source = Study(searcher(), LocalExecutor(), FullQuadratic(), budget=4, maximize=False,
-                   study_name='atomic', checkpoint_dir=tmp_path)
+                   study_name='atomic', checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     source.run()
     before = source._snapshot()
     for key, new_value in [('maximize', True), ('max_concurrent', 2)]:
@@ -296,7 +296,7 @@ def test_all_failed_finite_study_has_no_fabricated_best_and_retains_work(tmp_pat
     def fails(config):
         return {'value': math.nan, 'cost': 3}
     study = Study(factory(), LocalExecutor(), fails, budget=9, maximize=False,
-                  study_name='failed', checkpoint_dir=tmp_path)
+                  study_name='failed', checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     with pytest.raises(IncompleteStudyError) as caught:
         study.run()
     result = caught.value.result
@@ -304,7 +304,7 @@ def test_all_failed_finite_study_has_no_fabricated_best_and_retains_work(tmp_pat
     assert result.total_cost == 6 and result.n_trials == 2
     assert result.reason == 'search_space_exhausted' and result.status == 'incomplete'
     clone = Study(factory(), LocalExecutor(), fails, budget=9, maximize=False,
-                  study_name='failed', checkpoint_dir=tmp_path)
+                  study_name='failed', checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     clone.load_checkpoint(tmp_path/'failed_checkpoint.json')
     assert clone.searcher.get_state() == study.searcher.get_state()
     assert all(not row.is_valid() for row in clone.searcher.history)

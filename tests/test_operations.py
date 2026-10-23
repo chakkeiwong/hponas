@@ -189,7 +189,7 @@ def test_store_backup_restores_pending_proposal_and_artifact_without_repeating_p
 
     def make(store, fn):
         return Study(SobolSearcher(space, seed=9), LocalExecutor(), fn,
-                     store=store, budget=3, maximize=False, study_name='recover')
+                     store=store, budget=3, maximize=False, study_name='recover', legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
 
     original = Store(tmp_path/'source.db')
     try:

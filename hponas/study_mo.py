@@ -34,8 +34,6 @@ class _VectorObjective:
     def __init__(self, fn, spec):
         self.fn, self.spec = fn, spec
         self.parameters = inspect.signature(fn).parameters
-        if "reporter" in self.parameters:
-            raise ValueError("Multi-objective execution currently supports endpoint reports only")
 
     def __call__(self, config, fidelity=1., seed=None, trial_id=None, root_trial_id=None,
                  checkpoint=None, resume_from=0., evaluation=None):
@@ -53,6 +51,33 @@ class _VectorObjective:
         return {"value": 0. if observation["status"] == "completed" else math.nan,
                 "metadata": {"multi_objective": observation},
                 **{k: row[k] for k in ["cost", "checkpoint", "artifacts"] if k in row}}
+
+
+class _VectorReporter:
+    def __init__(self, reporter, spec):
+        self.reporter, self.spec = reporter, spec
+
+    def __call__(self, step, objectives, *, constraints, work, cost=None, checkpoint=None):
+        row = self.spec.observation(objectives=objectives, constraints=constraints, work=work)
+        return self.reporter(step, 0., cost=cost, checkpoint=checkpoint, metadata={'multi_objective': row})
+
+
+class _StreamingVectorObjective(_VectorObjective):
+    def __call__(self, config, fidelity=1., seed=None, trial_id=None, root_trial_id=None,
+                 checkpoint=None, resume_from=0., evaluation=None, reporter=None):
+        context = dict(fidelity=fidelity, seed=seed, trial_id=trial_id, root_trial_id=root_trial_id,
+                       checkpoint=checkpoint, resume_from=resume_from, evaluation=evaluation,
+                       reporter=_VectorReporter(reporter, self.spec))
+        row = self.fn(config, **{k: v for k, v in context.items() if k in self.parameters})
+        if not isinstance(row, dict) or not {'objectives', 'constraints', 'work'} <= set(row):
+            raise ValueError('Streaming vector objective requires an endpoint measurement')
+        if set(row) - {'objectives', 'constraints', 'work', 'status', 'cost', 'checkpoint', 'artifacts'}:
+            raise ValueError('Unknown vector objective output fields')
+        observation = self.spec.observation(**{k: row[k] for k in ('objectives', 'constraints', 'work')},
+                                            status=row.get('status', 'completed'))
+        return {'value': 0. if observation['status'] == 'completed' else math.nan,
+                'metadata': {'multi_objective': observation},
+                **{k: row[k] for k in ('cost', 'checkpoint', 'artifacts') if k in row}}
 
 
 class MultiObjectiveStudy(Study):
@@ -78,7 +103,14 @@ class MultiObjectiveStudy(Study):
         endpoint = scheduler.config.r_max if scheduler else 1.
         if getattr(searcher, "model_fidelity", endpoint) != endpoint:
             raise ValueError("Searcher model fidelity must match the full study endpoint")
-        super().__init__(searcher, executor, _VectorObjective(objective_fn, self.spec), maximize=False, **kwargs)
+        streaming = 'reporter' in inspect.signature(objective_fn).parameters
+        if streaming and not getattr(kwargs.get('declaration'), 'streaming_steps', ()):
+            raise ValueError('Vector streaming requires declared repetition barriers')
+        wrapper = _StreamingVectorObjective if streaming else _VectorObjective
+        super().__init__(searcher, executor, wrapper(objective_fn, self.spec), maximize=False, **kwargs)
+
+    def _progress_value(self, report):
+        return self.spec.validate_observation((report.metadata or {}).get('multi_objective'))
 
     def _accept(self, result):
         self.spec.validate_result(result)

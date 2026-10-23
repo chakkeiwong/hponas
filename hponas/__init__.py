@@ -11,6 +11,10 @@ __version__ = "0.1.0"
 
 from hponas.study import Study, StudyResult, IncompleteStudyError
 from hponas.evaluation import StudyDeclaration, EvaluationFold, EvaluationObjective, EvaluationContext
+from hponas.population_adapter import AdapterPopulation, PopulationAdapter, PopulationExecutionError
+from hponas.local_service import ManagedStudyService, DirectoryAlertSink, import_legacy_store, migrate_service, rollback_migration, restore_events
+from hponas.backup_security import BackupKeyProvider
+from hponas.rgpe import RGPESearcher, prepare_rgpe_history
 from hponas.budgets import StudyBudget
 from hponas.capabilities import SearcherCapabilities
 from hponas.prior_sampling import FiniteGuardedPrior, guarded_probabilities
@@ -40,6 +44,18 @@ __all__ = [
     "EvaluationFold",
     "EvaluationObjective",
     "EvaluationContext",
+    "AdapterPopulation",
+    "PopulationAdapter",
+    "PopulationExecutionError",
+    "ManagedStudyService",
+    "DirectoryAlertSink",
+    "BackupKeyProvider",
+    "RGPESearcher",
+    "prepare_rgpe_history",
+    "import_legacy_store",
+    "migrate_service",
+    "rollback_migration",
+    "restore_events",
     "FiniteGuardedPrior",
     "guarded_probabilities",
     "PriorBand",

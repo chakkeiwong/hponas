@@ -113,7 +113,7 @@ def test_finite_exhaustion_has_a_versioned_durable_event(tmp_path):
     finite = FiniteSearcher(original.search_space, seed=7)
     log = EventLog(tmp_path / 'exhausted.jsonl')
     result = Study(finite, LocalExecutor(), lambda config: 2., budget=2,
-                   study_name='finite', event_log=log).run()
+                   study_name='finite', event_log=log, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately').run()
     assert result.n_trials == 1 and result.reason == 'search_space_exhausted'
     events = [row for row in log.get_events() if row.event_type == EventType.SEARCH_EXHAUSTED]
     assert len(events) == 1 and events[0].data == {'schema_version': 1}
@@ -146,6 +146,6 @@ def test_scheduler_extension_with_finish_does_not_need_a_promotion_policy_field(
 
     scheduler = Scheduler()
     result = Study(searcher(), LocalExecutor(), lambda config: 2., budget=1,
-                   study_name='extension', scheduler=scheduler).run()
+                   study_name='extension', scheduler=scheduler, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately').run()
     assert result.status == 'completed'
     assert scheduler._terminal == {'extension_trial_0': 'completed'}

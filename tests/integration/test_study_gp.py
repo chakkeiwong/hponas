@@ -67,7 +67,7 @@ class TestStudyGPIntegration:
             objective_fn=branin_objective,
             budget=20,
             maximize=True,
-            study_name="test_branin",
+            study_name="test_branin", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
 
         # Run optimization
@@ -102,7 +102,7 @@ class TestStudyGPIntegration:
             executor=executor,
             objective_fn=branin_objective,
             budget=15,
-            maximize=True,
+            maximize=True, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
 
         result = study.run()
@@ -131,7 +131,7 @@ class TestStudyGPIntegration:
             executor=executor,
             objective_fn=branin_objective,
             budget=10,
-            maximize=True,
+            maximize=True, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
 
         result = study.run()
@@ -157,7 +157,7 @@ class TestStudyGPIntegration:
             executor=executor,
             objective_fn=branin_objective,
             budget=8,  # 5 random + 3 GP
-            maximize=True,
+            maximize=True, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
 
         # Should not crash when GP kicks in at trial 6
@@ -177,7 +177,7 @@ class TestStudyGPIntegration:
             objective_fn=branin_objective,
             budget=5,
             maximize=True,
-            study_name="study1",
+            study_name="study1", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         result1 = study1.run()
 
@@ -189,7 +189,7 @@ class TestStudyGPIntegration:
             objective_fn=branin_objective,
             budget=5,
             maximize=True,
-            study_name="study2",
+            study_name="study2", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         result2 = study2.run()
 
@@ -217,7 +217,7 @@ class TestStudyGPIntegration:
             executor=executor,
             objective_fn=branin_objective,
             budget=15,
-            maximize=False,  # Minimize
+            maximize=False, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',  # Minimize
         )
 
         result = study.run()
@@ -247,7 +247,7 @@ class TestStudyGPIntegration:
             executor=executor,
             objective_fn=noisy_branin,
             budget=15,
-            maximize=True,
+            maximize=True, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
 
         # Should complete despite NaN results
@@ -283,7 +283,7 @@ class TestStudyGPCheckpoint:
             budget=15,
             maximize=True,
             study_name="test_checkpoint_study",
-            checkpoint_dir=tmp_path,
+            checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
 
         result = study.run()

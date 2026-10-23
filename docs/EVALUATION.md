@@ -70,17 +70,41 @@ Endpoint Local execution (sync or async) and Ray Core commit repetitions seriall
 Ray transport failures retain explicit uncertain-work records. With StudyBudget,
 configure Ray with `max_retries=0` so recovery reserves each retry. See the
 [report and adapter contract](REPORTS_AND_ADAPTERS.md).
-Declared objectives accepting `reporter` are explicitly refused pending
-repeated-stream orchestration. Endpoint promotions support restart or
-per-repetition checkpoints; resumed objectives explicitly accept `checkpoint`
-and `resume_from`. Final fitting always restarts. The legacy compute cap applies
-to tuning and is checked between repetitions. For separate final work reserves,
+For streaming, declare `streaming_steps=(...)` containing every scheduler
+endpoint and any intermediate pruning barriers. The objective must accept
+`reporter`, `checkpoint` and `resume_from`. Each call advances one repetition
+to a barrier, returns its measurement and a JSON checkpoint, and reports the
+assigned endpoint. The controller advances all fold/seed repetitions serially
+before reporting their mean at that fidelity. Missing or failed repetitions
+invalidate the candidate; the scheduler never receives a partial mean. A stop
+at a complete barrier prevents all later training. Pause/promotion preserves
+each repetition's checkpoint. Internal barrier calls always resume; promotions
+respect the Study's restart/resume policy. Reports within a segment enforce
+cancellation and time controls; scheduler decisions occur only at declared
+barriers. Choosing coarse barriers limits pruning opportunities.
+
+Scalar reports use `reporter(step, value, cost=..., checkpoint=..., metadata=...)`.
+For a work budget, include `metadata={'resource': {'work': ..., 'unit': ...}}`
+on reports and returns; work is cumulative within the current segment.
+Vector reports use `reporter(step, objectives={...}, constraints={...}, work=...,
+cost=..., checkpoint=...)`. Vector endpoint output uses the same named fields.
+Each segment and acknowledged lost prefix remains in the durable ledger.
+Unknown work consumes its full reservation, and final fitting starts fresh with
+final folds/seeds. No final barrier is sent to search or scheduling.
+
+Endpoint promotions support restart or per-repetition checkpoints; resumed
+objectives explicitly accept `checkpoint` and `resume_from`. For separate final work reserves,
 units and worker limits, use [StudyBudget](BUDGETS.md); its checkpoints use
 schema 5 and bind both the evaluation and resource contracts.
 
-Without `declaration`, the legacy interface reports `legacy_unqualified`.
+Without `declaration`, construction requires a nonempty `legacy_reason` and
+reports `legacy_unqualified`. The exact reason is persisted and must match on
+recovery. Omitting both arguments or supplying both is refused before dispatch.
 An exposed deterministic fixture can specify a nonempty `opt_out_reason`
 and empty `final_folds`/`final_seeds`; its report says `opted_out`. Neither
-path upgrades old evidence. Legacy schema 2/3 checkpoints remain readable
-by legacy studies; crossing the declared/legacy boundary requires an explicit
-new-study migration and is refused by the loader.
+path upgrades old evidence. Historical legacy snapshots without a reason need
+an explicit migration with a retained predecessor, or execution on their
+retained source; the loader cannot invent a reason. Crossing the declared/legacy
+boundary requires a new study and is refused by the loader. Endpoint declaration
+identities remain version 1; streaming declarations and their raw segment
+ledgers use version 2 inside the ordinary Study checkpoint.

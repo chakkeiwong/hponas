@@ -71,7 +71,7 @@ def run(dsn, schema, output_dir, *, use_ray=False):
             maximize=False,
             study_name=study_id,
             store=store,
-        )
+         legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
         result = study.run()
         state = store.peek_study_snapshot(study_id)
     # Raw trajectories are verified independently from the training recurrence.
@@ -111,7 +111,7 @@ def run(dsn, schema, output_dir, *, use_ray=False):
             maximize=False,
             study_name=study_id,
             store=store,
-        )
+         legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
         resumed.load_checkpoint()
         assert resumed.run().best_value == result.best_value
     receipt = dict(

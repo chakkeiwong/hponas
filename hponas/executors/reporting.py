@@ -17,6 +17,7 @@ class ProgressReport:
     elapsed_seconds: float
     checkpoint: Any = None
     schema_version: int = 1
+    metadata: Any = None
 
     def to_dict(self):
         return asdict(self)
@@ -50,7 +51,7 @@ class TrialReporter:
         self.last = None
         self.halted = None
 
-    def __call__(self, step, value, *, cost=None, checkpoint=None):
+    def __call__(self, step, value, *, cost=None, checkpoint=None, metadata=None):
         if self.halted:
             raise TrialHalted(self.halted)
         elapsed = time.monotonic() - self.started
@@ -65,6 +66,9 @@ class TrialReporter:
                 "Progress step and cumulative evaluation cost must not decrease"
             )
         validate_checkpoint(checkpoint)
+        if metadata is not None and not isinstance(metadata, dict):
+            raise ValueError('Progress metadata must be a dictionary')
+        validate_checkpoint(metadata)
         report = ProgressReport(
             self.trial.trial_id,
             self.trial.root_trial_id or self.trial.trial_id,
@@ -73,6 +77,7 @@ class TrialReporter:
             cost,
             elapsed,
             checkpoint,
+            metadata=metadata,
         )
         self.last = report
         decision = self.callback(report) if self.callback else ReportDecision()

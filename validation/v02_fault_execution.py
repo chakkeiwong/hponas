@@ -90,7 +90,7 @@ def _study(directory, *, name, seed, count, objective, executor=None, width=1):
     directory.mkdir(parents=True, exist_ok=False)
     log = EventLog(directory / "events.jsonl")
     study = Study(RandomSearcher(_space(), seed=seed), executor or LocalExecutor(), objective,
-                  budget=count, study_name=name, checkpoint_dir=directory, event_log=log, max_concurrent=width)
+                  budget=count, study_name=name, checkpoint_dir=directory, event_log=log, max_concurrent=width, legacy_reason='Frozen validation protocol owns independent evaluation roles')
     return study
 
 

@@ -6,7 +6,8 @@ import pytest
 
 from validation.v03_mutation_testing import (
     CALIBRATION_CONTROLS, CALIBRATION_FUNCTION, CALIBRATION_ORDER_TESTS, CALIBRATION_WALL_SECONDS,
-    CRITICAL_PATHS, IN_SCOPE_MODULES, MAX_MUTATION_WORKERS, MAX_CAMPAIGN_WALL_SECONDS, _binding, analyze_results,
+    CRITICAL_PATHS, IN_SCOPE_MODULES, DEFERRED_MODULES, FACADE_MODULES,
+    MAX_MUTATION_WORKERS, MAX_CAMPAIGN_WALL_SECONDS, _binding, analyze_results,
     inventory_verdict, library_ownership, parse_listing, reconstruct_inventory,
     verify_execution_artifacts,
 )
@@ -49,13 +50,19 @@ def calibration_fixture(tmp_path, freeze):
     from validation.v03_mutation_testing import test_data_inventory
     freeze["test_data_inputs"] = test_data_inventory(ROOT)
     freeze["dependencies"] = dependency_versions()
+    # Synthetic outcome fixtures carry actual pinned tool bytes.
+    from validation.v03_mutation_testing import REQUIRED_TOOL_SOURCES
+    overlay = ROOT / "tests/fixtures/v03_tool_overlay_v6"
+    freeze["tool_sources"] = [_binding(overlay / (r["relative_path"] + ".txt"))
+                              for r in REQUIRED_TOOL_SOURCES]
+    freeze["tool_source_manifest"] = REQUIRED_TOOL_SOURCES
     freeze.update(python=sys.executable, calibration_controls=CALIBRATION_CONTROLS,
                   resource_policy=_binding(POLICY_PATH),
                   max_workers=MAX_MUTATION_WORKERS, wall_seconds=MAX_CAMPAIGN_WALL_SECONDS,
                   calibration_wall_seconds=CALIBRATION_WALL_SECONDS,
                   calibration_order_tests=list(CALIBRATION_ORDER_TESTS),
                   equivalence_rules=list(RULES),
-                  equivalence_argument=_binding(ROOT / "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_16.md"))
+                  equivalence_argument=_binding(ROOT / "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_18.md"))
     lines = [f"{module}.x_function__mutmut_1: not checked" for module in IN_SCOPE_MODULES]
     lines.extend(f"{mid}: {row['status']}" for mid, row in CALIBRATION_CONTROLS.items())
     raw = tmp_path / "calibration-listing.txt"
@@ -147,7 +154,7 @@ def test_reconstruction_binds_raw_individual_results_and_frozen_tool(tmp_path, d
     listing = tmp_path / "results.txt"
     listing.write_text("hponas.space.x_function__mutmut_1: survived\n")
     freeze = {
-        "kind": "v03_execution_freeze_v7", "source_digest": "fixture",
+        "kind": "v03_execution_freeze_v8", "source_digest": "fixture",
         "raw_outcome_policy": RAW_OUTCOME_POLICY,
         "library_ownership": library_ownership(ROOT),
         "required_modules": IN_SCOPE_MODULES, "critical_paths": list(CRITICAL_PATHS),
@@ -166,7 +173,11 @@ def test_reconstruction_binds_raw_individual_results_and_frozen_tool(tmp_path, d
     if damage == "listing":
         listing.write_text("hponas.space.x_function__mutmut_1: killed\n")
     elif damage == "tool":
-        source.write_text("changed")
+        changed = tmp_path / "changed-tool.py"
+        changed.write_text("changed")
+        freeze["tool_sources"][0] = _binding(changed)
+        path.write_text(json.dumps(freeze))
+        result["execution_freeze"] = _binding(path)
     elif damage == "reported_status":
         result["mutants"][0]["status"] = "killed"
     elif damage == "equivalence":
@@ -259,9 +270,9 @@ def test_whole_library_ownership_catches_jointly_incomplete_configuration(tmp_pa
             library_ownership(tmp_path)
     else:
         inventory = library_ownership(tmp_path)
-        assert len(inventory) == 71
+        assert len(inventory) == len(IN_SCOPE_MODULES) + len(DEFERRED_MODULES) + len(FACADE_MODULES)
         assert sum(row["disposition"] == "required" for row in inventory) == 24
-        assert sum(row["disposition"] == "deferred" for row in inventory) == 44
+        assert sum(row["disposition"] == "deferred" for row in inventory) == len(DEFERRED_MODULES)
         assert {row["module"] for row in inventory if row["disposition"] == "required"} == set(IN_SCOPE_MODULES)
 
 
@@ -277,6 +288,18 @@ def test_product_foundation_modules_have_explicit_nonmutation_owners(tmp_path, m
     monkeypatch.delitem(mutation.DEFERRED_MODULES, name)
     with pytest.raises(ValueError, match='Unassigned or missing'):
         library_ownership(tmp_path)
+
+
+def test_streaming_product_module_has_gap_owner_without_changing_mutation_population(monkeypatch):
+    from validation import v03_mutation_testing as mutation
+
+    name = 'hponas.evaluation_streaming'
+    row = next(row for row in library_ownership(ROOT) if row['module'] == name)
+    assert (row['disposition'], row['work_item']) == ('deferred', 'GAP-01')
+    assert name not in IN_SCOPE_MODULES
+    monkeypatch.delitem(mutation.DEFERRED_MODULES, name)
+    with pytest.raises(ValueError, match='Unassigned or missing'):
+        library_ownership(ROOT)
 
 
 def test_required_legacy_gp_and_architecture_are_configured_before_freezing():
@@ -325,6 +348,32 @@ def test_workspace_preserves_selected_document_bytes_without_copying_environment
     assert not same_test_data(test_data_inventory(source), test_data_inventory(workspace))
 
 
+@pytest.mark.parametrize("fault", ["changed", "missing", "external"])
+def test_selected_operation_dependency_is_bound_and_cannot_change(tmp_path, fault):
+    from validation.v03_mutation_testing import test_data_inventory, same_test_data
+
+    root = tmp_path / "root"
+    (root / "program_operations").mkdir(parents=True)
+    (root / "pyproject.toml").write_text(
+        '[tool.mutmut]\nalso_copy = ["program_operations/helper.py"]\n')
+    helper = root / "program_operations/helper.py"
+    helper.write_text('def run(): return 1\n')
+    frozen = test_data_inventory(root)
+    assert [row["relative_path"] for row in frozen] == ["program_operations/helper.py"]
+    if fault == "changed":
+        helper.write_text('def run(): return 2\n')
+        with pytest.raises(ValueError, match="Changed or missing V03 execution artifact"):
+            same_test_data(frozen, test_data_inventory(root))
+    else:
+        helper.unlink()
+        if fault == "external":
+            outside = tmp_path / "outside.py"
+            outside.write_text('def run(): return 1\n')
+            helper.symlink_to(outside)
+        with pytest.raises(ValueError, match="document input"):
+            test_data_inventory(root)
+
+
 @pytest.mark.parametrize("fault", ["missing", "external"])
 def test_document_fixture_inventory_refuses_missing_or_external_inputs(tmp_path, fault):
     from validation.v03_mutation_testing import test_data_inventory
@@ -365,7 +414,7 @@ def test_retained_evidence_survives_missing_original_temporary_inputs(tmp_path):
     work.mkdir()
     source = work / "source"
     source.write_text("frozen input")
-    freeze = {"kind": "v03_execution_freeze_v7", "source_digest": "fixture",
+    freeze = {"kind": "v03_execution_freeze_v8", "source_digest": "fixture",
               "raw_outcome_policy": RAW_OUTCOME_POLICY,
               "library_ownership": library_ownership(ROOT),
               "required_modules": IN_SCOPE_MODULES, "critical_paths": list(CRITICAL_PATHS),
@@ -530,7 +579,7 @@ def test_raw_runner_failures_remain_unresolved_through_retention_and_public_gate
     source = work / "source"
     source.write_text("bound input bytes\n")
     digest = evidence.source_digest()
-    freeze = {"kind": "v03_execution_freeze_v7", "source_digest": digest,
+    freeze = {"kind": "v03_execution_freeze_v8", "source_digest": digest,
               "raw_outcome_policy": RAW_OUTCOME_POLICY,
               "library_ownership": library_ownership(ROOT),
               "required_modules": IN_SCOPE_MODULES, "critical_paths": list(CRITICAL_PATHS),
@@ -638,7 +687,7 @@ def test_failed_generation_retains_unresolved_evidence_without_launching_full_ru
     assert mutation.inventory_verdict(result, mutation.analyze_results(result)) == "INCONCLUSIVE"
 
 
-@pytest.mark.parametrize("damage", [None, "version", "markdown", "rules", "timeout_code", "kill_code", "threshold", "ownership", "workers", "cpu_slots", "wall", "calibration_wall", "missing_admission", "retry_admission", "missing_prerequisite"])
+@pytest.mark.parametrize("damage", [None, "version", "markdown", "rules", "timeout_code", "kill_code", "threshold", "ownership", "workers", "cpu_slots", "wall", "calibration_wall", "missing_admission", "retry_admission", "missing_prerequisite", "tool_manifest"])
 def test_prospective_launch_refuses_stale_or_weakened_phase_register(tmp_path, damage):
     from validation.v03_mutation_testing import verify_phase_register
 
@@ -649,7 +698,9 @@ def test_prospective_launch_refuses_stale_or_weakened_phase_register(tmp_path, d
     if damage == "version":
         entry["version"] = "2.6"
     elif damage == "markdown":
-        markdown = markdown.replace("**Version:** 2.20", "**Version:** 2.19")
+        markdown = markdown.replace("**Version:** 2.29", "**Version:** 2.20")
+    elif damage == "tool_manifest":
+        entry["tool_source_manifest"].pop()
     elif damage == "missing_admission":
         entry.pop("execution_admission")
     elif damage == "retry_admission":
@@ -681,6 +732,62 @@ def test_prospective_launch_refuses_stale_or_weakened_phase_register(tmp_path, d
             verify_phase_register(tmp_path)
     else:
         verify_phase_register(tmp_path)
+
+
+@pytest.mark.parametrize("damage", [None, "bytes", "missing", "extra", "stale_name", "escape"])
+def test_tool_overlay_requires_reviewed_names_and_bytes(tmp_path, damage):
+    from validation.v03_mutation_testing import REQUIRED_TOOL_SOURCES, verify_tool_overlay
+
+    fixture = ROOT / "tests/fixtures/v03_tool_overlay_v6"
+    overlay = tmp_path / "mutmut-evidence-v6/mutmut"
+    for row in REQUIRED_TOOL_SOURCES:
+        dest = overlay / row["relative_path"]
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes((fixture / (row["relative_path"] + ".txt")).read_bytes())
+    first = overlay / REQUIRED_TOOL_SOURCES[0]["relative_path"]
+    if damage == "bytes":
+        first.write_bytes(first.read_bytes() + b"# unreviewed change")
+    elif damage == "missing":
+        first.unlink()
+    elif damage == "extra":
+        (overlay / "unexpected.py").write_text("# extra executable input")
+    elif damage == "stale_name":
+        overlay.parent.rename(tmp_path / "mutmut-evidence-v3")
+        overlay = tmp_path / "mutmut-evidence-v3/mutmut"
+    elif damage == "escape":
+        external = tmp_path / "outside.py"
+        external.write_bytes(first.read_bytes())
+        first.unlink()
+        first.symlink_to(external)
+    if damage:
+        with pytest.raises(ValueError, match="V03"):
+            verify_tool_overlay(overlay)
+    else:
+        sources, manifest = verify_tool_overlay(overlay)
+        assert manifest == REQUIRED_TOOL_SOURCES
+        assert len(sources) == len(REQUIRED_TOOL_SOURCES)
+
+
+@pytest.mark.parametrize("damage", ["missing", "duplicate", "reorder", "relabeled", "changed_bytes"])
+def test_retained_tool_inventory_cannot_conceal_damage(tmp_path, damage):
+    from validation.v03_mutation_testing import REQUIRED_TOOL_SOURCES, verify_frozen_tool_sources
+    fixture = ROOT / "tests/fixtures/v03_tool_overlay_v6"
+    sources = [_binding(fixture / (r["relative_path"] + ".txt")) for r in REQUIRED_TOOL_SOURCES]
+    manifest = [dict(row) for row in REQUIRED_TOOL_SOURCES]
+    if damage == "missing":
+        sources.pop()
+    elif damage == "duplicate":
+        sources[1] = sources[0]
+    elif damage == "reorder":
+        sources.reverse()
+    elif damage == "relabeled":
+        manifest[0]["relative_path"] = "other.py"
+    else:
+        altered = tmp_path / "altered.py"
+        altered.write_text("# different tool")
+        sources[0] = _binding(altered)
+    with pytest.raises(ValueError, match="V03 tool source"):
+        verify_frozen_tool_sources(sources, manifest)
 
 
 @pytest.mark.parametrize("damage", [None, "bytes", "rebound", "missing", "extra", "duplicate"])

@@ -4,26 +4,27 @@ See [the master program](../CONSOLIDATED_MASTER_AUTHORITY.md) for authority, sco
 
 ## Current execution status
 
-Program revision: **2.397**. Current phase: **Tier 1 development**.
+Program revision: **2.477**. Current phase: **Historical gap closure**.
 
 **Release status: LOCAL BASELINE ACCEPTED.** Tier-0 acceptance applies to the retained source. Current development and later phases require their own acceptance. No external release is recorded.
 
-Executable source fingerprint: `de68ddcd7998344333c3349b0d36accf5096f618c81ab12ce6a314bd7c0a6b2c`.
+Executable source fingerprint: `d4e762924717265ddd81e3e441a7c895e0ded52d62f2cdbea68734cb064405be`.
 
 These are stored evidence verdicts. CURRENT means source and protocol match; STALE requires revalidation. A new audit cannot make a HISTORICAL DIAGNOSTIC into fresh mutation execution. Full gate recomputation is required for acceptance.
 
 | Campaign | Recorded verdict | V16 receipt | Freshness | Run |
 |---|---|---|---|---|
-| V01 | PASS | PASS | CURRENT | `validation/artifacts/V01/20261016_bank_final_08` |
-| V02 | PASS | PASS | CURRENT | `validation/artifacts/V02/20261016_bank_final_08` |
-| V03 | PASS | PASS | STALE | `validation/artifacts/V03/20261016_bank_final_08` |
-| V04-T0 | PASS | PASS | CURRENT | `validation/artifacts/V04-T0/20261016_bank_final_08` |
-| V05 | PASS | PASS | CURRENT | `validation/artifacts/V05/20261016_bank_final_08` |
-| V14 | PASS | PASS | CURRENT | `validation/artifacts/V14/20261016_bank_final_08` |
+| V01 | PASS | PASS | CURRENT | `validation/artifacts/V01/20261023_gap_final_03` |
+| V02 | PASS | PASS | CURRENT | `validation/artifacts/V02/20261023_gap_final_03` |
+| V03 | INCONCLUSIVE | PASS | STALE | `validation/artifacts/V03/20261018_gap_final_01` |
+| V04-T0 | PASS | PASS | CURRENT | `validation/artifacts/V04-T0/20261023_gap_final_03` |
+| V05 | PASS | PASS | CURRENT | `validation/artifacts/V05/20261023_gap_final_03` |
+| V14 | PASS | PASS | CURRENT | `validation/artifacts/V14/20261023_gap_final_03` |
 
-Active work item: **none**.
+Active work item: **BANK-01**.
 
-Continuation: **COMPLETE**. Stop eligible: **true**.
+Continuation: **CONTINUE**. Stop eligible: **false**.
+Current continuation step: **BANK-01/GAP-QUALIFICATION** — Continue the allocated V03 mutation run, register its terminal result, run the final Tier-0 gate and package reconstruction, then execute GAP-01/FINAL-AUDIT. On failure preserve the receipt and repair at the current master boundary..
 
 ## Work breakdown
 
@@ -67,7 +68,8 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | T1-GATE | Tier-1 finite capability reconciliation | complete | verified | REL-01 | Retain the finite Tier-1 package and completed final integrated-source qualification in E-FINAL11-20261012-PACKAGE. |
 | REL-02 | Integrated-source qualification and release disposition | complete | verified | REL-01, T1-GATE | Preserve the qualified finite local baseline; PRD-01 owns omitted original product contracts and subsequent changed-source qualification. |
 | PRD-01 | Recover and repair the complete public product contract | complete | verified | REL-02, D-PRODUCT-CONTRACT-RECOVERY, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Retain engineering readiness; BANK-01 owns all final-source foundation and profile scientific qualification. |
-| BANK-01 | Reusable universal-bank model-family HPO/NAS workflows | complete | verified | PRD-01, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Master complete for the qualified finite local scope; preserve exact source package and require a prospective amendment for new claims. |
+| BANK-01 | Reusable universal-bank model-family HPO/NAS workflows | in_progress | verified | PRD-01, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Continue the allocated V03 mutation run, register its terminal result, run the final Tier-0 gate and package reconstruction, then execute GAP-01/FINAL-AUDIT. On failure preserve the receipt and repair at the current master boundary. |
+| GAP-01 | Close historical implementation gaps and independently audit completion | planned | verified | PRD-01, D-GAP-CLOSURE-20261018 | GAP-01/FINAL-AUDIT follows BANK-01/GAP-QUALIFICATION; independently reconstruct all 27 original gap clauses and reject false completion. |
 
 ## Decisions and unresolved conflicts
 
@@ -119,3 +121,4 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | D-BANK-PRODUCT-SCOPE | accepted | Make the universal-retail-bank HPO/NAS vision executable | Preserve the finite baseline, exclusions, failed ifBO disposition and local scope; complete PRD-01 then BANK-01 with self-contained model profiles. Initial 2–10 dimensions is a qualified envelope, not a universal support bound. No large campaign or production deployment is allocated. |
 | D-SCOPED-PROGRAM-OPERATIONS | accepted | Stable exact local commands and grouped scoped approvals | Use the reviewed bounded operations manifest; preserve managed approvals and unrelated rules. Rule matching/installation does not itself prove host live reload or grant scientific acceptance. |
 | D-PRODUCT-FINAL-QUALIFICATION-ORDER | accepted | Qualify the complete product after all planned foundation and bank source repairs | PRD closes engineering readiness; BANK final review owns unchanged complete scientific obligations and exact final-source acceptance. No campaign is allocated here. |
+| D-GAP-CLOSURE-20261018 | accepted | Execute all ten historical gap closures with final independent completion audit | GAP-01 is active; BANK-01 requalification is open for the repaired source; no changed code inherits prior acceptance. |

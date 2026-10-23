@@ -45,7 +45,7 @@ def run_one(directory, name, *, transform=None, recovery=None, maximize=False, f
     event_log = EventLog(target/'events.jsonl')
     budget = 30 if finite_stop else 12
     study = Study(make(0), LocalExecutor(), workload, budget=budget, study_name=name,
-                  maximize=maximize, checkpoint_dir=target, event_log=event_log)
+                  maximize=maximize, checkpoint_dir=target, event_log=event_log, legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
     boundary = None
     if recovery:
         for _ in range(6):
@@ -58,7 +58,7 @@ def run_one(directory, name, *, transform=None, recovery=None, maximize=False, f
         boundary = deepcopy(study._snapshot())
         study.executor.shutdown()
         resumed = Study(make(987), LocalExecutor(), workload, budget=budget, study_name=name,
-                        maximize=maximize, checkpoint_dir=target, event_log=event_log)
+                        maximize=maximize, checkpoint_dir=target, event_log=event_log, legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
         resumed.load_checkpoint(target/(name+'_checkpoint.json'))
         if resumed.searcher.get_state() != study.searcher.get_state():
             raise ValueError('Checkpoint changed trust state')

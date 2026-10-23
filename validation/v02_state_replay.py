@@ -44,7 +44,7 @@ def _replay_run(
         event_log=event_log,
         scheduler=scheduler,
         max_concurrent=width,
-    )
+     legacy_reason='Frozen validation protocol owns independent evaluation roles')
     study.run()
     restored_scheduler = ASHAScheduler(ASHAConfig()) if scheduler else None
     if restored_scheduler:
@@ -122,7 +122,7 @@ def campaign(run_dir):
             delayed,
             budget=20,
             study_name="order",
-        )
+         legacy_reason='Frozen validation protocol owns independent evaluation roles')
         study.run()
         runs.append(
             [
@@ -181,7 +181,7 @@ def streamed_replay(directory):
 
     study = Study(RandomSearcher(_space(), seed=47), LocalExecutor(), stream,
                   budget=2, maximize=False, scheduler=ASHAScheduler(config),
-                  continuation="resume", event_log=log, study_name="streamed")
+                  continuation="resume", event_log=log, study_name="streamed", legacy_reason='Frozen validation protocol owns independent evaluation roles')
     result = study.run()
     replay = ReplayEngine(RandomSearcher(_space(), seed=47), log, 47, ASHAScheduler(config))
     passed, message, _, _ = replay.verify_determinism(2)
@@ -208,7 +208,7 @@ def cancelled_replay(directory):
         tail.append("tail executed after cancellation")
 
     study = Study(RandomSearcher(_space(), seed=48), LocalExecutor(), objective, budget=1,
-                  scheduler=ASHAScheduler(config), event_log=log, study_name="cancelled")
+                  scheduler=ASHAScheduler(config), event_log=log, study_name="cancelled", legacy_reason='Frozen validation protocol owns independent evaluation roles')
     try:
         study.run()
         outcome = "unexpected_success"

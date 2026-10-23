@@ -27,6 +27,14 @@ class LegacySearcherAdapter(BaseSearcher):
         if hasattr(self.searcher, "validate_study_controls"):
             self.searcher.validate_study_controls(max_concurrent, scheduler)
 
+    def register_trial(self, trial):
+        if hasattr(self.searcher, 'register_trial'):
+            self.searcher.register_trial(trial)
+
+    def finalize_pending(self):
+        if hasattr(self.searcher, 'finalize_pending'):
+            self.searcher.finalize_pending()
+
     def validate_study_snapshot(self, state):
         if hasattr(self.searcher, "validate_study_snapshot"):
             self.searcher.validate_study_snapshot(state)

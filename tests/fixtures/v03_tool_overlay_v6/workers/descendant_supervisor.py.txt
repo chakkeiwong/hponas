@@ -1,0 +1,104 @@
+"""Isolate each mutant's subprocesses, including detached Ray workers.
+
+The forkserver's child is a subreaper. It forks the actual test process and
+does not report the result until every descendant has exited. The independent
+outer guard remains authoritative and rejects any survivor or intervention.
+"""
+
+import ctypes
+import os
+from pathlib import Path
+import signal
+import time
+
+
+_PR_SET_CHILD_SUBREAPER = 36
+
+
+def _children():
+    path = Path(f"/proc/{os.getpid()}/task/{os.getpid()}/children")
+    return [int(value) for value in path.read_text().split()]
+
+
+def _reap_ready():
+    while True:
+        try:
+            pid, _ = os.waitpid(-1, os.WNOHANG)
+        except ChildProcessError:
+            return
+        if pid == 0:
+            return
+
+
+def _signal(children, sig):
+    # These are our direct, unreaped children. Their PIDs cannot be reused
+    # before this single-threaded supervisor reaps them.
+    for pid in children:
+        try:
+            os.kill(pid, sig)
+        except ProcessLookupError:
+            pass
+
+
+def _drain_descendants(max_seconds=5.0):
+    started = time.monotonic()
+    while time.monotonic() - started < max_seconds:
+        _reap_ready()
+        children = _children()
+        if not children:
+            return True
+        _signal(children, signal.SIGTERM if time.monotonic() - started < 0.5
+                else signal.SIGKILL)
+        time.sleep(0.025)
+    _reap_ready()
+    return not _children()
+
+
+def supervise(run):
+    """Return the test's exact exit status only after its process tree drains."""
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.prctl(_PR_SET_CHILD_SUBREAPER, 1, 0, 0, 0) != 0:
+        raise OSError(ctypes.get_errno(), "Cannot isolate mutant descendants")
+    interrupted = []
+    def stop(sig, _frame):
+        interrupted.append(sig)
+    blocked = {signal.SIGXCPU, signal.SIGTERM}
+    old_mask = signal.pthread_sigmask(signal.SIG_BLOCK, blocked)
+    old_xcpu = signal.signal(signal.SIGXCPU, stop)
+    old_term = signal.signal(signal.SIGTERM, stop)
+    test_pid = os.fork()
+    if test_pid == 0:
+        for sig in (signal.SIGXCPU, signal.SIGTERM, signal.SIGINT, signal.SIGCHLD):
+            signal.signal(sig, signal.SIG_DFL)
+        signal.pthread_sigmask(signal.SIG_SETMASK, old_mask)
+        try:
+            os._exit(run())
+        except BaseException:
+            os._exit(2)
+    signal.pthread_sigmask(signal.SIG_SETMASK, old_mask)
+    try:
+        while True:
+            # Signal only before reaping this direct child. A handler merely
+            # records intent; it can never signal a reaped/reused PID.
+            if interrupted:
+                _signal([test_pid], signal.SIGKILL)
+            found, status = os.waitpid(test_pid, os.WNOHANG)
+            if found:
+                break
+            time.sleep(0.01)
+        code = os.waitstatus_to_exitcode(status)
+        drained = _drain_descendants()
+    finally:
+        signal.signal(signal.SIGXCPU, old_xcpu)
+        signal.signal(signal.SIGTERM, old_term)
+    if not drained:
+        return 2
+    if interrupted:
+        code = -interrupted[0]
+    if code < 0:
+        sig = -code
+        if sig not in {signal.SIGKILL, signal.SIGSTOP}:
+            signal.signal(sig, signal.SIG_DFL)
+        os.kill(os.getpid(), sig)
+        return 2
+    return code

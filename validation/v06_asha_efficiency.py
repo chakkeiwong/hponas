@@ -102,7 +102,7 @@ def run_asha_search(
         maximize=False,
         scheduler=ASHAScheduler(asha_config),
         max_concurrent=n_trials,
-    )
+     legacy_reason='Frozen validation protocol owns independent evaluation roles')
     result = study.run()
     # Only fully evaluated candidates enter the incumbent; no uncharged reevaluation.
     return result.best_value, result.total_cost, result.best_config.values
@@ -123,7 +123,7 @@ def run_full_fidelity_search(space, objective, n_trials, seed, max_fidelity):
         full,
         budget=n_trials,
         maximize=False,
-    ).run()
+     legacy_reason='Frozen validation protocol owns independent evaluation roles').run()
     return result.best_value, result.total_cost
 
 

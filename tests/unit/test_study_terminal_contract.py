@@ -6,6 +6,32 @@ from types import SimpleNamespace
 
 import pytest
 
+from hponas.types import Result
+
+
+@pytest.mark.parametrize('status,value', [('paused', -100.), ('completed', float('nan')),
+                                         ('failed', -100.)])
+def test_incumbent_requires_both_valid_measurement_and_completed_evaluation(status, value):
+    target = Study(searcher(), LocalExecutor(), lambda config: 0., maximize=False,
+                   legacy_reason='Public incumbent filtering boundary')
+    candidate = Result('candidate', value, status=status)
+    target.results = {'candidate': candidate}
+    assert target.get_best_so_far() is None
+    completed = Result('completed', 2.)
+    target.results['completed'] = completed
+    assert target.get_best_so_far() is completed
+
+
+def test_study_report_retains_an_interrupted_final_outcome(monkeypatch):
+    target = Study(searcher(), LocalExecutor(), lambda config: 2., budget=1,
+                   legacy_reason='Final report composition contract')
+    target.run()
+    monkeypatch.setattr(target, 'evaluation_report', lambda: {
+        'outcome': 'incomplete', 'final_cost': 3., 'final_elapsed_seconds': 4.})
+    result = target._build_result()
+    assert result.status == result.reason == 'final_evaluation_incomplete'
+    assert result.total_elapsed_seconds == target._elapsed() + 4.
+
 from hponas import IncompleteStudyError, LocalExecutor, RandomSearcher, Study
 from hponas.events import EventLog
 from hponas.executors import reporting
@@ -42,7 +68,7 @@ def test_executor_identity_refusal_keeps_a_durable_valid_prefix(tmp_path, fault,
 
     executor = Executor()
     study = Study(searcher(), executor, lambda config: 5., budget=2,
-                  max_concurrent=2, study_name="identity", checkpoint_dir=tmp_path)
+                  max_concurrent=2, study_name="identity", checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     with pytest.raises(ValueError) as raised:
         study.run()
     assert str(raised.value) == diagnostic
@@ -78,7 +104,7 @@ def test_endpoint_batch_and_singleton_keep_identity_results_and_zero_unreported_
 
     executor = Executor()
     study = Study(searcher(), executor, objective, budget=3, max_concurrent=2,
-                  study_name="endpoint")
+                  study_name="endpoint", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = study.run()
     assert executor.calls == [("batch", ["endpoint_trial_0", "endpoint_trial_1"]),
                               ("single", "endpoint_trial_2"), "shutdown"]
@@ -98,7 +124,7 @@ def test_cancel_during_endpoint_execution_retains_cost_but_never_an_incumbent(tm
         return {"value": 7., "cost": 3.}
 
     study = Study(searcher(), LocalExecutor(), objective, budget=1,
-                  study_name="cancel", checkpoint_dir=tmp_path)
+                  study_name="cancel", checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     with pytest.raises(IncompleteStudyError) as raised:
         study.run()
     result = raised.value.result
@@ -114,7 +140,7 @@ def test_scheduler_endpoint_reports_bind_evaluation_and_training_completion(tmp_
     study = Study(searcher(), LocalExecutor(), lambda config: {"value": 5., "cost": 2.},
                   budget=2, maximize=False, study_name="training", checkpoint_dir=tmp_path,
                   event_log=EventLog(tmp_path / "events.jsonl"),
-                  scheduler=ASHAScheduler(ASHAConfig(eta=2, r_min=1, r_max=2)))
+                  scheduler=ASHAScheduler(ASHAConfig(eta=2, r_min=1, r_max=2)), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = study.run()
     assert result.status == "completed" and result.reason is None
     assert [row.metadata["training_status"] for row in result.history] == [
@@ -146,7 +172,7 @@ def test_recovery_after_compute_stop_cancels_pending_without_losing_acknowledged
     def make(executor, objective_fn):
         return Study(searcher(), executor, objective_fn, budget=1, study_name="stopped",
                      checkpoint_dir=tmp_path, compute_budget_seconds=1.,
-                     scheduler=ASHAScheduler(ASHAConfig(r_min=2, r_max=2)))
+                     scheduler=ASHAScheduler(ASHAConfig(r_min=2, r_max=2)), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
 
     interrupted = make(InterruptedAcceptance(), objective)
     with pytest.raises(KeyboardInterrupt, match="stopped before acceptance"):

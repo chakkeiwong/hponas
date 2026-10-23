@@ -177,7 +177,7 @@ def test_modern_wrapper_only_observes_current_target_measurements(histories):
     warm = RankedWarmStartSearcher.from_store(RandomSearcher(space, seed=7), store, context=target, n=2)
     assert warm.history == warm._base.history == []
     outcome = Study(warm, LocalExecutor(), lambda config: (config["x"]-3)**2,
-                    budget=2, maximize=False, study_name="target").run()
+                    budget=2, maximize=False, study_name="target", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately').run()
     assert [warm.trials[r.trial_id].values["x"] for r in outcome.history] == [1, 5]
     assert [r.objective_value for r in warm.history] == [4, 4]
     assert all(not r.trial_id.startswith(("A-", "B-")) for r in warm.history)
@@ -189,7 +189,7 @@ def test_study_cannot_change_target_identity_or_objective(histories):
     for kwargs in [{"study_name": "other", "maximize": False}, {"study_name": "target", "maximize": True}]:
         warm = RankedWarmStartSearcher.from_store(RandomSearcher(space), store, context=target)
         with pytest.raises(ValueError, match="differs"):
-            Study(warm, LocalExecutor(), lambda config: 1, budget=2, **kwargs)
+            Study(warm, LocalExecutor(), lambda config: 1, budget=2, **kwargs, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
         assert warm.n_seeds_used == 0
 
 
@@ -241,7 +241,7 @@ def test_study_crash_recovery_reuses_pending_seeds_without_repeating_completed_w
 
     source = Study(RankedWarmStartSearcher(RandomSearcher(space, seed=7), selection),
                    LocalExecutor(), interrupted, budget=8, study_name="target", maximize=False,
-                   checkpoint_dir=tmp_path, store=store, max_concurrent=2)
+                   checkpoint_dir=tmp_path, store=store, max_concurrent=2, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     with pytest.raises(KeyboardInterrupt):
         source.run()
     completed = set(source.results)
@@ -252,13 +252,13 @@ def test_study_crash_recovery_reuses_pending_seeds_without_repeating_completed_w
         return (config["x"] - 3)**2
 
     resumed = Study(RankedWarmStartSearcher(RandomSearcher(space, seed=99), selection),
-                    LocalExecutor(), objective, budget=8, study_name="target", maximize=False, store=store)
+                    LocalExecutor(), objective, budget=8, study_name="target", maximize=False, store=store, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     resumed.load_checkpoint()
     result = resumed.run()
     assert not completed.intersection(dispatched)
     reference = Study(RankedWarmStartSearcher(RandomSearcher(space, seed=7), selection),
                       LocalExecutor(), lambda c: (c["x"] - 3)**2, budget=8, study_name="target",
-                      maximize=False, max_concurrent=2)
+                      maximize=False, max_concurrent=2, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     expected = reference.run()
     assert [resumed.trials[r.trial_id].config.values for r in result.history] == [
         reference.trials[r.trial_id].config.values for r in expected.history]
@@ -270,7 +270,7 @@ def test_study_crash_recovery_reuses_pending_seeds_without_repeating_completed_w
 def test_study_checkpoint_cannot_change_warm_target_after_partial_restore(histories, tmp_path, field, value):
     store, space, target = histories
     warm = RankedWarmStartSearcher.from_store(RandomSearcher(space, seed=7), store, context=target)
-    study = Study(warm, LocalExecutor(), lambda c: 1., budget=2, study_name="target", maximize=False)
+    study = Study(warm, LocalExecutor(), lambda c: 1., budget=2, study_name="target", maximize=False, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     before = study._snapshot()
     bad = deepcopy(before)
     bad[field] = value
@@ -337,9 +337,9 @@ def test_legacy_adapter_preserves_bound_history_context(histories):
     warm = WarmStartSearcher.from_store(SobolSearcher(space, seed=7), store, space, context=target)
     for name, maximize in [("wrong", False), ("target", True)]:
         with pytest.raises(ValueError, match="differs"):
-            Study(warm, LocalExecutor(), lambda c: 1., budget=2, study_name=name, maximize=maximize)
+            Study(warm, LocalExecutor(), lambda c: 1., budget=2, study_name=name, maximize=maximize, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     outcome = Study(warm, LocalExecutor(), lambda c: (c["x"]-3)**2,
-                    budget=2, study_name="target", maximize=False).run()
+                    budget=2, study_name="target", maximize=False, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately').run()
     assert [r.objective_value for r in outcome.history] == [4., 4.]
 
 

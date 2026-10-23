@@ -11,7 +11,8 @@ from hponas import Knob, SearchSpace, TrustRegionSearcher, LocalExecutor, Study
 
 space = SearchSpace([Knob('rate', 'continuous', (.001, .1), transform='log')])
 searcher = TrustRegionSearcher(space, seed=0)
-study = Study(searcher, LocalExecutor(), objective, budget=30, maximize=False)
+study = Study(searcher, LocalExecutor(), objective, budget=30, maximize=False,
+              declaration=declaration)  # Bind objective/model/data and role identities first.
 result = study.run()
 ```
 

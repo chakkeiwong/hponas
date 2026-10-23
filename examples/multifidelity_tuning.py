@@ -72,7 +72,7 @@ def run_one(output, name, order, policy, median, *, full=False, crash=False):
     executor = LocalExecutor()
     study = Study(FixedInventory(order), executor, workload, budget=len(order), maximize=False,
                   scheduler=scheduler(median, full=full), continuation=policy,
-                  checkpoint_dir=directory if crash else None, study_name=name)
+                  checkpoint_dir=directory if crash else None, study_name=name, legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
     try:
         try:
             outcome = study.run()
@@ -85,7 +85,7 @@ def run_one(output, name, order, policy, median, *, full=False, crash=False):
             executor = LocalExecutor()
             study = Study(FixedInventory(order), executor, workload, maximize=False,
                           scheduler=scheduler(median, full=full), continuation=policy,
-                          checkpoint_dir=directory, study_name=name)
+                          checkpoint_dir=directory, study_name=name, legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
             study.load_checkpoint(retained_checkpoint)
             outcome = study.run()
         except IncompleteStudyError as exc:

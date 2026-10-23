@@ -1,0 +1,95 @@
+"""Wall deadlines target exact child identities, never reusable numeric PIDs."""
+import ctypes
+import platform
+import heapq
+import itertools
+import os
+import signal
+import time
+from threading import Condition, Thread
+
+_timeout_heap = []
+_tickets = {}
+_serial = itertools.count()
+_heap_lock = Condition()
+_checker_started = False
+
+
+def _syscall(number, *arguments):
+    if platform.system() != 'Linux' or platform.machine() != 'x86_64':
+        raise RuntimeError('This reviewed syscall adapter requires Linux x86_64')
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.syscall.restype = ctypes.c_long
+    result = libc.syscall(ctypes.c_long(number), *arguments)
+    if result == -1:
+        number = ctypes.get_errno()
+        raise OSError(number, os.strerror(number))
+    return int(result)
+
+
+def _open_handle(pid):
+    # Linux x86_64 __NR_pidfd_open=434, verified against the host syscall header.
+    if hasattr(os, 'pidfd_open'):
+        return os.pidfd_open(pid, 0)
+    return _syscall(434, ctypes.c_int(pid), ctypes.c_uint(0))
+
+
+def _signal_handle(fd, sig):
+    # Linux x86_64 __NR_pidfd_send_signal=424; null siginfo, flags zero.
+    if hasattr(signal, 'pidfd_send_signal'):
+        return signal.pidfd_send_signal(fd, sig)
+    return _syscall(424, ctypes.c_int(fd), ctypes.c_int(sig), ctypes.c_void_p(), ctypes.c_uint(0))
+
+
+def register_timeout(pid, timeout_s):
+    global _checker_started
+    # Caller owns the unreaped direct child, so pidfd_open cannot bind a reused
+    # PID. pidfd_send_signal remains identity-safe after waitpid or reparenting.
+    fd = _open_handle(pid)
+    with _heap_lock:
+        previous = _tickets.pop(pid, None)
+        if previous is not None:
+            os.close(previous[1])
+        ticket = next(_serial)
+        _tickets[pid] = (ticket, fd)
+        heapq.heappush(_timeout_heap, (time.monotonic()+timeout_s, ticket, pid))
+        if not _checker_started:
+            _checker_started = True
+            Thread(target=_timeout_checker_thread, name=f'{os.getpid()}-mutmut-timeout-checker', daemon=True).start()
+        _heap_lock.notify()
+
+
+def cancel_timeout(pid):
+    with _heap_lock:
+        record = _tickets.pop(pid, None)
+        if record is not None:
+            os.close(record[1])
+        _heap_lock.notify()
+
+
+def _expire_due(now):
+    # Caller holds the condition lock; cancellation cannot close/reuse a handle
+    # between lookup and signalling. Stale heap entries have unique tickets.
+    while _timeout_heap and _timeout_heap[0][0] <= now:
+        _, ticket, pid = heapq.heappop(_timeout_heap)
+        record = _tickets.get(pid)
+        if record is None or record[0] != ticket:
+            continue
+        _, fd = _tickets.pop(pid)
+        try:
+            _signal_handle(fd, signal.SIGXCPU)
+        except ProcessLookupError:
+            pass
+        finally:
+            os.close(fd)
+
+
+def _timeout_checker_thread():
+    with _heap_lock:
+        while True:
+            while not _timeout_heap:
+                _heap_lock.wait()
+            now = time.monotonic()
+            _expire_due(now)
+            if _timeout_heap:
+                _heap_lock.wait(timeout=max(0., _timeout_heap[0][0]-time.monotonic()))

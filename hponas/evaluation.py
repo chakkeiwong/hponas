@@ -119,10 +119,16 @@ class StudyDeclaration:
     tuning_seeds: tuple[int, ...] = (0, 1)
     final_seeds: tuple[int, ...] = (1000, 1001)
     opt_out_reason: str | None = None
+    streaming_steps: tuple[float, ...] = ()
 
     def __post_init__(self):
         for key in ("objective_id", "model_id", "data_id", "protocol_id"):
             _name(getattr(self, key))
+        if (not isinstance(self.streaming_steps, (tuple, list))
+                or any(type(s) not in (int, float) or not math.isfinite(s) or s <= 0 for s in self.streaming_steps)
+                or list(self.streaming_steps) != sorted(set(self.streaming_steps))):
+            raise ValueError('Streaming barriers must be finite, positive and strictly increasing')
+        object.__setattr__(self, 'streaming_steps', tuple(self.streaming_steps))
         for key, cls in (("objectives", EvaluationObjective), ("tuning_folds", EvaluationFold),
                          ("final_folds", EvaluationFold)):
             values = getattr(self, key)
@@ -170,7 +176,10 @@ class StudyDeclaration:
 
     @property
     def contract(self):
-        return json.loads(json.dumps({"version": 1, **asdict(self), "aggregation": "equal_fold_seed_mean",
+        declared = asdict(self)
+        if not self.streaming_steps:
+            declared.pop('streaming_steps')  # Preserve endpoint declaration identities.
+        return json.loads(json.dumps({"version": 2 if self.streaming_steps else 1, **declared, "aggregation": "equal_fold_seed_mean",
             "failure_policy": "fail_candidate", "constraint_policy": "all_repetitions",
             "preprocessing": "fit_training_only", "refit": "fit_per_declared_fold",
             "selection": "scalar_best" if len(self.objectives) == 1 else "feasible_pareto_front"}))
@@ -182,7 +191,7 @@ class StudyDeclaration:
     @classmethod
     def from_contract(cls, contract):
         """Reconstruct typed declarations without accepting altered policy tags."""
-        values = {field.name:contract[field.name] for field in fields(cls)}
+        values = {field.name:contract[field.name] for field in fields(cls) if field.name in contract}
         for key, kind in (('objectives',EvaluationObjective),('tuning_folds',EvaluationFold),
                           ('final_folds',EvaluationFold)):
             values[key] = tuple(kind(**row) for row in values[key])
@@ -232,11 +241,11 @@ class EvaluationController:
         if ('evaluation' not in parameters
                 or parameters['evaluation'].kind == inspect.Parameter.POSITIONAL_ONLY):
             raise ValueError("Declared objectives must accept an explicit evaluation context")
-        if 'reporter' in parameters:
-            raise ValueError("Declared repeated evaluation currently requires endpoint objectives")
+        if ('reporter' in parameters) != bool(self.declaration.streaming_steps):
+            raise ValueError('Declared streaming requires a reporter and explicit streaming_steps barriers')
         if ('seed' not in parameters or parameters['seed'].kind == inspect.Parameter.POSITIONAL_ONLY):
             raise ValueError("Declared objectives must accept the assigned seed explicitly")
-        if continuation == 'resume' and any(k not in parameters or parameters[k].kind == inspect.Parameter.POSITIONAL_ONLY
+        if (continuation == 'resume' or self.declaration.streaming_steps) and any(k not in parameters or parameters[k].kind == inspect.Parameter.POSITIONAL_ONLY
                                             for k in ('checkpoint', 'resume_from')):
             raise ValueError("Resumed declared objectives require checkpoint and resume_from")
 
@@ -246,11 +255,11 @@ class EvaluationController:
         return [(fold, seed, f'{trial.trial_id}_{role}_{i}') for i, (fold, seed) in
                 enumerate((fold, seed) for fold in folds for seed in seeds)]
 
-    def aggregate(self, trial, rows, *, cancelled=False):
+    def aggregate(self, trial, rows, *, cancelled=False, role='tuning'):
         results = [Result(**row['result']) for row in rows]
         cancelled = cancelled or any(r.status == 'cancelled' for r in results)
-        valid = not cancelled and len(results) == len(self.tasks(trial, 'tuning')) and all(r.status == 'completed' and r.is_valid() for r in results)
-        metadata = {'evaluation': {'identity': self.declaration.identity, 'role': 'tuning',
+        valid = not cancelled and len(results) == len(self.tasks(trial, role)) and all(r.status == 'completed' and r.is_valid() for r in results)
+        metadata = {'evaluation': {'identity': self.declaration.identity, 'role': role,
                                   'records': deepcopy(rows), 'aggregation': 'equal_fold_seed_mean'},
                     'execution': {'elapsed_seconds': math.fsum(r.metadata.get('execution', {}).get('elapsed_seconds', 0.) for r in results),
                                   'accounting': 'lower_bound_after_interruption' if any(r.trial_id in self.state['uncertain'] for r in results) else 'measured'}}
@@ -270,19 +279,22 @@ class EvaluationController:
         checkpoints = {str(i): r.metadata.get('checkpoint') for i, r in enumerate(results)}
         if valid and all(v is not None for v in checkpoints.values()):
             metadata['checkpoint'] = checkpoints
+        pruned = any(r.status == 'pruned' for r in results)
         return Result(trial.trial_id, value, math.fsum(r.cost for r in results), trial.fidelity,
-                      metadata, 'completed' if valid else 'cancelled' if cancelled else 'failed')
+                      metadata, 'completed' if valid else 'cancelled' if cancelled else 'pruned' if pruned else 'failed')
 
     def validate_record(self, result, tid, fidelity):
         execution = result.metadata.get('execution', {})
         if (result.trial_id != tid or type(result.fidelity) not in (int, float) or result.fidelity != fidelity
                 or not _nonnegative(result.cost) or not _nonnegative(execution.get('elapsed_seconds'))
                 or execution.get('accounting') not in {'measured', 'not_dispatched', 'lower_bound_after_interruption'}
-                or result.status not in {'completed', 'failed', 'timeout', 'nan', 'inf', 'cancelled'}
+                or result.status not in ({'completed', 'failed', 'timeout', 'nan', 'inf', 'cancelled'}
+                                        | ({'pruned'} if self.declaration.streaming_steps else set()))
                 or (result.status == 'completed' and not result.is_valid())):
             raise ValueError("Invalid repetition result identity, status or accounting")
         if execution['accounting'] == 'not_dispatched' and (
-                result.status != 'cancelled' or result.cost != 0 or execution['elapsed_seconds'] != 0):
+                result.status not in ({'cancelled', 'failed', 'pruned'} if self.declaration.streaming_steps else {'cancelled'})
+                or result.cost != 0 or execution['elapsed_seconds'] != 0):
             raise ValueError("Undispatched repetition cannot claim work")
         if self.spec:
             self.spec.validate_result(result)
@@ -360,6 +372,14 @@ class EvaluationController:
     def uncommitted_elapsed(self, committed):
         return math.fsum(row['result']['metadata'].get('execution', {}).get('elapsed_seconds', 0.)
                          for tid, rows in self.state['tuning'].items() if tid not in committed for row in rows)
+
+    def resource_records(self):
+        return {row['result']['trial_id']: (role, row['result']) for role in ('tuning', 'final')
+                for rows in self.state[role].values() for row in rows}
+
+    def resource_role(self, tid):
+        record = self.resource_records().get(tid)
+        return record[0] if record is not None else None
 
     def finish(self, study):
         if self.state['phase'] == 'tuning':
@@ -511,8 +531,15 @@ class EvaluationController:
         self.state = deepcopy(saved)
 
 
-def legacy_evaluation_report():
-    return {'status': 'legacy_unqualified', 'reason': 'No objective identity or protected evaluation declaration supplied'}
+def legacy_evaluation_report(reason=None):
+    return {'status': 'legacy_unqualified', 'reason': reason or 'Historical record without an evaluation declaration or legacy reason'}
+
+
+def evaluation_controller(declaration, *, maximize, spec=None):
+    if declaration.streaming_steps:
+        from hponas.evaluation_streaming import StreamingEvaluationController
+        return StreamingEvaluationController(declaration, maximize=maximize, spec=spec)
+    return EvaluationController(declaration, maximize=maximize, spec=spec)
 
 
 def evaluation_outcome(state):

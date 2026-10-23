@@ -15,7 +15,7 @@ import time
 import uuid
 
 from hponas.encoding import as_knob_space
-from hponas.evaluation import EvaluationController, legacy_evaluation_report
+from hponas.evaluation import evaluation_controller, legacy_evaluation_report
 from hponas.capabilities import admit
 from hponas.budgets import ResourceController
 from hponas.persistence import atomic_json
@@ -90,7 +90,14 @@ class Study:
         declaration=None,
         resource_budget=None,
         architecture_coordinates=(),
+        legacy_reason=None,
     ):
+        if declaration is None:
+            if not isinstance(legacy_reason, str) or not legacy_reason.strip():
+                raise ValueError('Study requires a declaration or an explicit nonempty legacy_reason')
+        elif legacy_reason is not None:
+            raise ValueError('A declared Study cannot also supply legacy_reason')
+        self.legacy_reason = legacy_reason
         self._resources = ResourceController(resource_budget) if resource_budget is not None else None
         if self._resources is not None:
             if budget is not None and (type(budget) is not int or budget != resource_budget.configurations):
@@ -195,10 +202,16 @@ class Study:
             )
         except (TypeError, ValueError):
             self._streaming_objective = False
-        self._evaluation = (EvaluationController(declaration, maximize=maximize,
+        self._evaluation = (evaluation_controller(declaration, maximize=maximize,
                             spec=getattr(self, "spec", None)) if declaration is not None else None)
         if self._evaluation is not None:
             self._evaluation.validate_callable(objective_fn, continuation=continuation)
+            if declaration.streaming_steps:
+                endpoints = getattr(scheduler, 'rungs', [scheduler.config.r_min, scheduler.config.r_max]) if scheduler else [1.]
+                if not set(endpoints) <= set(declaration.streaming_steps):
+                    raise ValueError('Declared streaming barriers must contain all scheduler endpoints')
+        if hasattr(self.searcher, 'validate_study_declaration'):
+            self.searcher.validate_study_declaration(declaration)
 
     def _event(self, kind, trial_id, **data):
         self._events.append({"kind": kind, "trial_id": trial_id, "data": data})
@@ -363,7 +376,10 @@ class Study:
             and self._elapsed() >= self.compute_budget_seconds
         )
 
-    def _on_progress(self, report):
+    def _progress_value(self, report):
+        return -report.value if self.maximize else report.value
+
+    def _on_progress(self, report, *, ledger_accounted=False):
         """Run on the study thread so scheduler, SQLite and checkpoint order agree."""
         tid = report.trial_id
         if tid not in self._pending:
@@ -374,11 +390,13 @@ class Study:
             raise ValueError("Progress identity or version differs")
         if not (trial.resume_from < report.step <= trial.fidelity):
             raise ValueError("Progress outside assigned fidelity")
-        self._live_elapsed[tid] = report.elapsed_seconds
-        self._live_cost[tid] = report.cost
+        if not ledger_accounted:
+            self._live_elapsed[tid] = report.elapsed_seconds
+            self._live_cost[tid] = report.cost
+        value = self._progress_value(report)
         cache = self._report_cache.setdefault(tid, {})
         cached = cache.get(report.step)
-        if cached and cached["value"] != report.value:
+        if cached and (cached["value"] != report.value or cached.get('metric', value) != value):
             raise ValueError("Conflicting duplicate progress value")
         applied, scheduler_decision = False, None
         if self._cap_reached():
@@ -397,7 +415,6 @@ class Study:
             # new evidence or pausing again at a rung already promoted.
             decision = ReportDecision("continue", "repeated_work")
         else:
-            value = -report.value if self.maximize else report.value
             if self.scheduler:
                 options = {"is_progress": True} if self._reference_scheduler() else {}
                 scheduler_decision = self.scheduler.report(
@@ -416,14 +433,14 @@ class Study:
                 )
             decision = ReportDecision(action)
         cache.setdefault(
-            report.step, {"value": report.value, "decision": decision.__dict__}
+            report.step, {"value": report.value, 'metric': value, "decision": decision.__dict__}
         )
         self._event(
             "progress",
             tid,
             **{k: v for k, v in report.to_dict().items() if k != "trial_id"},
             root=root,
-            normalized_value=-report.value if self.maximize else report.value,
+            normalized_value=value,
             scheduler_applied=applied,
             scheduler_decision=scheduler_decision,
             control=decision.__dict__,
@@ -685,6 +702,9 @@ class Study:
         return self.get_best_so_far() is not None
 
     def _build_result(self):
+        if hasattr(self.searcher, 'finalize_pending'):
+            self.searcher.finalize_pending()
+            self.save_checkpoint()
         best = self.get_best_so_far()
         evaluation = self.evaluation_report()
         status, reason = self._result_status(evaluation, self._stop_reason)
@@ -708,7 +728,7 @@ class Study:
 
     def evaluation_report(self):
         """Final measurements are reported here, never in the searcher's history."""
-        return self._evaluation.report() if self._evaluation is not None else legacy_evaluation_report()
+        return self._evaluation.report() if self._evaluation is not None else legacy_evaluation_report(self.legacy_reason)
 
     def resource_report(self):
         if self._resources is not None:
@@ -727,6 +747,7 @@ class Study:
         state = {
             "schema_version": 5 if self._resources is not None else 4 if self._evaluation is not None else 3,
             "evaluation": copy.deepcopy(self._evaluation.state) if self._evaluation is not None else None,
+            "legacy_reason": self.legacy_reason,
             "resources": copy.deepcopy(self._resources.state) if self._resources is not None else None,
             "admission": copy.deepcopy(self._admission),
             "study_name": self.study_name,
@@ -808,6 +829,8 @@ class Study:
             )
         if (state.get("evaluation") is not None) != (self._evaluation is not None):
             raise ValueError("Checkpoint declaration/evaluation policy differs; explicit migration required")
+        if state.get('legacy_reason') != self.legacy_reason:
+            raise ValueError('Checkpoint legacy_reason differs; explicit migration required')
         if (state["schema_version"] in (4, 5)) != (state.get("evaluation") is not None):
             raise ValueError("Checkpoint declaration schema differs")
         if ((state.get('resources') is not None) != (self._resources is not None)
@@ -915,6 +938,10 @@ class Study:
                 ):
                     raise ValueError("Invalid checkpoint progress report")
                 ReportDecision(**entry["decision"])
+                if getattr(self, '_vector_objectives', False):
+                    self.spec.validate_observation(entry.get('metric'))
+                elif entry.get('metric', -entry['value'] if maximize else entry['value']) != (-entry['value'] if maximize else entry['value']):
+                    raise ValueError('Checkpoint progress metric differs')
         for tid, trial in trials.items():
             if trial.root_trial_id is None and state["schema_version"] == 2:
                 trial.root_trial_id = roots[tid]
@@ -949,6 +976,9 @@ class Study:
         if restored_scheduler is not None and hasattr(restored_scheduler, "validate_study_snapshot"):
             restored_scheduler.validate_study_snapshot(state)
         restored_evaluation = copy.deepcopy(self._evaluation)
+        if hasattr(restored_searcher, 'validate_study_declaration'):
+            restored_searcher.validate_study_declaration(
+                restored_evaluation.declaration if restored_evaluation is not None else None)
         if restored_evaluation is not None:
             if maximize != self.maximize:
                 raise ValueError("Checkpoint evaluation direction differs")
@@ -957,6 +987,8 @@ class Study:
             restored_evaluation.restore(state["evaluation"], trials, results,
                 finished=state.get("finished", False), maximize=maximize, endpoint=endpoint,
                 cancelled=set(state.get('cancel_requested', [])))
+            if hasattr(restored_evaluation, 'validate_study_snapshot'):
+                restored_evaluation.validate_study_snapshot(state)
             if json.dumps([r.to_dict() for r in restored_searcher.history], sort_keys=True) != json.dumps(list(state['results'].values()), sort_keys=True):
                 raise ValueError('Declared searcher and Study observation ledgers differ')
             for tid, result in results.items():

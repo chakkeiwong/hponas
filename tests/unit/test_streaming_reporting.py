@@ -122,7 +122,7 @@ def test_replay_rejects_forged_progress(tmp_path, field, value):
         budget=1,
         scheduler=new_scheduler(),
         event_log=events,
-    )
+     legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     study.run()
     events.get_events(EventType.PROGRESS)[0].data[field] = value
     assert not ReplayEngine(
@@ -139,7 +139,7 @@ def test_replay_rejects_forged_completion(tmp_path):
         budget=1,
         scheduler=new_scheduler(),
         event_log=events,
-    )
+     legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     study.run()
     events.get_events(EventType.FINISH)[0].data["status"] = "failed"
     passed, message, _, _ = ReplayEngine(
@@ -161,7 +161,7 @@ def test_rejected_accounting_checkpoint_leaves_live_study_unchanged(
 ):
     study = Study(
         new_searcher(), LocalExecutor(), objective, budget=1, scheduler=new_scheduler()
-    )
+    , legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     before = copy.deepcopy(study._snapshot())
     state = copy.deepcopy(before)
     state[field] = value

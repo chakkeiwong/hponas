@@ -29,7 +29,7 @@ def test_joint_priorband_checkpoint_pending_recovery_and_replay(tmp_path):
     pending=0
     for attempt in range(100):
         target=Study(searcher(),LocalExecutor(),workload,budget=21,study_name='priorband',
-                     maximize=False,scheduler=scheduler(),continuation='resume',store=store,event_log=events)
+                     maximize=False,scheduler=scheduler(),continuation='resume',store=store,event_log=events, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
         if attempt:
             target.load_checkpoint()
         try:
@@ -55,7 +55,7 @@ def test_joint_priorband_checkpoint_pending_recovery_and_replay(tmp_path):
         assert row.objective_value==pytest.approx(float(exact(index,int(row.fidelity))),abs=1e-12)
     assert any(context.get('mixture',{}).get('inc','0')!='0' for context in target.searcher._contexts)
     baseline=Study(searcher(1000),LocalExecutor(),StreamingQuadratic(),budget=21,study_name='priorband',
-                   maximize=False,scheduler=scheduler(),continuation='resume')
+                   maximize=False,scheduler=scheduler(),continuation='resume', legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     expected=baseline.run()
     assert [(r.trial_id,r.objective_value,r.fidelity) for r in result.history]==[(r.trial_id,r.objective_value,r.fidelity) for r in expected.history]
     engine=ReplayEngine(searcher(),events,seed=0,scheduler=scheduler())
@@ -69,7 +69,7 @@ def test_joint_priorband_checkpoint_pending_recovery_and_replay(tmp_path):
 @pytest.mark.parametrize('damage', ['weights','policy','trial','default','direction','counter'])
 def test_integrated_checkpoint_identity_and_policy_corruption_refused(tmp_path,damage):
     source=Study(searcher(1000),LocalExecutor(),StreamingQuadratic(),budget=5,study_name='short',
-                 maximize=False,scheduler=scheduler(),continuation='resume')
+                 maximize=False,scheduler=scheduler(),continuation='resume', legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     source.run()
     before=deepcopy(source._snapshot())
     bad=deepcopy(before)
@@ -90,12 +90,12 @@ def test_integrated_checkpoint_identity_and_policy_corruption_refused(tmp_path,d
 def test_plain_study_requires_the_matching_scheduler():
     # Uniform admission now refuses the missing scheduler before any proposal.
     with pytest.raises(ValueError,match='matching'):
-        Study(searcher(),LocalExecutor(),StreamingQuadratic(),budget=2,maximize=False)
+        Study(searcher(),LocalExecutor(),StreamingQuadratic(),budget=2,maximize=False, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
 
 
 def test_completed_sampler_cannot_rebind_to_an_earlier_mixture():
     source=Study(searcher(1000),LocalExecutor(),StreamingQuadratic(),budget=21,
-                 maximize=False,scheduler=scheduler(),continuation='resume')
+                 maximize=False,scheduler=scheduler(),continuation='resume', legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     source.run()
     state=source.searcher.get_state()
     bad=deepcopy(state)
@@ -111,7 +111,7 @@ def test_completed_sampler_cannot_rebind_to_an_earlier_mixture():
 @pytest.mark.parametrize('damage', ['lineage','duplicate_draw','direction'])
 def test_policy_and_public_study_ledgers_must_agree(damage):
     source=Study(searcher(1000),LocalExecutor(),StreamingQuadratic(),budget=21,
-                 maximize=False,scheduler=scheduler(),continuation='resume')
+                 maximize=False,scheduler=scheduler(),continuation='resume', legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     source.run()
     state=source._snapshot()
     if damage=='lineage':

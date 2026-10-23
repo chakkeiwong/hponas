@@ -52,7 +52,7 @@ def run_one(directory, name, *, recovery=False, maximize=False, total_budget=200
     store = Store(target/'store.db')
     kwargs = dict(budget=7, maximize=maximize, study_name=name, checkpoint_dir=target,
                   event_log=EventLog(target/'events.jsonl'), store=store)
-    study = Study(make(13), LocalExecutor(), workload, **kwargs)
+    study = Study(make(13), LocalExecutor(), workload, **kwargs, legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
     start, boundary = time.monotonic(), None
     if recovery:
         for _ in range(2):
@@ -60,7 +60,7 @@ def run_one(directory, name, *, recovery=False, maximize=False, total_budget=200
             study._accept(study.executor.execute(study.trials[tid], workload))
         study._new_trial(); study.save_checkpoint()
         boundary = deepcopy(study._snapshot())
-        restored = Study(make(987), LocalExecutor(), workload, **kwargs)
+        restored = Study(make(987), LocalExecutor(), workload, **kwargs, legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
         restored.load_checkpoint(target/(name+'_checkpoint.json'))
         if restored.searcher.get_state() != study.searcher.get_state():
             raise ValueError('Cost checkpoint changed pending or fitted state')

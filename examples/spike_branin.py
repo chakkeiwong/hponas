@@ -44,7 +44,7 @@ def _run_study(executor_name, seed, n_trials, output_dir):
             budget=n_trials, maximize=False, study_name="branin", store=store,
             checkpoint_dir=run_dir / "checkpoints", max_concurrent=2,
             scheduler=ASHAScheduler(ASHAConfig(eta=2, r_min=1., r_max=4.)),
-        )
+         legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
         result = study.run()
         trace = [(study.trials[r.trial_id].config.values, r.fidelity, r.objective_value)
                  for r in result.history]

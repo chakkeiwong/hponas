@@ -37,6 +37,7 @@ searcher = CategoricalPriorBandSearcher(
     space, {'eta_index': 18}, rungs=[1, 2, 4, 8], eta=2, seed=0,
 )
 study = Study(searcher, LocalExecutor(), StreamingQuadratic(), budget=21,
+              legacy_reason='Exposed deterministic quadratic method fixture',
               maximize=False, continuation='resume',
               scheduler=PriorBandScheduler(rungs=[1, 2, 4, 8], eta=2,
                                            default_at_target=True))

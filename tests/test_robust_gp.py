@@ -156,7 +156,7 @@ def test_invalid_observations_cannot_enter_fit_or_change_state(value):
 def test_study_cannot_change_direction_implicitly():
     from hponas import Study, LocalExecutor
     with pytest.raises(ValueError, match='direction'):
-        Study(RobustGPSearcher(space()), LocalExecutor(), lambda x: 1., maximize=True)
+        Study(RobustGPSearcher(space()), LocalExecutor(), lambda x: 1., maximize=True, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
 
 
 def test_study_refuses_unsupported_batch_and_scheduler_before_work():
@@ -166,13 +166,13 @@ def test_study_refuses_unsupported_batch_and_scheduler_before_work():
         searcher = RobustGPSearcher(space())
         before = searcher.state_dict()
         with pytest.raises(ValueError, match='serial'):
-            Study(searcher, LocalExecutor(), lambda x: 1., maximize=False, **controls)
+            Study(searcher, LocalExecutor(), lambda x: 1., maximize=False, **controls, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
         assert searcher.state_dict() == before
 
 
 def test_checkpoint_cannot_bypass_serial_study_contract(tmp_path):
     from hponas import Study, LocalExecutor
-    study = Study(RobustGPSearcher(space()), LocalExecutor(), lambda x: 1., maximize=False)
+    study = Study(RobustGPSearcher(space()), LocalExecutor(), lambda x: 1., maximize=False, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     before = deepcopy(study._snapshot())
     changed = deepcopy(before)
     changed['max_concurrent'] = 2

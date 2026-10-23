@@ -21,13 +21,19 @@ ROSTERS = {
         'tests/integration/test_postgres_workers.py',
         'tests/integration/test_declared_postgres.py',
     ),
-    'ray': ('tests/integration/test_ray_streaming.py', 'tests/integration/test_declared_ray.py'),
+    'ray': (
+        'tests/integration/test_ray_streaming.py',
+        'tests/integration/test_declared_ray.py::test_live_declared_ray_metered_artifact_roles_and_resume',
+    ),
+    'ray-repeated': (
+        'tests/integration/test_declared_ray.py::test_live_ray_repeated_barriers_preserve_vector_and_scalar_roles',
+    ),
 }
 
 
 def mode_from_args(args):
     if len(args) != 1 or args[0] not in ROSTERS:
-        raise ValueError('Pass exactly postgres or ray; no other arguments accepted')
+        raise ValueError('Pass exactly one reviewed local mode: postgres, ray, ray-repeated')
     return args[0]
 
 
@@ -75,19 +81,27 @@ def main():
                 pass
 
     def run(label, command, env, seconds):
+        child_started = time.monotonic()
+        code = None
+        timed_out = False
         with (out/(label+'.log')).open('x') as log:
             process = subprocess.Popen(command,cwd=ROOT,env=env,stdout=log,stderr=subprocess.STDOUT)
             limit = min(deadline,time.monotonic()+seconds)
-            while True:
-                remember()
-                if time.monotonic() >= limit:
-                    raise TimeoutError(label+' exceeded its fixed deadline')
-                try:
-                    code = process.wait(timeout=min(.5,max(.01,limit-time.monotonic())))
-                    break
-                except subprocess.TimeoutExpired:
-                    continue
-        steps.append({'label':label,'returncode':code})
+            try:
+                while True:
+                    remember()
+                    if time.monotonic() >= limit:
+                        timed_out = True
+                        raise TimeoutError(label+' exceeded its fixed deadline')
+                    try:
+                        code = process.wait(timeout=min(.5,max(.01,limit-time.monotonic())))
+                        break
+                    except subprocess.TimeoutExpired:
+                        continue
+            finally:
+                steps.append({'label':label,'returncode':code,'timed_out':timed_out,
+                              'elapsed_seconds':time.monotonic()-child_started,
+                              'command':command})
         if code:
             raise RuntimeError(label+' failed with code '+str(code))
 
@@ -125,7 +139,8 @@ def main():
                     if time.monotonic() >= ready_limit:
                         raise TimeoutError('Owned PostgreSQL server startup')
                     time.sleep(.2)
-        run('tests',[sys.executable,'-m','pytest','-q','-p','no:cacheprovider',
+        run('tests',[sys.executable,'-m','pytest','-vv','-p','no:cacheprovider',
+                     '-o','faulthandler_timeout=60','--durations=10',
                      *ROSTERS[mode],'--junitxml='+str(out/'tests.xml')],env,235)
         counts = test_counts(out/'tests.xml')
         if not counts['tests'] or any(counts[k] for k in ('skipped','failure','error')):

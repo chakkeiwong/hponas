@@ -3,6 +3,7 @@
 import copy
 import multiprocessing
 import os
+import time
 import uuid
 
 import pytest
@@ -191,7 +192,18 @@ def test_second_coordinator_is_fenced_and_monitor_stays_read_only(database):
             peer.load_study_snapshot("snap")
         with pytest.raises(CoordinatorBusy):
             peer.save_study_snapshot(snapshot())
+        token = owner.coordinator_token("snap")
         owner.close()
+        # Client close sends Terminate; PostgreSQL releases session locks when
+        # its backend exits. Observe that boundary before testing a new owner.
+        deadline = time.monotonic() + 5
+        while peer._connection.execute(
+            "SELECT 1 FROM pg_stat_activity WHERE pid=%s "
+            "AND backend_start=%s::timestamptz",
+            (token.backend_pid, token.backend_start),
+        ).fetchone() is not None:
+            assert time.monotonic() < deadline, "Closed owner session did not exit"
+            time.sleep(0.01)
         with pytest.raises(ValueError, match="Load"):
             peer.save_study_snapshot(snapshot())
         peer.load_study_snapshot("snap")
@@ -328,7 +340,7 @@ def test_native_failed_evaluation_is_durable_and_resumable(database):
             objective,
             budget=1,
             study_name="failed",
-            store=store,
+            store=store, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         with pytest.raises(IncompleteStudyError):
             study.run()
@@ -341,7 +353,7 @@ def test_native_failed_evaluation_is_durable_and_resumable(database):
             objective,
             budget=1,
             study_name="failed",
-            store=store,
+            store=store, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         study.load_checkpoint()
         with pytest.raises(IncompleteStudyError):
@@ -384,7 +396,7 @@ def test_native_study_restart_does_not_rerun_committed_training(database):
             budget=4,
             maximize=False,
             study_name="native",
-            store=store,
+            store=store, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         outcome = study.run()
         assert len(updates) == 16
@@ -397,7 +409,7 @@ def test_native_study_restart_does_not_rerun_committed_training(database):
             budget=4,
             maximize=False,
             study_name="native",
-            store=store,
+            store=store, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         resumed.load_checkpoint()
         assert resumed.run().best_value == outcome.best_value

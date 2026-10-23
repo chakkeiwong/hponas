@@ -166,7 +166,7 @@ def test_unqualified_joint_domain_refused_before_initial_design(domain_factory):
     with pytest.raises(ValueError): source.suggest_batch(2)
     assert source.get_state()==before
     with pytest.raises(ValueError):
-        Study(source,LocalExecutor(),lambda c:pytest.fail('unqualified domain dispatched'),max_concurrent=2)
+        Study(source,LocalExecutor(),lambda c:pytest.fail('unqualified domain dispatched'),max_concurrent=2, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
 
 
 def test_warm_wrapper_preserves_queue_without_claiming_joint_support():
@@ -193,7 +193,7 @@ def test_public_study_pending_batch_resume_matches_uninterrupted(tmp_path,crash_
     domain=SearchSpace([Knob('x','ordinal',(0,5))])
     def make(fn):
         return Study(GPSearcher(domain,seed=21,initial_random_samples=2),LocalExecutor(),fn,
-            budget=6,maximize=False,max_concurrent=2,study_name='joint',checkpoint_dir=tmp_path)
+            budget=6,maximize=False,max_concurrent=2,study_name='joint',checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     expected=make(lambda c:(c['x']-2)**2).run()
     calls=[]
     def crash(config,trial_id):

@@ -75,10 +75,10 @@ def test_checkpoint_policy_mismatches_have_precise_atomic_refusals(tmp_path, cas
         source = study(objective_fn=metered_objective, resource_budget=budgeted())
     if case in {'plain_into_resource', 'resource_schema'}:
         target = study(objective_fn=metered_objective, resource_budget=budgeted())
-    if case == 'legacy_into_declared': source = study(declaration=None, objective_fn=lambda c: 0.)
+    if case == 'legacy_into_declared': source = study(declaration=None, legacy_reason='Explicit legacy-policy counterexample', objective_fn=lambda c: 0.)
     if case in {'declared_into_legacy', 'legacy_schema'}:
-        target = study(declaration=None, objective_fn=lambda c: 0.)
-    if case == 'legacy_schema': source = study(declaration=None, objective_fn=lambda c: 0.)
+        target = study(declaration=None, legacy_reason='Explicit legacy-policy counterexample', objective_fn=lambda c: 0.)
+    if case == 'legacy_schema': source = study(declaration=None, legacy_reason='Explicit legacy-policy counterexample', objective_fn=lambda c: 0.)
     state = source._snapshot()
     if case == 'declared_schema': state['schema_version'] = 3
     if case == 'legacy_schema': state['schema_version'] = 4
@@ -372,7 +372,7 @@ def test_opt_out_and_legacy_are_explicit_and_not_upgradeable(tmp_path):
     source = study(declaration=d)
     assert source.run().evaluation['status'] == 'opted_out'
     assert source.evaluation_report()['opt_out_reason'] == d.opt_out_reason
-    legacy = study(declaration=None, objective_fn=lambda c: c['x'])
+    legacy = study(declaration=None, legacy_reason='Explicit legacy-policy counterexample', objective_fn=lambda c: c['x'])
     assert legacy.run().evaluation['status'] == 'legacy_unqualified'
     with pytest.raises(ValueError, match='explicit migration'):
         study().load_checkpoint(checkpoint(tmp_path,legacy._snapshot()))
@@ -740,6 +740,43 @@ def test_elapsed_limits_have_explicit_overshoot_and_independent_final_cap():
     assert result.resources['tuning']['seconds_overshoot'] == 1.
     assert result.resources['final']['elapsed_seconds'] == 4.
     assert result.resources['final']['seconds_overshoot'] == 1.
+    assert result.total_elapsed_seconds == 14.
+    assert result.evaluation['final_elapsed_seconds'] == 4.
+
+
+def test_partial_final_time_cap_cannot_report_a_completed_study():
+    class Clocked(LocalExecutor):
+        def execute(self, trial, fn, **kwargs):
+            result = super().execute(trial, fn, **kwargs)
+            result.metadata['execution']['elapsed_seconds'] = 2.
+            return result
+    result = study(objective_fn=metered_objective, executor=Clocked(),
+                   resource_budget=budgeted(final_seconds=1.)).run()
+    assert result.status == result.reason == 'final_evaluation_failed'
+    assert result.evaluation['outcome'] == 'failed'
+    assert result.resources['final']['attempts'] == 1
+    assert result.total_elapsed_seconds == 26.
+
+
+@pytest.mark.parametrize('budgeted_run', [False, True])
+def test_public_resource_report_and_checkpoint_are_independent_nested_values(budgeted_run):
+    options = dict(objective_fn=metered_objective, resource_budget=budgeted()) if budgeted_run else {}
+    source = study(**options)
+    source.run()
+    before = deepcopy(source._snapshot())
+    report = source.resource_report()
+    assert report['configurations_proposed'] == 3
+    assert report['tuning_evaluations'] == 3
+    assert report['admission'] == before['admission']
+    report['admission']['architecture_coordinates'].append('unregistered')
+    report['admission']['contract']['objectives'] = 'corrupted'
+    checkpoint = source._snapshot()
+    checkpoint['admission']['architecture_coordinates'].append('unregistered')
+    checkpoint['evaluation']['tuning'].clear()
+    if budgeted_run:
+        checkpoint['resources']['attempts'].clear()
+        report['attempts'].clear()
+    assert source._snapshot() == before
 
 
 def test_resource_declaration_conflicts_refused_before_execution():
@@ -749,11 +786,31 @@ def test_resource_declaration_conflicts_refused_before_execution():
              dict(resource_budget=budgeted(final_work=5.)),
              dict(resource_budget=budgeted(worker_capacity=1),max_concurrent=2),
              dict(resource_budget=budgeted(),compute_budget_seconds=2.),
-             dict(resource_budget=budgeted(),declaration=None)]
+             dict(resource_budget=budgeted(),declaration=None,legacy_reason='Resource declaration rejection fixture')]
     for change in cases:
         with pytest.raises(ValueError): study(**change)
     with pytest.raises(ValueError, match='maximum frozen selection'):
         vector_study(resource_budget=budgeted(configurations=6,work_unit='integer_operations',final_work=6.))
+
+
+@pytest.mark.parametrize('budget_options,study_options,message', [
+    ({'configurations': 2}, {}, 'Configuration count differs from resource budget'),
+    ({'tuning_seconds': 1.}, {'compute_budget_seconds': 2.},
+     'Tuning time cap differs from resource budget'),
+])
+def test_resource_conflicts_name_the_exact_repair_needed(budget_options, study_options, message):
+    with pytest.raises(ValueError) as raised:
+        study(resource_budget=budgeted(**budget_options), **study_options)
+    assert str(raised.value) == message
+
+
+def test_resource_budget_refuses_executor_owned_retries_before_dispatch():
+    class RetryingExecutor(LocalExecutor):
+        max_retries = 1
+    with pytest.raises(ValueError) as raised:
+        study(resource_budget=budgeted(), executor=RetryingExecutor())
+    assert str(raised.value) == ('StudyBudget requires executor max_retries=0; '
+                                 'reserve each retry through Study recovery')
 
 
 @pytest.mark.parametrize('field', ['contract', 'measured_work', 'elapsed', 'attempt_id', 'missing', 'raw_index', 'admission'])

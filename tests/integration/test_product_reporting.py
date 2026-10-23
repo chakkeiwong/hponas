@@ -98,7 +98,7 @@ def test_streaming_curves_checkpoint_transfer_and_replay_export(tmp_path):
     events=EventLog(tmp_path/'events.jsonl'); workload=StreamingQuadratic()
     with closing(Store(tmp_path/'stream.sqlite')) as store:
         study=Study(searcher(),LocalExecutor(),workload,budget=4,max_concurrent=4,
-                    maximize=False,continuation='resume',scheduler=scheduler,event_log=events,store=store)
+                    maximize=False,continuation='resume',scheduler=scheduler,event_log=events,store=store, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
         result=study.run()
         report=store.read_report(study.study_name)
         assert report==study.report()

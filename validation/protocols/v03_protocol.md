@@ -1,8 +1,8 @@
 # V03 Protocol: complete mutation conformance
 
-**Version:** 2.20
+**Version:** 2.29
 **Phase:** Tier 0 deterministic veto
-**Reconciled:** 2026-10-16, prospectively before final product qualification
+**Reconciled:** 2026-10-19 Asia/Shanghai, prospectively for reviewed runtime admission
 
 This phase protocol reconciles the original markdown, DRAFT register and the
 2026-09-26 execution profile. Their immutable snapshots and diagnostic failures
@@ -17,7 +17,56 @@ survivors, modules or abnormal outcomes are removed to improve the score.
 D-PROTOCOL remains open for other phases. This finite deterministic check does
 not assert a general probability of detecting real software defects.
 
+## Prospective 2.29 calibration resource amendment
+
+Only future allocations use a 2,700-second complete calibration ceiling.
+Admission02 completed the full statistics pass and both fixed mutation
+controls, but its mandatory four-case clean-order check exhausted the shared
+1,500-second deadline. That failed result remains unchanged. The measured
+engineering allocation is 1.5 times the sum of the retained full elapsed time,
+all four separately measured order durations and 120 seconds of overhead,
+rounded up to 300 seconds. This is a resource ceiling, not a confidence bound.
+
+The 36,000-second campaign ceiling, every control, ordered test, mutant,
+selection rule, score threshold, timeout formula and equivalence rule remain
+unchanged. The independent admission guard is 2,850 seconds; a new exclusive
+run is required and no partial calibration may be imported. The current
+plan and raw diagnosis are calibration-repair-plan-01.md and
+calibration-failure-analysis-01.json in gap-qualification-repair-01.
+Historical sections retain their original limits. No campaign is allocated.
+
+## Historical 2.28 execution amendment
+
+Only future allocations use the 36,000-second internal campaign ceiling and
+the exact reviewed mutmut-evidence-v6 overlay. Its complete ordered Python
+file inventory and hashes are pinned in the executable checker and register;
+missing, extra, changed or stale tooling refuses before execution and during
+reconstruction. Execution freeze v8 retains these identities after temporary
+workspace removal. Coordinator descendant drainage and pidfd-bound timeout
+cancellation passed owned-process and unrelated-sentinel controls on Linux x86_64.
+
+The measured engineering stress scenario is 33,827.53 seconds with calibration;
+36,000 seconds is a resource ceiling, not a confidence guarantee. The 1,500-second
+calibration cap, 24 CPU slots, 64-GiB independent guard, 52-GiB child reservations
+and disk protections remain. Keep all mutants and selected tests, original
+ordering, per-mutant timeouts, thresholds and equivalence rules. Each allocation
+permits one official run, no automatic retry and no partial-result import.
+This amendment allocates no campaign. The consumed six-hour run remains
+INCONCLUSIVE. Historical sections below retain their original version limits.
+The prospective plan is integration-plan-01.md under
+docs/program/evidence/2026-10-18/gap-qualification-repair-01/.
+
 ## Population and frozen inputs
+
+Version 2.27 prospectively includes the explicitly selected installation-test
+support script in the copied and hash-bound test inputs. Gap-governance unit
+counterexamples use disposable self-contained documents; actual master and
+evidence checks remain in the mandatory program/operation gates. A bounded
+isolated-workspace check exercises those tests before scientific admission.
+This repairs demonstrated missing-input failures without skipping tests,
+narrowing their selection, changing mutation operators or thresholds, adding
+equivalence rules, or allocating a campaign. Prior protocol/source evidence
+remains immutable.
 
 Use mutmut **3.8.0**, the exact installed tool source/dependency manifest,
 `pyproject.toml`, implementation, tests and protocol hashes recorded before
@@ -83,6 +132,29 @@ of the refactored proposal logic. The cumulative proof argument is
 rules and re-establishes the four changed source contexts prospectively.
 Unknown/missing/overlapping ownership still refuses; old 2.17 evidence remains
 valid only for its recorded source and scope.
+
+Version 2.21 prospectively assigns `hponas.evaluation_streaming` to GAP-01.
+Version 2.22 adds `hponas.population_adapter` to the same ownership. Version
+2.23 adds `hponas.local_service` and `hponas.backup_security`. Version 2.24
+adds the bounded opt-in `hponas.rgpe` transfer implementation. Version 2.25
+adds the shipped independent caller examples in `hponas.quickstart`. These
+modules require independent finite behavior, failure-accounting and recovery
+qualification under the gap contract. The twenty-four mutation modules,
+operators, selection, equivalence rules, thresholds, timeouts and execution
+resources remain unchanged. The ownership register must enumerate each added
+module before final source freeze; unassigned or missing modules still refuse.
+Historical 2.20 evidence remains immutable and does not qualify changed source.
+
+Version 2.26 prospectively re-establishes changed TPE replay/bookkeeping,
+cancelled aggregation, endpoint/streaming/resource restoration and falsey
+truth-projection contexts in the cumulative argument
+`docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_18.md`. Preserve all original
+proof fixtures and bind explicit successor-control lineage. Candidate-source
+preflight is separate from historical-fixture tests and must pass before
+calibration or worker allocation. All twenty-five rules, twenty-four mutation
+modules, operators, population, selection, scientific thresholds, critical
+veto, timeout formula and resource caps remain. This amendment allocates no
+campaign and changes no earlier result.
 
 Version 2.9 lists those same 24 files explicitly in `source_paths`, preventing
 new later-phase modules from accidentally entering through a directory glob.

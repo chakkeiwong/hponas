@@ -55,13 +55,13 @@ def test_completed_resume_executes_no_more_work(tmp_path):
         budget=4,
         study_name="done",
         checkpoint_dir=tmp_path,
-    )
+     legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = study.run()
     resumed = Study(
         RandomSearcher(space(), seed=99),
         LocalExecutor(),
         lambda c: pytest.fail("repeated completed trial"),
-    )
+     legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     resumed.load_checkpoint(tmp_path / "done_checkpoint.json")
     other = resumed.run()
     assert values(resumed) == values(study)
@@ -89,7 +89,7 @@ def test_crash_inside_batch_preserves_pending_configs_and_store(tmp_path):
         checkpoint_dir=tmp_path,
         store=store,
         max_concurrent=3,
-    )
+     legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     with pytest.raises(KeyboardInterrupt):
         study.run()
     assert len(study.results) == 1
@@ -105,7 +105,7 @@ def test_crash_inside_batch_preserves_pending_configs_and_store(tmp_path):
         resumed_objective,
         store=store,
         study_name="crash",
-    )
+     legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     resumed.load_checkpoint()
     resumed.run()
     reference = Study(
@@ -115,7 +115,7 @@ def test_crash_inside_batch_preserves_pending_configs_and_store(tmp_path):
         budget=5,
         study_name="crash",
         max_concurrent=3,
-    )
+     legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     reference.run()
     assert values(resumed) == values(reference)
     assert "crash_trial_0" not in dispatched
@@ -137,7 +137,7 @@ def test_gp_replay_crosses_warmup_and_preserves_rng(tmp_path):
         budget=4,
         maximize=False,
         event_log=events,
-    )
+     legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     before = torch.random.get_rng_state().clone()
     study.run()
     assert torch.equal(before, torch.random.get_rng_state())
@@ -273,7 +273,7 @@ def test_scheduler_study_replay_includes_empty_promotion_rounds(tmp_path):
         scheduler=scheduler,
         max_concurrent=4,
         event_log=log,
-    )
+     legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = study.run()
     assert result.best_value == max(
         r.objective_value for r in result.history if r.fidelity == 4
@@ -321,12 +321,12 @@ def test_tpe_pending_resume_and_maximize_direction():
     )
     source = TPESearcher(mixed, seed=4)
     configs = source.propose(12)
-    for config in configs[:10]:
-        source.observe({"config": config, "value": float(config.get("x", 0.0))})
+    for number, config in enumerate(configs[:10]):
+        source.observe({"config": config, "value": float(config.get("x", 0.0)), 'trial_number': number})
     restored = TPESearcher(mixed, seed=99)
     restored.load_state_dict(json.loads(json.dumps(source.state_dict())))
     for target in (source, restored):
-        target.observe({"config": configs[10], "value": 0.4})
+        target.observe({"config": configs[10], "value": 0.4, 'trial_number': 10})
     assert restored.propose(3) == source.propose(3)
     adapter = LegacySearcherAdapter(TPESearcher(space(), seed=1), maximize=True)
     adapter.trials["a"] = adapter.suggest()

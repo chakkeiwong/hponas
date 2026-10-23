@@ -188,18 +188,18 @@ def test_duplicate_observation_refusal_keeps_pending_cost_and_base_state():
 def test_study_controls_direction_failed_work_budget_and_pending_checkpoint(tmp_path):
     for options in [{'max_concurrent': 2}, {'scheduler': ASHAScheduler(ASHAConfig())}]:
         with pytest.raises(ValueError, match='sequential'):
-            Study(search(), LocalExecutor(), lambda c: 1., **options)
+            Study(search(), LocalExecutor(), lambda c: 1., **options, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     calls = []
     def objective(config):
         calls.append(config)
         return {'value': math.nan if len(calls) == 2 else quadratic(config['eta'], 8)['value'], 'cost': 8.}
     source = Study(search(total_budget=24), LocalExecutor(), objective,
                    budget=20, maximize=False, study_name='cost', checkpoint_dir=tmp_path,
-                   event_log=EventLog(tmp_path/'events.jsonl'))
+                   event_log=EventLog(tmp_path/'events.jsonl'), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     source._new_trial(); source.save_checkpoint()
     resumed = Study(search(seed=33, total_budget=24), LocalExecutor(), objective,
                     budget=20, maximize=False, study_name='cost', checkpoint_dir=tmp_path,
-                    event_log=EventLog(tmp_path/'events.jsonl'))
+                    event_log=EventLog(tmp_path/'events.jsonl'), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     resumed.load_checkpoint(tmp_path/'cost_checkpoint.json')
     assert resumed.searcher.get_state() == source.searcher.get_state()
     outcome = resumed.run()
@@ -209,7 +209,7 @@ def test_study_controls_direction_failed_work_budget_and_pending_checkpoint(tmp_
     assert s.records[1].kind == 'unmodeled'
     assert s._trace[0]['objective_observation']['value'] == -outcome.history[0].objective_value
     final = Study(search(total_budget=24), LocalExecutor(), objective,
-                  budget=20, maximize=False, study_name='cost', checkpoint_dir=tmp_path)
+                  budget=20, maximize=False, study_name='cost', checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     final.load_checkpoint(tmp_path/'cost_checkpoint.json')
     assert final.run().total_cost == 24 and len(calls) == 3
     replay = LegacySearcherAdapter(search(total_budget=24), maximize=False)
@@ -254,7 +254,7 @@ def test_explicit_cost_only_mode_and_finite_mixed_space_exhaustion():
     with pytest.raises(TypeError, match='log_expected_improvement'):
         CostAwareProposalSearcher(mixed, RandomSearcher(mixed), total_budget=100)
     s = CostAwareProposalSearcher(mixed, RandomSearcher(mixed), total_budget=100, cost_only=True, candidate_count=4)
-    study = Study(s, LocalExecutor(), lambda c: {'value': 1., 'cost': 1.}, budget=10)
+    study = Study(s, LocalExecutor(), lambda c: {'value': 1., 'cost': 1.}, budget=10, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     result = study.run()
     assert result.n_trials == 3 and result.reason == 'search_space_exhausted'
 

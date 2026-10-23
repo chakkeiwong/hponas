@@ -24,7 +24,7 @@ def run(directory):
             traces.append({'rate': rate, 'step': step, 'state': state.tolist()})
         return {'value': float(state@state/2), 'cost': 8.}
     study = Study(searcher, LocalExecutor(), objective, budget=7, maximize=False,
-                  study_name='robust-quadratic', checkpoint_dir=directory)
+                  study_name='robust-quadratic', checkpoint_dir=directory, legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
     result = study.run()
     summary = {'trials': result.n_trials, 'best_loss': result.best_value,
         'physical_updates': len(traces), 'accounted_updates': result.total_cost,

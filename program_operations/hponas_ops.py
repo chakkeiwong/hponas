@@ -37,6 +37,12 @@ TESTS = {
         'tests/unit/test_rung_diagnostics.py',
         'tests/unit/test_capability_routing.py',
         'tests/integration/test_declared_evaluation.py',
+        'tests/integration/test_declared_streaming.py',
+        'tests/integration/test_streaming_scheduler.py',
+        'tests/unit/test_streaming_reporting.py',
+        'tests/unit/test_study_progress_controls.py',
+        'tests/unit/test_explicit_evaluation_policy.py',
+        'tests/integration/test_tpe_scheduler.py',
         'tests/unit/test_study_configuration_contract.py',
         'tests/unit/test_study_checkpoint_contract.py',
         'tests/unit/test_study_checkpoint_additional.py',
@@ -133,10 +139,20 @@ def commands(operation):
     if operation in TESTS:
         result = [[PYTHON, '-m', 'pytest', '-q', '-p', 'no:cacheprovider', *TESTS[operation]]]
         if operation == 'test-search':
+            # Retain every reviewed file, in order, under the existing 300s cap.
+            # The growing single group reached its bound on 18 October 2026.
+            roster = TESTS[operation]
+            contract_boundary = roster.index('tests/validation/test_v03_phase_contract.py')
+            boundary = roster.index('tests/unit/test_gp_joint_batch.py')
+            result = [[PYTHON, '-m', 'pytest', '-q', '-p', 'no:cacheprovider', *part]
+                      for part in (roster[:contract_boundary], roster[contract_boundary:boundary], roster[boundary:])]
             result.insert(0, ['/usr/bin/python3', '-I', str(ROOT / 'program_operations/check_collection.py')])
+            result.insert(1, ['/usr/bin/python3', '-I', str(ROOT / 'program_operations/check_proof_context.py')])
         mode = {'test-study':'ray','test-store':'postgres'}.get(operation)
         if mode:
             result.append([PYTHON,str(ROOT/'program_operations/local_services.py'),mode])
+        if operation == 'test-study':
+            result.append([PYTHON,str(ROOT/'program_operations/local_services.py'),'ray-repeated'])
         return result
     scripts = {'check-rules': 'check_approval_rules.py', 'test-operations': 'test_operations.py'}
     if operation in scripts:

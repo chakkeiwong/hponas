@@ -994,9 +994,16 @@
         "Version 2.16: retain the clean host stats child exit and Ray fatal terminal-task cancellation log. Legacy executor cleanup now cancels only pending tasks in a live cluster. The 31 controlled/recovery and five real-Ray conformance checks pass. Refresh exact generated population, source, current installation, clean calibration, timing eligibility and affected local-operation evidence. Preserve the 24-module scope, selected-test rule, scientific thresholds, timeout formula and resource caps.",
         "Version 2.17: replace the mandatory duplicate timing census with prospective guarded once-only admission after descendant/guard controls, current complete calibration, installation, local-impact continuity, protocol refusal checks and program checks. Prior projections remain uncertain engineering evidence; no timing guarantee or favorable outcome reuse is inferred. Preserve all population, test, timeout, scientific and resource rules. A failed or incomplete allocation requires repair, not automatic retry.",
         "Version 2.19: retain incomplete final03 and all original outcomes; add public Study budget, proposal, cancellation, role and reporting contracts, and prospectively enable only the source-bound cancelled-result reconstruction lemma. The two exact rewrites preserve already-cancelled canonical scalar/vector aggregates. Pin Study, evaluation, vector-study, vector-specification and types source; refuse nearby AST changes and stale dependencies. No population, selection, operator, threshold, timeout or resource change; successor allocation remains separate.",
-        "Version 2.20: preserve recovered complete final04 FAIL and all 168 diagnostic outcomes. Add precise public GP/checkpoint/persistence boundary tests and four source-bound semantic rules for an already-admitted GP guard, one-element acquisition view, isolated concrete controller restoration and falsey restore defaults. The twelve exact rewrites require pinned source/dependencies/runtime and negative controls. No module, operator, selection, threshold, timeout or resource change; prospective complete qualification remains separate."
+        "Version 2.20: preserve recovered complete final04 FAIL and all 168 diagnostic outcomes. Add precise public GP/checkpoint/persistence boundary tests and four source-bound semantic rules for an already-admitted GP guard, one-element acquisition view, isolated concrete controller restoration and falsey restore defaults. The twelve exact rewrites require pinned source/dependencies/runtime and negative controls. No module, operator, selection, threshold, timeout or resource change; prospective complete qualification remains separate.",
+        "Version 2.21: prospectively assign hponas.evaluation_streaming to GAP-01 while preserving all 24 mutation modules and the scientific/execution rules. Prior V03 evidence remains immutable and does not qualify the changed source.",
+        "Version 2.22: add hponas.population_adapter to GAP-01 ownership alongside evaluation_streaming; preserve mutation population, operators, selection, thresholds, timeouts, resources and prior evidence scope.",
+        "Version 2.23: add hponas.local_service and hponas.backup_security to GAP-01 finite behavioral ownership; preserve the 24 mutation modules and every scientific/execution rule.",
+        "Version 2.24: add hponas.rgpe to GAP-01 finite behavioral ownership; preserve the 24 mutation modules, population rules, operators, selection, scientific thresholds, timeouts and resource rules.",
+        "Version 2.25: add the shipped independent hponas.quickstart examples to GAP-01 finite behavioral ownership; preserve all 24 mutation modules and every scientific/execution rule.",
+        "Version 2.26: prospectively re-establish current-source TPE replay/bookkeeping, cancelled aggregation, endpoint/streaming/resource restore and falsey projection proof contexts. Preserve all historical examples with explicit successor-control lineage; add actual-source preflight and adjacent refusal controls. Keep all 25 rule names, 24 mutation modules, operators, population, selection, numerical thresholds, critical policy, timeout and resource rules unchanged. This amendment allocates no campaign.",
+        "Version 2.27: copy and bind the explicitly selected installation-test support script; make gap-governance unit counterexamples independent of mutable checkout evidence while retaining real-register checks in mandatory program and operation gates. Add bounded actual isolated-input verification before admission. No test-selection exclusion, operator, module, threshold, equivalence, timeout or resource change; no campaign allocation."
       ],
-      "version": "2.20",
+      "version": "2.29",
       "scope_contract": "fresh_complete_mutation_population_v2",
       "decision_rule": {
         "overall_minimum": 0.9,
@@ -1006,7 +1013,7 @@
         "minimum_mutants": 100,
         "timeout_maximum_fraction": 0.2,
         "abnormal_or_unchecked": "INCONCLUSIVE",
-        "equivalent_policy": "Only the twenty-five listed equivalence_rules under exact source, companion-source and runtime-bound domains in MUTATION_EQUIVALENCE_LEMMAS_2026_10_16.md. Verify actual generated original/mutated functions. Unknown survivors remain; maximum fraction 0.05.",
+        "equivalent_policy": "Only the twenty-five listed equivalence_rules under exact source, companion-source and runtime-bound domains in MUTATION_EQUIVALENCE_LEMMAS_2026_10_18.md. Verify actual generated original/mutated functions. Unknown survivors remain; maximum fraction 0.05.",
         "equivalence_rules": [
           "builtin_nan_case_v1",
           "full_population_slice_v1",
@@ -1109,7 +1116,13 @@
           "hponas.budgets": "PRD-01",
           "hponas.capabilities": "PRD-01",
           "hponas.diagnostics": "PRD-01",
-          "hponas.reporting": "PRD-01"
+          "hponas.reporting": "PRD-01",
+          "hponas.evaluation_streaming": "GAP-01",
+          "hponas.population_adapter": "GAP-01",
+          "hponas.local_service": "GAP-01",
+          "hponas.backup_security": "GAP-01",
+          "hponas.rgpe": "GAP-01",
+          "hponas.quickstart": "GAP-01"
         },
         "import_facades": [
           "hponas.__init__",
@@ -1120,8 +1133,8 @@
       "execution_resources": {
         "workers": 24,
         "cpu_slots": "distinct_inherited_cpu_per_live_child",
-        "wall_seconds": 21600,
-        "calibration_wall_seconds": 1500,
+        "wall_seconds": 36000,
+        "calibration_wall_seconds": 2700,
         "scheduler": {
           "kind": "v03_measured_resource_admission_v1",
           "max_workers": 24,
@@ -1179,7 +1192,149 @@
         "automatic_retry": false,
         "prior_scientific_outcomes_reused": false,
         "incomplete_or_resource_intervention": "INCONCLUSIVE_REPAIR_REQUIRED"
-      }
+      },
+      "tool_source_manifest": [
+        {
+          "relative_path": "__init__.py",
+          "sha256": "e907533ddfa85ae95a5669993fe759bc08ef00a21658336202202d1e1cb61d6d"
+        },
+        {
+          "relative_path": "__main__.py",
+          "sha256": "f32efe3ef83379b013725d04f2b1d738c83d940abb8470d1e56193e9da56fc55"
+        },
+        {
+          "relative_path": "code_coverage.py",
+          "sha256": "b0d7dc9a8841dfa54e49fe5002ddb568cd7cc62b16f548554dcf52577013d970"
+        },
+        {
+          "relative_path": "configuration.py",
+          "sha256": "c9933b8da52e69604daf509ffb6f08904bdca408aefce3cfc3568c01ff6f1af7"
+        },
+        {
+          "relative_path": "core.py",
+          "sha256": "7fcc8eb26fe0e798efab4c0e03fbe3f93f5e034d3e329fa525645b7afdb6e7a7"
+        },
+        {
+          "relative_path": "hponas_evidence.py",
+          "sha256": "955d8c3dc9b83d9eb7de3770d99d8af71bc3bbda28c8675798253ea854441a94"
+        },
+        {
+          "relative_path": "hponas_scheduler.py",
+          "sha256": "0fd3d757edbd17b5581ae8280b5e2bffd8a341d55005df41f5803200b9b387d5"
+        },
+        {
+          "relative_path": "models/__init__.py",
+          "sha256": "fe1a8196124b4bb56ab9fc913febf3259a2b44cfce469ad4307a8e3ee8e03588"
+        },
+        {
+          "relative_path": "models/results.py",
+          "sha256": "d2702c2cfd3d46024c692e601fecbab61cb66abda15c36ebd78d74f46fe02583"
+        },
+        {
+          "relative_path": "mutation/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "relative_path": "mutation/data.py",
+          "sha256": "de6e43ecb99ac4c2197410e89dc25cbb50952d7e9e1c4216cd9e6c1e8209a6f2"
+        },
+        {
+          "relative_path": "mutation/diff_apply.py",
+          "sha256": "3dfa739a362138e885444360157cc1ef608a20b84e6eb4325a2e83f283002e39"
+        },
+        {
+          "relative_path": "mutation/file_mutation.py",
+          "sha256": "a8cf64d1a1442ed1dbdbaeb59e7893dc902dbba8c1f723ead133a237b4335364"
+        },
+        {
+          "relative_path": "mutation/mutators.py",
+          "sha256": "197eae529cde0d1f0e5dc30cb41224a2f5b92454b03f2d69777785b007a1833f"
+        },
+        {
+          "relative_path": "mutation/pragma_handling.py",
+          "sha256": "f18c5e3e9a829f54e5aaa51cdaf44317ab61640a405b6918b772f362675b89a5"
+        },
+        {
+          "relative_path": "mutation/trampoline.py",
+          "sha256": "95162d6315056960f3551ba4b532bb34deb30fec7668c61be1f7a93bb1bb42d1"
+        },
+        {
+          "relative_path": "mutation/trampoline_templates.py",
+          "sha256": "836cdd8cc881482e2ecd6f1f4fb03e8c7823a9f72b181789772f36e6e4fe3782"
+        },
+        {
+          "relative_path": "runners/__init__.py",
+          "sha256": "7985fd4e0b7abd2c5d24db79d44ca7892bf5486e3af29669cb1b3c17cd88b322"
+        },
+        {
+          "relative_path": "runners/harness.py",
+          "sha256": "667da68b2a6f7f7bccabb0fcace8392288008194df78119a7c690601104da9d1"
+        },
+        {
+          "relative_path": "state.py",
+          "sha256": "322d20e19411d34dc90744325ba9a3ef27f946dfaca89dd59a8471092b86e875"
+        },
+        {
+          "relative_path": "stats.py",
+          "sha256": "b499ec9e6e4d0bd792898b8979744b5108498201ee68f6eb7e137c498dae4bd5"
+        },
+        {
+          "relative_path": "type_checking.py",
+          "sha256": "833708742c87b61c3e2a211ffc467281c57c42fcb9315a4a8cdfcb047d95f06d"
+        },
+        {
+          "relative_path": "ui/__init__.py",
+          "sha256": "94141bfffc56085fb1a1a535cb7f9e90caaad57d76cc8aaa799d4cbdc5122f36"
+        },
+        {
+          "relative_path": "ui/browse.py",
+          "sha256": "09a34226d4093ee6856d4ecef302ba328208361e45c79fc361969e34319d7aac"
+        },
+        {
+          "relative_path": "ui/terminal.py",
+          "sha256": "03c31ef7800e806bc5900a7ea9d722a4756f848fb60fe67f9f4b9e5610661005"
+        },
+        {
+          "relative_path": "utils/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "relative_path": "utils/file_utils.py",
+          "sha256": "1757d79ac9d53163916eeef725c6e8fe3683447ecd818792366677a415077c63"
+        },
+        {
+          "relative_path": "utils/format_utils.py",
+          "sha256": "d88a4362a4ed21606cb74d7417654f18b44155f132c084c9774e3de93209c00e"
+        },
+        {
+          "relative_path": "utils/logging_utils.py",
+          "sha256": "de6081569bbf0882714a1cf648898e7c6e2c88ff5548784076b2c5028fca8420"
+        },
+        {
+          "relative_path": "utils/safe_setproctitle.py",
+          "sha256": "a266ee10efdd5639347a19f18f60e88956dfd9c292e65eae5d06552c9e0556a5"
+        },
+        {
+          "relative_path": "workers/__init__.py",
+          "sha256": "e2c55429239e3ec0ee46c482c6d36521b8b8a74fda30970b73d4c1bcbbd09ae8"
+        },
+        {
+          "relative_path": "workers/coordinator_cleanup.py",
+          "sha256": "963e37668f45a15fa75abf3c2b50831d31ee732ed83804586e5ab4789cfd6025"
+        },
+        {
+          "relative_path": "workers/descendant_supervisor.py",
+          "sha256": "bc4d28a7528c0492163f4ec27e14d812236ed0088f9d3c3f9102af636310d0f3"
+        },
+        {
+          "relative_path": "workers/isolation.py",
+          "sha256": "5365fef8ebcc4a9bf0f79bbffc8290072d3009c99d94d6bf29600531b548ad93"
+        },
+        {
+          "relative_path": "workers/timeout.py",
+          "sha256": "ff5027bdae778385ce4cecc6c883ee1fde78c8a7d403a4af318145451700527c"
+        }
+      ]
     },
     "V04-T0": {
       "id": "V04-T0",

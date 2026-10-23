@@ -55,7 +55,7 @@ def execute_slot(slot, directory):
         def make(candidate):
             return Study(candidate, LocalExecutor(), objective,
                 budget=6 if sid in {'target', 'cold'} else 4,
-                maximize=slot['maximize'], study_name=sid, store=store)
+                maximize=slot['maximize'], study_name=sid, store=store, legacy_reason='Frozen validation protocol owns independent evaluation roles')
         study = make(searcher)
         if recover:
             try:

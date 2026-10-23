@@ -135,19 +135,35 @@ class OperationBoundary(unittest.TestCase):
         for operation in ops.TESTS:
             for path in ops.TESTS[operation]:
                 self.assertTrue((ops.ROOT / path).is_file(), path)
-            for command in ops.commands(operation):
-                if command[1:3] != ['-m', 'pytest']:
-                    expected = (['/usr/bin/python3','-I',str(BASE/'check_collection.py')]
-                                if operation == 'test-search' else
-                                [ops.PYTHON,str(BASE/'local_services.py'),
-                                 {'test-study':'ray','test-store':'postgres'}[operation]])
-                    self.assertEqual(command, expected)
+            expected = {
+                'test-search': [
+                    ['/usr/bin/python3','-I',str(BASE/'check_collection.py')],
+                    ['/usr/bin/python3','-I',str(BASE/'check_proof_context.py')],
+                ],
+                'test-study': [
+                    [ops.PYTHON,str(BASE/'local_services.py'),'ray'],
+                    [ops.PYTHON,str(BASE/'local_services.py'),'ray-repeated'],
+                ],
+                'test-store': [[ops.PYTHON,str(BASE/'local_services.py'),'postgres']],
+            }.get(operation, [])
+            actual = [command for command in ops.commands(operation) if command[1:3] != ['-m', 'pytest']]
+            self.assertEqual(actual, expected)
+            pytest_commands = [command for command in ops.commands(operation) if command[1:3] == ['-m', 'pytest']]
+            self.assertEqual(tuple(path for command in pytest_commands for path in command[6:]), ops.TESTS[operation])
+            self.assertEqual(len(pytest_commands), 3 if operation == 'test-search' else 1)
         self.assertNotIn('run-campaign', ops.OPERATIONS)
 
     def test_live_modes_reject_arbitrary_commands_and_skipped_evidence(self):
         for args in ([],['unknown'],['ray','extra'],['postgres','--dsn=external']):
             with self.assertRaises(ValueError):
                 services.mode_from_args(args)
+        self.assertEqual(set(services.ROSTERS), {'postgres','ray','ray-repeated'})
+        ray_cases = services.ROSTERS['ray'] + services.ROSTERS['ray-repeated']
+        self.assertEqual(ray_cases, (
+            'tests/integration/test_ray_streaming.py',
+            'tests/integration/test_declared_ray.py::test_live_declared_ray_metered_artifact_roles_and_resume',
+            'tests/integration/test_declared_ray.py::test_live_ray_repeated_barriers_preserve_vector_and_scalar_roles',
+        ))
         with tempfile.TemporaryDirectory(dir=BASE) as tmp:
             path = Path(tmp)/'tests.xml'
             path.write_text('<testsuites><testsuite><testcase/><testcase><skipped/></testcase></testsuite></testsuites>')

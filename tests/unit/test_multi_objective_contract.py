@@ -33,7 +33,7 @@ def objective(config):
 
 def study(fn=objective, **kwargs):
     return MultiObjectiveStudy(searcher(), LocalExecutor(), fn, objectives=OBJECTIVES,
-                               constraints=CONSTRAINTS, budget=12, study_name="vector", **kwargs)
+                               constraints=CONSTRAINTS, budget=12, study_name="vector", **kwargs, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
 
 
 def exact_union(points):
@@ -174,12 +174,12 @@ def test_invalid_completed_vector_is_retained_as_failure_with_unknown_work(key, 
 
 def test_scalar_and_vector_study_contracts_cannot_be_silently_mixed():
     with pytest.raises(ValueError, match="MultiObjectiveStudy"):
-        Study(searcher(), LocalExecutor(), lambda c: 1.)
+        Study(searcher(), LocalExecutor(), lambda c: 1., legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     changed = deepcopy(OBJECTIVES)
     changed[0]["upper"] = 2
     with pytest.raises(ValueError, match="same frozen"):
         MultiObjectiveStudy(searcher(objectives=changed), LocalExecutor(), objective,
-                            objectives=OBJECTIVES, constraints=CONSTRAINTS)
+                            objectives=OBJECTIVES, constraints=CONSTRAINTS, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
 
 
 @pytest.mark.parametrize("work", [-1, True, .5, None])

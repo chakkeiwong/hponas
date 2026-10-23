@@ -49,7 +49,7 @@ def run(output_dir=None):
         try:
             study = Study(searcher, LocalExecutor(), objective, budget=3, maximize=False,
                           study_name="metered-quadratic", checkpoint_dir=run_dir,
-                          store=store)
+                          store=store, legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
             result = study.run()
             snapshot = store.load_study_snapshot("metered-quadratic")
             before_inventory = database_inventory(database)
@@ -64,7 +64,7 @@ def run(output_dir=None):
             restored_snapshot = restored_store.load_study_snapshot("metered-quadratic")
             resumed = Study(RandomSearcher(space, seed=17), LocalExecutor(), objective,
                             budget=3, maximize=False, study_name="metered-quadratic",
-                            store=restored_store, checkpoint_dir=run_dir / "restored-checkpoints")
+                            store=restored_store, checkpoint_dir=run_dir / "restored-checkpoints", legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
             resumed.load_checkpoint()
             resumed_result = resumed.run()
             if restored_snapshot != snapshot or resumed_result.to_dict() != result.to_dict():

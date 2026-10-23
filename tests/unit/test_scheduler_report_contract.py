@@ -50,8 +50,38 @@ def test_invalid_rung_controls_are_rejected_without_constructing_a_loop(
     config_type, options
 ):
     kwargs = {"eta": 3, "r_min": 1.0, "r_max": 9.0, **options}
-    with pytest.raises(ValueError, match="finite"):
+    with pytest.raises(ValueError, match="^Require finite eta>1 and 0<r_min<=r_max$"):
         config_type(**kwargs)
+
+
+@pytest.mark.parametrize('step', [0., -1., 10., float('nan'), float('inf')])
+def test_report_grid_refuses_every_invalid_endpoint(step):
+    with pytest.raises(ValueError) as raised:
+        ASHAConfig(r_max=9., report_grid=(step,))
+    assert str(raised.value) == 'report_grid must contain finite steps in (0, r_max]'
+    assert ASHAConfig(r_max=9., report_grid=(1., 9.)).report_grid == (1., 9.)
+
+
+@pytest.mark.parametrize('options,message', [
+    ({'promotion_policy': 'unknown'}, 'Unknown ASHA promotion_policy'),
+    ({'median_stopping': True}, 'Streamed median stopping requires an explicit report_grid'),
+])
+def test_scheduler_policy_refusal_explains_the_required_control(options, message):
+    with pytest.raises(ValueError) as raised:
+        ASHAConfig(**options)
+    assert str(raised.value) == message
+
+
+def test_streaming_history_snapshot_cannot_change_live_median_decisions():
+    target = ASHAScheduler(ASHAConfig(r_min=2., r_max=2., median_stopping=True,
+                                     median_min_completed=1, report_grid=(1., 2.)))
+    target.report('reference', 1., 1., is_progress=True)
+    target.report('reference', 2., 1., is_progress=True)
+    target.finish('reference', 'completed')
+    snapshot = target.state_dict()
+    snapshot['running_histories']['reference'][1.] = 1000.
+    assert target.state_dict()['running_histories']['reference'][1.] == 1.
+    assert target.report('candidate', 1., 2., is_progress=True) == 'stop'
 
 
 @pytest.mark.parametrize("kind", ["scalar", "multiobjective", "budgeted"])

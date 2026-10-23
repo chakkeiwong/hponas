@@ -37,7 +37,7 @@ def test_study_owns_cluster_across_streamed_batches_and_can_restart_it():
             training,
             budget=2,
             continuation="resume",
-            scheduler=ASHAScheduler(ASHAConfig(eta=2, r_min=1, r_max=2)),
+            scheduler=ASHAScheduler(ASHAConfig(eta=2, r_min=1, r_max=2)), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
         )
         try:
             outcome = study.run()

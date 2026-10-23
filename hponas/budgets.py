@@ -52,7 +52,8 @@ class StudyBudget:
         if workers > self.worker_capacity:
             raise ValueError('Study concurrency exceeds declared worker capacity')
         candidates = self.configurations if vector else 1
-        required = candidates * len(declaration.final_folds) * len(declaration.final_seeds) * self.max_work_per_call
+        calls = max(1, len(declaration.streaming_steps))
+        required = candidates * len(declaration.final_folds) * len(declaration.final_seeds) * calls * self.max_work_per_call
         if self.final_work < required:
             raise ValueError('Final work reserve cannot cover the maximum frozen selection')
 
@@ -117,7 +118,8 @@ class ResourceController:
         work = self.meter(result, spec)
         breach = ('missing_or_invalid_work_meter' if work is None else
                   'work_exceeds_declared_call_bound' if work > self.budget.max_work_per_call else None)
-        attempt.update(state='committed', work=work, elapsed=result.metadata['execution']['elapsed_seconds'], breach=breach)
+        elapsed = result.metadata.get('streaming_attempt', {}).get('elapsed_seconds', result.metadata['execution']['elapsed_seconds'])
+        attempt.update(state='committed', work=work, elapsed=elapsed, breach=breach)
         result.metadata['resource_attempt'] = len(self.state['attempts']) - 1
         if breach:
             result.metadata['resource_refusal'] = {'reason': breach, 'original_status': result.status}
@@ -141,8 +143,7 @@ class ResourceController:
         if (not isinstance(saved, dict) or set(saved) != set(self.state) or saved['version'] != 1
                 or saved['contract'] != self.budget.contract or not isinstance(saved['attempts'], list)):
             raise ValueError('Checkpoint resource contract differs')
-        raw = {row['result']['trial_id']: (role, row['result']) for role in ('tuning', 'final')
-               for rows in evaluation.state[role].values() for row in rows}
+        raw = evaluation.resource_records()
         committed = set()
         candidate = ResourceController(self.budget)
         for i, attempt in enumerate(saved['attempts']):
@@ -151,7 +152,7 @@ class ResourceController:
                 raise ValueError('Invalid resource attempt')
             tid, role = attempt['trial_id'], attempt['role']
             active = evaluation.state['inflight']
-            known = tid in raw and raw[tid][0] == role or active is not None and active['trial_id'] == tid and active['role'] == role
+            known = evaluation.resource_role(tid) == role or active is not None and active['trial_id'] == tid and active['role'] == role
             if not isinstance(tid, str) or not tid or not known or tid in committed or candidate.refusal(role):
                 raise ValueError('Resource attempt exceeds admission contract')
             if attempt['state'] == 'committed':

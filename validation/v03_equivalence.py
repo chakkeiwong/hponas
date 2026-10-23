@@ -19,18 +19,18 @@ RULES += ("study_cancelled_reaggregation_v1",)
 RULES += ("modern_gp_admitted_guard_v1", "modern_gp_scalar_view_v1",
           "study_restore_controller_copy_v1", "study_restore_falsey_default_v1")
 CONTEXTS = {
-    "hponas/study.py": "06cdb66d96e086dd33a0eaf94be220d77c0a084d981c4da97a79d3c0af2f9c8e",
+    "hponas/study.py": "c101c8e07ffe65fa4b0e73453c76f9f4a1d1f78e81def22c54e7bd1043897d16",
     "hponas/executors/ray_executor.py": "f9c7a7967608ba06794913157479cc72ad852a783d8a3cd05048c432e9c9532f",
     "hponas/searchers/gp_searcher.py": "78804381622efd55de8ec363d770457a143cfef9d72edff38083ea149eb92be7",
     "hponas/schedulers.py": "22a00c3c288fe5759c709c6e0407d49f26dc72913ad1cc9b7083366b51baac8c",
     "hponas/searchers_gp.py": "d94fa38d591f5a59e3bc43a62808f969d8a6a29a9681a4d73013a3de038e1a12",
-    "hponas/searchers_tpe.py": "17653e8b1da3a8bec709327ac5bcfcc8e3150039b928ae9c0152a43d0597d11d",
+    "hponas/searchers_tpe.py": "47b92a56fe1018525eeb44450dbee9bba6fe020f1a58e5be71a7a5086375978b",
     "hponas/searchers/cmaes_searcher.py": "5fb40c8def5908e2640d8529297ef968ad4b5aa303982659834a59382d05ccc0",
-    "hponas/executors/base.py": "13dbe05b2470848128884f26b0a8688d8026a633e69f75fb42c5dd44c33a3b7c",
+    "hponas/executors/base.py": "b80776437f88595bc7a3b3ccd00c0c5e6076e265d68563788e209df7f695c6a7",
     "hponas/replay.py": "59658c7dd15c9933eb26a66b64b276d1be5921bf3510cfb036c6c05a84d42688",
 }
 CONTEXT_DEPENDENCIES = {
-    "study_cancelled_reaggregation_v1": {'hponas/evaluation.py': '66adc6055aa4bd2f639a6e4f28c4a8656b44932bd48483eb17845e6db90a4fc0', 'hponas/study_mo.py': '80cb9f42090f099080b10bb0980089efa0797c5ac22d9231c715e3699249663e', 'hponas/multi_objective.py': 'afee087d5622a6017ceaffc924f5ca0d4062032e8a174367dd97eaf451b1b42a', 'hponas/types.py': '0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304'},
+    "study_cancelled_reaggregation_v1": {'hponas/evaluation.py': 'f949e23c292ab94822ad79955bb87450e0936d1681a9fdae565b7f93b7923aba', 'hponas/study_mo.py': 'a4f2720fc7183be6d437b7a81a73f960868c9220dcf658b335bfc782c7539206', 'hponas/multi_objective.py': 'afee087d5622a6017ceaffc924f5ca0d4062032e8a174367dd97eaf451b1b42a', 'hponas/types.py': '0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304'},
     "modern_gp_training_axis_v1": {
         "hponas/encoding.py": "54675a16db37aacbd2d7b9f04d67916a775fb3b867e81fcc76047818fb8b6ac0",
         "hponas/space.py": "8c508dc0bd1ef8962433ace32f5a89a4fc3c693e661c74d31a787001494aa1f8",
@@ -41,7 +41,16 @@ CONTEXT_DEPENDENCIES = {
         "hponas/types.py": "0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304",
     },
 }
-CONTEXT_DEPENDENCIES.update({'modern_gp_admitted_guard_v1': {'hponas/encoding.py': '54675a16db37aacbd2d7b9f04d67916a775fb3b867e81fcc76047818fb8b6ac0', 'hponas/space.py': '8c508dc0bd1ef8962433ace32f5a89a4fc3c693e661c74d31a787001494aa1f8', 'hponas/types.py': '0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304', 'hponas/capabilities.py': '5aa5a71637f92e295da4558c646bb84e9b5d9d59f5f683630a344958684faa6a'}, 'modern_gp_scalar_view_v1': {'hponas/encoding.py': '54675a16db37aacbd2d7b9f04d67916a775fb3b867e81fcc76047818fb8b6ac0', 'hponas/space.py': '8c508dc0bd1ef8962433ace32f5a89a4fc3c693e661c74d31a787001494aa1f8', 'hponas/types.py': '0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304', 'hponas/capabilities.py': '5aa5a71637f92e295da4558c646bb84e9b5d9d59f5f683630a344958684faa6a'}, 'study_restore_controller_copy_v1': {'hponas/evaluation.py': '66adc6055aa4bd2f639a6e4f28c4a8656b44932bd48483eb17845e6db90a4fc0', 'hponas/budgets.py': '86c4d84f240ab422f3c581c545a22367cfa1ed5392978c24764b814825b7f5ee', 'hponas/study_mo.py': '80cb9f42090f099080b10bb0980089efa0797c5ac22d9231c715e3699249663e', 'hponas/multi_objective.py': 'afee087d5622a6017ceaffc924f5ca0d4062032e8a174367dd97eaf451b1b42a', 'hponas/types.py': '0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304'}, 'study_restore_falsey_default_v1': {'hponas/evaluation.py': '66adc6055aa4bd2f639a6e4f28c4a8656b44932bd48483eb17845e6db90a4fc0', 'hponas/budgets.py': '86c4d84f240ab422f3c581c545a22367cfa1ed5392978c24764b814825b7f5ee', 'hponas/study_mo.py': '80cb9f42090f099080b10bb0980089efa0797c5ac22d9231c715e3699249663e', 'hponas/types.py': '0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304'}})
+CONTEXT_DEPENDENCIES.update({'modern_gp_admitted_guard_v1': {'hponas/encoding.py': '54675a16db37aacbd2d7b9f04d67916a775fb3b867e81fcc76047818fb8b6ac0', 'hponas/space.py': '8c508dc0bd1ef8962433ace32f5a89a4fc3c693e661c74d31a787001494aa1f8', 'hponas/types.py': '0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304', 'hponas/capabilities.py': '5aa5a71637f92e295da4558c646bb84e9b5d9d59f5f683630a344958684faa6a'}, 'modern_gp_scalar_view_v1': {'hponas/encoding.py': '54675a16db37aacbd2d7b9f04d67916a775fb3b867e81fcc76047818fb8b6ac0', 'hponas/space.py': '8c508dc0bd1ef8962433ace32f5a89a4fc3c693e661c74d31a787001494aa1f8', 'hponas/types.py': '0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304', 'hponas/capabilities.py': '5aa5a71637f92e295da4558c646bb84e9b5d9d59f5f683630a344958684faa6a'}, 'study_restore_controller_copy_v1': {'hponas/evaluation.py': 'f949e23c292ab94822ad79955bb87450e0936d1681a9fdae565b7f93b7923aba', 'hponas/budgets.py': '2af2a3c6b046f8f57f2344ef947a225b48d4fb8f3071ce86b635482ca72d3d5b', 'hponas/study_mo.py': 'a4f2720fc7183be6d437b7a81a73f960868c9220dcf658b335bfc782c7539206', 'hponas/multi_objective.py': 'afee087d5622a6017ceaffc924f5ca0d4062032e8a174367dd97eaf451b1b42a', 'hponas/types.py': '0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304'}, 'study_restore_falsey_default_v1': {'hponas/evaluation.py': 'f949e23c292ab94822ad79955bb87450e0936d1681a9fdae565b7f93b7923aba', 'hponas/budgets.py': '2af2a3c6b046f8f57f2344ef947a225b48d4fb8f3071ce86b635482ca72d3d5b', 'hponas/study_mo.py': 'a4f2720fc7183be6d437b7a81a73f960868c9220dcf658b335bfc782c7539206', 'hponas/types.py': '0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304'}})
+# Protocol 2.26: concrete streaming restore/aggregation and TPE registration
+# are part of these arguments. Bind them before enabling successor proofs.
+for _rule in ("study_cancelled_reaggregation_v1", "study_restore_controller_copy_v1",
+              "study_restore_falsey_default_v1"):
+    CONTEXT_DEPENDENCIES[_rule]["hponas/evaluation_streaming.py"] = (
+        "e266a977bc7adce82dfcb13aa4f8e6e349d7d5b205d1185c4825ee14afcabb75")
+CONTEXT_DEPENDENCIES["tpe_replay_copy_v1"] = {
+    "hponas/types.py": "0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304",
+}
 RUNTIME_CONTEXTS = {
     "modern_gp_scalar_view_v1": {"torch": "2.13.0"},
     "modern_gp_kernel_flag_v1": {"botorch": "0.18.1", "gpytorch": "1.15.2", "torch": "2.13.0"},
@@ -102,6 +111,34 @@ def _single_expression_rewrite(original, mutated, before, after):
     transform = Replace()
     result = transform.visit(copy.deepcopy(original))
     return transform.count == 1 and _dump(result) == _dump(mutated)
+
+
+def _one_of_two_expression_rewrite(original, mutated, before, after):
+    """Change exactly one of two reviewed sites, with the rest identical.
+
+    Used only for the source-bound Study vector flag's two truth projections.
+    A simultaneous change at both sites is not an individual mutation proof.
+    """
+    old = ast.parse(before, mode="eval").body
+    new = ast.parse(after, mode="eval").body
+    if sum(_dump(node) == _dump(old) for node in ast.walk(original)) != 2:
+        return False
+    for selected in range(2):
+        class Replace(ast.NodeTransformer):
+            def __init__(self):
+                self.count = 0
+
+            def visit(self, node):
+                if _dump(node) == _dump(old):
+                    index = self.count
+                    self.count += 1
+                    if index == selected:
+                        return copy.deepcopy(new)
+                return super().visit(node)
+
+        if _dump(Replace().visit(copy.deepcopy(original))) == _dump(mutated):
+            return True
+    return False
 
 
 def _dump(node):
@@ -189,7 +226,7 @@ def lemma(original, mutated, module_source, source_path, class_name):
                 accepted = _single_expression_rewrite(original, mutated,
                     ast.unparse(old_call), ast.unparse(changed_call))
             else:
-                accepted = _single_expression_rewrite(original, mutated, before, after)
+                accepted = _one_of_two_expression_rewrite(original, mutated, before, after)
             if accepted:
                 return "study_restore_falsey_default_v1"
     if (source_path == "hponas/study.py" and class_name == "Study"
@@ -257,7 +294,7 @@ def lemma(original, mutated, module_source, source_path, class_name):
                          ("self._next_trial_id = 0", "self._next_trial_id = 1")],
             "propose": [("self._n_proposed += n", "self._n_proposed = n"),
                         ("self._n_proposed += n", "self._n_proposed -= n")],
-            "observe": [("self._n_observed += 1", "self._n_observed = 1"),
+            "_tell": [("self._n_observed += 1", "self._n_observed = 1"),
                         ("self._n_observed += 1", "self._n_observed -= 1"),
                         ("self._n_observed += 1", "self._n_observed += 2")],
         }

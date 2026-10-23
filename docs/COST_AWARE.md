@@ -19,7 +19,8 @@ searcher = CostAwareProposalSearcher(
     cost_unit="declared_work_units", default_cost=8, seed=7,
 )
 # train returns {"value": loss, "cost": measured_work, "metadata": {...}}.
-# Study(searcher, LocalExecutor(), train, budget=20, maximize=False).run()
+# Study(searcher, LocalExecutor(), train, budget=20, maximize=False,
+#       declaration=declaration).run()  # Bind tuning/final roles before dispatch.
 ```
 
 The default pool has 16 candidates and a maximum of 256. Finite mixed spaces

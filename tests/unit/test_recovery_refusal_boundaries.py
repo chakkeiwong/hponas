@@ -14,8 +14,8 @@ def space():
 
 
 @pytest.mark.parametrize("damage,message", [
-    ("kind", "TPE checkpoint requires complete version 2 ask/tell ledger"),
-    ("version", "TPE checkpoint requires complete version 2 ask/tell ledger"),
+    ("kind", "TPE checkpoint requires complete version 3 identity-bound ask/tell ledger"),
+    ("version", "TPE checkpoint requires complete version 3 identity-bound ask/tell ledger"),
     ("config", "TPE sampler changed; checkpoint cannot be replayed exactly"),
     ("event", "Unknown TPE checkpoint event"),
 ])

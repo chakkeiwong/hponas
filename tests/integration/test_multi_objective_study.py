@@ -129,7 +129,7 @@ def test_vector_promotions_resume_actual_quadratic_work_and_recover(tmp_path, me
         return MultiObjectiveStudy(make_searcher(method, fidelity=8), LocalExecutor(), fn,
             objectives=OBJECTIVES, constraints=CONSTRAINTS, budget=8, study_name="promotions",
             scheduler=MultiObjectiveScheduler(objectives=OBJECTIVES, constraints=CONSTRAINTS, r_min=1, r_max=8),
-            continuation="resume", checkpoint_dir=checkpoint_dir, store=store)
+            continuation="resume", checkpoint_dir=checkpoint_dir, store=store, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     interrupted_once = []
     def interrupted(config, fidelity, checkpoint, resume_from):
         if fidelity == 4 and not interrupted_once:

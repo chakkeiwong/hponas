@@ -248,7 +248,7 @@ class Store:
             return None
         if state.get("evaluation") is None:
             from hponas.evaluation import legacy_evaluation_report
-            return legacy_evaluation_report()
+            return legacy_evaluation_report(state.get('legacy_reason'))
         return state["evaluation"]
 
     def read_rung_diagnostics(self, study_id):

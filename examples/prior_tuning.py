@@ -43,7 +43,7 @@ def run_one(directory, name, default, *, cap=16, continuation='resume', uniform=
             executor=LocalExecutor()
             study=Study(searcher,executor,workload,budget=21,study_name=name,maximize=False,
                 scheduler=PriorBandScheduler(rungs=[1,2,4,8],eta=2,default_at_target=True),
-                continuation=continuation,store=store,event_log=log)
+                continuation=continuation,store=store,event_log=log, legacy_reason='Exposed deterministic tutorial fixture; no protected performance claim')
             try:
                 if attempt:
                     study.load_checkpoint()

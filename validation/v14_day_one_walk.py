@@ -48,7 +48,7 @@ def campaign(run_dir, smoke=True):
         store=store,
         checkpoint_dir=run_dir / "checkpoints",
         event_log=EventLog(run_dir / "events.jsonl"),
-    )
+     legacy_reason='Frozen validation protocol owns independent evaluation roles')
     try:
         result = study.run()
         observed = {r.trial_id: r.objective_value for r in study.searcher.history}

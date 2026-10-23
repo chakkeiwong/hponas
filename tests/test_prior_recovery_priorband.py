@@ -22,7 +22,7 @@ def test_positive_support_does_not_guarantee_a_good_finite_recommendation():
     result = Study(
         searcher, LocalExecutor(), lambda config: (config["x"] - 1) ** 2,
         budget=1, maximize=False,
-        scheduler=PriorBandScheduler(rungs=[1], eta=2, default_at_target=True),
+        scheduler=PriorBandScheduler(rungs=[1], eta=2, default_at_target=True), legacy_reason='Protocol-only regression fixture; protected evaluation tested separately',
     ).run()
     # The protocol's first default evaluation has known regret 1, despite
     # positive sampling support everywhere. This is an adverse outcome.

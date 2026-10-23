@@ -1,0 +1,464 @@
+{
+  "kind": "prospective_checker_control_lineage_v1",
+  "scientific_acceptance": false,
+  "historical_files": [
+    {
+      "path": "tests/fixtures/v03_equivalence/base.py.txt",
+      "sha256": "13dbe05b2470848128884f26b0a8688d8026a633e69f75fb42c5dd44c33a3b7c"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/budgets.py.txt",
+      "sha256": "86c4d84f240ab422f3c581c545a22367cfa1ed5392978c24764b814825b7f5ee"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/capabilities.py.txt",
+      "sha256": "5aa5a71637f92e295da4558c646bb84e9b5d9d59f5f683630a344958684faa6a"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/cmaes_searcher.py.txt",
+      "sha256": "5fb40c8def5908e2640d8529297ef968ad4b5aa303982659834a59382d05ccc0"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/encoding.py.txt",
+      "sha256": "54675a16db37aacbd2d7b9f04d67916a775fb3b867e81fcc76047818fb8b6ac0"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/evaluation.py.txt",
+      "sha256": "66adc6055aa4bd2f639a6e4f28c4a8656b44932bd48483eb17845e6db90a4fc0"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/gp_searcher.py.txt",
+      "sha256": "78804381622efd55de8ec363d770457a143cfef9d72edff38083ea149eb92be7"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/multi_objective.py.txt",
+      "sha256": "afee087d5622a6017ceaffc924f5ca0d4062032e8a174367dd97eaf451b1b42a"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/prospective_cases.json",
+      "sha256": "d64e8a52d91d1b3e44dbcfa23488aa2f71d097bc6756d26d030d2c6a7ebf754f"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/ray_executor.py.txt",
+      "sha256": "f9c7a7967608ba06794913157479cc72ad852a783d8a3cd05048c432e9c9532f"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/replay.py.txt",
+      "sha256": "59658c7dd15c9933eb26a66b64b276d1be5921bf3510cfb036c6c05a84d42688"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/schedulers.py.txt",
+      "sha256": "22a00c3c288fe5759c709c6e0407d49f26dc72913ad1cc9b7083366b51baac8c"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/searchers_gp.py.txt",
+      "sha256": "d94fa38d591f5a59e3bc43a62808f969d8a6a29a9681a4d73013a3de038e1a12"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/searchers_tpe.py.txt",
+      "sha256": "17653e8b1da3a8bec709327ac5bcfcc8e3150039b928ae9c0152a43d0597d11d"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/space.py.txt",
+      "sha256": "8c508dc0bd1ef8962433ace32f5a89a4fc3c693e661c74d31a787001494aa1f8"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/study.py.txt",
+      "sha256": "06cdb66d96e086dd33a0eaf94be220d77c0a084d981c4da97a79d3c0af2f9c8e"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/study_mo.py.txt",
+      "sha256": "80cb9f42090f099080b10bb0980089efa0797c5ac22d9231c715e3699249663e"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence/types.py.txt",
+      "sha256": "0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304"
+    }
+  ],
+  "cases": [
+    {
+      "historical_index": 0,
+      "historical_id": "hponas.schedulers.xǁPASHASchedulerǁreport__mutmut_14",
+      "current_id": "hponas.schedulers.xǁPASHASchedulerǁreport__mutmut_gap_review_00",
+      "historical_method": "report",
+      "current_method": "report"
+    },
+    {
+      "historical_index": 1,
+      "historical_id": "hponas.schedulers.xǁPASHASchedulerǁreport__mutmut_16",
+      "current_id": "hponas.schedulers.xǁPASHASchedulerǁreport__mutmut_gap_review_01",
+      "historical_method": "report",
+      "current_method": "report"
+    },
+    {
+      "historical_index": 2,
+      "historical_id": "hponas.schedulers.xǁPASHASchedulerǁ_update_epsilon__mutmut_8",
+      "current_id": "hponas.schedulers.xǁPASHASchedulerǁ_update_epsilon__mutmut_gap_review_02",
+      "historical_method": "_update_epsilon",
+      "current_method": "_update_epsilon"
+    },
+    {
+      "historical_index": 3,
+      "historical_id": "hponas.schedulers.xǁPASHASchedulerǁ_update_epsilon__mutmut_39",
+      "current_id": "hponas.schedulers.xǁPASHASchedulerǁ_update_epsilon__mutmut_gap_review_03",
+      "historical_method": "_update_epsilon",
+      "current_method": "_update_epsilon"
+    },
+    {
+      "historical_index": 4,
+      "historical_id": "hponas.schedulers.xǁPASHASchedulerǁ_update_epsilon__mutmut_41",
+      "current_id": "hponas.schedulers.xǁPASHASchedulerǁ_update_epsilon__mutmut_gap_review_04",
+      "historical_method": "_update_epsilon",
+      "current_method": "_update_epsilon"
+    },
+    {
+      "historical_index": 5,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ__init____mutmut_88",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ__init____mutmut_gap_review_05",
+      "historical_method": "__init__",
+      "current_method": "__init__"
+    },
+    {
+      "historical_index": 6,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ__init____mutmut_89",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ__init____mutmut_gap_review_06",
+      "historical_method": "__init__",
+      "current_method": "__init__"
+    },
+    {
+      "historical_index": 7,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_validate_controls__mutmut_37",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_validate_controls__mutmut_gap_review_07",
+      "historical_method": "_validate_controls",
+      "current_method": "_validate_controls"
+    },
+    {
+      "historical_index": 8,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_build_gp__mutmut_8",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_build_gp__mutmut_gap_review_08",
+      "historical_method": "_build_gp",
+      "current_method": "_build_gp"
+    },
+    {
+      "historical_index": 9,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_build_gp__mutmut_24",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_build_gp__mutmut_gap_review_09",
+      "historical_method": "_build_gp",
+      "current_method": "_build_gp"
+    },
+    {
+      "historical_index": 10,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_9",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_gap_review_10",
+      "historical_method": "_propose",
+      "current_method": "_propose"
+    },
+    {
+      "historical_index": 11,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_17",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_gap_review_11",
+      "historical_method": "_propose",
+      "current_method": "_propose"
+    },
+    {
+      "historical_index": 12,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_19",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_gap_review_12",
+      "historical_method": "_propose",
+      "current_method": "_propose"
+    },
+    {
+      "historical_index": 13,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_25",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_gap_review_13",
+      "historical_method": "_propose",
+      "current_method": "_propose"
+    },
+    {
+      "historical_index": 14,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_29",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_gap_review_14",
+      "historical_method": "_propose",
+      "current_method": "_propose"
+    },
+    {
+      "historical_index": 15,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_31",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_gap_review_15",
+      "historical_method": "_propose",
+      "current_method": "_propose"
+    },
+    {
+      "historical_index": 16,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_33",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_gap_review_16",
+      "historical_method": "_propose",
+      "current_method": "_propose"
+    },
+    {
+      "historical_index": 17,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_35",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁ_propose__mutmut_gap_review_17",
+      "historical_method": "_propose",
+      "current_method": "_propose"
+    },
+    {
+      "historical_index": 18,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁobserve__mutmut_17",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁobserve__mutmut_gap_review_18",
+      "historical_method": "observe",
+      "current_method": "observe"
+    },
+    {
+      "historical_index": 19,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁobserve__mutmut_36",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁobserve__mutmut_gap_review_19",
+      "historical_method": "observe",
+      "current_method": "observe"
+    },
+    {
+      "historical_index": 20,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁobserve__mutmut_37",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁobserve__mutmut_gap_review_20",
+      "historical_method": "observe",
+      "current_method": "observe"
+    },
+    {
+      "historical_index": 21,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁload_state_dict__mutmut_177",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁload_state_dict__mutmut_gap_review_21",
+      "historical_method": "load_state_dict",
+      "current_method": "load_state_dict"
+    },
+    {
+      "historical_index": 22,
+      "historical_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁload_state_dict__mutmut_178",
+      "current_id": "hponas.searchers_gp.xǁGPqLogEISearcherǁload_state_dict__mutmut_gap_review_22",
+      "historical_method": "load_state_dict",
+      "current_method": "load_state_dict"
+    },
+    {
+      "historical_index": 23,
+      "historical_id": "hponas.searchers_tpe.xǁTPESearcherǁ__init____mutmut_10",
+      "current_id": "hponas.searchers_tpe.xǁTPESearcherǁ__init____mutmut_gap_review_23",
+      "historical_method": "__init__",
+      "current_method": "__init__"
+    },
+    {
+      "historical_index": 24,
+      "historical_id": "hponas.searchers_tpe.xǁTPESearcherǁ__init____mutmut_12",
+      "current_id": "hponas.searchers_tpe.xǁTPESearcherǁ__init____mutmut_gap_review_24",
+      "historical_method": "__init__",
+      "current_method": "__init__"
+    },
+    {
+      "historical_index": 25,
+      "historical_id": "hponas.searchers_tpe.xǁTPESearcherǁ__init____mutmut_23",
+      "current_id": "hponas.searchers_tpe.xǁTPESearcherǁ__init____mutmut_gap_review_25",
+      "historical_method": "__init__",
+      "current_method": "__init__"
+    },
+    {
+      "historical_index": 26,
+      "historical_id": "hponas.searchers_tpe.xǁTPESearcherǁ__init____mutmut_24",
+      "current_id": "hponas.searchers_tpe.xǁTPESearcherǁ__init____mutmut_gap_review_26",
+      "historical_method": "__init__",
+      "current_method": "__init__"
+    },
+    {
+      "historical_index": 27,
+      "historical_id": "hponas.searchers_tpe.xǁTPESearcherǁpropose__mutmut_66",
+      "current_id": "hponas.searchers_tpe.xǁTPESearcherǁpropose__mutmut_gap_review_27",
+      "historical_method": "propose",
+      "current_method": "propose"
+    },
+    {
+      "historical_index": 28,
+      "historical_id": "hponas.searchers_tpe.xǁTPESearcherǁpropose__mutmut_67",
+      "current_id": "hponas.searchers_tpe.xǁTPESearcherǁpropose__mutmut_gap_review_28",
+      "historical_method": "propose",
+      "current_method": "propose"
+    },
+    {
+      "historical_index": 29,
+      "historical_id": "hponas.searchers_tpe.xǁTPESearcherǁobserve__mutmut_25",
+      "current_id": "hponas.searchers_tpe.xǁTPESearcherǁ_tell__mutmut_gap_review_29",
+      "historical_method": "observe",
+      "current_method": "_tell"
+    },
+    {
+      "historical_index": 30,
+      "historical_id": "hponas.searchers_tpe.xǁTPESearcherǁobserve__mutmut_26",
+      "current_id": "hponas.searchers_tpe.xǁTPESearcherǁ_tell__mutmut_gap_review_30",
+      "historical_method": "observe",
+      "current_method": "_tell"
+    },
+    {
+      "historical_index": 31,
+      "historical_id": "hponas.searchers_tpe.xǁTPESearcherǁobserve__mutmut_27",
+      "current_id": "hponas.searchers_tpe.xǁTPESearcherǁ_tell__mutmut_gap_review_31",
+      "historical_method": "observe",
+      "current_method": "_tell"
+    },
+    {
+      "historical_index": 32,
+      "historical_id": "hponas.searchers.cmaes_searcher.xǁCMAESSearcherǁsuggest__mutmut_16",
+      "current_id": "hponas.searchers.cmaes_searcher.xǁCMAESSearcherǁsuggest__mutmut_gap_review_32",
+      "historical_method": "suggest",
+      "current_method": "suggest"
+    },
+    {
+      "historical_index": 33,
+      "historical_id": "hponas.searchers.cmaes_searcher.xǁCMAESSearcherǁsuggest__mutmut_27",
+      "current_id": "hponas.searchers.cmaes_searcher.xǁCMAESSearcherǁsuggest__mutmut_gap_review_33",
+      "historical_method": "suggest",
+      "current_method": "suggest"
+    },
+    {
+      "historical_index": 34,
+      "historical_id": "hponas.executors.base.x_evaluate_trial__mutmut_9",
+      "current_id": "hponas.executors.base.x_evaluate_trial__mutmut_gap_review_34",
+      "historical_method": "evaluate_trial",
+      "current_method": "evaluate_trial"
+    },
+    {
+      "historical_index": 35,
+      "historical_id": "hponas.replay.xǁReplayEngineǁverify_determinism__mutmut_1",
+      "current_id": "hponas.replay.xǁReplayEngineǁverify_determinism__mutmut_gap_review_35",
+      "historical_method": "verify_determinism",
+      "current_method": "verify_determinism"
+    },
+    {
+      "historical_index": 36,
+      "historical_id": "hponas.replay.xǁReplayEngineǁverify_determinism__mutmut_16",
+      "current_id": "hponas.replay.xǁReplayEngineǁverify_determinism__mutmut_gap_review_36",
+      "historical_method": "verify_determinism",
+      "current_method": "verify_determinism"
+    },
+    {
+      "historical_index": 37,
+      "historical_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_29",
+      "current_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_gap_review_37",
+      "historical_method": "_suggest_joint_impl",
+      "current_method": "_suggest_joint_impl"
+    },
+    {
+      "historical_index": 38,
+      "historical_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_32",
+      "current_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_gap_review_38",
+      "historical_method": "_suggest_joint_impl",
+      "current_method": "_suggest_joint_impl"
+    },
+    {
+      "historical_index": 39,
+      "historical_id": "hponas.executors.ray_executor.xǁRayExecutorǁ_execute_streaming__mutmut_5",
+      "current_id": "hponas.executors.ray_executor.xǁRayExecutorǁ_execute_streaming__mutmut_gap_review_39",
+      "historical_method": "_execute_streaming",
+      "current_method": "_execute_streaming"
+    },
+    {
+      "historical_index": 40,
+      "historical_id": "hponas.study.xǁStudyǁ_accept__mutmut_12",
+      "current_id": "hponas.study.xǁStudyǁ_accept__mutmut_gap_review_40",
+      "historical_method": "_accept",
+      "current_method": "_accept"
+    },
+    {
+      "historical_index": 41,
+      "historical_id": "hponas.study.xǁStudyǁ_accept__mutmut_13",
+      "current_id": "hponas.study.xǁStudyǁ_accept__mutmut_gap_review_41",
+      "historical_method": "_accept",
+      "current_method": "_accept"
+    },
+    {
+      "historical_index": 42,
+      "historical_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_127",
+      "current_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_gap_review_42",
+      "historical_method": "_suggest_joint_impl",
+      "current_method": "_suggest_joint_impl"
+    },
+    {
+      "historical_index": 43,
+      "historical_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_129",
+      "current_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_gap_review_43",
+      "historical_method": "_suggest_joint_impl",
+      "current_method": "_suggest_joint_impl"
+    },
+    {
+      "historical_index": 44,
+      "historical_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_135",
+      "current_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_gap_review_44",
+      "historical_method": "_suggest_joint_impl",
+      "current_method": "_suggest_joint_impl"
+    },
+    {
+      "historical_index": 45,
+      "historical_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_136",
+      "current_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_gap_review_45",
+      "historical_method": "_suggest_joint_impl",
+      "current_method": "_suggest_joint_impl"
+    },
+    {
+      "historical_index": 46,
+      "historical_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_137",
+      "current_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_gap_review_46",
+      "historical_method": "_suggest_joint_impl",
+      "current_method": "_suggest_joint_impl"
+    },
+    {
+      "historical_index": 47,
+      "historical_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_138",
+      "current_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_gap_review_47",
+      "historical_method": "_suggest_joint_impl",
+      "current_method": "_suggest_joint_impl"
+    },
+    {
+      "historical_index": 48,
+      "historical_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_185",
+      "current_id": "hponas.searchers.gp_searcher.xǁGPSearcherǁ_suggest_joint_impl__mutmut_gap_review_48",
+      "historical_method": "_suggest_joint_impl",
+      "current_method": "_suggest_joint_impl"
+    },
+    {
+      "historical_index": 49,
+      "historical_id": "hponas.study.xǁStudyǁload_checkpoint__mutmut_463",
+      "current_id": "hponas.study.xǁStudyǁload_checkpoint__mutmut_gap_review_49",
+      "historical_method": "load_checkpoint",
+      "current_method": "load_checkpoint"
+    },
+    {
+      "historical_index": 50,
+      "historical_id": "hponas.study.xǁStudyǁload_checkpoint__mutmut_560",
+      "current_id": "hponas.study.xǁStudyǁload_checkpoint__mutmut_gap_review_50",
+      "historical_method": "load_checkpoint",
+      "current_method": "load_checkpoint"
+    },
+    {
+      "historical_index": 51,
+      "historical_id": "hponas.study.xǁStudyǁload_checkpoint__mutmut_499",
+      "current_id": "hponas.study.xǁStudyǁload_checkpoint__mutmut_gap_review_51",
+      "historical_method": "load_checkpoint",
+      "current_method": "load_checkpoint"
+    },
+    {
+      "historical_index": 52,
+      "historical_id": "hponas.study.xǁStudyǁload_checkpoint__mutmut_501",
+      "current_id": "hponas.study.xǁStudyǁload_checkpoint__mutmut_gap_review_52",
+      "historical_method": "load_checkpoint",
+      "current_method": "load_checkpoint"
+    },
+    {
+      "historical_index": 53,
+      "historical_id": "hponas.study.xǁStudyǁload_checkpoint__mutmut_578",
+      "current_id": "hponas.study.xǁStudyǁload_checkpoint__mutmut_gap_review_53",
+      "historical_method": "load_checkpoint",
+      "current_method": "load_checkpoint"
+    },
+    {
+      "current_id": "hponas.study.xǁStudyǁload_checkpoint__mutmut_gap_review_54",
+      "historical_index": null,
+      "current_method": "load_checkpoint",
+      "purpose": "New progress-cache vector truth projection"
+    }
+  ]
+}

@@ -21,15 +21,15 @@ def test_fitted_gp_trace_matches_uninterrupted_study_after_crash(tmp_path, maxim
 
     interrupted = Study(GPSearcher(space, seed=12, initial_random_samples=3, num_restarts=2),
                         LocalExecutor(), objective, budget=6, maximize=maximize,
-                        study_name="gp", checkpoint_dir=tmp_path)
+                        study_name="gp", checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     with pytest.raises(KeyboardInterrupt):
         interrupted.run()
     resumed = Study(GPSearcher(space, seed=999), LocalExecutor(), plain,
-                    study_name="restored", checkpoint_dir=tmp_path)
+                    study_name="restored", checkpoint_dir=tmp_path, legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     resumed.load_checkpoint(tmp_path / "gp_checkpoint.json")
     actual = resumed.run()
     baseline = Study(GPSearcher(space, seed=12, initial_random_samples=3, num_restarts=2),
-                     LocalExecutor(), plain, budget=6, maximize=maximize, study_name="gp")
+                     LocalExecutor(), plain, budget=6, maximize=maximize, study_name="gp", legacy_reason='Protocol-only regression fixture; protected evaluation tested separately')
     expected = baseline.run()
     assert [r.objective_value for r in actual.history] == [r.objective_value for r in expected.history]
     assert [t.config.values for t in resumed.trials.values()] == [t.config.values for t in baseline.trials.values()]
