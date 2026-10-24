@@ -122,5 +122,4 @@ and replaced acknowledged measurements are refused before live state changes.
 Hashes detect inconsistency; they do not authenticate an untrusted caller.
 
 GAP-01/TRANSFER-DISPOSITIONS supplies development arithmetic and workflow
-evidence. Current-source scientific qualification remains a separate master
-stage. Mathematical correctness does not establish empirical transfer benefit.
+evidence. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed. Mathematical correctness does not establish empirical transfer benefit.

@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "revision": "2.477",
+  "revision": "2.519",
   "local_date": "2026-10-18",
   "timezone": "Asia/Shanghai",
   "master": "CONSOLIDATED_MASTER_AUTHORITY.md",
   "current_phase": "tier1_development",
-  "active_work_item": "BANK-01",
+  "active_work_item": null,
   "goal": "Reusable HPO and moderate architecture-coordinate NAS for a universal retail bank: declared model-family evaluation, budgeted search, reproducible selection/recovery and objective evidence, without sibling-project dependencies.",
   "tier0_campaigns": [
     "V01",
@@ -45,7 +45,7 @@
     {
       "id": "SRC-06",
       "path": "validation/protocols.json",
-      "sha256": "e34f3e9a65627e6229029a7ba27998ce1c29e457e6d39ec42c82db73fba0ecfb"
+      "sha256": "5381ac6ac74837b023edbfe7311c46368797acefb993bc4b5126d853d9fae5f5"
     },
     {
       "id": "SRC-07",
@@ -165,7 +165,7 @@
     {
       "id": "SRC-BANK-CONTRACT",
       "path": "docs/program/BANK_HPO_NAS_PRODUCT_CONTRACT.md",
-      "sha256": "946cea1fac9203f395fe736729a1277c5decfdf90a4d2ffb7a7b4a98ab12127f"
+      "sha256": "0244cb87e9175a12b8a689d3a77d36ac7d9ecd474c621395947fa1a19c743f2f"
     },
     {
       "id": "SRC-PRODUCT-REPAIR",
@@ -175,7 +175,7 @@
     {
       "id": "SRC-PROGRAM-OPERATIONS",
       "path": "docs/PROGRAM_OPERATIONS.md",
-      "sha256": "5d51e7daee81e885d65a7101f40f7279a8b17271a688cf9f64aaa6a770392324"
+      "sha256": "b4e6ddc256762e734c285a17928b2f32da6dd5c3942a863a2ece42262fdf897d"
     },
     {
       "id": "SRC-GIT-PUBLICATION-CI",
@@ -6383,7 +6383,7 @@
       "title": "Reusable universal-bank model-family HPO/NAS workflows",
       "phase": "bank_product_profiles",
       "owner": "Implementation agent",
-      "state": "in_progress",
+      "state": "complete",
       "implementation": "verified",
       "dependencies": [
         "PRD-01"
@@ -7136,13 +7136,120 @@
         "E-GAP-CHECKPOINT-20261023-01-PLAN",
         "E-GAP-CHECKPOINT-20261023-01-REFRESH",
         "E-GAP-CHECKPOINT-20261023-01-OBSERVATION",
-        "E-GAP-CHECKPOINT-20261023-01-ARCHIVE"
+        "E-GAP-CHECKPOINT-20261023-01-ARCHIVE",
+        "E-GAP-FINAL03-20261018-V03-ARCHIVE",
+        "E-GAP-FINAL03-20261018-RESULT-V03",
+        "E-GAP-FINAL03-20261018-FAILURE-ARCHIVE",
+        "E-GAP-FINAL03-20261018-FAILURE",
+        "E-GAP-RECOVERY-STOP01-20261023-STOP",
+        "E-GAP-RECOVERY-STOP01-20261023-ARCHIVE",
+        "E-GAP-SURVIVOR-20261023-PLAN",
+        "E-GAP-SURVIVOR-20261023-DIAGNOSIS",
+        "E-GAP-SURVIVOR-20261023-ARCHIVE",
+        "E-GAP-SURVIVOR-20261023-INVENTORY",
+        "E-GAP-SURVIVOR-20261023-DIAGNOSTIC",
+        "E-GAP-SURVIVOR-20261023-DIAGNOSTIC-GUARD",
+        "E-GAP-SURVIVOR-20261023-PROOF",
+        "E-GAP-SURVIVOR-20261023-PROOF-ARCHIVE",
+        "E-GAP-SURVIVOR-20261023-RUNBOOK",
+        "E-GAP-SURVIVOR-20261023-SUCCESSOR-PLAN",
+        "E-GAP-SURVIVOR-20261023-INSTALL-REPAIR",
+        "E-GAP-SURVIVOR-20261023-SUCCESSOR-RUNBOOK",
+        "E-GAP-SURVIVOR-20261023-SUCCESSOR-ARCHIVE",
+        "E-GAP-SURVIVOR-20261023-INTEGRATION",
+        "E-GAP-SURVIVOR-20261023-INTEGRATION-REVIEW",
+        "E-GAP-SURVIVOR-20261023-IMPACT",
+        "E-GAP-SURVIVOR-20261023-INTEGRATION-ARCHIVE",
+        "E-GAP-SURVIVOR-20261024-LAUNCH-REVIEW",
+        "E-GAP-SURVIVOR-20261024-STARTUP-RECOVERY",
+        "E-GAP-SURVIVOR-20261024-LAUNCH",
+        "E-GAP-SURVIVOR-20261024-LAUNCH-ARCHIVE",
+        "E-GAP-ADMISSION04-20261018-ADMISSION",
+        "E-GAP-ADMISSION04-20261018-CALIBRATION",
+        "E-GAP-ADMISSION04-20261018-TARGET",
+        "E-GAP-ADMISSION04-20261018-CONTINUATION-DRIVER",
+        "E-GAP-ADMISSION04-20261018-CONTINUATION-REVIEW",
+        "E-GAP-ADMISSION04-20261018-DURABLE-LAUNCHER",
+        "E-GAP-ADMISSION04-20261018-TRANSITION",
+        "E-GAP-ADMISSION04-20261018-ARCHIVE",
+        "E-GAP-SERVICE05-20261019-STOP",
+        "E-GAP-SERVICE05-20261019-ARCHIVE",
+        "E-GAP-FREEZE-REPAIR02-20261024-PLAN",
+        "E-GAP-FREEZE-REPAIR02-20261024-REVIEW",
+        "E-GAP-FREEZE-REPAIR02-20261024-FAILURE",
+        "E-GAP-FREEZE-REPAIR02-20261024-FAILURE-LOG",
+        "E-GAP-FREEZE-REPAIR02-20261024-FREEZE",
+        "E-GAP-FREEZE-REPAIR02-20261024-DRIVER",
+        "E-GAP-FREEZE-REPAIR02-20261024-LAUNCHER",
+        "E-GAP-FREEZE-REPAIR02-20261024-TRANSITION",
+        "E-GAP-FREEZE-REPAIR02-20261024-LAUNCH",
+        "E-GAP-FREEZE-REPAIR02-20261024-START",
+        "E-GAP-FREEZE-REPAIR02-20261024-ARCHIVE",
+        "E-GAP-FINAL04-20261018-ALLOCATION",
+        "E-GAP-FINAL04-20261018-PLAN",
+        "E-GAP-FINAL04-20261018-ARCHIVE",
+        "E-GAP-FINAL04-20261018-LOCAL-CONTINUITY",
+        "E-GAP-FINAL04-20261018-V01-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V01",
+        "E-GAP-FINAL04-20261018-V02-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V02",
+        "E-GAP-FINAL04-20261018-V04-T0-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V04-T0",
+        "E-GAP-FINAL04-20261018-V05-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V05",
+        "E-GAP-FINAL04-20261018-V14-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V14",
+        "E-GAP-FINAL04-20261018-V04-T1-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V04-T1",
+        "E-GAP-FINAL04-20261018-V06-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V06",
+        "E-GAP-FINAL04-20261018-V09-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V09",
+        "E-GAP-FINAL04-20261018-V10-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V10",
+        "E-GAP-FINAL04-20261018-V11A-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V11a",
+        "E-GAP-FINAL04-20261018-V11B-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V11b",
+        "E-GAP-FINAL04-20261018-V13-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V13",
+        "E-GAP-FINAL04-20261018-V-COST-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V-COST",
+        "E-GAP-FINAL04-20261018-V08-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V08",
+        "E-GAP-FINAL04-20261018-V07-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V07",
+        "E-GAP-FINAL04-20261018-V12-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V12",
+        "E-GAP-FINAL04-20261018-FINITE-ARCHIVE",
+        "E-GAP-FINAL04-20261018-V03-ARCHIVE",
+        "E-GAP-FINAL04-20261018-RESULT-V03",
+        "E-GAP-FINAL04-20261018-MUTATION-ARCHIVE",
+        "E-GAP-FINAL04-20261018-FAILURE-ARCHIVE",
+        "E-GAP-FINAL04-20261018-FAILURE",
+        "E-GAP-FREEZE-REPAIR02-STOP-20261024-STOP",
+        "E-GAP-FREEZE-REPAIR02-STOP-20261024-ARCHIVE",
+        "E-GAP-CLOSE-REPAIR01-20261024-PLAN",
+        "E-GAP-CLOSE-REPAIR01-20261024-REVIEW",
+        "E-GAP-CLOSE-REPAIR01-20261024-FAILURE",
+        "E-GAP-CLOSE-REPAIR01-20261024-LOG",
+        "E-GAP-CLOSE-REPAIR01-20261024-REGISTRATION",
+        "E-GAP-CLOSE-REPAIR01-20261024-PRODUCT-CLOSURE",
+        "E-GAP-CLOSE-REPAIR01-20261024-VERIFIER",
+        "E-GAP-CLOSE-REPAIR01-20261024-DRIVER",
+        "E-GAP-CLOSE-REPAIR01-20261024-AUDIT-PLAN",
+        "E-GAP-CLOSE-REPAIR01-20261024-LAUNCH",
+        "E-GAP-CLOSE-REPAIR01-20261024-ARCHIVE",
+        "E-GAP-FINAL04-20261024-REPAIRED-CLOSE-ARCHIVE",
+        "E-GAP-FINAL04-20261018-QUALIFIED-TRACE",
+        "E-GAP-FINAL04-20261018-PACKAGE",
+        "E-GAP-FINAL04-20261018-GAP-QUALIFICATION"
       ],
       "done_when": "Every required bank profile has a configured public study, independent finite reference and adverse cases, explicit evaluation/cost/artifact contracts and precise support status; integrated semantic and affected-source reviews pass. Final integrated qualification includes all changed PRD foundation source and every retained scientific gate; old source acceptance cannot close this work.",
-      "next_action": "Continue the allocated V03 mutation run, register its terminal result, run the final Tier-0 gate and package reconstruction, then execute GAP-01/FINAL-AUDIT. On failure preserve the receipt and repair at the current master boundary.",
+      "next_action": "Preserve current qualified source; GAP-01/FINAL-AUDIT independently assesses complete gap closure.",
       "budget": {
         "mode": "frozen_integrated_qualification",
-        "allocation_evidence": "E-GAP-FINAL03-20261018-ALLOCATION",
+        "allocation_evidence": "E-GAP-FINAL04-20261018-ALLOCATION",
         "scientific_process_seconds": 45720,
         "registration_seconds": 6000,
         "mutation_runs": 1,
@@ -7155,7 +7262,7 @@
       "title": "Close historical implementation gaps and independently audit completion",
       "phase": "gap_closure",
       "owner": "Single implementation/review agent",
-      "state": "planned",
+      "state": "complete",
       "implementation": "verified",
       "dependencies": [
         "PRD-01"
@@ -7200,10 +7307,36 @@
         "E-GAP-INTEGRATION-20261018-FINAL-CONTROLLER-REVIEW",
         "E-GAP-INTEGRATION-20261018-FINAL-PREPARATION-REVIEW",
         "E-GAP-INTEGRATION-20261018-FINAL-ARCHIVE",
-        "E-GAP-REPAIR01-20261018-AUDIT09"
+        "E-GAP-REPAIR01-20261018-AUDIT09",
+        "E-GAP-CLOSE-REPAIR01-20261024-STOP-ARCHIVE",
+        "E-GAP-TERMINAL-REPAIR01-20261024-PLAN",
+        "E-GAP-TERMINAL-REPAIR01-20261024-REVIEW",
+        "E-GAP-TERMINAL-REPAIR01-20261024-FAILURE",
+        "E-GAP-TERMINAL-REPAIR01-20261024-LOG",
+        "E-GAP-TERMINAL-REPAIR01-20261024-RECOVERY",
+        "E-GAP-TERMINAL-REPAIR01-20261024-DRIVER",
+        "E-GAP-TERMINAL-REPAIR01-20261024-AUDIT-PLAN",
+        "E-GAP-TERMINAL-REPAIR01-20261024-LAUNCH",
+        "E-GAP-TERMINAL-REPAIR01-20261024-ARCHIVE",
+        "E-GAP-AUDIT15-20261018-PLAN",
+        "E-GAP-AUDIT15-20261018-REVIEW",
+        "E-GAP-AUDIT15-20261018-PREDECESSOR",
+        "E-GAP-AUDIT15-20261018-TERMINAL-REVIEW",
+        "E-GAP-AUDIT15-20261018-ARCHIVE",
+        "E-GAP-AUDIT15-GUIDANCE-QUALIFIED",
+        "E-GAP-AUDIT15-GUIDANCE-ARCHIVE-QUALIFIED",
+        "E-GAP-AUDIT15-20261018-BEHAVIOR",
+        "E-GAP-AUDIT15-20261018-READY",
+        "E-GAP-AUDIT15-20261018-CLOSING-ARCHIVE",
+        "E-GAP-TERMINAL-STATUS01-20261024-PLAN",
+        "E-GAP-TERMINAL-STATUS01-20261024-RECONCILIATION",
+        "E-GAP-TERMINAL-STATUS01-20261024-ARCHIVE",
+        "E-GAP-TERMINAL-STATUS01-20261024-FINAL-AUDIT",
+        "E-GAP-TERMINAL-STATUS01-20261024-PUBLICATION",
+        "E-GAP-TERMINAL-STATUS01-20261024-SERVICE"
       ],
       "done_when": "All 27 atomic clauses have objective behavior/evidence or appropriate retained research outcomes, final current-source qualification passes and GAP-01/FINAL-AUDIT reconstructs complete closure with no unresolved required behavior.",
-      "next_action": "GAP-01/FINAL-AUDIT follows BANK-01/GAP-QUALIFICATION; independently reconstruct all 27 original gap clauses and reject false completion.",
+      "next_action": "Preserve all original obligations and qualified finite evidence; changed source or additional claims require prospective work.",
       "budget": {
         "mode": "bounded_local_development",
         "cpu_count": 1,
@@ -7213,7 +7346,22 @@
         "max_groups_per_stage": 12,
         "scientific_campaign_allocation": null,
         "integration_reviewed_max_groups": 40,
-        "integration_completion_evidence": "E-GAP-INTEGRATION-20261018-FINAL-REVIEW"
+        "integration_completion_evidence": "E-GAP-INTEGRATION-20261018-FINAL-REVIEW",
+        "final_audit_allocation": {
+          "seconds": 6000,
+          "cpu_count": 1,
+          "gpu": false,
+          "automatic_retry": false,
+          "groups": [
+            "vector",
+            "evaluation",
+            "population",
+            "local",
+            "rgpe",
+            "installation",
+            "obligations"
+          ]
+        }
       }
     }
   ],
@@ -7886,14 +8034,14 @@
       "id": "V03",
       "registry_claim": "the suite itself catches wiring bugs",
       "registry_gate": "tier0_gate",
-      "registry_entry_sha256": "3df9bbf06a5bc685d5d7fdff2678d9612042c9764566fcfb5f926e27cce57d82",
+      "registry_entry_sha256": "45d8d5295a1bd7ec2d23479f5d8ca476adb44843ec0fe247f9a8a9ae0819bea2",
       "protocol_path": "validation/protocols/v03_protocol.md",
       "identity": "aligned",
       "decision_refs": [
         "D-V03-PHASE"
       ],
-      "protocol_sha256": "c92ac0f155dc5b5b0ed1bb4423b76776fd5e7bbc996618205a00ebdc880bea54",
-      "note": "Prospective 2.29 complete calibration resource ceiling; all controls and scientific criteria preserved."
+      "protocol_sha256": "63cb33a065710ecf334004fe3f1ed4507e6ce2ba6532c9773589874a328639a9",
+      "note": "Prospective 2.30 exact optional-fidelity proof; prior FAIL retained, no allocation."
     },
     {
       "id": "V04-T0",
@@ -8105,51 +8253,51 @@
   ],
   "campaign_receipts": {
     "V01": {
-      "run": "validation/artifacts/V01/20261023_gap_final_03",
+      "run": "validation/artifacts/V01/20261023_gap_final_04",
       "hashes": {
-        "results.json": "9a7300ce7effc2272b305dec058457ce15dcf41adc5b994d6aa9b94ca7a38217",
-        "metadata.json": "81406305acbe6e30c799e965bdd957b9f83c44de7cb0d6d0628e6df34eaf15c5",
-        "v16_audit.json": "686328e3f5cd73d035fda2d3d693094f01012f614c34f807b926dd606648b221"
+        "results.json": "bcefa102c36dbe53d71ec8ca2aa7d8f6edd85dfe3f19ba9a77ba6346ea5f78b3",
+        "metadata.json": "05666f089ef1db135e590b950eab301b3543f97a0abf833f5c325c0edd40e03e",
+        "v16_audit.json": "3d2219e8092f89268534629975d911e053269a43a806c8cf30e3d061bb850a9d"
       }
     },
     "V02": {
-      "run": "validation/artifacts/V02/20261023_gap_final_03",
+      "run": "validation/artifacts/V02/20261023_gap_final_04",
       "hashes": {
-        "results.json": "858202f618fb6bd01fc78ab45d60a726d33709c17856717b23316cee21b92bef",
-        "metadata.json": "11228c8e39b1826eb7e4d65e9783b5342d0de7225b0fabdc6e0bc7333ae8d2d4",
-        "v16_audit.json": "86caf270b798052244347e69e845a280fead82ce5015c5610146f43daaac55e6"
+        "results.json": "c8f5306daf50e92dfb9e71a633d41ef43656836c00c72cf1e2c6dd1e0a48928b",
+        "metadata.json": "dc8c0ec855efd9ecb49fdb9bca91b33e37a3f04c4a5aec96960ece2efc1c44f4",
+        "v16_audit.json": "39b583b908da328df32b0dd485fec98f8f02ab53be3657b0312f52d8c0c996cd"
       }
     },
     "V03": {
-      "run": "validation/artifacts/V03/20261018_gap_final_01",
+      "run": "validation/artifacts/V03/20261023_gap_final_04",
       "hashes": {
-        "results.json": "dab5d1b4fcc4701a07b867d29873a4bfc967c8d59a0035a822fb1046d1533bfb",
-        "metadata.json": "18f34f7ec7264f66dc8c32a5555c60678b5de88618f1cca82aa32ba6db97a802",
-        "v16_audit.json": "191b70246e33fce6630c7d05b280dd02892e5957ed3658c8647963a06288778b"
+        "results.json": "c1a00df10d5133eaae7889c19b30bed0831de03225935720ed97f219ae973d30",
+        "metadata.json": "c03d69882d1ced34e4f0a0c14ba5b068ba3306fdce02ed60dc9696f36b8c1fa5",
+        "v16_audit.json": "38ded0a4ffd98b319e6965035b2cb590edbd791648fd19421639ca28bd76e949"
       }
     },
     "V04-T0": {
-      "run": "validation/artifacts/V04-T0/20261023_gap_final_03",
+      "run": "validation/artifacts/V04-T0/20261023_gap_final_04",
       "hashes": {
-        "results.json": "5c95b6b0774050e996097a6a64156937ef56a80efb2ef10a14911a94ddfcae5e",
-        "metadata.json": "97e1b8f5a736ea19d845592188708df4350acbf457f13ffdb6e4686955e1bcc2",
-        "v16_audit.json": "4df8909f2163585a79ce8b0134f2eebd1c514b4c08a68ec573d6f89a2f6a737b"
+        "results.json": "9a4a4339935ee76ca67e0caaa5be2f3a2354c939c16c1bc3c6a64f736597ec14",
+        "metadata.json": "2c87785366becec2b88198c94ba0f0aa6390ed7ff428323a6dc17e5a9719b62a",
+        "v16_audit.json": "fd74d6defc6c0cbe3bc2ed6657ff674928b2cc3b04edb68553beea3cfd9e01b6"
       }
     },
     "V05": {
-      "run": "validation/artifacts/V05/20261023_gap_final_03",
+      "run": "validation/artifacts/V05/20261023_gap_final_04",
       "hashes": {
-        "results.json": "2257412f014e3941fd0d206eae5362a9d82b8c7e4a7afaae73c68df5e9c0bd17",
-        "metadata.json": "35509c7fb77b7a8ad74e9c4e925f4e554ba1e1d36ba71c4b35c21e3ac55ad220",
-        "v16_audit.json": "7338124793af8a4f63394f01978463b9ec9236d9f6373bdd7aead03eb5b7a9e9"
+        "results.json": "1326fb0109efd4c8e0939a696de597d372def822a130f38864d021f9eac93c7a",
+        "metadata.json": "0b153a25527149a9b0ae69dd2c0b8b95f3aba15de47c8658bfeca591c0df09ef",
+        "v16_audit.json": "2ce06f645036d47e80dfd69a6bb9a8cddf3b0ae807274811dea521d4b921019d"
       }
     },
     "V14": {
-      "run": "validation/artifacts/V14/20261023_gap_final_03",
+      "run": "validation/artifacts/V14/20261023_gap_final_04",
       "hashes": {
-        "results.json": "ff8255b94ff0d312c65189b3fe79efc0f9a80ddfd845ea24f27ff6245885e5bb",
-        "metadata.json": "ec2e9918bea988142f4adf4132b49aca583fa713c3c668632895183fdd1fcc9d",
-        "v16_audit.json": "c898c54cb7484a9cb988431c3d4e7d7a7147bf809fe84197879b6084d7955cf5"
+        "results.json": "03bcbe195075463e8bd15493f8712f1902bb7f666bd85c7798e85567ab5d004f",
+        "metadata.json": "c8c6dabf8ffb37260500f32e854926fa3aa0b4a7cb291d86d56526cf2a003aad",
+        "v16_audit.json": "a5e1b95c57871aade721ea519ec1f28a0e85eff7b83ed14008b2fb428b83fd04"
       }
     }
   },
@@ -24855,7 +25003,7 @@
     },
     {
       "id": "E-GAP-CALIBRATION-SUCCESSOR01-20261019-RUNBOOK",
-      "path": "docs/PROGRAM_OPERATIONS.md",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/program-operations-before-diagnostic.md",
       "sha256": "5d51e7daee81e885d65a7101f40f7279a8b17271a688cf9f64aaa6a770392324",
       "note": "Concrete prospective successor and exact operations; review and managed launch remain required."
     },
@@ -25261,6 +25409,835 @@
       "path": "archive/program-2026-10-18/before-gap-git-checkpoint-20261023-01/manifest.json",
       "sha256": "eb21a3262a0ddb136aeaa063795c6ede6402e27d0a8d7649dfa33a0f404c588b",
       "note": "User-requested Git checkpoint and live master refresh; qualification continues."
+    },
+    {
+      "id": "E-GAP-FINAL03-20261018-V03-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-03-V03/manifest.json",
+      "sha256": "75845c3710ac59173ae61ec77ef55394c3c0060d25045be47f082389cf9ce78c",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL03-20261018-RESULT-V03",
+      "path": "validation/artifacts/V03/20261023_gap_final_03/results.json",
+      "sha256": "59c655d4ecb1042fed0fc4e93cd52a1f4931bda022f8c763f5681713c2138bb3",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL03-20261018-FAILURE-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-03-failure/manifest.json",
+      "sha256": "73abff5a635aa9de403ec97f80e57d6f4f49c797454dfcc310a46b491e27fb04",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL03-20261018-FAILURE",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-03/execution-01/receipt.json",
+      "sha256": "1b3d17ea1ec2c7e21488b829f19a8d98149e49cc77be24674af0ed2d2973a58a",
+      "note": "Final allocation failed; retained without automatic retry or acceptance."
+    },
+    {
+      "id": "E-GAP-RECOVERY-STOP01-20261023-STOP",
+      "path": "docs/program/evidence/2026-10-23/gap-crash-recovery-01/service-stop-01/observation.json",
+      "sha256": "2a9365fd5262dc5631ab3ec6e68c9a97b4f4b28095ab759b00bd1d352ba06c2d",
+      "note": "Retained incomplete service; no retry or scientific acceptance."
+    },
+    {
+      "id": "E-GAP-RECOVERY-STOP01-20261023-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-crash-recovery-stop-20261023-01/manifest.json",
+      "sha256": "279bae0b9ae70ea409f4bfbb7e6a6aa54dda2f161e09b5112e1a509298f1bbdb",
+      "note": "Retained incomplete service; no retry or scientific acceptance."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-PLAN",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/plan.md",
+      "sha256": "e20364fea82b669c82627cf1f1a92122f2545d72cc4ee367ee25411ff977d370",
+      "note": "Completed V03 FAIL retained; bounded contract repair within BANK-01/GAP-QUALIFICATION."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-DIAGNOSIS",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/diagnosis.json",
+      "sha256": "135d35d6323116b86be5254a0c80dde7d437dbb70c8afb96091bf1301861e38e",
+      "note": "Completed V03 FAIL retained; bounded contract repair within BANK-01/GAP-QUALIFICATION."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-survivor-repair-20261023-01/manifest.json",
+      "sha256": "c4112e4d9f0031250f927c3103a08d8598fd839499b39e1ae034cfe0012ecca2",
+      "note": "Completed V03 FAIL retained; bounded contract repair within BANK-01/GAP-QUALIFICATION."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-INVENTORY",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/inventory.json",
+      "sha256": "d86b8c0e7af8ddf8d08f7322b3a6e6b29da314ed43faa57a74f6dd83d45682bf",
+      "note": "Bounded contract repair evidence; not scientific qualification."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-DIAGNOSTIC",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/diagnostic-01/result.json",
+      "sha256": "3175effe925567a88645e4d8eaeaefe31541a170261e018206b54bf4c4bfabd1",
+      "note": "Bounded contract repair evidence; not scientific qualification."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-DIAGNOSTIC-GUARD",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/diagnostic-01/receipt.json",
+      "sha256": "8d78f565424aa4c31581fc95c6ade92326527815938f212871f7304484a3efdb",
+      "note": "Bounded contract repair evidence; not scientific qualification."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-PROOF",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/proof-amendment-01.json",
+      "sha256": "99529a6ee71ef1b1f50b8ade9c4e997ccb11890479155d6ff5a4ba6133721ffb",
+      "note": "Bounded contract repair evidence; not scientific qualification."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-PROOF-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-survivor-proof-20261023-01/manifest.json",
+      "sha256": "16f0e26e2690c766517f696ff5c98897a131c45dcae4a0e8424e7b4726339543",
+      "note": "Bounded contract repair evidence; not scientific qualification."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-RUNBOOK",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/program-operations-before-successor.md",
+      "sha256": "448c92fac6617026235f4fc80a9619b0abe939e0180b3810ee426bcbfb037422",
+      "note": "Add exact bounded diagnostic operation; prior runbook retained byte-for-byte."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-SUCCESSOR-PLAN",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/successor-plan.md",
+      "sha256": "f5a659b8de4fb3b30fdec2f81c9378efeab447d022c19371af5bca508f56a9ce",
+      "note": "Bounded current-source repair and prospective successor; no qualification or scientific allocation."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-INSTALL-REPAIR",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/offline-build-repair-01.json",
+      "sha256": "f76d35294ca71d2f7f3e1721e14b29ee22344c192a1b5b73cf5111d97ccc887e",
+      "note": "Bounded current-source repair and prospective successor; no qualification or scientific allocation."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-SUCCESSOR-RUNBOOK",
+      "path": "docs/PROGRAM_OPERATIONS.md",
+      "sha256": "b4e6ddc256762e734c285a17928b2f32da6dd5c3942a863a2ece42262fdf897d",
+      "note": "Bounded current-source repair and prospective successor; no qualification or scientific allocation."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-SUCCESSOR-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-survivor-successor-20261023-01/manifest.json",
+      "sha256": "498e4f9e9db6263f36cf4b4c83eda6fc57515554ed259f868a7b4b6c1663faa8",
+      "note": "Bounded current-source repair and prospective successor; no qualification or scientific allocation."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-INTEGRATION",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/integration-verification-02.json",
+      "sha256": "9394c137bbc987abc42f21c63443bc3ace44ef1f980bef3cfcfb188f628cd5dd",
+      "note": "Current development and exact unchanged-source reconstruction; not scientific qualification."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-INTEGRATION-REVIEW",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/integration-reconstruction-01.json",
+      "sha256": "04cad256b66b4532768d435e27d5a8aae469da2b16db2475193d8873d9953d47",
+      "note": "Current development and exact unchanged-source reconstruction; not scientific qualification."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-IMPACT",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/integration-impact-02.json",
+      "sha256": "7feacfee987a4389a3d2a076a20107378a7f3698d0f446aaf97131f5854546ff",
+      "note": "Current development and exact unchanged-source reconstruction; not scientific qualification."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261023-INTEGRATION-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-survivor-development-20261023-01/manifest.json",
+      "sha256": "f72efd0d7a35e2927e6c02833d579bab71930c6917764802bc67288f12e94c53",
+      "note": "Current development and exact unchanged-source reconstruction; not scientific qualification."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261024-LAUNCH-REVIEW",
+      "path": "docs/program/evidence/2026-10-18/gap-admission-04/continuation-review.json",
+      "sha256": "fad73564c7b0630413e972d63ddb0a688322e5e23f7222f32ff6caf3b1b22f7d",
+      "note": "Actually launched approved bounded service; fresh qualification and last-phase audit remain required."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261024-STARTUP-RECOVERY",
+      "path": "docs/program/evidence/2026-10-18/gap-admission-04/launch-recovery-review.json",
+      "sha256": "27981396a2521b4b008d9bb08e6fad27acf1356d65e4061b24f3ca2434e56584",
+      "note": "Actually launched approved bounded service; fresh qualification and last-phase audit remain required."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261024-LAUNCH",
+      "path": "docs/program/evidence/2026-10-23/gap-survivor-repair-01/launch-observation-01.json",
+      "sha256": "e0d5a896894a005e7b65d64018564d5b9911c72b67d238ce2979482c9972d635",
+      "note": "Actually launched approved bounded service; fresh qualification and last-phase audit remain required."
+    },
+    {
+      "id": "E-GAP-SURVIVOR-20261024-LAUNCH-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-survivor-service-launch-20261024-01/manifest.json",
+      "sha256": "a03f471db77248b54851f9b7064850ce0e29ad8d87d93bd32d5c19469e6bd9ce",
+      "note": "Actually launched approved bounded service; fresh qualification and last-phase audit remain required."
+    },
+    {
+      "id": "E-GAP-ADMISSION04-20261018-ADMISSION",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/admission.json",
+      "sha256": "952f59357d00e6e494b560a93113cc45b52c944d2993010b3b968e34c40ff5e4",
+      "note": "Current gap source installation, calibration, cleanup and durable qualification admission."
+    },
+    {
+      "id": "E-GAP-ADMISSION04-20261018-CALIBRATION",
+      "path": "docs/program/evidence/2026-10-18/gap-admission-04/calibration-verification.json",
+      "sha256": "598ad63e6e19a71fd086df47e9793775130b19f52ea97a0bead5f7182f215cd7",
+      "note": "Current gap source installation, calibration, cleanup and durable qualification admission."
+    },
+    {
+      "id": "E-GAP-ADMISSION04-20261018-TARGET",
+      "path": "docs/program/evidence/2026-10-18/gap-descendant-04/target-review.json",
+      "sha256": "bf749bf55e2221a1aceff5edb672e287aacd1cd674e18749da096495bea462e4",
+      "note": "Current gap source installation, calibration, cleanup and durable qualification admission."
+    },
+    {
+      "id": "E-GAP-ADMISSION04-20261018-CONTINUATION-DRIVER",
+      "path": "docs/program/evidence/2026-10-18/gap-admission-04/continue_program.py",
+      "sha256": "17e3a68e230639fb6df37ae2eb9d3312451304daa95a20a166aaaba1524421ce",
+      "note": "Current gap source installation, calibration, cleanup and durable qualification admission."
+    },
+    {
+      "id": "E-GAP-ADMISSION04-20261018-CONTINUATION-REVIEW",
+      "path": "docs/program/evidence/2026-10-18/gap-admission-04/continuation-review.json",
+      "sha256": "fad73564c7b0630413e972d63ddb0a688322e5e23f7222f32ff6caf3b1b22f7d",
+      "note": "Current gap source installation, calibration, cleanup and durable qualification admission."
+    },
+    {
+      "id": "E-GAP-ADMISSION04-20261018-DURABLE-LAUNCHER",
+      "path": "docs/program/evidence/2026-10-18/gap-admission-04/run_gap_program.py",
+      "sha256": "0edd5772ba46666ca14924559eb03c91ee06396f62ef111425f38261c844a5a2",
+      "note": "Current gap source installation, calibration, cleanup and durable qualification admission."
+    },
+    {
+      "id": "E-GAP-ADMISSION04-20261018-TRANSITION",
+      "path": "docs/program/evidence/2026-10-18/gap-admission-04/record_admission.py",
+      "sha256": "ede6b622afaf8959df895ba03cb7d16804a363c447fed7272d0f60aeadcb6eda",
+      "note": "Current gap source installation, calibration, cleanup and durable qualification admission."
+    },
+    {
+      "id": "E-GAP-ADMISSION04-20261018-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-current-admission-04/manifest.json",
+      "sha256": "0124cdd9077c7f83e531a5e08ea10c12b5a204d7f21f490ae7c3b3263fe4ca1a",
+      "note": "Current gap source installation, calibration, cleanup and durable qualification admission."
+    },
+    {
+      "id": "E-GAP-SERVICE05-20261019-STOP",
+      "path": "docs/program/evidence/2026-10-18/gap-admission-04/service-stop-01/observation.json",
+      "sha256": "2a9365fd5262dc5631ab3ec6e68c9a97b4f4b28095ab759b00bd1d352ba06c2d",
+      "note": "Retained incomplete service; no retry or scientific acceptance."
+    },
+    {
+      "id": "E-GAP-SERVICE05-20261019-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-service-stop-05/manifest.json",
+      "sha256": "209dbbac697d26bd4dbcccdb43065447a44ebe1302c6eab7b26ed9934b82cbda",
+      "note": "Retained incomplete service; no retry or scientific acceptance."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-20261024-PLAN",
+      "path": "docs/program/evidence/2026-10-18/gap-freeze-repair-02/plan.md",
+      "sha256": "b6c8aaea818def11d03dcbdf79b7b70118f6dba48a5e122ff0a638e0bec81753",
+      "note": "Additive runtime repair; preserve passing admission and all failed/partial evidence."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-20261024-REVIEW",
+      "path": "docs/program/evidence/2026-10-18/gap-freeze-repair-02/review.json",
+      "sha256": "e80c7f4366ef28c4337a71cf2eae0d9733a26e58ba9ed7c18774a03faef26419",
+      "note": "Additive runtime repair; preserve passing admission and all failed/partial evidence."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-20261024-FAILURE",
+      "path": "docs/program/evidence/2026-10-18/gap-admission-04/continuation-01/receipt.json",
+      "sha256": "f89c842cd4c29e82ac7bf9821f1143de7e669133d9b89f1a9b13f476c981c994",
+      "note": "Additive runtime repair; preserve passing admission and all failed/partial evidence."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-20261024-FAILURE-LOG",
+      "path": "docs/program/evidence/2026-10-18/gap-admission-04/continuation-01/freeze-final.log",
+      "sha256": "c67d7ac8af9ba319ef7ed59a9af9993a960131214055b59e7eefbd7ea29394d8",
+      "note": "Additive runtime repair; preserve passing admission and all failed/partial evidence."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-20261024-FREEZE",
+      "path": "docs/program/evidence/2026-10-18/gap-freeze-repair-02/freeze.py",
+      "sha256": "a9b5886f41b606c86221c260356778c773c2831007d5cc9b66f8a83e4bb9c904",
+      "note": "Additive runtime repair; preserve passing admission and all failed/partial evidence."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-20261024-DRIVER",
+      "path": "docs/program/evidence/2026-10-18/gap-freeze-repair-02/continue_program.py",
+      "sha256": "66ab3166a9c8a345c1ad81877f63e6b47b031faeba868dda3dd079b1598992bf",
+      "note": "Additive runtime repair; preserve passing admission and all failed/partial evidence."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-20261024-LAUNCHER",
+      "path": "docs/program/evidence/2026-10-18/gap-freeze-repair-02/run_freeze_repair.py",
+      "sha256": "183bb210a36d13dae7e55001a8c04fe682eb297aab737264498c150b7d42a739",
+      "note": "Additive runtime repair; preserve passing admission and all failed/partial evidence."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-20261024-TRANSITION",
+      "path": "docs/program/evidence/2026-10-18/gap-freeze-repair-02/register_repair.py",
+      "sha256": "57136a72f42f9d35e01fb1b41033a14911085d19e5a83e7ef2d715909b85adaa",
+      "note": "Additive runtime repair; preserve passing admission and all failed/partial evidence."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-20261024-LAUNCH",
+      "path": "docs/program/evidence/2026-10-18/gap-freeze-repair-02/durable-launch-01/launch.json",
+      "sha256": "936440794886d3606785826bd25630fa2322d9d551d0e661448774a5c65966cc",
+      "note": "Additive runtime repair; preserve passing admission and all failed/partial evidence."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-20261024-START",
+      "path": "docs/program/evidence/2026-10-18/gap-freeze-repair-02/execution-01/start.json",
+      "sha256": "77241c1a25a8da2165c28e68593ae80ea040c538f0fe1cdcbed782cde1fc7c36",
+      "note": "Additive runtime repair; preserve passing admission and all failed/partial evidence."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-20261024-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-freeze-runtime-repair-02/manifest.json",
+      "sha256": "ea09d4dc06411d7fe3b029185fd9629c7010a0e99901e96c66386e17a897f886",
+      "note": "Additive runtime repair; preserve passing admission and all failed/partial evidence."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-PHASE-TIER0",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/tier0-phase-02.json",
+      "sha256": "20f0e7b121897512be26325904c2f08e29e651518143b6b3b55892bde3ef8799",
+      "note": "Fresh integrated allocation; prior phase evidence remains unchanged.",
+      "kind": "phase_protocol_binding"
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-PHASE-TIER1",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/tier1-phase-02.json",
+      "sha256": "9fd88c3e4f8fabd3fde361bae1ab7ae2e719c95390530f9cd2f9f3be5179219f",
+      "note": "Fresh integrated allocation; prior phase evidence remains unchanged."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-PHASE-TIER2",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/tier2-phase-02.json",
+      "sha256": "171ce30e55d0c098543121068340b68bf53180b90838c2caf63c706aa8e04279",
+      "note": "Fresh integrated allocation; prior phase evidence remains unchanged."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-PHASE-TIER3-ACCEPTANCE",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/tier3-acceptance-phase-02.json",
+      "sha256": "89a518d59882adea87380322b05783d00659652d7eedefe831e269b5f35b679c",
+      "note": "Fresh integrated allocation; prior phase evidence remains unchanged."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-PHASE-WARM-FINITE",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/warm-finite-phase-02.json",
+      "sha256": "60e8245133d94aaadf198e4f41c4de2aebe0db8f3ccab7b488714c388d20d807",
+      "note": "Fresh integrated allocation; prior phase evidence remains unchanged."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-ALLOCATION",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/allocation.json",
+      "sha256": "d35d0f7b195c392ce9accd1fdc7c33836e8a3511cfeefed23ec59a3ab58f6000",
+      "note": "Exact final source, phase bindings, resources and once-only run paths."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-PLAN",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/plan.md",
+      "sha256": "601f2915cdebd49a3283c0eb1708e025cd522910436f4145806a53638d08bf0d",
+      "note": "Objective final scope, continuation, error and completion consequences."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-final-allocation-04-freeze-repair-02/manifest.json",
+      "sha256": "64227fa98e56b71ff05457ab643263cc403fc429d9e45016ae27fa1fe7653a8d",
+      "note": "Authority before final allocation."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-LOCAL-CONTINUITY",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/local-product-continuity.json",
+      "sha256": "8beac17efc510f64330bda90995520cb52014eb4c686e9147da837beb2d9c0ed",
+      "note": "Reviewed checkpoint semantics, unchanged remaining dependencies, fresh installs and retained cleanup preserve local scope."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V01-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V01/manifest.json",
+      "sha256": "c978e4f15422625ad5577b4de8d33547cbcee196cba2a12144d063cd2fb2d507",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V01",
+      "path": "validation/artifacts/V01/20261023_gap_final_04/results.json",
+      "sha256": "bcefa102c36dbe53d71ec8ca2aa7d8f6edd85dfe3f19ba9a77ba6346ea5f78b3",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V02-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V02/manifest.json",
+      "sha256": "5f629b1957e90bfc81861e34177cfdc7916cc0648180a527a9f27efc7d9ffab4",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V02",
+      "path": "validation/artifacts/V02/20261023_gap_final_04/results.json",
+      "sha256": "c8f5306daf50e92dfb9e71a633d41ef43656836c00c72cf1e2c6dd1e0a48928b",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V04-T0-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V04-T0/manifest.json",
+      "sha256": "17c996e6d0a2ab0cfdbe8f92f9a2fc65e4738bcb0f2f38ee35a97db05a11ce93",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V04-T0",
+      "path": "validation/artifacts/V04-T0/20261023_gap_final_04/results.json",
+      "sha256": "9a4a4339935ee76ca67e0caaa5be2f3a2354c939c16c1bc3c6a64f736597ec14",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V05-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V05/manifest.json",
+      "sha256": "764e3bd6cf9f26416ecf63956d1cab03866cb1be08ef4c01a82f4ea1a95ac386",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V05",
+      "path": "validation/artifacts/V05/20261023_gap_final_04/results.json",
+      "sha256": "1326fb0109efd4c8e0939a696de597d372def822a130f38864d021f9eac93c7a",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V14-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V14/manifest.json",
+      "sha256": "ec31d3a1d0cbfd0344e8f683883e22aaf3424e68e4d1a0d2bf84c2bb78a8f9fb",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V14",
+      "path": "validation/artifacts/V14/20261023_gap_final_04/results.json",
+      "sha256": "03bcbe195075463e8bd15493f8712f1902bb7f666bd85c7798e85567ab5d004f",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V04-T1-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V04-T1/manifest.json",
+      "sha256": "e825c4bcb250978b8199e604ef49c866cdbbacaecd6212922ba5376d0a0365db",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V04-T1",
+      "path": "validation/artifacts/V04-T1/20261023_gap_final_04/results.json",
+      "sha256": "7e01c6add3c12c7d11558409dcdd37ffd4629538c876370edcdb9d307a56d85e",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V06-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V06/manifest.json",
+      "sha256": "6ae55bf001fa66ff8ca96dac82585b965e2a010509ccdb03626f191291b48675",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V06",
+      "path": "validation/artifacts/V06/20261023_gap_final_04/results.json",
+      "sha256": "e6e16f2b2053aaa8ed78c021a22b8fefdc7adee215483755cd788dfd866b048b",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V09-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V09/manifest.json",
+      "sha256": "ce2b6f01777a1f7b9d45fa25bb89352d4f552b16234f3095d07c65f0f2fb049e",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V09",
+      "path": "validation/artifacts/V09/20261023_gap_final_04/results.json",
+      "sha256": "120d9424be863a0ddc7afc0e0e40bf97efca35ac4b0885342def306b36bc8ad7",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V10-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V10/manifest.json",
+      "sha256": "f9dc09de6513eaba9896d1959729452fb68bd029d746c84897df5b0a37e97012",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V10",
+      "path": "validation/artifacts/V10/20261023_gap_final_04/results.json",
+      "sha256": "193a87a39a1b49b31ca2590017e347d80f0fb8f9bd4ddb0dbe69781c5bdb7380",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V11A-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V11a/manifest.json",
+      "sha256": "e6e619a767ea597adbaaab6dbe40e5696cad4d18c561784b1c195c8b27efce78",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V11a",
+      "path": "validation/artifacts/V11a/20261023_gap_final_04/results.json",
+      "sha256": "9867c75c632404b71880b0d74f1551d21c074cf77d6ec90d1d49f18c215d6216",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V11B-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V11b/manifest.json",
+      "sha256": "c425b5e085d86a719c95101d27b2ccf6527460b9f380544533b560c0a955941c",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V11b",
+      "path": "validation/artifacts/V11b/20261023_gap_final_04/results.json",
+      "sha256": "eae13546f0159110d36bc1cfc446fa6f770911d305799e776353f5a5d2a4e3fa",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V13-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V13/manifest.json",
+      "sha256": "0d56c1e37902d92b7572d95b950e8a4cffa82977bbb4572047ccd88086c04d40",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V13",
+      "path": "validation/artifacts/V13/20261023_gap_final_04/results.json",
+      "sha256": "c9bd1a67037b6cf46d36c4159bede7d52b7aced4d223d6997731082728e98ac3",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V-COST-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V-COST/manifest.json",
+      "sha256": "4e61c2aecb301b96a9243dcc1e13709641d6bba4768eca908ba341839510012e",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V-COST",
+      "path": "validation/artifacts/V-COST/20261023_gap_final_04/results.json",
+      "sha256": "84160dc58f41a82d536697f3530dfc6658dc8191b5c54d90047d3c68ec172acc",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V08-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V08/manifest.json",
+      "sha256": "b803c53e40d3d325114e809f217294b91c9b21b661ffe1bfa1af0f72c973d473",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V08",
+      "path": "validation/artifacts/V08/20261023_gap_final_04/results.json",
+      "sha256": "3b7fb02c81f699b7f69ba3d24a7ea20fb9eaeca49bc09936ff7af1ae303f63aa",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V07-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V07/manifest.json",
+      "sha256": "da86d01b10805eb9273def760731e0903d9eb557373938a689dcbf7591b6a90a",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V07",
+      "path": "validation/artifacts/V07/20261023_gap_final_04/results.json",
+      "sha256": "bb6f3b8581e3e6b0c8464f018f3099b69ca732a33c331085f1a0cd6fba126fef",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V12-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V12/manifest.json",
+      "sha256": "5db9eee0966f215b48e1191fe413f7a57413ffc364a844cc04173e6c05de577c",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V12",
+      "path": "validation/artifacts/V12/20261023_gap_final_04/results.json",
+      "sha256": "23c8a9d3afb1febc4d2bddff50a814066e6c5ab1b9465c8f56f108c30b2d2b29",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-FINITE-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-finite/manifest.json",
+      "sha256": "66aaa899458529fb10496ab30efe96f09f907f7ff95d2e0ae48b7dbe5f0e99de",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-V03-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-V03/manifest.json",
+      "sha256": "dcf46e45936b3e50551a65381d791c1073e0b58ce225adfe2b0e26c39dd695a5",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-RESULT-V03",
+      "path": "validation/artifacts/V03/20261023_gap_final_04/results.json",
+      "sha256": "c1a00df10d5133eaae7889c19b30bed0831de03225935720ed97f219ae973d30",
+      "note": "Exact terminal result retained immediately, including adverse or incomplete outcomes."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-MUTATION-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-mutation/manifest.json",
+      "sha256": "f59a3a1f86fbead0fc5ec2b3d75b13652dcc0cf1223b9ca990213b9a406bad71",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-FAILURE-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-failure/manifest.json",
+      "sha256": "c7f97de38719106afbfb72529ef3525be20dfa2629dbc65f987154e388c2712d",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-FAILURE",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/execution-01/receipt.json",
+      "sha256": "48f3db33df9aac703c94332c4a6de324aefa0b1d99c3a908c577ac9dd52b5989",
+      "note": "Final allocation failed; retained without automatic retry or acceptance."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-STOP-20261024-STOP",
+      "path": "docs/program/evidence/2026-10-18/gap-freeze-repair-02/service-stop-01/observation.json",
+      "sha256": "2a9365fd5262dc5631ab3ec6e68c9a97b4f4b28095ab759b00bd1d352ba06c2d",
+      "note": "Retained incomplete service; no retry or scientific acceptance."
+    },
+    {
+      "id": "E-GAP-FREEZE-REPAIR02-STOP-20261024-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-freeze-repair-02-service-stop/manifest.json",
+      "sha256": "af5ff9b196a77b0da11ebb8f695584ba6ebcbccc6cd25a13a2cc69890662f5ee",
+      "note": "Retained incomplete service; no retry or scientific acceptance."
+    },
+    {
+      "id": "E-GAP-CLOSE-REPAIR01-20261024-PLAN",
+      "path": "docs/program/evidence/2026-10-18/gap-close-repair-01/plan.md",
+      "sha256": "392ee22239f54ba2aed761bd255a08f0e97b72bd94f59b6c40abfd821b54ea18",
+      "note": "All original scientific results retained; bounded administrative recovery and final audit."
+    },
+    {
+      "id": "E-GAP-CLOSE-REPAIR01-20261024-REVIEW",
+      "path": "docs/program/evidence/2026-10-18/gap-close-repair-01/review.json",
+      "sha256": "ba8181dbf5c1ffa68b7be0b16cdd49e34f1dc9a611fca977ea1ad53b9da4b01e",
+      "note": "All original scientific results retained; bounded administrative recovery and final audit."
+    },
+    {
+      "id": "E-GAP-CLOSE-REPAIR01-20261024-FAILURE",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/execution-01/receipt.json",
+      "sha256": "48f3db33df9aac703c94332c4a6de324aefa0b1d99c3a908c577ac9dd52b5989",
+      "note": "All original scientific results retained; bounded administrative recovery and final audit."
+    },
+    {
+      "id": "E-GAP-CLOSE-REPAIR01-20261024-LOG",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/execution-01/register-close/command.log",
+      "sha256": "e2f6653ec53ae625f8b380f539595c2f5723302cfef6863ed803e79c306cf1f2",
+      "note": "All original scientific results retained; bounded administrative recovery and final audit."
+    },
+    {
+      "id": "E-GAP-CLOSE-REPAIR01-20261024-REGISTRATION",
+      "path": "docs/program/evidence/2026-10-18/gap-close-repair-01/record.py",
+      "sha256": "8f96165fcb7ad2e9e74877784e18cf19f5e1de4293831770bd9f8f9dd3bb0f3b",
+      "note": "All original scientific results retained; bounded administrative recovery and final audit."
+    },
+    {
+      "id": "E-GAP-CLOSE-REPAIR01-20261024-PRODUCT-CLOSURE",
+      "path": "docs/program/evidence/2026-10-18/gap-close-repair-01/product_closure.py",
+      "sha256": "fb5d5494a2672996cf9050f46e578bb168cb9755aca717ee83737e49216d6b08",
+      "note": "All original scientific results retained; bounded administrative recovery and final audit."
+    },
+    {
+      "id": "E-GAP-CLOSE-REPAIR01-20261024-VERIFIER",
+      "path": "docs/program/evidence/2026-10-18/gap-close-repair-01/verification.py",
+      "sha256": "0d971f53891a6308a3e7497349c8228aa7a3b973756984e7b450ae2986175740",
+      "note": "All original scientific results retained; bounded administrative recovery and final audit."
+    },
+    {
+      "id": "E-GAP-CLOSE-REPAIR01-20261024-DRIVER",
+      "path": "docs/program/evidence/2026-10-18/gap-close-repair-01/continue_program.py",
+      "sha256": "e4c4a825af7983214c02645408fc3148118270e874e9afeaea9003f6fbedb8d1",
+      "note": "All original scientific results retained; bounded administrative recovery and final audit."
+    },
+    {
+      "id": "E-GAP-CLOSE-REPAIR01-20261024-AUDIT-PLAN",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-14/audit-plan.md",
+      "sha256": "34e8d23c6fe6edc73ce7761158d861327bbfc32d2e631aaa6e7c8ff180589cbf",
+      "note": "All original scientific results retained; bounded administrative recovery and final audit."
+    },
+    {
+      "id": "E-GAP-CLOSE-REPAIR01-20261024-LAUNCH",
+      "path": "docs/program/evidence/2026-10-18/gap-close-repair-01/durable-launch-01/launch.json",
+      "sha256": "a307e827b30824a507cbae2bb56d9108e0e5b2a09165b156ddb8e5d5db7c73e0",
+      "note": "All original scientific results retained; bounded administrative recovery and final audit."
+    },
+    {
+      "id": "E-GAP-CLOSE-REPAIR01-20261024-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-close-repair-01/manifest.json",
+      "sha256": "aee75c4ee803bc0be26d158d664986c423e8b55e8f9cac0b2fc2663bff943072",
+      "note": "All original scientific results retained; bounded administrative recovery and final audit."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261024-REPAIRED-CLOSE-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-qualification-04-close-repair-01/manifest.json",
+      "sha256": "2d659f1976dfeeca42c494f8fc084fda5df6d95d68c5c8902c0e0af31ba56cca",
+      "note": "Retain authority before final sequence boundary."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-QUALIFIED-TRACE",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/coverage-qualified.json",
+      "sha256": "ea668829ba844f12f31a92ac36ea07dd3ed3313333b55df12646ed3d97f45ecf",
+      "note": "Original scientific obligations pass on current source; independent final gap completion audit remains open."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-PACKAGE",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/accepted-package.json",
+      "sha256": "468db5f8c1245e7d3bbc127c138eaede8b206903a2d3d23e51d9d9a46a798886",
+      "note": "Exact qualified local source; finite claims, waived separate-machine test and cancelled branch retained."
+    },
+    {
+      "id": "E-GAP-FINAL04-20261018-GAP-QUALIFICATION",
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/gap-qualification.json",
+      "sha256": "ba882bfe24e873fc289815c9eafc2dfd4d9abcce3fe64ffc1ff7c3ea2a1b6e65",
+      "note": "Current-source scientific qualification and GAP behavior evidence; final audit remains open."
+    },
+    {
+      "id": "E-GAP-CLOSE-REPAIR01-20261024-STOP-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-close-repair-01-stop/manifest.json",
+      "sha256": "d6fb36a5355f0c883be8793403641319247dde30e2014c0ffd1bc6eac30d1a24",
+      "note": "Retained incomplete administrative continuation."
+    },
+    {
+      "id": "E-GAP-TERMINAL-REPAIR01-20261024-PLAN",
+      "path": "docs/program/evidence/2026-10-18/gap-terminal-repair-01/plan.md",
+      "sha256": "99d6f3c7e663eaa7478cf00f3174ff62e4ab6b300f91b5cb3298afdd86c596d8",
+      "note": "Successful terminal reconstruction retained; reporting-only recovery and unchanged final audit."
+    },
+    {
+      "id": "E-GAP-TERMINAL-REPAIR01-20261024-REVIEW",
+      "path": "docs/program/evidence/2026-10-18/gap-terminal-repair-01/review.json",
+      "sha256": "2cb77a09aa91128596171172d00078f98f53df86733aeefe8b8e31606ccee937",
+      "note": "Successful terminal reconstruction retained; reporting-only recovery and unchanged final audit."
+    },
+    {
+      "id": "E-GAP-TERMINAL-REPAIR01-20261024-FAILURE",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-14/terminal-review/receipt.json",
+      "sha256": "35eb63c22b9a08862cec0adaeefb8b44706188274438a5b03845b197e606a6ff",
+      "note": "Successful terminal reconstruction retained; reporting-only recovery and unchanged final audit."
+    },
+    {
+      "id": "E-GAP-TERMINAL-REPAIR01-20261024-LOG",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-14/terminal-review/protocol_probe.log",
+      "sha256": "d07b2a4b4daaa1979f4aebc0d9356925d1de051ba0899e21b7aa5e84482da7a6",
+      "note": "Successful terminal reconstruction retained; reporting-only recovery and unchanged final audit."
+    },
+    {
+      "id": "E-GAP-TERMINAL-REPAIR01-20261024-RECOVERY",
+      "path": "docs/program/evidence/2026-10-18/gap-terminal-repair-01/report_recovery.py",
+      "sha256": "4a2d5747e55e4f6a01697f71ea206c6d5fa934d6afc088d7a5188a68de291006",
+      "note": "Successful terminal reconstruction retained; reporting-only recovery and unchanged final audit."
+    },
+    {
+      "id": "E-GAP-TERMINAL-REPAIR01-20261024-DRIVER",
+      "path": "docs/program/evidence/2026-10-18/gap-terminal-repair-01/continue_program.py",
+      "sha256": "06f42e6135403bc74ab2b5b378dd827e83ea25e2601a524557a3c119b9d7d0d1",
+      "note": "Successful terminal reconstruction retained; reporting-only recovery and unchanged final audit."
+    },
+    {
+      "id": "E-GAP-TERMINAL-REPAIR01-20261024-AUDIT-PLAN",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-15/audit-plan.md",
+      "sha256": "45f72e71f66fd2a3cd2463483c8fbe8468b1b5e9b6bd65097bbfee46ef391271",
+      "note": "Successful terminal reconstruction retained; reporting-only recovery and unchanged final audit."
+    },
+    {
+      "id": "E-GAP-TERMINAL-REPAIR01-20261024-LAUNCH",
+      "path": "docs/program/evidence/2026-10-18/gap-terminal-repair-01/durable-launch-01/launch.json",
+      "sha256": "594d1b6e818b101d400669e8876ef77ca80d486064e7cbb2a068cb37e765fb89",
+      "note": "Successful terminal reconstruction retained; reporting-only recovery and unchanged final audit."
+    },
+    {
+      "id": "E-GAP-TERMINAL-REPAIR01-20261024-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-terminal-report-repair-01/manifest.json",
+      "sha256": "df73d73437ea602513e21244fa8a8bf5d087d6f5eb4b0ff619351d91cbfc7c69",
+      "note": "Successful terminal reconstruction retained; reporting-only recovery and unchanged final audit."
+    },
+    {
+      "id": "E-GAP-AUDIT15-20261018-PLAN",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-15/audit-plan.md",
+      "sha256": "45f72e71f66fd2a3cd2463483c8fbe8468b1b5e9b6bd65097bbfee46ef391271",
+      "note": "Prospective final audit scope, sequence and 6000-second bound."
+    },
+    {
+      "id": "E-GAP-AUDIT15-20261018-REVIEW",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-15/review.json",
+      "sha256": "daa9fcb228cf6cc0bfa6d0440aa93cf4d8b6e4f9d2af947a629bda8e070a40cc",
+      "note": "Compiled operational inputs and completion/refusal controls."
+    },
+    {
+      "id": "E-GAP-AUDIT15-20261018-PREDECESSOR",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-15/predecessor.json",
+      "sha256": "86b95eb39af987d915d3dda68d13ee55dee2ef0db2f07c4f039f575f7630a888",
+      "note": "Original final audit retained; exact runtime mismatch demonstrated."
+    },
+    {
+      "id": "E-GAP-AUDIT15-20261018-TERMINAL-REVIEW",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-15/terminal-review/receipt.json",
+      "sha256": "822d003f8c8a6c45f042293410ff82a60f76c686da7717d458102ed2ff113c51",
+      "note": "All current campaigns reconstructed before final examination; no consumed slots reused."
+    },
+    {
+      "id": "E-GAP-AUDIT15-20261018-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-final-audit-15/manifest.json",
+      "sha256": "01172f70d0928259c0cadff950d3a2353c846b1f27a17afa0e203b4f250abcf7",
+      "note": "Preserved qualified predecessor before the final audit."
+    },
+    {
+      "id": "E-GAP-AUDIT15-GUIDANCE-QUALIFIED",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-15/execution-01/before-qualified-guidance/manifest.json",
+      "sha256": "e7ec57d6b57cdcfe99323888943ea07839289d9a18a6f9117af443711ee81d95",
+      "note": "Original guidance bytes retained before qualification-status reconciliation."
+    },
+    {
+      "id": "E-GAP-AUDIT15-GUIDANCE-ARCHIVE-QUALIFIED",
+      "path": "archive/program-2026-10-18/before-gap-audit15-guidance-qualified/manifest.json",
+      "sha256": "0bdbfeb3fa92728b1a359a15da838121979125c44c45e2a4d4520efe8be390f3",
+      "note": "Authority before current guidance source-input rebinding."
+    },
+    {
+      "id": "E-GAP-AUDIT15-20261018-BEHAVIOR",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-15/execution-01/audit.json",
+      "sha256": "61fd2f7e6efe5ae32fd45cff48289161ce0b994e75a6fad39d75d8fcd47905f9",
+      "note": "All 27 original obligations independently reconstructed; final work remains open for exact checks."
+    },
+    {
+      "id": "E-GAP-AUDIT15-20261018-READY",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-15/execution-01/ready-to-publish.json",
+      "sha256": "ce62286e0354d073fa600e40011586a0fdc7123201dabd2db785f07892f9f5c2",
+      "note": "Verified final publication boundary."
+    },
+    {
+      "id": "E-GAP-AUDIT15-20261018-CLOSING-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-final-publication-15/manifest.json",
+      "sha256": "7ede9369ad267c689f4fa202301a71d9c71e74038bf34be92dce88d39a59ca79",
+      "note": "Verified final publication boundary."
+    },
+    {
+      "id": "E-GAP-TERMINAL-STATUS01-20261024-PLAN",
+      "path": "docs/program/evidence/2026-10-18/gap-terminal-status-01/plan.md",
+      "sha256": "27cde5d952b818f0c62719ff90321891bdfee47722976eae26bd3a95abb9e1d8",
+      "note": "Post-publication operational metadata reconciliation; no scientific or completion scope change."
+    },
+    {
+      "id": "E-GAP-TERMINAL-STATUS01-20261024-RECONCILIATION",
+      "path": "docs/program/evidence/2026-10-18/gap-terminal-status-01/reconciliation.json",
+      "sha256": "75d44b90db4b4278f815b053109ef3061179714d0be2a71ade05825d55d10c41",
+      "note": "Post-publication operational metadata reconciliation; no scientific or completion scope change."
+    },
+    {
+      "id": "E-GAP-TERMINAL-STATUS01-20261024-ARCHIVE",
+      "path": "archive/program-2026-10-18/before-gap-terminal-status-reconciliation-01/manifest.json",
+      "sha256": "abb0207431660c45ce97489f551c9a7ff11ae7de2da619457e599a76d6ac3450",
+      "note": "Post-publication operational metadata reconciliation; no scientific or completion scope change."
+    },
+    {
+      "id": "E-GAP-TERMINAL-STATUS01-20261024-FINAL-AUDIT",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-15/execution-01/receipt.json",
+      "sha256": "c61c050c727045ee22a5c77d5c6f0cf3a3021d3a03298dc128885dfd355d0388",
+      "note": "Post-publication operational metadata reconciliation; no scientific or completion scope change."
+    },
+    {
+      "id": "E-GAP-TERMINAL-STATUS01-20261024-PUBLICATION",
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-15/execution-01/publication-committed.json",
+      "sha256": "dc2c993bcdd94d40cf8f93d6cae153b8ed81b9c53c9d261c4851797c111de4cd",
+      "note": "Post-publication operational metadata reconciliation; no scientific or completion scope change."
+    },
+    {
+      "id": "E-GAP-TERMINAL-STATUS01-20261024-SERVICE",
+      "path": "docs/program/evidence/2026-10-18/gap-terminal-repair-01/execution-01/receipt.json",
+      "sha256": "7820e66c9366597d7a4a6f08b1562d7607abd00763aa7bce96fb176c159b841a",
+      "note": "Post-publication operational metadata reconciliation; no scientific or completion scope change."
     }
   ],
   "continuation": {
@@ -31285,11 +32262,11 @@
         "id": "BANK-01/GAP-QUALIFICATION",
         "work_item": "BANK-01",
         "kind": "execution",
-        "state": "in_progress",
+        "state": "complete",
         "dependencies": [
           "BANK-01/GAP-REPAIR-INTEGRATION"
         ],
-        "action": "Continue the allocated V03 mutation run, register its terminal result, run the final Tier-0 gate and package reconstruction, then execute GAP-01/FINAL-AUDIT. On failure preserve the receipt and repair at the current master boundary.",
+        "action": "Repair current-development receipt selection, register completed scientific qualification04, then execute the final independent audit14.",
         "done_when": "Affected original gates and new public behavior have current passing evidence under frozen rules; no inherited stale acceptance.",
         "evidence_refs": [
           "E-GAP-INTEGRATION-20261018-FINAL-REVIEW",
@@ -31446,32 +32423,165 @@
           "E-GAP-CHECKPOINT-20261023-01-PLAN",
           "E-GAP-CHECKPOINT-20261023-01-REFRESH",
           "E-GAP-CHECKPOINT-20261023-01-OBSERVATION",
-          "E-GAP-CHECKPOINT-20261023-01-ARCHIVE"
+          "E-GAP-CHECKPOINT-20261023-01-ARCHIVE",
+          "E-GAP-FINAL03-20261018-V03-ARCHIVE",
+          "E-GAP-FINAL03-20261018-RESULT-V03",
+          "E-GAP-FINAL03-20261018-FAILURE-ARCHIVE",
+          "E-GAP-FINAL03-20261018-FAILURE",
+          "E-GAP-RECOVERY-STOP01-20261023-STOP",
+          "E-GAP-RECOVERY-STOP01-20261023-ARCHIVE",
+          "E-GAP-SURVIVOR-20261023-PLAN",
+          "E-GAP-SURVIVOR-20261023-DIAGNOSIS",
+          "E-GAP-SURVIVOR-20261023-ARCHIVE",
+          "E-GAP-SURVIVOR-20261023-INVENTORY",
+          "E-GAP-SURVIVOR-20261023-DIAGNOSTIC",
+          "E-GAP-SURVIVOR-20261023-DIAGNOSTIC-GUARD",
+          "E-GAP-SURVIVOR-20261023-PROOF",
+          "E-GAP-SURVIVOR-20261023-PROOF-ARCHIVE",
+          "E-GAP-SURVIVOR-20261023-RUNBOOK",
+          "E-GAP-SURVIVOR-20261023-SUCCESSOR-PLAN",
+          "E-GAP-SURVIVOR-20261023-INSTALL-REPAIR",
+          "E-GAP-SURVIVOR-20261023-SUCCESSOR-RUNBOOK",
+          "E-GAP-SURVIVOR-20261023-SUCCESSOR-ARCHIVE",
+          "E-GAP-SURVIVOR-20261023-INTEGRATION",
+          "E-GAP-SURVIVOR-20261023-INTEGRATION-REVIEW",
+          "E-GAP-SURVIVOR-20261023-IMPACT",
+          "E-GAP-SURVIVOR-20261023-INTEGRATION-ARCHIVE",
+          "E-GAP-SURVIVOR-20261024-LAUNCH-REVIEW",
+          "E-GAP-SURVIVOR-20261024-STARTUP-RECOVERY",
+          "E-GAP-SURVIVOR-20261024-LAUNCH",
+          "E-GAP-SURVIVOR-20261024-LAUNCH-ARCHIVE",
+          "E-GAP-ADMISSION04-20261018-ADMISSION",
+          "E-GAP-ADMISSION04-20261018-CALIBRATION",
+          "E-GAP-ADMISSION04-20261018-TARGET",
+          "E-GAP-ADMISSION04-20261018-CONTINUATION-DRIVER",
+          "E-GAP-ADMISSION04-20261018-CONTINUATION-REVIEW",
+          "E-GAP-ADMISSION04-20261018-DURABLE-LAUNCHER",
+          "E-GAP-ADMISSION04-20261018-TRANSITION",
+          "E-GAP-ADMISSION04-20261018-ARCHIVE",
+          "E-GAP-SERVICE05-20261019-STOP",
+          "E-GAP-SERVICE05-20261019-ARCHIVE",
+          "E-GAP-FREEZE-REPAIR02-20261024-PLAN",
+          "E-GAP-FREEZE-REPAIR02-20261024-REVIEW",
+          "E-GAP-FREEZE-REPAIR02-20261024-FAILURE",
+          "E-GAP-FREEZE-REPAIR02-20261024-FAILURE-LOG",
+          "E-GAP-FREEZE-REPAIR02-20261024-FREEZE",
+          "E-GAP-FREEZE-REPAIR02-20261024-DRIVER",
+          "E-GAP-FREEZE-REPAIR02-20261024-LAUNCHER",
+          "E-GAP-FREEZE-REPAIR02-20261024-TRANSITION",
+          "E-GAP-FREEZE-REPAIR02-20261024-LAUNCH",
+          "E-GAP-FREEZE-REPAIR02-20261024-START",
+          "E-GAP-FREEZE-REPAIR02-20261024-ARCHIVE",
+          "E-GAP-FINAL04-20261018-ALLOCATION",
+          "E-GAP-FINAL04-20261018-PLAN",
+          "E-GAP-FINAL04-20261018-ARCHIVE",
+          "E-GAP-FINAL04-20261018-LOCAL-CONTINUITY",
+          "E-GAP-FINAL04-20261018-V01-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V01",
+          "E-GAP-FINAL04-20261018-V02-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V02",
+          "E-GAP-FINAL04-20261018-V04-T0-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V04-T0",
+          "E-GAP-FINAL04-20261018-V05-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V05",
+          "E-GAP-FINAL04-20261018-V14-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V14",
+          "E-GAP-FINAL04-20261018-V04-T1-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V04-T1",
+          "E-GAP-FINAL04-20261018-V06-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V06",
+          "E-GAP-FINAL04-20261018-V09-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V09",
+          "E-GAP-FINAL04-20261018-V10-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V10",
+          "E-GAP-FINAL04-20261018-V11A-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V11a",
+          "E-GAP-FINAL04-20261018-V11B-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V11b",
+          "E-GAP-FINAL04-20261018-V13-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V13",
+          "E-GAP-FINAL04-20261018-V-COST-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V-COST",
+          "E-GAP-FINAL04-20261018-V08-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V08",
+          "E-GAP-FINAL04-20261018-V07-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V07",
+          "E-GAP-FINAL04-20261018-V12-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V12",
+          "E-GAP-FINAL04-20261018-FINITE-ARCHIVE",
+          "E-GAP-FINAL04-20261018-V03-ARCHIVE",
+          "E-GAP-FINAL04-20261018-RESULT-V03",
+          "E-GAP-FINAL04-20261018-MUTATION-ARCHIVE",
+          "E-GAP-FINAL04-20261018-FAILURE-ARCHIVE",
+          "E-GAP-FINAL04-20261018-FAILURE",
+          "E-GAP-FREEZE-REPAIR02-STOP-20261024-STOP",
+          "E-GAP-FREEZE-REPAIR02-STOP-20261024-ARCHIVE",
+          "E-GAP-CLOSE-REPAIR01-20261024-PLAN",
+          "E-GAP-CLOSE-REPAIR01-20261024-REVIEW",
+          "E-GAP-CLOSE-REPAIR01-20261024-FAILURE",
+          "E-GAP-CLOSE-REPAIR01-20261024-LOG",
+          "E-GAP-CLOSE-REPAIR01-20261024-REGISTRATION",
+          "E-GAP-CLOSE-REPAIR01-20261024-PRODUCT-CLOSURE",
+          "E-GAP-CLOSE-REPAIR01-20261024-VERIFIER",
+          "E-GAP-CLOSE-REPAIR01-20261024-DRIVER",
+          "E-GAP-CLOSE-REPAIR01-20261024-AUDIT-PLAN",
+          "E-GAP-CLOSE-REPAIR01-20261024-LAUNCH",
+          "E-GAP-CLOSE-REPAIR01-20261024-ARCHIVE",
+          "E-GAP-FINAL04-20261024-REPAIRED-CLOSE-ARCHIVE",
+          "E-GAP-FINAL04-20261018-QUALIFIED-TRACE",
+          "E-GAP-FINAL04-20261018-PACKAGE",
+          "E-GAP-FINAL04-20261018-GAP-QUALIFICATION"
         ]
       },
       {
         "id": "GAP-01/FINAL-AUDIT",
         "work_item": "GAP-01",
         "kind": "preparation",
-        "state": "planned",
+        "state": "complete",
         "dependencies": [
           "BANK-01/GAP-QUALIFICATION"
         ],
-        "action": "Independently reread every original gap/subclause and reconstruct complete closure as the last phase.",
+        "action": "Recover the bound successful terminal report, then execute all seven final examination groups and exact completion checks.",
         "done_when": "Final behavioral audit covers all G01-G10 and atomic clauses, source/installation/recovery evidence is current, negative controls reject false completion, and no required obligation remains open.",
         "evidence_refs": [
-          "E-GAP-REPAIR01-20261018-AUDIT09"
+          "E-GAP-REPAIR01-20261018-AUDIT09",
+          "E-GAP-CLOSE-REPAIR01-20261024-STOP-ARCHIVE",
+          "E-GAP-TERMINAL-REPAIR01-20261024-PLAN",
+          "E-GAP-TERMINAL-REPAIR01-20261024-REVIEW",
+          "E-GAP-TERMINAL-REPAIR01-20261024-FAILURE",
+          "E-GAP-TERMINAL-REPAIR01-20261024-LOG",
+          "E-GAP-TERMINAL-REPAIR01-20261024-RECOVERY",
+          "E-GAP-TERMINAL-REPAIR01-20261024-DRIVER",
+          "E-GAP-TERMINAL-REPAIR01-20261024-AUDIT-PLAN",
+          "E-GAP-TERMINAL-REPAIR01-20261024-LAUNCH",
+          "E-GAP-TERMINAL-REPAIR01-20261024-ARCHIVE",
+          "E-GAP-AUDIT15-20261018-PLAN",
+          "E-GAP-AUDIT15-20261018-REVIEW",
+          "E-GAP-AUDIT15-20261018-PREDECESSOR",
+          "E-GAP-AUDIT15-20261018-TERMINAL-REVIEW",
+          "E-GAP-AUDIT15-20261018-ARCHIVE",
+          "E-GAP-AUDIT15-GUIDANCE-QUALIFIED",
+          "E-GAP-AUDIT15-GUIDANCE-ARCHIVE-QUALIFIED",
+          "E-GAP-AUDIT15-20261018-BEHAVIOR",
+          "E-GAP-AUDIT15-20261018-READY",
+          "E-GAP-AUDIT15-20261018-CLOSING-ARCHIVE",
+          "E-GAP-TERMINAL-STATUS01-20261024-PLAN",
+          "E-GAP-TERMINAL-STATUS01-20261024-RECONCILIATION",
+          "E-GAP-TERMINAL-STATUS01-20261024-ARCHIVE",
+          "E-GAP-TERMINAL-STATUS01-20261024-FINAL-AUDIT",
+          "E-GAP-TERMINAL-STATUS01-20261024-PUBLICATION",
+          "E-GAP-TERMINAL-STATUS01-20261024-SERVICE"
         ]
       }
     ]
   },
   "review_register": {
-    "latest_review_id": "gap-git-checkpoint-20261023-01",
-    "latest_review_evidence": "E-GAP-CHECKPOINT-20261023-01-OBSERVATION",
-    "pre_refresh_archive": "E-GAP-ADMISSION03-20261018-ARCHIVE",
+    "latest_review_id": "gap-terminal-status-reconciliation-01",
+    "latest_review_evidence": "E-GAP-TERMINAL-STATUS01-20261024-RECONCILIATION",
+    "pre_refresh_archive": "E-GAP-ADMISSION04-20261018-ARCHIVE",
     "prior_review_metadata_evidence": "E-R189-REVIEW",
-    "source_digest": "d4e762924717265ddd81e3e441a7c895e0ded52d62f2cdbea68734cb064405be",
-    "source_frozen_by_active_run": true,
+    "source_digest": "7a3975382cf19d55d3be3b653ccf5f860c576e13e7998a9dded47dff0a9adb17",
+    "source_frozen_by_active_run": false,
     "attempt12_closure": "E-A12-FINAL-RECONCILIATION-02",
     "readiness_verification": "E-A12-FINAL-RECONCILIATION-03",
     "current_engineering_campaigns": [
@@ -31534,11 +32644,11 @@
     "scientific_acceptance": {
       "tier0": true,
       "scope": "retained_source_only",
-      "master_complete": false,
-      "integrated_local_source": "de68ddcd7998344333c3349b0d36accf5096f618c81ab12ce6a314bd7c0a6b2c",
+      "master_complete": true,
+      "integrated_local_source": "7a3975382cf19d55d3be3b653ccf5f860c576e13e7998a9dded47dff0a9adb17",
       "integrated_baseline_qualified": true,
-      "current_source_qualified": false,
-      "gap_closure_complete": false
+      "current_source_qualified": true,
+      "gap_closure_complete": true
     },
     "release_gate_unchanged": false,
     "workspace_diagnostic": "E-R189-SUMMARY",
@@ -31576,13 +32686,7 @@
       "health_log": "docs/program/evidence/2026-10-06/stylized-engineering-01/engineering-execution-01/health.jsonl",
       "terminal_receipt": "docs/program/evidence/2026-10-06/stylized-engineering-01/engineering-execution-01/receipt.json"
     },
-    "active_campaign": {
-      "stage": "BANK-01/GAP-QUALIFICATION",
-      "status": "allocated",
-      "allocation": "E-GAP-FINAL03-20261018-ALLOCATION",
-      "health_log": "docs/program/evidence/2026-10-18/gap-qualification-03/execution-01",
-      "service": "hponas-gap-recovery-20261023-01"
-    },
+    "active_campaign": null,
     "historical_automatic_closure": {
       "plan": "E-R195-PLAN",
       "driver": "E-R195-DRIVER",
@@ -31648,6 +32752,14 @@
         ],
         "health_log": "docs/program/evidence/2026-10-10/mutation-termination-repair-01/diagnostic-01/guarded-execution/guard/health.jsonl",
         "recovery": "E-STORAGE-RECOVERY-FAILURE"
+      },
+      {
+        "stage": "BANK-01/GAP-QUALIFICATION",
+        "status": "repair_required",
+        "service": "hponas-gap-close-repair-20261024-01",
+        "health_log": "docs/program/evidence/2026-10-18/gap-close-repair-01/execution-01",
+        "superseded_by": "E-GAP-TERMINAL-STATUS01-20261024-RECONCILIATION",
+        "meaning": "Historical failed wrapper; subsequently repaired and final audit committed."
       }
     ],
     "retained_terminal_closures": [
@@ -31683,13 +32795,13 @@
     "integrated_engineering_closure": "E-INTEGRATED-REPAIR-20261008-CLOSURE",
     "local_operations_qualified": "E-LOCAL-SCOPE-20261008-QUALIFICATION",
     "product_lineage": "E-MASTER-LINEAGE-20261012-TRACE",
-    "product_contract_completion": "historical_finite_baseline_complete_current_gap_closure_incomplete",
+    "product_contract_completion": "complete_finite_local_product_and_all_original_gap_clauses",
     "superseded_whole_product_completion": "E-MASTER-CLOSURE-20261012-REVIEW",
     "bank_product_contract": "E-BANK-PRODUCT-20261012-CONTRACT",
     "bank_product_coverage": "E-BANK-PRODUCT-20261012-COVERAGE",
     "scoped_operations_installation": "E-BANK-PRODUCT-20261012-OPS-INSTALL",
     "bank_product_integrity_review": "E-BANK-PRODUCT-20261012-REVIEW",
-    "changed_source_qualification": "pending_BANK-01_GAP-QUALIFICATION",
+    "changed_source_qualification": "complete_BANK-01_GAP-QUALIFICATION",
     "runbook_binding_repair": "E-PRODUCT-LOCAL-OPS-20261013-BINDING-REPAIR",
     "bank_integrated_findings": "E-BANK-INTEGRATED-20261013-FINDINGS",
     "bank_calibration_repair": "E-BANK-CALIBRATION-REPAIR-20261013-REVIEW",
@@ -31697,7 +32809,7 @@
     "bank_guard_exit_repair": "E-BANK-GUARD-EXIT-20261013-PLAN",
     "bank_guard_exit_controls": "E-BANK-GUARD-EXIT-20261013-CONTROLS-PASS",
     "bank_current_calibration": "E-BANK-GUARD-EXIT-20261013-CALIBRATION-ALLOCATION",
-    "bank_final_admission": "E-GAP-ADMISSION03-20261018-ADMISSION",
+    "bank_final_admission": "E-GAP-ADMISSION04-20261018-ADMISSION",
     "bank_collection_repair": {
       "review": "E-BANK-COLLECTION-20261016-REVIEW",
       "replacement_plan": "E-BANK-COLLECTION-20261016-PLAN",
@@ -31758,13 +32870,31 @@
         "sha256": "8f52525f2c2153e0150ad88feefbc1e506f9686651f3aaf6148b4eda5feb3ce5"
       }
     },
-    "current_preparation": {
-      "stage": "BANK-01/GAP-QUALIFICATION",
-      "status": "executing_reviewed_recovery",
-      "review": "E-GAP-CRASH01-20261023-REVIEW",
-      "scientific_allocation": "E-GAP-FINAL03-20261018-ALLOCATION"
+    "current_preparation": null,
+    "execution_checkpoint": "E-GAP-CHECKPOINT-20261023-01-OBSERVATION",
+    "active_audit": {
+      "stage": "GAP-01/FINAL-AUDIT",
+      "status": "complete",
+      "health_log": "docs/program/evidence/2026-10-18/gap-final-audit-15/execution-01"
     },
-    "execution_checkpoint": "E-GAP-CHECKPOINT-20261023-01-OBSERVATION"
+    "final_gap_audit": "complete",
+    "retained_preparation_metadata": [
+      {
+        "metadata": {
+          "stage": "BANK-01/GAP-QUALIFICATION",
+          "status": "administrative_close_repair",
+          "review": "E-GAP-CLOSE-REPAIR01-20261024-REVIEW"
+        },
+        "superseded_by": "E-GAP-TERMINAL-STATUS01-20261024-RECONCILIATION"
+      }
+    ],
+    "terminal_completion": {
+      "status": "COMPLETE",
+      "final_audit": "E-GAP-TERMINAL-STATUS01-20261024-FINAL-AUDIT",
+      "publication": "E-GAP-TERMINAL-STATUS01-20261024-PUBLICATION",
+      "completed_service": "E-GAP-TERMINAL-STATUS01-20261024-SERVICE",
+      "reconciliation": "E-GAP-TERMINAL-STATUS01-20261024-RECONCILIATION"
+    }
   },
   "protocol_ownership_review": {
     "V04-T0": "PPO-01",
@@ -31993,87 +33123,87 @@
     }
   ],
   "protocol_phase_bindings": {
-    "tier0": "E-GAP-FINAL03-20261018-PHASE-TIER0",
-    "tier1": "E-GAP-FINAL03-20261018-PHASE-TIER1",
-    "tier2": "E-GAP-FINAL03-20261018-PHASE-TIER2",
+    "tier0": "E-GAP-FINAL04-20261018-PHASE-TIER0",
+    "tier1": "E-GAP-FINAL04-20261018-PHASE-TIER1",
+    "tier2": "E-GAP-FINAL04-20261018-PHASE-TIER2",
     "tier3-feasibility": "E-IFBO-FROZEN-20261008-FREEZE",
-    "tier3-acceptance": "E-GAP-FINAL03-20261018-PHASE-TIER3-ACCEPTANCE",
-    "warm-finite": "E-GAP-FINAL03-20261018-PHASE-WARM-FINITE"
+    "tier3-acceptance": "E-GAP-FINAL04-20261018-PHASE-TIER3-ACCEPTANCE",
+    "warm-finite": "E-GAP-FINAL04-20261018-PHASE-WARM-FINITE"
   },
   "phase_transition": "E-TIER1-LOCAL-ADOPTION",
   "tier1_campaign_receipts": {
     "V04-T1": {
-      "run": "validation/artifacts/V04-T1/20261023_gap_final_03",
+      "run": "validation/artifacts/V04-T1/20261023_gap_final_04",
       "hashes": {
-        "results.json": "2aa664cf147d8b887c5e17f6a67f658bbc19aa7b943ef6fe8bf95d352efbfe34",
-        "metadata.json": "ee4158b1eb07e29bc682b71a0c044206b651a3f3ce007c8948329b6074e20092",
-        "v16_audit.json": "d104f287a6b87a626708f248d9fe5b0a158291375266f6c6008c359d1aefdad5"
+        "results.json": "7e01c6add3c12c7d11558409dcdd37ffd4629538c876370edcdb9d307a56d85e",
+        "metadata.json": "ff7fc77302d4d0bbb070efec5b76a2c888932cbdcf4d7067b6a8aad71f5706e9",
+        "v16_audit.json": "bf7f3a6109c17620bff4cecc1a6ed16068f8ec448a9117b8d9b1d7758421aed7"
       }
     },
     "V06": {
-      "run": "validation/artifacts/V06/20261023_gap_final_03",
+      "run": "validation/artifacts/V06/20261023_gap_final_04",
       "hashes": {
-        "results.json": "60a20282dd845b68808ebf520ff1a8ba291070742fb102ea7faabe63bc41c7af",
-        "metadata.json": "2e9a946c100689c05cc3799e1e9537b42c1a08627fb63e9239565921a552fcd9",
-        "v16_audit.json": "c49342a9fc1dd109f94e8083bf8a10d980fe21498c4533bf767e06d2168b64e4"
+        "results.json": "e6e16f2b2053aaa8ed78c021a22b8fefdc7adee215483755cd788dfd866b048b",
+        "metadata.json": "20c302f8880cb5534c07501b08a2370f347d538ad5b5743e6a466fe84247514c",
+        "v16_audit.json": "bcca22966c588c7c47331f73528fbded1041f1c0d30976fce064e6e23c1fbc0f"
       }
     },
     "V09": {
-      "run": "validation/artifacts/V09/20261023_gap_final_03",
+      "run": "validation/artifacts/V09/20261023_gap_final_04",
       "hashes": {
-        "results.json": "b003207f2cffa0532435527841ef0ef6e9703dd44c78b89bb7783554cf80816d",
-        "metadata.json": "a4c393a7979be87b38a5361dd0d18dd471beb0b2157095790f392f0ec5dc90b5",
-        "v16_audit.json": "6c42edd5c8e6d23c908edc59d825f27abb2733ef66f674f8493662fd7432842e"
+        "results.json": "120d9424be863a0ddc7afc0e0e40bf97efca35ac4b0885342def306b36bc8ad7",
+        "metadata.json": "1d93749c65081428d03c00ac3ac84bf7bd85da116f78e2dc4015833624394b48",
+        "v16_audit.json": "f314f66d18d0f59a119fb5c8e87d2ce9c581b530b352f2966406dc3c8c0a6f05"
       }
     },
     "V10": {
-      "run": "validation/artifacts/V10/20261023_gap_final_03",
+      "run": "validation/artifacts/V10/20261023_gap_final_04",
       "hashes": {
-        "results.json": "7fabc2d76f2c70e7321410643da77f17073b51fa9da406ccd1852463560bcc35",
-        "metadata.json": "ad356430a77de78d202073b708fdaddfc63f495cc98c8fdacce84514660ae217",
-        "v16_audit.json": "8bc2f3700307256a4f2eab89e81a63de3b3ed5fc099221b32af7a6865f589c2e"
+        "results.json": "193a87a39a1b49b31ca2590017e347d80f0fb8f9bd4ddb0dbe69781c5bdb7380",
+        "metadata.json": "a165a0839f1b6cc014560c564beaf88db84283f887d5e86acb66f3c8453fc03f",
+        "v16_audit.json": "c2b81072eaef95a1b25a34fe2fee83a28ec6a140a809ecb3212d8f82c788a01a"
       }
     },
     "V11a": {
-      "run": "validation/artifacts/V11a/20261023_gap_final_03",
+      "run": "validation/artifacts/V11a/20261023_gap_final_04",
       "hashes": {
-        "results.json": "a274f425bff648d80f8638e0ed8498e9889cdf00a224ab9b53c62093ed89d01d",
-        "metadata.json": "f9f24c36a88d8b75b0c1b76cd0a60f76375d94ced17d81210e49984b1c3c4e4b",
-        "v16_audit.json": "3f1a2e2825fdf2a0b03e92cbcd7ac1e59974cbfcacac5105b7cf41ba654e6bf0"
+        "results.json": "9867c75c632404b71880b0d74f1551d21c074cf77d6ec90d1d49f18c215d6216",
+        "metadata.json": "27278b33e60e0b694619bef4a1246d74159e7f3fe643216855d04de3c1337075",
+        "v16_audit.json": "bc22544149352c50599e9a0b07c7c9648a19ab781aeb068cd98c1b1127782727"
       }
     },
     "V11b": {
-      "run": "validation/artifacts/V11b/20261023_gap_final_03",
+      "run": "validation/artifacts/V11b/20261023_gap_final_04",
       "hashes": {
-        "results.json": "633505209026e12141331f64e59fd75f52d59fbd7309eadee4ee57002eea87dc",
-        "metadata.json": "d0a1f31885121812f8a3111c02fa9ec92e42cb713f92ea6a187decd49070f383",
-        "v16_audit.json": "9a09038a7301ba0cbc6818c10fe2118f950245ca42c767c19467769b0bb25faf"
+        "results.json": "eae13546f0159110d36bc1cfc446fa6f770911d305799e776353f5a5d2a4e3fa",
+        "metadata.json": "800ecc262eae763bc5555155034b4b54a701a4c750e901443bea073cc1b36356",
+        "v16_audit.json": "05809af3cda8ef50d5b55e31beff6ac66626037f27f73de9f8f3766906ba2602"
       }
     },
     "V13": {
-      "run": "validation/artifacts/V13/20261023_gap_final_03",
+      "run": "validation/artifacts/V13/20261023_gap_final_04",
       "hashes": {
-        "results.json": "a84e613172d6ed2befad149b9f920561369963a7c49fdb70235ebc80fde49b56",
-        "metadata.json": "9dc862cdc8f98eb988318bc4147c802a292ed297e690372e203455c33c8abf38",
-        "v16_audit.json": "98af2513d06d29139e42e8b0bb735e2c03561c60773c735a886c34978479cfae"
+        "results.json": "c9bd1a67037b6cf46d36c4159bede7d52b7aced4d223d6997731082728e98ac3",
+        "metadata.json": "e863d462e8fceeefee77ea785ec3961c9e021d26952e427b79fd8deb115d1331",
+        "v16_audit.json": "d5a3dfcddd5b5db4105ade44edd665aa499b3202b482e027160ff4f8ed173ddc"
       }
     },
     "V-COST": {
-      "run": "validation/artifacts/V-COST/20261023_gap_final_03",
+      "run": "validation/artifacts/V-COST/20261023_gap_final_04",
       "hashes": {
-        "results.json": "0056b4bc5338c7c8d3613b976f754545b5d402fdadf9a56983112a0e76a46503",
-        "metadata.json": "260ab33842bcc24e73a76590f75a6679f580006f7a58a99809115a6ee630575e",
-        "v16_audit.json": "89bdc36c6f80db96130de59f904662856ac999889de79e653fbca29456b968c9"
+        "results.json": "84160dc58f41a82d536697f3530dfc6658dc8191b5c54d90047d3c68ec172acc",
+        "metadata.json": "8fa385891f491896154fe2b3db50b0d83e3c38400d0087a141d0b5fb21034a0f",
+        "v16_audit.json": "da789d4707bd8398d4a6d5c89aaaa74f49703d04d23f24464f6da7a0d8ad17a9"
       }
     }
   },
   "tier1_accepted_package": "E-TIER1-CLOSED-20261007-PACKAGE",
   "population_campaign_receipt": {
-    "run": "validation/artifacts/V08/20261023_gap_final_03",
+    "run": "validation/artifacts/V08/20261023_gap_final_04",
     "hashes": {
-      "results.json": "97448a5fd34df82510736d021de95636401316847c9dd5aab87180671eb778c5",
-      "metadata.json": "6bb3be85d740e098329405bae00f0f914e0387e6401a38b5887045f810ef5998",
-      "v16_audit.json": "cc5f3ac5de4e4b6e4f58a1583e7e1ef4bf77229139a8c92b5b418e1b35b4b3f8"
+      "results.json": "3b7fb02c81f699b7f69ba3d24a7ea20fb9eaeca49bc09936ff7af1ae303f63aa",
+      "metadata.json": "55d246cfddf1fc2c89111ca60a7256a36b0a151c1472deaf2cf90400de46594a",
+      "v16_audit.json": "7e985b80ede1e377a20387a426c8b88a3b2a130bc5b60f47f0866abcffd1c902"
     }
   },
   "population_accepted_package": "E-POP-ACCEPTED-20261008-PACKAGE",
@@ -32130,266 +33260,282 @@
   "warm_accepted_package": "E-WARM-ACCEPTED-20261008-PACKAGE",
   "integrated_candidate_receipts": {
     "V01": {
-      "run": "validation/artifacts/V01/20261023_gap_final_03",
+      "run": "validation/artifacts/V01/20261023_gap_final_04",
       "hashes": {
-        "results.json": "9a7300ce7effc2272b305dec058457ce15dcf41adc5b994d6aa9b94ca7a38217",
-        "metadata.json": "81406305acbe6e30c799e965bdd957b9f83c44de7cb0d6d0628e6df34eaf15c5",
-        "v16_audit.json": "686328e3f5cd73d035fda2d3d693094f01012f614c34f807b926dd606648b221"
+        "results.json": "bcefa102c36dbe53d71ec8ca2aa7d8f6edd85dfe3f19ba9a77ba6346ea5f78b3",
+        "metadata.json": "05666f089ef1db135e590b950eab301b3543f97a0abf833f5c325c0edd40e03e",
+        "v16_audit.json": "3d2219e8092f89268534629975d911e053269a43a806c8cf30e3d061bb850a9d"
       }
     },
     "V02": {
-      "run": "validation/artifacts/V02/20261023_gap_final_03",
+      "run": "validation/artifacts/V02/20261023_gap_final_04",
       "hashes": {
-        "results.json": "858202f618fb6bd01fc78ab45d60a726d33709c17856717b23316cee21b92bef",
-        "metadata.json": "11228c8e39b1826eb7e4d65e9783b5342d0de7225b0fabdc6e0bc7333ae8d2d4",
-        "v16_audit.json": "86caf270b798052244347e69e845a280fead82ce5015c5610146f43daaac55e6"
+        "results.json": "c8f5306daf50e92dfb9e71a633d41ef43656836c00c72cf1e2c6dd1e0a48928b",
+        "metadata.json": "dc8c0ec855efd9ecb49fdb9bca91b33e37a3f04c4a5aec96960ece2efc1c44f4",
+        "v16_audit.json": "39b583b908da328df32b0dd485fec98f8f02ab53be3657b0312f52d8c0c996cd"
       }
     },
     "V04-T0": {
-      "run": "validation/artifacts/V04-T0/20261023_gap_final_03",
+      "run": "validation/artifacts/V04-T0/20261023_gap_final_04",
       "hashes": {
-        "results.json": "5c95b6b0774050e996097a6a64156937ef56a80efb2ef10a14911a94ddfcae5e",
-        "metadata.json": "97e1b8f5a736ea19d845592188708df4350acbf457f13ffdb6e4686955e1bcc2",
-        "v16_audit.json": "4df8909f2163585a79ce8b0134f2eebd1c514b4c08a68ec573d6f89a2f6a737b"
+        "results.json": "9a4a4339935ee76ca67e0caaa5be2f3a2354c939c16c1bc3c6a64f736597ec14",
+        "metadata.json": "2c87785366becec2b88198c94ba0f0aa6390ed7ff428323a6dc17e5a9719b62a",
+        "v16_audit.json": "fd74d6defc6c0cbe3bc2ed6657ff674928b2cc3b04edb68553beea3cfd9e01b6"
       }
     },
     "V05": {
-      "run": "validation/artifacts/V05/20261023_gap_final_03",
+      "run": "validation/artifacts/V05/20261023_gap_final_04",
       "hashes": {
-        "results.json": "2257412f014e3941fd0d206eae5362a9d82b8c7e4a7afaae73c68df5e9c0bd17",
-        "metadata.json": "35509c7fb77b7a8ad74e9c4e925f4e554ba1e1d36ba71c4b35c21e3ac55ad220",
-        "v16_audit.json": "7338124793af8a4f63394f01978463b9ec9236d9f6373bdd7aead03eb5b7a9e9"
+        "results.json": "1326fb0109efd4c8e0939a696de597d372def822a130f38864d021f9eac93c7a",
+        "metadata.json": "0b153a25527149a9b0ae69dd2c0b8b95f3aba15de47c8658bfeca591c0df09ef",
+        "v16_audit.json": "2ce06f645036d47e80dfd69a6bb9a8cddf3b0ae807274811dea521d4b921019d"
       }
     },
     "V14": {
-      "run": "validation/artifacts/V14/20261023_gap_final_03",
+      "run": "validation/artifacts/V14/20261023_gap_final_04",
       "hashes": {
-        "results.json": "ff8255b94ff0d312c65189b3fe79efc0f9a80ddfd845ea24f27ff6245885e5bb",
-        "metadata.json": "ec2e9918bea988142f4adf4132b49aca583fa713c3c668632895183fdd1fcc9d",
-        "v16_audit.json": "c898c54cb7484a9cb988431c3d4e7d7a7147bf809fe84197879b6084d7955cf5"
+        "results.json": "03bcbe195075463e8bd15493f8712f1902bb7f666bd85c7798e85567ab5d004f",
+        "metadata.json": "c8c6dabf8ffb37260500f32e854926fa3aa0b4a7cb291d86d56526cf2a003aad",
+        "v16_audit.json": "a5e1b95c57871aade721ea519ec1f28a0e85eff7b83ed14008b2fb428b83fd04"
       }
     },
     "V04-T1": {
-      "run": "validation/artifacts/V04-T1/20261023_gap_final_03",
+      "run": "validation/artifacts/V04-T1/20261023_gap_final_04",
       "hashes": {
-        "results.json": "2aa664cf147d8b887c5e17f6a67f658bbc19aa7b943ef6fe8bf95d352efbfe34",
-        "metadata.json": "ee4158b1eb07e29bc682b71a0c044206b651a3f3ce007c8948329b6074e20092",
-        "v16_audit.json": "d104f287a6b87a626708f248d9fe5b0a158291375266f6c6008c359d1aefdad5"
+        "results.json": "7e01c6add3c12c7d11558409dcdd37ffd4629538c876370edcdb9d307a56d85e",
+        "metadata.json": "ff7fc77302d4d0bbb070efec5b76a2c888932cbdcf4d7067b6a8aad71f5706e9",
+        "v16_audit.json": "bf7f3a6109c17620bff4cecc1a6ed16068f8ec448a9117b8d9b1d7758421aed7"
       }
     },
     "V06": {
-      "run": "validation/artifacts/V06/20261023_gap_final_03",
+      "run": "validation/artifacts/V06/20261023_gap_final_04",
       "hashes": {
-        "results.json": "60a20282dd845b68808ebf520ff1a8ba291070742fb102ea7faabe63bc41c7af",
-        "metadata.json": "2e9a946c100689c05cc3799e1e9537b42c1a08627fb63e9239565921a552fcd9",
-        "v16_audit.json": "c49342a9fc1dd109f94e8083bf8a10d980fe21498c4533bf767e06d2168b64e4"
+        "results.json": "e6e16f2b2053aaa8ed78c021a22b8fefdc7adee215483755cd788dfd866b048b",
+        "metadata.json": "20c302f8880cb5534c07501b08a2370f347d538ad5b5743e6a466fe84247514c",
+        "v16_audit.json": "bcca22966c588c7c47331f73528fbded1041f1c0d30976fce064e6e23c1fbc0f"
       }
     },
     "V09": {
-      "run": "validation/artifacts/V09/20261023_gap_final_03",
+      "run": "validation/artifacts/V09/20261023_gap_final_04",
       "hashes": {
-        "results.json": "b003207f2cffa0532435527841ef0ef6e9703dd44c78b89bb7783554cf80816d",
-        "metadata.json": "a4c393a7979be87b38a5361dd0d18dd471beb0b2157095790f392f0ec5dc90b5",
-        "v16_audit.json": "6c42edd5c8e6d23c908edc59d825f27abb2733ef66f674f8493662fd7432842e"
+        "results.json": "120d9424be863a0ddc7afc0e0e40bf97efca35ac4b0885342def306b36bc8ad7",
+        "metadata.json": "1d93749c65081428d03c00ac3ac84bf7bd85da116f78e2dc4015833624394b48",
+        "v16_audit.json": "f314f66d18d0f59a119fb5c8e87d2ce9c581b530b352f2966406dc3c8c0a6f05"
       }
     },
     "V10": {
-      "run": "validation/artifacts/V10/20261023_gap_final_03",
+      "run": "validation/artifacts/V10/20261023_gap_final_04",
       "hashes": {
-        "results.json": "7fabc2d76f2c70e7321410643da77f17073b51fa9da406ccd1852463560bcc35",
-        "metadata.json": "ad356430a77de78d202073b708fdaddfc63f495cc98c8fdacce84514660ae217",
-        "v16_audit.json": "8bc2f3700307256a4f2eab89e81a63de3b3ed5fc099221b32af7a6865f589c2e"
+        "results.json": "193a87a39a1b49b31ca2590017e347d80f0fb8f9bd4ddb0dbe69781c5bdb7380",
+        "metadata.json": "a165a0839f1b6cc014560c564beaf88db84283f887d5e86acb66f3c8453fc03f",
+        "v16_audit.json": "c2b81072eaef95a1b25a34fe2fee83a28ec6a140a809ecb3212d8f82c788a01a"
       }
     },
     "V11a": {
-      "run": "validation/artifacts/V11a/20261023_gap_final_03",
+      "run": "validation/artifacts/V11a/20261023_gap_final_04",
       "hashes": {
-        "results.json": "a274f425bff648d80f8638e0ed8498e9889cdf00a224ab9b53c62093ed89d01d",
-        "metadata.json": "f9f24c36a88d8b75b0c1b76cd0a60f76375d94ced17d81210e49984b1c3c4e4b",
-        "v16_audit.json": "3f1a2e2825fdf2a0b03e92cbcd7ac1e59974cbfcacac5105b7cf41ba654e6bf0"
+        "results.json": "9867c75c632404b71880b0d74f1551d21c074cf77d6ec90d1d49f18c215d6216",
+        "metadata.json": "27278b33e60e0b694619bef4a1246d74159e7f3fe643216855d04de3c1337075",
+        "v16_audit.json": "bc22544149352c50599e9a0b07c7c9648a19ab781aeb068cd98c1b1127782727"
       }
     },
     "V11b": {
-      "run": "validation/artifacts/V11b/20261023_gap_final_03",
+      "run": "validation/artifacts/V11b/20261023_gap_final_04",
       "hashes": {
-        "results.json": "633505209026e12141331f64e59fd75f52d59fbd7309eadee4ee57002eea87dc",
-        "metadata.json": "d0a1f31885121812f8a3111c02fa9ec92e42cb713f92ea6a187decd49070f383",
-        "v16_audit.json": "9a09038a7301ba0cbc6818c10fe2118f950245ca42c767c19467769b0bb25faf"
+        "results.json": "eae13546f0159110d36bc1cfc446fa6f770911d305799e776353f5a5d2a4e3fa",
+        "metadata.json": "800ecc262eae763bc5555155034b4b54a701a4c750e901443bea073cc1b36356",
+        "v16_audit.json": "05809af3cda8ef50d5b55e31beff6ac66626037f27f73de9f8f3766906ba2602"
       }
     },
     "V13": {
-      "run": "validation/artifacts/V13/20261023_gap_final_03",
+      "run": "validation/artifacts/V13/20261023_gap_final_04",
       "hashes": {
-        "results.json": "a84e613172d6ed2befad149b9f920561369963a7c49fdb70235ebc80fde49b56",
-        "metadata.json": "9dc862cdc8f98eb988318bc4147c802a292ed297e690372e203455c33c8abf38",
-        "v16_audit.json": "98af2513d06d29139e42e8b0bb735e2c03561c60773c735a886c34978479cfae"
+        "results.json": "c9bd1a67037b6cf46d36c4159bede7d52b7aced4d223d6997731082728e98ac3",
+        "metadata.json": "e863d462e8fceeefee77ea785ec3961c9e021d26952e427b79fd8deb115d1331",
+        "v16_audit.json": "d5a3dfcddd5b5db4105ade44edd665aa499b3202b482e027160ff4f8ed173ddc"
       }
     },
     "V-COST": {
-      "run": "validation/artifacts/V-COST/20261023_gap_final_03",
+      "run": "validation/artifacts/V-COST/20261023_gap_final_04",
       "hashes": {
-        "results.json": "0056b4bc5338c7c8d3613b976f754545b5d402fdadf9a56983112a0e76a46503",
-        "metadata.json": "260ab33842bcc24e73a76590f75a6679f580006f7a58a99809115a6ee630575e",
-        "v16_audit.json": "89bdc36c6f80db96130de59f904662856ac999889de79e653fbca29456b968c9"
+        "results.json": "84160dc58f41a82d536697f3530dfc6658dc8191b5c54d90047d3c68ec172acc",
+        "metadata.json": "8fa385891f491896154fe2b3db50b0d83e3c38400d0087a141d0b5fb21034a0f",
+        "v16_audit.json": "da789d4707bd8398d4a6d5c89aaaa74f49703d04d23f24464f6da7a0d8ad17a9"
       }
     },
     "V08": {
-      "run": "validation/artifacts/V08/20261023_gap_final_03",
+      "run": "validation/artifacts/V08/20261023_gap_final_04",
       "hashes": {
-        "results.json": "97448a5fd34df82510736d021de95636401316847c9dd5aab87180671eb778c5",
-        "metadata.json": "6bb3be85d740e098329405bae00f0f914e0387e6401a38b5887045f810ef5998",
-        "v16_audit.json": "cc5f3ac5de4e4b6e4f58a1583e7e1ef4bf77229139a8c92b5b418e1b35b4b3f8"
+        "results.json": "3b7fb02c81f699b7f69ba3d24a7ea20fb9eaeca49bc09936ff7af1ae303f63aa",
+        "metadata.json": "55d246cfddf1fc2c89111ca60a7256a36b0a151c1472deaf2cf90400de46594a",
+        "v16_audit.json": "7e985b80ede1e377a20387a426c8b88a3b2a130bc5b60f47f0866abcffd1c902"
       }
     },
     "V07": {
-      "run": "validation/artifacts/V07/20261023_gap_final_03",
+      "run": "validation/artifacts/V07/20261023_gap_final_04",
       "hashes": {
-        "results.json": "b429f3d994268bd92445e3fbcb0d49ce978d67b05274b701927b71a3d6fc9601",
-        "metadata.json": "2968954a92cd98f093625e807a562eb97b5641902ee32252312dd029d8659220",
-        "v16_audit.json": "b43f304b36f67df15340f7cd97a2bd21e2b78b281185d092620e88cefe89cce8"
+        "results.json": "bb6f3b8581e3e6b0c8464f018f3099b69ca732a33c331085f1a0cd6fba126fef",
+        "metadata.json": "afa901bd00188c3679c92f277e45dea4f358ffda4ec4723bf7cbebf695c32678",
+        "v16_audit.json": "bbfa3d802b493d21926cef14328c65a2a15b184ee4176cd9c11be04294c02008"
       }
     },
     "V12": {
-      "run": "validation/artifacts/V12/20261023_gap_final_03",
+      "run": "validation/artifacts/V12/20261023_gap_final_04",
       "hashes": {
-        "results.json": "fb6a2bdb9d5b16941349a1cf360119b05673bf3467a9241092df0b0e68299566",
-        "metadata.json": "e76665e10d42b139d949989d5eba2166c6df9460fab157da6026ac4d60c8084d",
-        "v16_audit.json": "69bd2b5b2eb86c52a1347889badfa41b5458e8430d0729cd230213a82314fac1"
+        "results.json": "23c8a9d3afb1febc4d2bddff50a814066e6c5ab1b9465c8f56f108c30b2d2b29",
+        "metadata.json": "c38208ebc07bc1227e63d9b42ba12a3ee61fb532fbe08f9f6f3a303f431e8fdb",
+        "v16_audit.json": "300daf031695a2c4b8fd54865602ee633398f9281957592eedc45c62a4b4e8d3"
+      }
+    },
+    "V03": {
+      "run": "validation/artifacts/V03/20261023_gap_final_04",
+      "hashes": {
+        "results.json": "c1a00df10d5133eaae7889c19b30bed0831de03225935720ed97f219ae973d30",
+        "metadata.json": "c03d69882d1ced34e4f0a0c14ba5b068ba3306fdce02ed60dc9696f36b8c1fa5",
+        "v16_audit.json": "38ded0a4ffd98b319e6965035b2cb590edbd791648fd19421639ca28bd76e949"
       }
     }
   },
   "integrated_campaign_receipts": {
     "V01": {
-      "run": "validation/artifacts/V01/20261023_gap_final_03",
+      "run": "validation/artifacts/V01/20261023_gap_final_04",
       "hashes": {
-        "results.json": "9a7300ce7effc2272b305dec058457ce15dcf41adc5b994d6aa9b94ca7a38217",
-        "metadata.json": "81406305acbe6e30c799e965bdd957b9f83c44de7cb0d6d0628e6df34eaf15c5",
-        "v16_audit.json": "686328e3f5cd73d035fda2d3d693094f01012f614c34f807b926dd606648b221"
+        "results.json": "bcefa102c36dbe53d71ec8ca2aa7d8f6edd85dfe3f19ba9a77ba6346ea5f78b3",
+        "metadata.json": "05666f089ef1db135e590b950eab301b3543f97a0abf833f5c325c0edd40e03e",
+        "v16_audit.json": "3d2219e8092f89268534629975d911e053269a43a806c8cf30e3d061bb850a9d"
       }
     },
     "V02": {
-      "run": "validation/artifacts/V02/20261023_gap_final_03",
+      "run": "validation/artifacts/V02/20261023_gap_final_04",
       "hashes": {
-        "results.json": "858202f618fb6bd01fc78ab45d60a726d33709c17856717b23316cee21b92bef",
-        "metadata.json": "11228c8e39b1826eb7e4d65e9783b5342d0de7225b0fabdc6e0bc7333ae8d2d4",
-        "v16_audit.json": "86caf270b798052244347e69e845a280fead82ce5015c5610146f43daaac55e6"
+        "results.json": "c8f5306daf50e92dfb9e71a633d41ef43656836c00c72cf1e2c6dd1e0a48928b",
+        "metadata.json": "dc8c0ec855efd9ecb49fdb9bca91b33e37a3f04c4a5aec96960ece2efc1c44f4",
+        "v16_audit.json": "39b583b908da328df32b0dd485fec98f8f02ab53be3657b0312f52d8c0c996cd"
       }
     },
     "V04-T0": {
-      "run": "validation/artifacts/V04-T0/20261023_gap_final_03",
+      "run": "validation/artifacts/V04-T0/20261023_gap_final_04",
       "hashes": {
-        "results.json": "5c95b6b0774050e996097a6a64156937ef56a80efb2ef10a14911a94ddfcae5e",
-        "metadata.json": "97e1b8f5a736ea19d845592188708df4350acbf457f13ffdb6e4686955e1bcc2",
-        "v16_audit.json": "4df8909f2163585a79ce8b0134f2eebd1c514b4c08a68ec573d6f89a2f6a737b"
+        "results.json": "9a4a4339935ee76ca67e0caaa5be2f3a2354c939c16c1bc3c6a64f736597ec14",
+        "metadata.json": "2c87785366becec2b88198c94ba0f0aa6390ed7ff428323a6dc17e5a9719b62a",
+        "v16_audit.json": "fd74d6defc6c0cbe3bc2ed6657ff674928b2cc3b04edb68553beea3cfd9e01b6"
       }
     },
     "V05": {
-      "run": "validation/artifacts/V05/20261023_gap_final_03",
+      "run": "validation/artifacts/V05/20261023_gap_final_04",
       "hashes": {
-        "results.json": "2257412f014e3941fd0d206eae5362a9d82b8c7e4a7afaae73c68df5e9c0bd17",
-        "metadata.json": "35509c7fb77b7a8ad74e9c4e925f4e554ba1e1d36ba71c4b35c21e3ac55ad220",
-        "v16_audit.json": "7338124793af8a4f63394f01978463b9ec9236d9f6373bdd7aead03eb5b7a9e9"
+        "results.json": "1326fb0109efd4c8e0939a696de597d372def822a130f38864d021f9eac93c7a",
+        "metadata.json": "0b153a25527149a9b0ae69dd2c0b8b95f3aba15de47c8658bfeca591c0df09ef",
+        "v16_audit.json": "2ce06f645036d47e80dfd69a6bb9a8cddf3b0ae807274811dea521d4b921019d"
       }
     },
     "V14": {
-      "run": "validation/artifacts/V14/20261023_gap_final_03",
+      "run": "validation/artifacts/V14/20261023_gap_final_04",
       "hashes": {
-        "results.json": "ff8255b94ff0d312c65189b3fe79efc0f9a80ddfd845ea24f27ff6245885e5bb",
-        "metadata.json": "ec2e9918bea988142f4adf4132b49aca583fa713c3c668632895183fdd1fcc9d",
-        "v16_audit.json": "c898c54cb7484a9cb988431c3d4e7d7a7147bf809fe84197879b6084d7955cf5"
+        "results.json": "03bcbe195075463e8bd15493f8712f1902bb7f666bd85c7798e85567ab5d004f",
+        "metadata.json": "c8c6dabf8ffb37260500f32e854926fa3aa0b4a7cb291d86d56526cf2a003aad",
+        "v16_audit.json": "a5e1b95c57871aade721ea519ec1f28a0e85eff7b83ed14008b2fb428b83fd04"
       }
     },
     "V04-T1": {
-      "run": "validation/artifacts/V04-T1/20261023_gap_final_03",
+      "run": "validation/artifacts/V04-T1/20261023_gap_final_04",
       "hashes": {
-        "results.json": "2aa664cf147d8b887c5e17f6a67f658bbc19aa7b943ef6fe8bf95d352efbfe34",
-        "metadata.json": "ee4158b1eb07e29bc682b71a0c044206b651a3f3ce007c8948329b6074e20092",
-        "v16_audit.json": "d104f287a6b87a626708f248d9fe5b0a158291375266f6c6008c359d1aefdad5"
+        "results.json": "7e01c6add3c12c7d11558409dcdd37ffd4629538c876370edcdb9d307a56d85e",
+        "metadata.json": "ff7fc77302d4d0bbb070efec5b76a2c888932cbdcf4d7067b6a8aad71f5706e9",
+        "v16_audit.json": "bf7f3a6109c17620bff4cecc1a6ed16068f8ec448a9117b8d9b1d7758421aed7"
       }
     },
     "V06": {
-      "run": "validation/artifacts/V06/20261023_gap_final_03",
+      "run": "validation/artifacts/V06/20261023_gap_final_04",
       "hashes": {
-        "results.json": "60a20282dd845b68808ebf520ff1a8ba291070742fb102ea7faabe63bc41c7af",
-        "metadata.json": "2e9a946c100689c05cc3799e1e9537b42c1a08627fb63e9239565921a552fcd9",
-        "v16_audit.json": "c49342a9fc1dd109f94e8083bf8a10d980fe21498c4533bf767e06d2168b64e4"
+        "results.json": "e6e16f2b2053aaa8ed78c021a22b8fefdc7adee215483755cd788dfd866b048b",
+        "metadata.json": "20c302f8880cb5534c07501b08a2370f347d538ad5b5743e6a466fe84247514c",
+        "v16_audit.json": "bcca22966c588c7c47331f73528fbded1041f1c0d30976fce064e6e23c1fbc0f"
       }
     },
     "V09": {
-      "run": "validation/artifacts/V09/20261023_gap_final_03",
+      "run": "validation/artifacts/V09/20261023_gap_final_04",
       "hashes": {
-        "results.json": "b003207f2cffa0532435527841ef0ef6e9703dd44c78b89bb7783554cf80816d",
-        "metadata.json": "a4c393a7979be87b38a5361dd0d18dd471beb0b2157095790f392f0ec5dc90b5",
-        "v16_audit.json": "6c42edd5c8e6d23c908edc59d825f27abb2733ef66f674f8493662fd7432842e"
+        "results.json": "120d9424be863a0ddc7afc0e0e40bf97efca35ac4b0885342def306b36bc8ad7",
+        "metadata.json": "1d93749c65081428d03c00ac3ac84bf7bd85da116f78e2dc4015833624394b48",
+        "v16_audit.json": "f314f66d18d0f59a119fb5c8e87d2ce9c581b530b352f2966406dc3c8c0a6f05"
       }
     },
     "V10": {
-      "run": "validation/artifacts/V10/20261023_gap_final_03",
+      "run": "validation/artifacts/V10/20261023_gap_final_04",
       "hashes": {
-        "results.json": "7fabc2d76f2c70e7321410643da77f17073b51fa9da406ccd1852463560bcc35",
-        "metadata.json": "ad356430a77de78d202073b708fdaddfc63f495cc98c8fdacce84514660ae217",
-        "v16_audit.json": "8bc2f3700307256a4f2eab89e81a63de3b3ed5fc099221b32af7a6865f589c2e"
+        "results.json": "193a87a39a1b49b31ca2590017e347d80f0fb8f9bd4ddb0dbe69781c5bdb7380",
+        "metadata.json": "a165a0839f1b6cc014560c564beaf88db84283f887d5e86acb66f3c8453fc03f",
+        "v16_audit.json": "c2b81072eaef95a1b25a34fe2fee83a28ec6a140a809ecb3212d8f82c788a01a"
       }
     },
     "V11a": {
-      "run": "validation/artifacts/V11a/20261023_gap_final_03",
+      "run": "validation/artifacts/V11a/20261023_gap_final_04",
       "hashes": {
-        "results.json": "a274f425bff648d80f8638e0ed8498e9889cdf00a224ab9b53c62093ed89d01d",
-        "metadata.json": "f9f24c36a88d8b75b0c1b76cd0a60f76375d94ced17d81210e49984b1c3c4e4b",
-        "v16_audit.json": "3f1a2e2825fdf2a0b03e92cbcd7ac1e59974cbfcacac5105b7cf41ba654e6bf0"
+        "results.json": "9867c75c632404b71880b0d74f1551d21c074cf77d6ec90d1d49f18c215d6216",
+        "metadata.json": "27278b33e60e0b694619bef4a1246d74159e7f3fe643216855d04de3c1337075",
+        "v16_audit.json": "bc22544149352c50599e9a0b07c7c9648a19ab781aeb068cd98c1b1127782727"
       }
     },
     "V11b": {
-      "run": "validation/artifacts/V11b/20261023_gap_final_03",
+      "run": "validation/artifacts/V11b/20261023_gap_final_04",
       "hashes": {
-        "results.json": "633505209026e12141331f64e59fd75f52d59fbd7309eadee4ee57002eea87dc",
-        "metadata.json": "d0a1f31885121812f8a3111c02fa9ec92e42cb713f92ea6a187decd49070f383",
-        "v16_audit.json": "9a09038a7301ba0cbc6818c10fe2118f950245ca42c767c19467769b0bb25faf"
+        "results.json": "eae13546f0159110d36bc1cfc446fa6f770911d305799e776353f5a5d2a4e3fa",
+        "metadata.json": "800ecc262eae763bc5555155034b4b54a701a4c750e901443bea073cc1b36356",
+        "v16_audit.json": "05809af3cda8ef50d5b55e31beff6ac66626037f27f73de9f8f3766906ba2602"
       }
     },
     "V13": {
-      "run": "validation/artifacts/V13/20261023_gap_final_03",
+      "run": "validation/artifacts/V13/20261023_gap_final_04",
       "hashes": {
-        "results.json": "a84e613172d6ed2befad149b9f920561369963a7c49fdb70235ebc80fde49b56",
-        "metadata.json": "9dc862cdc8f98eb988318bc4147c802a292ed297e690372e203455c33c8abf38",
-        "v16_audit.json": "98af2513d06d29139e42e8b0bb735e2c03561c60773c735a886c34978479cfae"
+        "results.json": "c9bd1a67037b6cf46d36c4159bede7d52b7aced4d223d6997731082728e98ac3",
+        "metadata.json": "e863d462e8fceeefee77ea785ec3961c9e021d26952e427b79fd8deb115d1331",
+        "v16_audit.json": "d5a3dfcddd5b5db4105ade44edd665aa499b3202b482e027160ff4f8ed173ddc"
       }
     },
     "V-COST": {
-      "run": "validation/artifacts/V-COST/20261023_gap_final_03",
+      "run": "validation/artifacts/V-COST/20261023_gap_final_04",
       "hashes": {
-        "results.json": "0056b4bc5338c7c8d3613b976f754545b5d402fdadf9a56983112a0e76a46503",
-        "metadata.json": "260ab33842bcc24e73a76590f75a6679f580006f7a58a99809115a6ee630575e",
-        "v16_audit.json": "89bdc36c6f80db96130de59f904662856ac999889de79e653fbca29456b968c9"
+        "results.json": "84160dc58f41a82d536697f3530dfc6658dc8191b5c54d90047d3c68ec172acc",
+        "metadata.json": "8fa385891f491896154fe2b3db50b0d83e3c38400d0087a141d0b5fb21034a0f",
+        "v16_audit.json": "da789d4707bd8398d4a6d5c89aaaa74f49703d04d23f24464f6da7a0d8ad17a9"
       }
     },
     "V08": {
-      "run": "validation/artifacts/V08/20261023_gap_final_03",
+      "run": "validation/artifacts/V08/20261023_gap_final_04",
       "hashes": {
-        "results.json": "97448a5fd34df82510736d021de95636401316847c9dd5aab87180671eb778c5",
-        "metadata.json": "6bb3be85d740e098329405bae00f0f914e0387e6401a38b5887045f810ef5998",
-        "v16_audit.json": "cc5f3ac5de4e4b6e4f58a1583e7e1ef4bf77229139a8c92b5b418e1b35b4b3f8"
+        "results.json": "3b7fb02c81f699b7f69ba3d24a7ea20fb9eaeca49bc09936ff7af1ae303f63aa",
+        "metadata.json": "55d246cfddf1fc2c89111ca60a7256a36b0a151c1472deaf2cf90400de46594a",
+        "v16_audit.json": "7e985b80ede1e377a20387a426c8b88a3b2a130bc5b60f47f0866abcffd1c902"
       }
     },
     "V07": {
-      "run": "validation/artifacts/V07/20261023_gap_final_03",
+      "run": "validation/artifacts/V07/20261023_gap_final_04",
       "hashes": {
-        "results.json": "b429f3d994268bd92445e3fbcb0d49ce978d67b05274b701927b71a3d6fc9601",
-        "metadata.json": "2968954a92cd98f093625e807a562eb97b5641902ee32252312dd029d8659220",
-        "v16_audit.json": "b43f304b36f67df15340f7cd97a2bd21e2b78b281185d092620e88cefe89cce8"
+        "results.json": "bb6f3b8581e3e6b0c8464f018f3099b69ca732a33c331085f1a0cd6fba126fef",
+        "metadata.json": "afa901bd00188c3679c92f277e45dea4f358ffda4ec4723bf7cbebf695c32678",
+        "v16_audit.json": "bbfa3d802b493d21926cef14328c65a2a15b184ee4176cd9c11be04294c02008"
       }
     },
     "V12": {
-      "run": "validation/artifacts/V12/20261023_gap_final_03",
+      "run": "validation/artifacts/V12/20261023_gap_final_04",
       "hashes": {
-        "results.json": "fb6a2bdb9d5b16941349a1cf360119b05673bf3467a9241092df0b0e68299566",
-        "metadata.json": "e76665e10d42b139d949989d5eba2166c6df9460fab157da6026ac4d60c8084d",
-        "v16_audit.json": "69bd2b5b2eb86c52a1347889badfa41b5458e8430d0729cd230213a82314fac1"
+        "results.json": "23c8a9d3afb1febc4d2bddff50a814066e6c5ab1b9465c8f56f108c30b2d2b29",
+        "metadata.json": "c38208ebc07bc1227e63d9b42ba12a3ee61fb532fbe08f9f6f3a303f431e8fdb",
+        "v16_audit.json": "300daf031695a2c4b8fd54865602ee633398f9281957592eedc45c62a4b4e8d3"
+      }
+    },
+    "V03": {
+      "run": "validation/artifacts/V03/20261023_gap_final_04",
+      "hashes": {
+        "results.json": "c1a00df10d5133eaae7889c19b30bed0831de03225935720ed97f219ae973d30",
+        "metadata.json": "c03d69882d1ced34e4f0a0c14ba5b068ba3306fdce02ed60dc9696f36b8c1fa5",
+        "v16_audit.json": "38ded0a4ffd98b319e6965035b2cb590edbd791648fd19421639ca28bd76e949"
       }
     }
   },
-  "integrated_accepted_package": "E-BANK-FINAL08-20261016-PACKAGE",
-  "semantic_product_trace": "E-BANK-FINAL08-20261016-QUALIFIED-TRACE",
+  "integrated_accepted_package": "E-GAP-FINAL04-20261018-PACKAGE",
+  "semantic_product_trace": "E-GAP-FINAL04-20261018-QUALIFIED-TRACE",
   "bank_profile_contract": "E-BANK-PROFILES-20261013-CONTRACT",
   "bank_profile_evidence": {
     "prediction": "E-BANK-PREDICTION-20261013-VERIFICATION",
@@ -32399,7 +33545,7 @@
     "decisions": "E-BANK-DECISIONS-20261013-VERIFICATION",
     "nas_portability": "E-BANK-NAS-20261013-VERIFICATION"
   },
-  "final_product_qualification": "E-BANK-FINAL08-20261016-PACKAGE",
+  "final_product_qualification": "E-GAP-FINAL04-20261018-PACKAGE",
   "gap_closure": {
     "path": "docs/program/gap_closure.json",
     "contract_evidence": "E-GAP-20261018-PLAN",

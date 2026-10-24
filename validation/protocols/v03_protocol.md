@@ -1,6 +1,6 @@
 # V03 Protocol: complete mutation conformance
 
-**Version:** 2.29
+**Version:** 2.30
 **Phase:** Tier 0 deterministic veto
 **Reconciled:** 2026-10-19 Asia/Shanghai, prospectively for reviewed runtime admission
 
@@ -17,7 +17,16 @@ survivors, modules or abnormal outcomes are removed to improve the score.
 D-PROTOCOL remains open for other phases. This finite deterministic check does
 not assert a general probability of detecting real software defects.
 
-## Prospective 2.29 calibration resource amendment
+## Prospective 2.30 exact optional-fidelity equivalence
+
+Add only tpe_optional_fidelity_default_v1 for the two exact source-bound
+missing-key default rewrites proved in MUTATION_EQUIVALENCE_LEMMAS_2026_10_23.md.
+The strengthened public contracts and negative proof controls apply to fresh
+allocations. Final03 remains FAIL; all numerical criteria, modules, operators,
+test selection, timeout and resource limits remain unchanged. Diagnostic
+outcomes cannot be imported as qualification. No campaign is allocated.
+
+## Historical 2.29 calibration resource amendment
 
 Only future allocations use a 2,700-second complete calibration ceiling.
 Admission02 completed the full statistics pass and both fixed mutation

@@ -1,6 +1,6 @@
 # Installed caller model examples
 
-`hponas.quickstart` ships in the wheel and needs only base package dependencies.
+`hponas.quickstart` ships in the wheel and needs only base package dependencies; no optional extras are required for either model or resume.
 Its two objective classes are ordinary callers of public Study/Store APIs;
 they do not inherit bank fixtures or import sibling projects, validation models,
 private data or services. The source is [quickstart.py](../hponas/quickstart.py).
@@ -56,5 +56,4 @@ both tuning and final evaluation. Offline wheel checks run both CLI models
 and completed resume outside the checkout on Python 3.12/3.13. This is finite
 mathematical and workflow evidence. Empirical banking usefulness, general
 optimizer superiority, posterior convergence and production readiness remain
-unestablished. Changed-source scientific qualification and the final complete
-audit belong to the remaining GAP-01 master phases.
+unestablished. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed.

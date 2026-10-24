@@ -4,9 +4,7 @@ The product is a reusable HPO and moderate coordinate NAS workflow for
 universal-bank model families. The core accepts caller-owned data/model
 adapters; the implemented bank examples use independent synthetic generators and
 mathematical references. The [16 October product package](program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json)
-is the qualified finite local baseline. The master is now incomplete:
-[GAP-01](program/GAP_CLOSURE_PROGRAM_2026_10_18.md) repairs ten historical gaps,
-with current-source qualification and an independent completion audit last.
+is the qualified finite local baseline for its original source. The current source passed qualification and GAP-01/FINAL-AUDIT; all 27 original clauses and the adopted finite local master are complete. [GAP-01](program/GAP_CLOSURE_PROGRAM_2026_10_18.md) implements the ten historical gaps and independently audits every original clause.
 
 The 12 October baseline remains attached to its original source. The
 16 October product package binds fresh applicable scientific gates, finite bank
@@ -49,15 +47,14 @@ Knob.prior text is not silently made into a sampling distribution.
 | Robust GP | Refuses scheduler and concurrency | Refused because failed-repetition handling is unsupported |
 | RGPE | Refuses scheduler and concurrency | Scalar endpoint with matching declared source/target protocols and protected final roles |
 
-These are development-verified interfaces. GAP-01 scientific requalification
-remains open. TPE checkpoints use identity-bound version 3; version 2 replay
+These interfaces have passed current-source finite qualification. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed. TPE checkpoints use identity-bound version 3; version 2 replay
 requires the retained source or an explicit migration. Direct dictionary TPE
 observations must name `trial_number` when equal configurations are pending.
 
 Finite optional-method evidence remains opt-in. DEHB and population controllers
 are implemented; the old word “deferred” is not their current implementation
 status. The bounded fixed-kernel RGPE searcher now supplies ranked initialization
-and actual surrogate transfer with development evidence; see
+and actual surrogate transfer with current-source finite evidence; see
 [warm starts](WARM_START.md). ifBO feasibility failed and integration was
 cancelled. [Method outcomes](METHOD_OUTCOMES.md) enumerates each implemented,
 failed/cancelled and watchlist method separately. A cost predictor does not
@@ -66,10 +63,10 @@ posterior calibration. No empirical optimizer superiority or automatic default
 promotion follows from these finite examples.
 
 Operational scope is trusted supervised local research. The new local service
-has development evidence for committed-prefix PITR, incremental/scheduled backup,
+has current-source finite evidence for committed-prefix PITR, incremental/scheduled backup,
 local alerts, application roles, caller-provided backup keys and authenticated
 encrypted event artifacts, plus cooperative measured device-time/currency quotas.
-Final source qualification remains open. Live databases remain plaintext;
+Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed. Live databases remain plaintext;
 authentication, external secret vaults, external alert delivery and hostile
 tenant isolation are separate integrations. The bounded eight-study/four-local-
 worker measurement does not qualify the original 100-study/50-distributed-worker
@@ -80,8 +77,7 @@ production banking readiness.
 The [bank profiles](BANK_PROFILES.md) now implement the following finite local
 workflows. Each has independent reference checks, adverse cases, public
 selection/evaluation, resume and reporting tests. Their 16 October baseline
-source passed BANK-01/INTEGRATED-REVIEW. The changed GAP-01 source still requires
-BANK-01/GAP-QUALIFICATION and the last-phase complete audit.
+source passed BANK-01/INTEGRATED-REVIEW. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed.
 
 | Model family | Implemented finite support | Explicit limit |
 |---|---|---|
@@ -100,7 +96,7 @@ enumeration or a feasible winner. Empty fronts, failed trials, uncertain work
 and unsupported identification remain visible. Separate final work is reserved.
 Core adapters remain caller-owned and require no sibling imports, services or
 private data. Python 3.12/3.13 installation evidence is bound to its tested
-source. GAP-01 refreshes installed-workflow evidence before its own qualification.
+source. GAP-01 retained installed-workflow evidence before its passing current-source qualification.
 The wheel ships [two independent caller models](CALLER_MODELS.md) through
 `python -m hponas.quickstart`: fitted ReLU readout coordinate NAS and a tuned
 projected-gradient allocation solver. Their exact finite references and

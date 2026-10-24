@@ -1001,9 +1001,10 @@
         "Version 2.24: add hponas.rgpe to GAP-01 finite behavioral ownership; preserve the 24 mutation modules, population rules, operators, selection, scientific thresholds, timeouts and resource rules.",
         "Version 2.25: add the shipped independent hponas.quickstart examples to GAP-01 finite behavioral ownership; preserve all 24 mutation modules and every scientific/execution rule.",
         "Version 2.26: prospectively re-establish current-source TPE replay/bookkeeping, cancelled aggregation, endpoint/streaming/resource restore and falsey projection proof contexts. Preserve all historical examples with explicit successor-control lineage; add actual-source preflight and adjacent refusal controls. Keep all 25 rule names, 24 mutation modules, operators, population, selection, numerical thresholds, critical policy, timeout and resource rules unchanged. This amendment allocates no campaign.",
-        "Version 2.27: copy and bind the explicitly selected installation-test support script; make gap-governance unit counterexamples independent of mutable checkout evidence while retaining real-register checks in mandatory program and operation gates. Add bounded actual isolated-input verification before admission. No test-selection exclusion, operator, module, threshold, equivalence, timeout or resource change; no campaign allocation."
+        "Version 2.27: copy and bind the explicitly selected installation-test support script; make gap-governance unit counterexamples independent of mutable checkout evidence while retaining real-register checks in mandatory program and operation gates. Add bounded actual isolated-input verification before admission. No test-selection exclusion, operator, module, threshold, equivalence, timeout or resource change; no campaign allocation.",
+        "Version 2.30: preserve completed final03 FAIL; strengthen TPE, recovery and metadata contracts and add only the exact optional-fidelity default equivalence proof with adjacent refusal controls. Complete fresh qualification is required; no threshold, population, operator, selection or resource change."
       ],
-      "version": "2.29",
+      "version": "2.30",
       "scope_contract": "fresh_complete_mutation_population_v2",
       "decision_rule": {
         "overall_minimum": 0.9,
@@ -1013,7 +1014,7 @@
         "minimum_mutants": 100,
         "timeout_maximum_fraction": 0.2,
         "abnormal_or_unchecked": "INCONCLUSIVE",
-        "equivalent_policy": "Only the twenty-five listed equivalence_rules under exact source, companion-source and runtime-bound domains in MUTATION_EQUIVALENCE_LEMMAS_2026_10_18.md. Verify actual generated original/mutated functions. Unknown survivors remain; maximum fraction 0.05.",
+        "equivalent_policy": "Only the twenty-six listed exact source-bound rules in MUTATION_EQUIVALENCE_LEMMAS_2026_10_23.md; reconstruct generated functions and all dependencies. Unknown survivors remain; maximum fraction 0.05.",
         "equivalence_rules": [
           "builtin_nan_case_v1",
           "full_population_slice_v1",
@@ -1039,7 +1040,8 @@
           "modern_gp_admitted_guard_v1",
           "modern_gp_scalar_view_v1",
           "study_restore_controller_copy_v1",
-          "study_restore_falsey_default_v1"
+          "study_restore_falsey_default_v1",
+          "tpe_optional_fidelity_default_v1"
         ],
         "raw_outcome_policy": "mutmut_3_8_forkserver_process_outcomes_v1",
         "raw_kill_exit_code": 1,

@@ -423,6 +423,56 @@ def report_cache(trial="recovery_trial_1", step=1., value=2.):
     return {trial: {str(step): {"value": value, "decision": {"action": "continue", "reason": "scheduler"}}}}
 
 
+@pytest.mark.parametrize('reason', [None, 'Different explicit legacy purpose'])
+def test_legacy_reason_mismatch_is_refused_before_replacing_live_state(
+    tmp_path, interrupted_state, reason
+):
+    interrupted_state['legacy_reason'] = reason
+    target = make_study()
+    before = copy.deepcopy(target._snapshot())
+    with pytest.raises(ValueError) as caught:
+        target.load_checkpoint(write_state(tmp_path, interrupted_state))
+    assert str(caught.value) == 'Checkpoint legacy_reason differs; explicit migration required'
+    assert target._snapshot() == before
+
+
+@pytest.mark.parametrize('maximize', [False, True])
+def test_cached_scalar_metric_must_match_direction_and_reject_atomically(
+    tmp_path, interrupted_state, maximize
+):
+    interrupted_state['maximize'] = maximize
+    interrupted_state['report_cache'] = report_cache()
+    entry = interrupted_state['report_cache']['recovery_trial_1']['1.0']
+    expected = -2. if maximize else 2.
+    entry['metric'] = expected + 1.
+    target = make_study(maximize=maximize)
+    before = copy.deepcopy(target._snapshot())
+    with pytest.raises(ValueError) as caught:
+        target.load_checkpoint(write_state(tmp_path, interrupted_state))
+    assert str(caught.value) == 'Checkpoint progress metric differs'
+    assert target._snapshot() == before
+    entry['metric'] = expected
+    target.load_checkpoint(write_state(tmp_path, interrupted_state))
+    assert target._report_cache['recovery_trial_1'][1.]['metric'] == expected
+
+
+class DeclarationAwareRandom(RandomSearcher):
+    def validate_study_declaration(self, declaration):
+        if declaration is not None:
+            raise ValueError('This extension accepts only explicit legacy evaluation')
+        self.validated_declaration = declaration
+        self.declaration_checked = True
+
+
+def test_legacy_recovery_revalidates_searcher_with_no_declaration(tmp_path):
+    source = make_study(searcher=DeclarationAwareRandom(space(), seed=17))
+    target = make_study(searcher=DeclarationAwareRandom(space(), seed=99))
+    target.searcher.declaration_checked = False
+    target.load_checkpoint(write_state(tmp_path, source._snapshot()))
+    assert target.searcher.declaration_checked is True
+    assert target.searcher.validated_declaration is None
+
+
 @pytest.mark.parametrize("trial,step,value,message", [
     ("ghost", 1., 2., "Progress cache without trial"),
     ("recovery_trial_1", 0., 2., "Invalid checkpoint progress report"),

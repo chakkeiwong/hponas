@@ -18,6 +18,7 @@ RULES += ("ray_terminal_retry_bound_v1",)
 RULES += ("study_cancelled_reaggregation_v1",)
 RULES += ("modern_gp_admitted_guard_v1", "modern_gp_scalar_view_v1",
           "study_restore_controller_copy_v1", "study_restore_falsey_default_v1")
+RULES += ("tpe_optional_fidelity_default_v1",)
 CONTEXTS = {
     "hponas/study.py": "c101c8e07ffe65fa4b0e73453c76f9f4a1d1f78e81def22c54e7bd1043897d16",
     "hponas/executors/ray_executor.py": "f9c7a7967608ba06794913157479cc72ad852a783d8a3cd05048c432e9c9532f",
@@ -284,6 +285,13 @@ def lemma(original, mutated, module_source, source_path, class_name):
         if _dump(changed) == _dump(mutated):
             return "replay_unused_batch_default_v1"
     if source_path == "hponas/searchers_tpe.py" and class_name == "TPESearcher":
+        if original.name == "observe" and any(
+            _single_expression_rewrite(original, mutated,
+                "trial_result.get('fidelity', self.model_fidelity)", replacement)
+            for replacement in ("trial_result.get('fidelity', None)",
+                                "trial_result.get('fidelity')")
+        ):
+            return "tpe_optional_fidelity_default_v1"
         unused = {"_n_proposed", "_n_observed", "_next_trial_id"}
         read = any(isinstance(n, ast.Attribute) and isinstance(n.ctx, ast.Load)
                    and n.attr in unused for n in ast.walk(ast.parse(module_source)))

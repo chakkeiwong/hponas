@@ -719,7 +719,7 @@ def mutation_freeze(workspace):
             "calibration_order_tests": list(CALIBRATION_ORDER_TESTS),
             "calibration_wall_seconds": CALIBRATION_WALL_SECONDS,
             "equivalence_rules": list(RULES),
-            "equivalence_argument": _binding(workspace / "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_18.md"),
+            "equivalence_argument": _binding(workspace / "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_23.md"),
             "raw_outcome_policy": RAW_OUTCOME_POLICY,
             "resource_policy": _binding(workspace / "validation/designs/v03_resource_policy.json"),
             "max_workers": MAX_MUTATION_WORKERS, "wall_seconds": MAX_CAMPAIGN_WALL_SECONDS}
@@ -737,7 +737,7 @@ def verify_phase_register(workspace):
                 "minimum_mutants": MIN_MUTANTS, "timeout_maximum_fraction": MAX_TIMEOUT_RATE,
                 "abnormal_or_unchecked": "INCONCLUSIVE", "equivalence_rules": list(RULES),
                 "raw_outcome_policy": RAW_OUTCOME_POLICY, "raw_kill_exit_code": 1, "raw_timeout_exit_code": -24}
-    if (entry.get("version") != "2.29" or any(decision.get(key) != value for key, value in expected.items())
+    if (entry.get("version") != "2.30" or any(decision.get(key) != value for key, value in expected.items())
             or entry.get("tool_source_manifest") != REQUIRED_TOOL_SOURCES
             or entry.get("execution_admission") != EXECUTION_ADMISSION
             or entry.get("execution_resources") != {"workers": MAX_MUTATION_WORKERS,
@@ -748,7 +748,7 @@ def verify_phase_register(workspace):
             or entry.get("module_ownership") != {
                 "required": IN_SCOPE_MODULES, "outside_scope": DEFERRED_MODULES,
                 "import_facades": sorted(FACADE_MODULES)}
-            or "**Version:** 2.29" not in (workspace / "validation/protocols/v03_protocol.md").read_text()):
+            or "**Version:** 2.30" not in (workspace / "validation/protocols/v03_protocol.md").read_text()):
         raise ValueError("V03 phase register differs from the prospective executable contract")
 
 
@@ -940,7 +940,7 @@ def verify_execution_artifacts(result):
         raise ValueError("V03 measured resource policy differs from its freeze")
     for binding in frozen["tool_sources"] + [frozen[key] for key in ("config_file", "protocol", "protocol_register", "equivalence_argument")]:
         read(binding, parse=False)
-    if frozen["equivalence_argument"]["sha256"] != _binding(ROOT / "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_18.md")["sha256"]:
+    if frozen["equivalence_argument"]["sha256"] != _binding(ROOT / "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_23.md")["sha256"]:
         raise ValueError("V03 equivalence argument differs from the frozen rules")
     # The program is a retained test-context snapshot, not executable source.
     # New master receipts may follow execution; static fixture bytes may not.

@@ -86,6 +86,10 @@ hpo-survey/.localresources/
 mutants/
 mutmut_junit.xml
 
+# Released guard reservations and relocated local mutation workspaces.
+emergency.reserve
+mutants
+
 # Audited campaigns retain the closed database and completed Study snapshot.
 !validation/artifacts/**/*.db
 !validation/artifacts/**/checkpoints/

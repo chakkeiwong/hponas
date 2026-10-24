@@ -62,7 +62,7 @@ def calibration_fixture(tmp_path, freeze):
                   calibration_wall_seconds=CALIBRATION_WALL_SECONDS,
                   calibration_order_tests=list(CALIBRATION_ORDER_TESTS),
                   equivalence_rules=list(RULES),
-                  equivalence_argument=_binding(ROOT / "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_18.md"))
+                  equivalence_argument=_binding(ROOT / "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_23.md"))
     lines = [f"{module}.x_function__mutmut_1: not checked" for module in IN_SCOPE_MODULES]
     lines.extend(f"{mid}: {row['status']}" for mid, row in CALIBRATION_CONTROLS.items())
     raw = tmp_path / "calibration-listing.txt"
@@ -698,7 +698,7 @@ def test_prospective_launch_refuses_stale_or_weakened_phase_register(tmp_path, d
     if damage == "version":
         entry["version"] = "2.6"
     elif damage == "markdown":
-        markdown = markdown.replace("**Version:** 2.29", "**Version:** 2.20")
+        markdown = markdown.replace("**Version:** 2.30", "**Version:** 2.20")
     elif damage == "tool_manifest":
         entry["tool_source_manifest"].pop()
     elif damage == "missing_admission":

@@ -54,6 +54,19 @@ Rule syntax/matching is verified with the installed `codex execpolicy check`. Th
 
 Read the active stage and its dependencies. At each boundary, retain the result, repair observed defects, update the next stage's concrete tests/resource allocation, synchronize the master/register and continue eligible work. A proposed “next” action must name its master stage and whether it changes scope. Continue master execution until a real blocker, explicit user pause, or whole-master completion; distinguish answering a status/scope question from claiming the master is complete. Do not label queued work “running,” or a development check “scientific acceptance.”
 
+## Completed-failure survivor diagnostic (23 October 2026)
+
+Exact one-time operation:
+`/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-23/gap-survivor-repair-01/run_diagnostic.py`
+
+The adjacent `diagnostic-plan.md` and `diagnostic-review-01.json` define 151
+retained targets, three clean baselines, one CPU, no GPU, 15 seconds per fresh
+child and a 2,550-second independent guard with 4-GiB owned-RSS cap. This is a
+contract diagnostic in BANK-01/GAP-QUALIFICATION, not an official campaign.
+It refuses stale inputs, extra arguments, existing outputs or an active run.
+The fixed focused tests and exact retained functions are bound before launch.
+No service, network, deployment or global permission change is requested.
+
 
 ## GAP-01 exact operations (18 October 2026)
 
@@ -185,3 +198,36 @@ complete package is reviewable. Existing routine rules remain sufficient; no
 global interpreter, shell, network or deployment permission is broadened.
 Managed rejection remains authoritative. Success requires every frozen result
 and the complete last-phase audit; service exit alone cannot close the master.
+
+
+## Completed-failure survivor-repair successor (23 October 2026)
+
+The historical admission03/qualification03 is consumed: its complete V03
+result is FAIL, not an interrupted result eligible for retry. The active
+prospective package is admission04, qualification04, descendant04 and final
+audit13. It stays within BANK-01/GAP-QUALIFICATION then GAP-01/FINAL-AUDIT.
+The concrete repair sequence is
+docs/program/evidence/2026-10-23/gap-survivor-repair-01/successor-plan.md.
+Earlier launch commands remain historical and must not be reused.
+
+The fixed test-adapters command now builds offline in a fresh build environment
+with retained setuptools 84.0.0 and wheel 0.45.1. It verifies all declared
+package files against SHA-256 RECORD entries and rejects unbound inputs; the
+package-manager lock is separately bound and not imported. The retained
+installation runtimes remain unchanged. The operation retains its 270-second
+helper deadline, 60-second subprocess limits and complete installed workflows.
+
+| Exact command | Purpose and bound |
+|---|---|
+| /home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-18/gap-admission-04/review_program.py | Serial current development/install reconstruction, service/controller refusal controls and six independent audit rehearsals; 4,100 seconds, one CPU, no GPU, no scientific allocation |
+| /home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-18/gap-admission-04/review_launch.py | Exact handoff bindings, governance and resource arithmetic; 300-second review, no scientific allocation |
+| /home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-18/gap-admission-04/run_gap_program.py | One hponas-gap-program-20261023-01 service: fresh calibration/cleanup admission, 17 scientific entries and five gates, then terminal reconstruction and complete 27-clause final audit; 68,000-second ceiling |
+
+All numerical thresholds, population/operators, selection rules, no-GPU and
+CPU/memory/disk controls are unchanged. V03 2.30 prospectively adds only the
+exact optional-fidelity default proof; diagnostic outcomes cannot be imported.
+The thirteen service steps total 66,930 seconds. Restart=no, KillMode=control-group,
+TimeoutStopSec=30, exclusive outputs and the fixed stop handler apply. No
+campaign is allocated until complete review and fresh admission pass. Group
+any managed approval for this exact launcher and owned sockets/service/children;
+no global interpreter, shell, network or deployment rule is requested.

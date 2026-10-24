@@ -1,5 +1,8 @@
 """Owned-process and argument boundaries of the fixed offline install helper."""
 import importlib.util
+import base64
+import csv
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -66,3 +69,64 @@ def test_machine_output_stays_parseable_with_retained_dependency_warning(tmp_pat
     assert 'retained dependency warning' in (tmp_path / 'json-with-warning.stderr.log').read_text()
     assert run.steps[0]['returncode'] == 0
     assert not run.cleanup()
+
+
+def build_prerequisite_fixture(tmp_path):
+    retained = tmp_path / 'retained'
+    for distribution in helper.BUILD_DISTRIBUTIONS:
+        package = distribution.split('-')[0]
+        package_file = retained / package / '__init__.py'
+        package_file.parent.mkdir(parents=True)
+        package_file.write_bytes(b'build backend fixture\n')
+        record = retained / distribution / 'RECORD'
+        record.parent.mkdir()
+        digest = base64.urlsafe_b64encode(hashlib.sha256(package_file.read_bytes()).digest()).decode().rstrip('=')
+        with record.open('w', newline='') as stream:
+            csv.writer(stream).writerows([
+                [str(package_file.relative_to(retained)), 'sha256=' + digest, str(package_file.stat().st_size)],
+                [str(record.relative_to(retained)), '', ''],
+            ])
+    return retained
+
+
+def test_offline_build_prerequisites_copy_verified_packages_to_fresh_environment(tmp_path):
+    retained = build_prerequisite_fixture(tmp_path)
+    before = {str(p.relative_to(retained)): p.read_bytes() for p in retained.rglob('*') if p.is_file()}
+    (retained / '.lock').write_bytes(b'')
+    destination = tmp_path / 'fresh-site'
+    result = helper.stage_build_prerequisites(retained, destination)
+    assert result['distributions'] == list(helper.BUILD_DISTRIBUTIONS)
+    assert len(result['retained_files']) == len(result['copied_files']) == 4
+    assert result['nonimported_auxiliary_files'] == [{'path': '.lock', 'sha256': hashlib.sha256(b'').hexdigest()}]
+    assert not (destination / '.lock').exists()
+    for name, data in before.items():
+        assert (retained / name).read_bytes() == (destination / name).read_bytes() == data
+    with pytest.raises(FileExistsError):
+        helper.stage_build_prerequisites(retained, destination)
+
+
+@pytest.mark.parametrize('damage', ['bytes', 'missing', 'unlisted', 'escape', 'symlink', 'unhashed'])
+def test_offline_build_prerequisites_reject_corrupt_or_unbound_inputs(tmp_path, damage):
+    retained = build_prerequisite_fixture(tmp_path)
+    package = retained / 'setuptools/__init__.py'
+    record = retained / helper.BUILD_DISTRIBUTIONS[0] / 'RECORD'
+    if damage == 'bytes':
+        package.write_bytes(b'changed')
+    elif damage == 'missing':
+        package.unlink()
+    elif damage == 'unlisted':
+        (retained / 'unexpected.py').write_text('unbound')
+    elif damage == 'escape':
+        with record.open('a') as stream:
+            stream.write('../escape.py,,\n')
+    elif damage == 'symlink':
+        external = tmp_path / 'external.py'
+        external.write_bytes(package.read_bytes())
+        package.unlink()
+        package.symlink_to(external)
+    elif damage == 'unhashed':
+        record.write_text('setuptools/__init__.py,,\n')
+    destination = tmp_path / 'fresh-site'
+    with pytest.raises(ValueError):
+        helper.stage_build_prerequisites(retained, destination)
+    assert not destination.exists()

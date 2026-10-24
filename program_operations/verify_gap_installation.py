@@ -4,6 +4,8 @@ No arbitrary commands, paths or interpreter arguments are accepted by the CLI.
 All children inherit the parent operation's process group and CPU affinity.
 """
 from pathlib import Path
+import base64
+import csv
 import hashlib
 import json
 import os
@@ -19,6 +21,7 @@ ROOT = Path('/home/ubuntu/workspace/hponas')
 RUNTIMES = ('py312', 'py313')
 TOTAL_SECONDS = 270
 PROCESS_SECONDS = 60
+BUILD_DISTRIBUTIONS = ('setuptools-84.0.0.dist-info', 'wheel-0.45.1.dist-info')
 
 
 def parse_args(args):
@@ -37,6 +40,63 @@ def operation_directory(value):
 def binding(path):
     return {'path': str(path.relative_to(ROOT)),
             'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+
+
+def stage_build_prerequisites(retained, destination):
+    """Copy the two retained, RECORD-verified build tools into a fresh venv."""
+    retained, destination = Path(retained), Path(destination)
+    if retained.is_symlink() or retained.resolve() != retained:
+        raise ValueError('Build prerequisites must be a real retained directory')
+    records = {}
+    for distribution in BUILD_DISTRIBUTIONS:
+        record = retained / distribution / 'RECORD'
+        with record.open(newline='') as stream:
+            for name, digest, size in csv.reader(stream):
+                relative = Path(name)
+                path = retained / relative
+                if (relative.is_absolute() or '..' in relative.parts
+                        or path.resolve() != path or not path.is_file()):
+                    raise ValueError('Unsafe or missing retained build file: ' + name)
+                data = path.read_bytes()
+                if digest:
+                    algorithm, expected = digest.split('=', 1)
+                    if algorithm != 'sha256':
+                        raise ValueError('Unexpected retained build digest: ' + name)
+                    actual = base64.urlsafe_b64encode(hashlib.sha256(data).digest()).decode().rstrip('=')
+                    if actual != expected or size != str(len(data)):
+                        raise ValueError('Retained build file integrity failed: ' + name)
+                elif path != record or size:
+                    raise ValueError('Unhashed retained build file: ' + name)
+                if name in records:
+                    raise ValueError('Duplicate retained build file: ' + name)
+                records[name] = hashlib.sha256(data).hexdigest()
+    actual = {str(p.relative_to(retained)) for p in retained.rglob('*')
+              if p.is_file() and '__pycache__' not in p.parts}
+    auxiliary = []
+    lock = retained / '.lock'
+    if lock.exists():
+        if lock.resolve() != lock or not lock.is_file():
+            raise ValueError('Unsafe retained build lock')
+        auxiliary.append({'path': '.lock', 'sha256': hashlib.sha256(lock.read_bytes()).hexdigest()})
+        actual.discard('.lock')
+    if set(records) != actual:
+        raise ValueError('Retained build inventory differs from RECORD files')
+    copied = []
+    for name, digest in sorted(records.items()):
+        # Generated launchers use their old interpreter; backend imports need
+        # only the verified package and metadata, never these bin scripts.
+        if Path(name).parts[0] == 'bin':
+            continue
+        target = destination / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open('xb') as output:
+            output.write((retained / name).read_bytes())
+        if hashlib.sha256(target.read_bytes()).hexdigest() != digest:
+            raise ValueError('Build prerequisite copy changed: ' + name)
+        copied.append({'path': name, 'sha256': digest})
+    return {'distributions': list(BUILD_DISTRIBUTIONS), 'retained_directory': str(retained),
+            'retained_files': [{'path': n, 'sha256': h} for n, h in sorted(records.items())],
+            'copied_files': copied, 'nonimported_auxiliary_files': auxiliary}
 
 
 class BoundedRun:
@@ -172,7 +232,7 @@ def main():
     before = source_digest()
     runner = BoundedRun(out, outside, env)
     failure, leftovers, wheel_binding = None, [], None
-    retained_manifests, examples = {}, []
+    retained_manifests, examples, build_prerequisites = {}, [], None
 
     def interrupted(signum, frame):
         raise InterruptedError('Owned installation verification was interrupted')
@@ -194,8 +254,15 @@ def main():
                 shutil.copyfile(license_file, source / license_file.name)
         assert source_digest(source) == before
         uv = ROOT / '.hponas-runtime/package-tools/bin/uv'
-        runner.run('build', [uv, 'build', '--offline', '--python',
-            ROOT / '.hponas-runtime/installation/py313/bin/python', '--wheel', '--out-dir', out / 'wheel', source])
+        build_environment = out / 'build-environment'
+        runner.run('build-venv', [uv, 'venv', '--offline', '--python',
+            ROOT / '.hponas-runtime/installation/py313/bin/python', build_environment])
+        build_site, = (build_environment / 'lib').glob('python*/site-packages')
+        build_prerequisites = stage_build_prerequisites(
+            ROOT / '.hponas-runtime/build-prerequisites', build_site)
+        runner.check_time()
+        runner.run('build', [uv, 'build', '--offline', '--no-build-isolation', '--python',
+            build_environment / 'bin/python', '--wheel', '--out-dir', out / 'wheel', source])
         wheel, = (out / 'wheel').glob('*.whl')
         wheel_binding = binding(wheel)
         with zipfile.ZipFile(wheel) as archive:
@@ -267,6 +334,7 @@ def main():
             'scientific_acceptance': False, 'outside_directory': str(outside),
             'runtimes': list(RUNTIMES), 'retained_dependency_manifests': retained_manifests,
             'examples': examples, 'wheel': wheel_binding, 'leftover_owned_pids': leftovers,
+            'build_prerequisites': build_prerequisites,
             'limits': {'total_seconds': TOTAL_SECONDS, 'seconds_per_process': PROCESS_SECONDS,
                        'cpu_count': 1, 'gpu': False, 'inherits_operation_process_group': True},
             'driver': binding(Path(__file__))}

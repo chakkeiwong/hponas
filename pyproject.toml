@@ -95,6 +95,7 @@ also_copy = [
     "docs/program/program.json",
     "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_16.md",
     "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_18.md",
+    "docs/program/MUTATION_EQUIVALENCE_LEMMAS_2026_10_23.md",
     "docs/program/evidence/2026-09-28/spec-01/syne_tune_0_13_pasha_reference.py",
     "docs/program/evidence/2026-09-29/stat-03/task-sources",
     "docs/program/evidence/2026-09-29/stat-03/v02-proposed-population.json",

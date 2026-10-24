@@ -11,8 +11,7 @@ silently select checkout library code.
 
 For current interface behavior and scope, use the [product support reference](../docs/PRODUCT_SUPPORT.md).
 The declared scalar/vector and banking-family examples were qualified on the
-16 October source. GAP-01 now repairs the historical interface gaps; repaired
-source requires BANK-01/GAP-QUALIFICATION and the final GAP-01/FINAL-AUDIT.
+16 October source. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed.
 Finite examples do not establish empirical application usefulness.
 
 | File | Status and dependencies | Master owner |
@@ -35,7 +34,7 @@ Finite examples do not establish empirical application usefulness.
 | `sampler_neutra_example.py` | Maintained actual learned tanh-coupling example with transformed leapfrog. Finite math only; no posterior calibration claim. | WL-01 |
 | `finance_tuning.py` | Maintained declared two-asset vector Study/Store example; exact train/evaluation moments, 64 metered updates, complete report and explicit deterministic-known-answer final opt-out. | WL-01 / PRD-01 |
 | `population_known_answer.py` | Maintained ten-update two-generation example; finite V08 acceptance is retained on the 2026-10-08 source. | T2-POP |
-| `population_adapters.py` | General caller model/optimizer adapter examples: scalar quadratic and vector linear fit, independent finite references, protected final evaluation and checkpoint transfer. Current development evidence; final qualification remains open. | GAP-01/POPULATION |
+| `population_adapters.py` | General caller model/optimizer adapter examples: linear SGD and logistic Adam, independent finite references, protected final evaluation and checkpoint transfer. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed. | GAP-01/POPULATION |
 | `operations_known_answer.py` | Maintained local operations example; a metered diagonal quadratic verifies the work ledger and SQLite backup/recovery. Prior local qualification is retained; broader historical operations are GAP-01 work. | OPS-01 / GAP-01 |
 | `warm_start_tuning.py` | Maintained actual synthetic-history and target training, rational within-study ranks, leakage refusal, pending recovery and scalar-power reconstruction. No empirical warm-start/default claim. | T1-WARM |
 

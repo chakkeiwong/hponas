@@ -186,6 +186,33 @@ def test_cancellation_preserves_acknowledged_work_without_dispatching_the_rest()
     assert len(source._evaluation.resource_records()) == 1
 
 
+@pytest.mark.parametrize('damage', ['missing', 'value', 'decision'])
+def test_restored_barriers_must_match_the_independent_scheduler_cache(tmp_path, damage):
+    source = make(budget=2)
+    source.run()
+    saved = deepcopy(source._snapshot())
+    group = next(g for g in saved['evaluation']['streaming'].values()
+                 if g['role'] == 'tuning' and g['barriers'])
+    step = group['barriers'][0]['step']
+    cache = saved['report_cache'][group['parent']]
+    entry = cache[step]
+    if damage == 'missing':
+        del cache[step]
+    elif damage == 'value':
+        entry['value'] += 1.
+        entry['metric'] = entry['value']
+    else:
+        entry['decision']['reason'] = 'forged scheduler explanation'
+    path = tmp_path / 'bad-cache.json'
+    path.write_text(json.dumps(saved))
+    target = make(budget=2)
+    before = deepcopy(target._snapshot())
+    with pytest.raises(ValueError) as caught:
+        target.load_checkpoint(path)
+    assert str(caught.value) == 'Streaming barrier and scheduler decision cache differ'
+    assert target._snapshot() == before
+
+
 def test_complete_repetition_barrier_can_prune_before_any_later_training():
     scheduler = ASHAScheduler(ASHAConfig(r_min=4, r_max=4, median_stopping=True, report_grid=(1, 2, 4)))
     for i in range(5):

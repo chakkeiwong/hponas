@@ -2,18 +2,67 @@
 
 import copy
 import json
+import time
 
 import pytest
 
 from hponas import Config, LocalExecutor, Study, Trial
 from hponas.events import EventLog, EventType
 from hponas.executors.base import evaluate_trial
-from hponas.executors.reporting import ReportDecision
+from hponas.executors.reporting import ReportDecision, TrialReporter
 from hponas.replay import ReplayEngine
 from hponas.schedulers import ASHAConfig, ASHAScheduler
 from hponas.searchers import RandomSearcher
 from hponas.space import Knob, SearchSpace
 
+
+@pytest.mark.parametrize('key', ['multi_objective', 'resource'])
+@pytest.mark.parametrize('damage', ['changed', 'missing'])
+def test_final_output_must_preserve_reported_endpoint_measurements(key, damage):
+    payload = {'a': 2., 'b': 3.} if key == 'multi_objective' else {'work': 2., 'unit': 'evaluations'}
+    def objective(config, reporter):
+        reporter(1., 7., cost=2., metadata={key: payload})
+        metadata = {key: {'changed': True}} if damage == 'changed' else {}
+        return dict(value=7., cost=2., metadata=metadata)
+    result = evaluate_trial(Trial(Config({'x': 1}), 'endpoint'), objective)
+    assert result.status == 'failed'
+    assert result.metadata['error'] == 'Final measurement conflicts with reported endpoint metadata'
+    assert result.metadata[key] == payload
+    assert result.cost >= 2.
+
+
+def test_progress_metadata_reaches_callback_and_final_result():
+    reports = []
+    payload = {'multi_objective': {'a': 2., 'b': 3.}, 'resource': {'work': 2., 'unit': 'evaluations'}}
+    def callback(report):
+        reports.append(report.to_dict())
+        return ReportDecision()
+    def objective(config, reporter):
+        reporter(1., 7., cost=2., metadata=payload)
+        return dict(value=7., cost=2., metadata=payload)
+    result = evaluate_trial(Trial(Config({'x': 1}), 'endpoint'), objective, callback)
+    assert result.status == 'completed'
+    assert reports[0]['metadata'] == payload
+    assert all(result.metadata[k] == v for k, v in payload.items())
+
+
+@pytest.mark.parametrize('metadata', [[], 'wrong', 1])
+def test_progress_metadata_requires_dictionary_with_precise_refusal(metadata):
+    reporter = TrialReporter(Trial(Config({}), 'report'), None, time.monotonic())
+    with pytest.raises(ValueError) as caught:
+        reporter(1., 7., cost=1., metadata=metadata)
+    assert str(caught.value) == 'Progress metadata must be a dictionary'
+    assert reporter.last is None
+
+
+@pytest.mark.parametrize('invalid', [float('nan'), float('inf'), object()])
+def test_progress_metadata_must_be_json_serializable_before_publication(invalid):
+    reports = []
+    reporter = TrialReporter(Trial(Config({}), 'report'), reports.append, time.monotonic())
+    with pytest.raises((ValueError, TypeError)):
+        reporter(1., 7., cost=1., metadata={'measurement': invalid})
+    assert reporter.last is None
+    assert reports == []
 
 @pytest.mark.parametrize(
     "reports",
