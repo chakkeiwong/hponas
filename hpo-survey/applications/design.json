@@ -1,0 +1,27 @@
+{
+  "schema": "app01-design-v1",
+  "replicates": [401, 502, 603],
+  "methods": ["random", "sobol", "gp", "tpe"],
+  "budget": 16,
+  "tuning_seeds": [0, 1],
+  "final_seeds": [1000, 1001],
+  "epochs": 120,
+  "grids": {
+    "forecast": {"lag": [1, 2, 3], "ridge": [0.01, 0.1, 1.0], "variance": [0.1, 0.4, 1.0]},
+    "wallet": {"degree": [1, 2, 3], "ridge": [0.001, 0.01, 0.1], "sigma": [0.4, 0.7, 1.0]},
+    "policy": {"threshold": [-1.5, -0.5, 0.5, 1.5], "time_slope": [0.0, 0.3], "smoothing": [0.1, 1.0, 10.0]},
+    "nas": {"width": [2, 4, 8], "depth": [1, 2], "activation": ["tanh", "silu"], "learning_rate": [0.01, 0.03]},
+    "transport": {"width": [2, 4, 8], "depth": [1, 2], "activation": ["tanh", "silu"], "learning_rate": [0.01, 0.03]}
+  },
+  "rows": {"forecast": [48, 24, 24], "wallet": [96, 64, 96], "policy": [128, 96, 128], "nas": [48, 32, 64], "transport": [96, 64, 96]},
+  "forecast": {"rho": 0.6, "process_variance": 0.15, "true_observation_variance": 0.4, "availability": "exogenous x released after one period; auxiliary observations every third period released after two periods; no interpolation from future", "missing": "y absent when t mod 7 = 0; absence contributes no likelihood update", "score": "observed-row sequential Gaussian NLL; nuisance regression is ridge fit on observed training only"},
+  "wallet": {"law": "Z=0.3+0.7*x-0.2*x*x+0.6*epsilon; W=expm1(max(Z,0)); x uniform(-1,1)", "fit": "BFGS censored Gaussian likelihood on log1p wallet; ridge excludes intercept; fixed candidate sigma", "stationarity_tolerance": 0.0000002, "iterations": 1000},
+  "policy": {"states": [-1, 0, 1], "horizon": 3, "discount": 0.95, "logger": [0.2, 0.5, 0.8], "initial": [0.25, 0.5, 0.25], "reward": "0.3*s+a*(0.2-0.5*s)+Normal(0,0.1^2)", "transition": "softmax(-(next_state-(0.6*s+0.5*a))^2)", "selection": "negative doubly robust validation value; known logger; fitted transitions/rewards use training only", "truth": "DP and independent trajectory enumeration; optimal Markov policy and best finite threshold class reported separately"},
+  "nas": {"function": "exp(-a*x)", "domain": [[-0.5, 0.5], [0.2, 0.6]], "fit": "Adam, float64; mean value and two derivative squared errors, equal weights", "selection": "sum of three validation MSEs", "vector": "value MSE and parameter count, with separate maximum derivative errors", "derivative_limits": "h=0.25; limits=h*M, Mx=0.6^2*exp(0.3), Ma=0.5^2*exp(0.3); first-order interpolation derivative resolution bound", "vector_methods": ["random"], "streaming": {"rungs": [40, 120], "proposals": 4, "replicate": 401, "seed": 71, "optimizer": "momentum SGD with serialized weights and momentum", "interruption": "before third objective call; compare uninterrupted and restored trajectories"}},
+  "transport": {"target": "X1=Z1; X2=Z2+0.35*(Z1^2-1), Z iid standard Gaussian", "model": "T(z)=(z1, exp(log_scale)*z2+MLP(z1)); triangular invertible neural shear", "fit": "exact model NLL, Adam float64; held-out NLL selection", "sampler": {"step_sizes": [0.05, 0.15, 0.35], "lengths": [1, 4, 8], "chains": 2, "warmup": 32, "draws": 128, "final_seed": 1000, "selection": "retain every pair passing fresh finite reversibility, volume and target-gradient checks; posterior discrepancies never select candidates"}},
+  "roles": "train/validation/final are disjoint; finals refit on train+validation using seeds 1000/1001; no final observation enters searcher",
+  "methods_review": "GP has four initial random draws and two acquisition restarts; TPE defaults have ten startup draws and six potential adaptive draws; ordinal indices are a declared encoding, not invariant to category ordering",
+  "inference_scope": "Three data replicates; deterministic families have repeated identical fits for workflow coverage only; no power or universal superiority claim",
+  "numerical_tolerances": {"reconstruction": 1e-8, "finite_difference": 0.00001, "hmc_reversibility": 0.00000001, "volume_difference": 0.00002, "rationale": "float64 scale-aware reconstruction; 1e-5 central difference balances O(h^2) truncation and O(eps/h) roundoff; cross-check at h/2"},
+  "limits": {"cpu": 1, "gpu": false, "network": false, "seconds_per_family": 1200, "rss_bytes": 4294967296, "output_bytes": 268435456, "minimum_free_bytes": 2147483648}
+}

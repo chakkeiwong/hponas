@@ -265,3 +265,17 @@ DOC-01 final completion checker (no arguments):
 The adjacent final-review-manifest.json pins all inputs and the checker. It has
 a 300-second bound, performs no fitting/network/service action and writes only
 final-review.json. The original terminal GAP-01 audit still follows it.
+
+## APP-01 five-family application validation (24 October 2026)
+
+Reviewed authority: docs/program/WORKSPACE_APPLICATION_VALIDATION_MASTER_2026_10_24.md. Inputs are pinned in docs/program/evidence/2026-10-24/app-01/manifest-current.json; consumed manifests and source versions remain immutable. One CPU, no GPU/network; 4-GiB owned RSS, 256-MiB output, 2-GiB starting disk floor. Family limits 1,200 seconds; others 300. No automatic rerun of successful allocations.
+
+/home/ubuntu/workspace/hponas/program_operations/app_ops.py controls
+/home/ubuntu/workspace/hponas/program_operations/app_ops.py forecast
+/home/ubuntu/workspace/hponas/program_operations/app_ops.py wallet
+/home/ubuntu/workspace/hponas/program_operations/app_ops.py policy
+/home/ubuntu/workspace/hponas/program_operations/app_ops.py nas
+/home/ubuntu/workspace/hponas/program_operations/app_ops.py transport
+/home/ubuntu/workspace/hponas/program_operations/app_ops.py verify
+/home/ubuntu/workspace/hponas/program_operations/app_ops.py synthesis
+/home/ubuntu/workspace/hponas/program_operations/app_ops.py audit

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "revision": "2.526",
+  "revision": "2.537",
   "local_date": "2026-10-24",
   "timezone": "Asia/Shanghai",
   "master": "CONSOLIDATED_MASTER_AUTHORITY.md",
@@ -175,7 +175,7 @@
     {
       "id": "SRC-PROGRAM-OPERATIONS",
       "path": "docs/PROGRAM_OPERATIONS.md",
-      "sha256": "ca82eb9c2076e0fe510091d1f886a5a0f24df9165463c632944342914d0e1a2e"
+      "sha256": "baa409d364f61a4a6e76e4861614169de751b417bf121d4039c5602e2397bd6d"
     },
     {
       "id": "SRC-GIT-PUBLICATION-CI",
@@ -196,6 +196,11 @@
       "id": "DOC01-PLAN",
       "path": "docs/program/PRODUCT_DOCUMENTATION_AND_APPLICATION_PLAN_2026_10_24.md",
       "sha256": "146d37554b2eb8684356d0445a761e81adace4f7b7576fe5f4bee9df5429066a"
+    },
+    {
+      "id": "APP01-PLAN",
+      "path": "docs/program/WORKSPACE_APPLICATION_VALIDATION_MASTER_2026_10_24.md",
+      "sha256": "b251e8a002eec2b1f93868b2ad05389c989a0682050ac13016c72384822d225e"
     }
   ],
   "audit_findings": [
@@ -2437,6 +2442,90 @@
         "docs/program/PRODUCT_DOCUMENTATION_AND_APPLICATION_PLAN_2026_10_24.md"
       ],
       "reason": "Explicit user extension; completion requires DOC-01/FINAL-REVIEW evidence."
+    },
+    {
+      "id": "APPVAL-01",
+      "title": "Mixed-frequency forecasting",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "APP-01"
+      ],
+      "sources": [
+        "docs/program/WORKSPACE_APPLICATION_VALIDATION_MASTER_2026_10_24.md"
+      ],
+      "reason": "Explicit application extension; finite claims and unsupported outcomes remain distinct."
+    },
+    {
+      "id": "APPVAL-02",
+      "title": "Censored wallet prediction",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "APP-01"
+      ],
+      "sources": [
+        "docs/program/WORKSPACE_APPLICATION_VALIDATION_MASTER_2026_10_24.md"
+      ],
+      "reason": "Explicit application extension; finite claims and unsupported outcomes remain distinct."
+    },
+    {
+      "id": "APPVAL-03",
+      "title": "Sequential servicing policy selection",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "APP-01"
+      ],
+      "sources": [
+        "docs/program/WORKSPACE_APPLICATION_VALIDATION_MASTER_2026_10_24.md"
+      ],
+      "reason": "Explicit application extension; finite claims and unsupported outcomes remain distinct."
+    },
+    {
+      "id": "APPVAL-04",
+      "title": "Constrained neural architecture search",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "APP-01"
+      ],
+      "sources": [
+        "docs/program/WORKSPACE_APPLICATION_VALIDATION_MASTER_2026_10_24.md"
+      ],
+      "reason": "Explicit application extension; finite claims and unsupported outcomes remain distinct."
+    },
+    {
+      "id": "APPVAL-05",
+      "title": "Neural transport and sampler verification",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "APP-01"
+      ],
+      "sources": [
+        "docs/program/WORKSPACE_APPLICATION_VALIDATION_MASTER_2026_10_24.md"
+      ],
+      "reason": "Explicit application extension; finite claims and unsupported outcomes remain distinct."
+    },
+    {
+      "id": "APPVAL-06",
+      "title": "Cross-family recovery and independent final audit",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "APP-01"
+      ],
+      "sources": [
+        "docs/program/WORKSPACE_APPLICATION_VALIDATION_MASTER_2026_10_24.md"
+      ],
+      "reason": "Explicit application extension; finite claims and unsupported outcomes remain distinct."
     }
   ],
   "work_items": [
@@ -7383,10 +7472,14 @@
         "E-GAP-TERMINAL-STATUS01-20261024-SERVICE",
         "E-DOC01-GUARD-REVIEW",
         "E-DOC01-FINAL-REVIEW",
-        "E-DOC01-TERMINAL-CLOSURE"
+        "E-DOC01-TERMINAL-CLOSURE",
+        "E-APP01-FINAL-REVIEW",
+        "E-APP01-TERMINAL-CLOSURE",
+        "E-APP01-COMPLETE",
+        "E-APP01-TERMINAL-BOUNDARY"
       ],
       "done_when": "All 27 atomic clauses have objective behavior/evidence or appropriate retained research outcomes, final current-source qualification passes and GAP-01/FINAL-AUDIT reconstructs complete closure with no unresolved required behavior.",
-      "next_action": "Retain original gap and DOC-01 closure evidence. No required active work remains in the adopted finite local program; new application/production claims require a new bounded stage.",
+      "next_action": "Retain terminal closure after APP-01; any new scope or source change requires a prospective master amendment.",
       "budget": {
         "mode": "bounded_local_development",
         "cpu_count": 1,
@@ -7468,6 +7561,79 @@
         "seconds_per_process": 300,
         "seconds_per_example": 1200,
         "combined_example_seconds": 2400,
+        "scientific_campaign_allocation": null
+      }
+    },
+    {
+      "id": "APP-01",
+      "title": "Five-family workspace application validation",
+      "phase": "application_validation",
+      "owner": "Single implementation/review agent",
+      "state": "complete",
+      "implementation": "verified",
+      "dependencies": [
+        "DOC-01"
+      ],
+      "decision_dependencies": [
+        "D-APP01-20261024"
+      ],
+      "code_refs": [
+        "hpo-survey/applications/models.py",
+        "hpo-survey/applications/studies.py",
+        "hpo-survey/applications/streaming.py",
+        "hpo-survey/applications/transport.py"
+      ],
+      "test_refs": [
+        "hpo-survey/applications/controls.py",
+        "hpo-survey/applications/references.py",
+        "hpo-survey/applications/verification.py",
+        "hpo-survey/applications/reporting.py"
+      ],
+      "acceptance_campaigns": [],
+      "evidence_refs": [
+        "E-APP01-PLAN",
+        "E-APP01-BASELINE",
+        "E-APP01-DESIGN",
+        "E-APP01-REVIEW",
+        "E-APP01-CONTROLS",
+        "E-APP01-FORECAST",
+        "E-APP01-FORECAST-VERIFY",
+        "E-APP01-WALLET",
+        "E-APP01-WALLET-VERIFY",
+        "E-APP01-POLICY",
+        "E-APP01-POLICY-VERIFY",
+        "E-APP01-NAS",
+        "E-APP01-NAS-VERIFY",
+        "E-APP01-NAS-REPAIR02",
+        "E-APP01-MANIFEST05",
+        "E-APP01-NAS-BOUNDARY",
+        "E-APP01-AUDIT-REPAIR01",
+        "E-APP01-MANIFEST06",
+        "E-APP01-GUIDE",
+        "E-APP01-TRANSPORT",
+        "E-APP01-ALL-VERIFY",
+        "E-APP01-CONTROLS02",
+        "E-APP01-CONTROLS02-RECEIPT",
+        "E-APP01-TRANSPORT-BOUNDARY",
+        "E-APP01-SYNTHESIS",
+        "E-APP01-SYNTHESIS-RECEIPT",
+        "E-APP01-RESULTS",
+        "E-APP01-SYNTHESIS-BOUNDARY",
+        "E-APP01-FINAL-REVIEW",
+        "E-APP01-FINAL-RECEIPT",
+        "E-APP01-COMPLETE-BOUNDARY"
+      ],
+      "done_when": "Five families executed, independently reconstructed; recovery, negative controls and final audit pass with limitations retained.",
+      "next_action": "Retain completed five-family finite evidence. NAS scientific nonattainment and short-chain discrepancies are explicit; new budgets/designs require successor work.",
+      "budget": {
+        "mode": "bounded_application_validation",
+        "cpu_count": 1,
+        "gpu": false,
+        "seconds_per_family": 1200,
+        "combined_family_seconds": 6000,
+        "other_process_seconds": 300,
+        "rss_bytes": 4294967296,
+        "output_bytes_per_family": 268435456,
         "scientific_campaign_allocation": null
       }
     }
@@ -8118,6 +8284,18 @@
       "evidence_refs": [
         "E-DOC01-PLAN",
         "E-DOC01-REVIEW"
+      ]
+    },
+    {
+      "id": "D-APP01-20261024",
+      "title": "Systematically validate five workspace-inspired application families",
+      "kind": "execution_authorization",
+      "status": "accepted",
+      "authorization": "User: create a master program to systematically test these 5 problems. review the program. execute",
+      "rationale": "Extend application coverage with bounded independent companions and objective references.",
+      "consequence": "APP-01 precedes terminal GAP audit; no inherited qualification for companions.",
+      "evidence_refs": [
+        "E-APP01-PLAN"
       ]
     }
   ],
@@ -26496,11 +26674,239 @@
       "path": "docs/program/operations-runs/20261024T112720Z-audit-closure-98982a5f/receipt.json",
       "sha256": "539258b21ba302fb028ddcf4adc6937e6dfc0ad797dc5f135694c5d81f5fc5eb",
       "note": "Original exact clause/source completion audit passes after verified DOC-01 extension; no scientific source or outcome change."
+    },
+    {
+      "id": "E-APP01-PLAN",
+      "path": "docs/program/WORKSPACE_APPLICATION_VALIDATION_MASTER_2026_10_24.md",
+      "sha256": "b251e8a002eec2b1f93868b2ad05389c989a0682050ac13016c72384822d225e",
+      "note": "User-authorized five-problem validation extension."
+    },
+    {
+      "id": "E-APP01-BASELINE",
+      "path": "archive/program-2026-10-24/before-app-01/manifest.json",
+      "sha256": "ece70a90fbf7f853f0e6056a734faee0b2fa8459024e6107139164b65e50ac14",
+      "note": "Immutable completed revision 2.526 before APP-01."
+    },
+    {
+      "id": "E-APP01-DESIGN",
+      "path": "hpo-survey/applications/design.json",
+      "sha256": "37aef711fd4f7638e694d11870f48e96d78060ce3d3f5f68e70b179f370f5c0d",
+      "note": "Reviewed APP-01 preparation; runtime controls follow."
+    },
+    {
+      "id": "E-APP01-REVIEW",
+      "path": "docs/program/evidence/2026-10-24/app-01/design-review-01.json",
+      "sha256": "7dbb33b76623e1cc82f79ff617a2b05f9f8b00f8fcd22be674117782783eb088",
+      "note": "Reviewed APP-01 preparation; runtime controls follow."
+    },
+    {
+      "id": "E-APP01-MANIFEST01",
+      "path": "docs/program/evidence/2026-10-24/app-01/manifest-01.json",
+      "sha256": "070a713446a2e505d822d703848afb54607746afe42c4fa5208fcbafe4e6da8e",
+      "note": "Reviewed APP-01 preparation; runtime controls follow."
+    },
+    {
+      "id": "E-APP01-REPAIR01",
+      "path": "docs/program/evidence/2026-10-24/app-01/repair-01.json",
+      "sha256": "99d2dffc28eccd60f8012d6c113968ff5f4c11ea0efefe72c739701893f614d5",
+      "note": "Runner and runbook-binding repair before any family allocation."
+    },
+    {
+      "id": "E-APP01-CONTROLS",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T125107Z-controls-0a104b04/controls.json",
+      "sha256": "d2fc70894af6a924e4ac3f75c9b4b167627c073c2bc482b08adaf1d632e852d0",
+      "note": "Independent numerical and adverse controls passed."
+    },
+    {
+      "id": "E-APP01-CONTROLS-RECEIPT",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T125107Z-controls-0a104b04/receipt.json",
+      "sha256": "727b8c2d1fc05238ba88798f71a23571bb1f5f6692419e7954eb0f52e0792a1a",
+      "note": "Independent numerical and adverse controls passed."
+    },
+    {
+      "id": "E-APP01-FORECAST",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T125157Z-forecast-2afd81e9/receipt.json",
+      "sha256": "bfaad3783976bc59e3a449c3631fb4f84faaef0aa3e576db91822f4a91e146ec",
+      "note": "Forecast completed and independently reconstructed."
+    },
+    {
+      "id": "E-APP01-FORECAST-VERIFY",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T125358Z-verify-e8995abd/verification.json",
+      "sha256": "51e9da1b48e46efa3e80f23e6d0fe2c353d90d8f66fdbe97b56ecb50101e2b79",
+      "note": "Forecast completed and independently reconstructed."
+    },
+    {
+      "id": "E-APP01-WALLET",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T125428Z-wallet-f5e2b268/receipt.json",
+      "sha256": "9c5f40323260d01f00044ee07ab3c44570a76262629b9b3c5d59caf02e908e31",
+      "note": "Censored wallets complete with independent numerical reconstruction."
+    },
+    {
+      "id": "E-APP01-WALLET-VERIFY",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T125510Z-verify-b474c413/verification.json",
+      "sha256": "f7c666228fd31ac6983773e68d9b1d837c78fbf624eb6b34ac8f2cd346fac8f6",
+      "note": "Censored wallets complete with independent numerical reconstruction."
+    },
+    {
+      "id": "E-APP01-POLICY",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T125533Z-policy-41e7cc55/receipt.json",
+      "sha256": "477cc74e54ce5ae488c1180d0480e3d06a4b7e30320834a2a00725c98035b4da",
+      "note": "Policy studies complete; independent path enumeration and protected-value reconstruction."
+    },
+    {
+      "id": "E-APP01-POLICY-VERIFY",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T125618Z-verify-40b64cc8/verification.json",
+      "sha256": "507ccc8a680e02bc2f377aba4629dcd6b2890ea568c138d1dbb26a7590f9d9a1",
+      "note": "Policy studies complete; independent path enumeration and protected-value reconstruction."
+    },
+    {
+      "id": "E-APP01-NAS-REPAIR01",
+      "path": "docs/program/evidence/2026-10-24/app-01/nas-repair-review-01.json",
+      "sha256": "316a8562551246a0abc0da75e1013c8c82dc81663bf887b558d916e6c130fe83",
+      "note": "No-feasible scientific result retained; continue without repeating completed fits."
+    },
+    {
+      "id": "E-APP01-NAS",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T130144Z-nas-8261839a/receipt.json",
+      "sha256": "0d64e27b2f2ed6a4f61b0cb65eae18f65ccdcbceb09a0bb3ed80d40c6baacf5f",
+      "note": "NAS completed and independently reconstructed; repairs preserve adverse outcomes and prior fits."
+    },
+    {
+      "id": "E-APP01-NAS-VERIFY",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T130215Z-verify-3d13ddb0/verification.json",
+      "sha256": "907e19bacbc7851cb0a2c00f6a8e8aab4d2d40e0fbd9a3c31bbf808bd21c15c0",
+      "note": "NAS completed and independently reconstructed; repairs preserve adverse outcomes and prior fits."
+    },
+    {
+      "id": "E-APP01-NAS-REPAIR02",
+      "path": "docs/program/evidence/2026-10-24/app-01/nas-repair-review-02.json",
+      "sha256": "3837e14a00fe6138c076de6080806898a1fd45da7cca2ab51e2d83194b51166e",
+      "note": "NAS completed and independently reconstructed; repairs preserve adverse outcomes and prior fits."
+    },
+    {
+      "id": "E-APP01-MANIFEST05",
+      "path": "docs/program/evidence/2026-10-24/app-01/manifest-05.json",
+      "sha256": "749ad873dfe7139f4d2de17285967b3eb9e22dc4d25fcdd752e9eb8323dab56b",
+      "note": "NAS completed and independently reconstructed; repairs preserve adverse outcomes and prior fits."
+    },
+    {
+      "id": "E-APP01-NAS-BOUNDARY",
+      "path": "docs/program/evidence/2026-10-24/app-01/boundary-nas-complete/manifest.json",
+      "sha256": "de6812835d2babfc271a000087105c7f4daf217f103c6f06f2cc1a2f2287e8e6",
+      "note": "NAS completed and independently reconstructed; repairs preserve adverse outcomes and prior fits."
+    },
+    {
+      "id": "E-APP01-AUDIT-REPAIR01",
+      "path": "docs/program/evidence/2026-10-24/app-01/audit-repair-review-01.json",
+      "sha256": "e549c56ad55f96a0db1252db65c4235c1415124ea13165f7f2d38c26a8a20eb9",
+      "note": "Audit-only repair; no model, training, target, data, budget or scientific tolerance change"
+    },
+    {
+      "id": "E-APP01-MANIFEST06",
+      "path": "docs/program/evidence/2026-10-24/app-01/manifest-06.json",
+      "sha256": "399733356ff24e1b64a2e0d9e09ec3aecdbf2367cea272561ade4a7617692721",
+      "note": "Audit-only repair; no model, training, target, data, budget or scientific tolerance change"
+    },
+    {
+      "id": "E-APP01-GUIDE",
+      "path": "hpo-survey/applications/README.md",
+      "sha256": "298d1da8a7dec7df2674bc045374ac22a9eb24946be4a29f32f6b447981fc14e",
+      "note": "Audit-only repair; no model, training, target, data, budget or scientific tolerance change"
+    },
+    {
+      "id": "E-APP01-TRANSPORT",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T130543Z-transport-9e8c4466/receipt.json",
+      "sha256": "dc3336694bacc89791015a108dfc352efd43ced1b294de2f1d4dd4fe1f4c1060",
+      "note": "All five families independently reconstructed, including vector final feasibility and 34560 HMC transitions; strengthened controls pass."
+    },
+    {
+      "id": "E-APP01-ALL-VERIFY",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T131040Z-verify-5ee12ee6/verification.json",
+      "sha256": "aaa9287d3d5fab4ce8e8e9c369f68d66c032eb15389c96e57502a59c4753c251",
+      "note": "All five families independently reconstructed, including vector final feasibility and 34560 HMC transitions; strengthened controls pass."
+    },
+    {
+      "id": "E-APP01-CONTROLS02",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T131021Z-controls-313b1058/controls.json",
+      "sha256": "46010812754459c4f0e159820470c7fee07019125dc8341f0f5d0a896ad59447",
+      "note": "All five families independently reconstructed, including vector final feasibility and 34560 HMC transitions; strengthened controls pass."
+    },
+    {
+      "id": "E-APP01-CONTROLS02-RECEIPT",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T131021Z-controls-313b1058/receipt.json",
+      "sha256": "6d6a33e27889834c021ab0b274f7cd475c2854670ad1e8f854913e0f0b8c26e1",
+      "note": "All five families independently reconstructed, including vector final feasibility and 34560 HMC transitions; strengthened controls pass."
+    },
+    {
+      "id": "E-APP01-TRANSPORT-BOUNDARY",
+      "path": "docs/program/evidence/2026-10-24/app-01/boundary-transport-complete/manifest.json",
+      "sha256": "1012a5cd04b443ce157dd918679c5443201af8de842d172fda9295c74044fe48",
+      "note": "All five families independently reconstructed, including vector final feasibility and 34560 HMC transitions; strengthened controls pass."
+    },
+    {
+      "id": "E-APP01-SYNTHESIS",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T131132Z-synthesis-bec4d9ec/results.json",
+      "sha256": "cac0be473735d8ca31a7284c04bdca9ed41eb3bc5b91be98f722c36f7d40030f",
+      "note": "Reviewed descriptive synthesis: no constrained NAS final passes; 108 finite sampler checks pass with unconverged short-chain discrepancies explicitly retained."
+    },
+    {
+      "id": "E-APP01-SYNTHESIS-RECEIPT",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T131132Z-synthesis-bec4d9ec/receipt.json",
+      "sha256": "6a13e43b366fa02eda77d42f85c098877bc5660a1604399423a4831f4fec8895",
+      "note": "Reviewed descriptive synthesis: no constrained NAS final passes; 108 finite sampler checks pass with unconverged short-chain discrepancies explicitly retained."
+    },
+    {
+      "id": "E-APP01-RESULTS",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T131132Z-synthesis-bec4d9ec/RESULTS.md",
+      "sha256": "bae592a5d4b0134155bef4bd603cf14c6ccc717d14208eccf0d0ae0e8d48cb48",
+      "note": "Reviewed descriptive synthesis: no constrained NAS final passes; 108 finite sampler checks pass with unconverged short-chain discrepancies explicitly retained."
+    },
+    {
+      "id": "E-APP01-SYNTHESIS-BOUNDARY",
+      "path": "docs/program/evidence/2026-10-24/app-01/boundary-synthesis-complete/manifest.json",
+      "sha256": "693183519cd62489aecb6b2840b7d1f9f7cd233446d109f2ec78145673fd1e62",
+      "note": "Reviewed descriptive synthesis: no constrained NAS final passes; 108 finite sampler checks pass with unconverged short-chain discrepancies explicitly retained."
+    },
+    {
+      "id": "E-APP01-FINAL-REVIEW",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T131229Z-audit-89261884/audit.json",
+      "sha256": "f8bce6509db8f7e26685fce2c7bc53ff5a18e783e6f20c91960f8ccb0723da99",
+      "note": "APP-01 complete: all five families independently reconstructed; adverse scientific findings and failed attempts retained; numerical, source, lineage, negative and tamper controls pass."
+    },
+    {
+      "id": "E-APP01-FINAL-RECEIPT",
+      "path": "docs/program/evidence/2026-10-24/app-01/20261024T131229Z-audit-89261884/receipt.json",
+      "sha256": "40569c7c97602d1f9e77798d934e1e6613ad62003ad274c90c0002447f95b806",
+      "note": "APP-01 complete: all five families independently reconstructed; adverse scientific findings and failed attempts retained; numerical, source, lineage, negative and tamper controls pass."
+    },
+    {
+      "id": "E-APP01-COMPLETE-BOUNDARY",
+      "path": "docs/program/evidence/2026-10-24/app-01/boundary-app-complete/manifest.json",
+      "sha256": "f500205384dd6f687b0569f24341007649948f62daeb3a72658ac03d888ddb8c",
+      "note": "APP-01 complete: all five families independently reconstructed; adverse scientific findings and failed attempts retained; numerical, source, lineage, negative and tamper controls pass."
+    },
+    {
+      "id": "E-APP01-TERMINAL-CLOSURE",
+      "path": "docs/program/operations-runs/20261024T131318Z-audit-closure-c6494e88/receipt.json",
+      "sha256": "b406092ab184cfe632ebe94c92c561e6ab7fee3457ed5c897ac9a05bda25ec6a",
+      "note": "Terminal original-clause/source audit passes after APP-01 final review; all registered stages complete with explicit scientific nonattainment."
+    },
+    {
+      "id": "E-APP01-COMPLETE",
+      "path": "docs/program/evidence/2026-10-24/app-01/completion.json",
+      "sha256": "dd6575c3762cf5f3727f84a2ed9fb51871eee239eb7bb2efc54f1dca3b912db4",
+      "note": "Terminal original-clause/source audit passes after APP-01 final review; all registered stages complete with explicit scientific nonattainment."
+    },
+    {
+      "id": "E-APP01-TERMINAL-BOUNDARY",
+      "path": "docs/program/evidence/2026-10-24/app-01/boundary-master-complete/manifest.json",
+      "sha256": "660b365ca5dd7b3f74b1c670d0ab0d6ecb6fa98b415a6fddc2545a0263b0bc64",
+      "note": "Terminal original-clause/source audit passes after APP-01 final review; all registered stages complete with explicit scientific nonattainment."
     }
   ],
   "continuation": {
     "policy": "repair_verify_refresh_advance_v1",
-    "scope": "Revision 2.526 completes DOC-01 and the terminal GAP-01 recheck: 39 work items, 217 stages, 126 requirements. Retain finite local qualification and explicit unestablished application/production/watchlist capabilities.",
+    "scope": "Revision2.537 completes all40 work items,226 stages and132 requirements, including five-family APP-01 and terminal GAP audit. Retain finite local qualification, original lineage, NAS nonattainment, short-chain sampling discrepancies and unsupported production claims.",
     "steps": [
       {
         "id": "GOV-01/HANDOFF",
@@ -32884,15 +33290,169 @@
         ]
       },
       {
+        "id": "APP-01/DESIGN",
+        "work_item": "APP-01",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "DOC-01/FINAL-REVIEW"
+        ],
+        "action": "Freeze designs and review resource and scientific controls.",
+        "done_when": "All stage criteria have retained objective evidence; refresh following stage.",
+        "evidence_refs": [
+          "E-APP01-PLAN",
+          "E-APP01-DESIGN",
+          "E-APP01-REVIEW"
+        ]
+      },
+      {
+        "id": "APP-01/REFERENCES",
+        "work_item": "APP-01",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "APP-01/DESIGN"
+        ],
+        "action": "Implement independent references and negative controls.",
+        "done_when": "All stage criteria have retained objective evidence; refresh following stage.",
+        "evidence_refs": [
+          "E-APP01-PLAN",
+          "E-APP01-CONTROLS",
+          "E-APP01-CONTROLS-RECEIPT"
+        ]
+      },
+      {
+        "id": "APP-01/FORECAST",
+        "work_item": "APP-01",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "APP-01/REFERENCES"
+        ],
+        "action": "Run forecasting reference, searches and final evaluation.",
+        "done_when": "All stage criteria have retained objective evidence; refresh following stage.",
+        "evidence_refs": [
+          "E-APP01-PLAN",
+          "E-APP01-FORECAST",
+          "E-APP01-FORECAST-VERIFY"
+        ]
+      },
+      {
+        "id": "APP-01/WALLET",
+        "work_item": "APP-01",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "APP-01/FORECAST"
+        ],
+        "action": "Run censored wallet fits, searches and support checks.",
+        "done_when": "All stage criteria have retained objective evidence; refresh following stage.",
+        "evidence_refs": [
+          "E-APP01-PLAN",
+          "E-APP01-WALLET",
+          "E-APP01-WALLET-VERIFY"
+        ]
+      },
+      {
+        "id": "APP-01/POLICY",
+        "work_item": "APP-01",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "APP-01/WALLET"
+        ],
+        "action": "Run policy search with exact dynamic-programming validation.",
+        "done_when": "All stage criteria have retained objective evidence; refresh following stage.",
+        "evidence_refs": [
+          "E-APP01-PLAN",
+          "E-APP01-POLICY",
+          "E-APP01-POLICY-VERIFY"
+        ]
+      },
+      {
+        "id": "APP-01/NAS",
+        "work_item": "APP-01",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "APP-01/POLICY"
+        ],
+        "action": "Run trained architecture, vector and streaming recovery studies.",
+        "done_when": "All stage criteria have retained objective evidence; refresh following stage.",
+        "evidence_refs": [
+          "E-APP01-PLAN",
+          "E-APP01-NAS",
+          "E-APP01-NAS-VERIFY",
+          "E-APP01-NAS-REPAIR02",
+          "E-APP01-MANIFEST05",
+          "E-APP01-NAS-BOUNDARY"
+        ]
+      },
+      {
+        "id": "APP-01/TRANSPORT",
+        "work_item": "APP-01",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "APP-01/NAS"
+        ],
+        "action": "Run learned transports and fresh sampler verification.",
+        "done_when": "All stage criteria have retained objective evidence; refresh following stage.",
+        "evidence_refs": [
+          "E-APP01-PLAN",
+          "E-APP01-TRANSPORT",
+          "E-APP01-ALL-VERIFY",
+          "E-APP01-CONTROLS02",
+          "E-APP01-CONTROLS02-RECEIPT",
+          "E-APP01-TRANSPORT-BOUNDARY"
+        ]
+      },
+      {
+        "id": "APP-01/SYNTHESIS",
+        "work_item": "APP-01",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "APP-01/TRANSPORT"
+        ],
+        "action": "Publish results, costs, adverse findings and guide.",
+        "done_when": "All stage criteria have retained objective evidence; refresh following stage.",
+        "evidence_refs": [
+          "E-APP01-PLAN",
+          "E-APP01-SYNTHESIS",
+          "E-APP01-SYNTHESIS-RECEIPT",
+          "E-APP01-RESULTS",
+          "E-APP01-SYNTHESIS-BOUNDARY"
+        ]
+      },
+      {
+        "id": "APP-01/FINAL-REVIEW",
+        "work_item": "APP-01",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "APP-01/SYNTHESIS"
+        ],
+        "action": "Independently reconstruct outputs and audit complete coverage.",
+        "done_when": "All stage criteria have retained objective evidence; refresh following stage.",
+        "evidence_refs": [
+          "E-APP01-PLAN",
+          "E-APP01-FINAL-REVIEW",
+          "E-APP01-FINAL-RECEIPT",
+          "E-APP01-COMPLETE-BOUNDARY"
+        ]
+      },
+      {
         "id": "GAP-01/FINAL-AUDIT",
         "work_item": "GAP-01",
         "kind": "preparation",
         "state": "complete",
         "dependencies": [
           "BANK-01/GAP-QUALIFICATION",
-          "DOC-01/FINAL-REVIEW"
+          "DOC-01/FINAL-REVIEW",
+          "APP-01/FINAL-REVIEW"
         ],
-        "action": "After DOC-01 completes, rerun unchanged exact clause/source closure, confirm extension evidence and reconcile terminal master status.",
+        "action": "After APP-01, recheck original clause/source closure and reconcile complete master.",
         "done_when": "Final behavioral audit covers all G01-G10 and atomic clauses, source/installation/recovery evidence is current, negative controls reject false completion, and no required obligation remains open.",
         "evidence_refs": [
           "E-GAP-REPAIR01-20261018-AUDIT09",
@@ -32924,7 +33484,11 @@
           "E-GAP-TERMINAL-STATUS01-20261024-SERVICE",
           "E-DOC01-GUARD-REVIEW",
           "E-DOC01-FINAL-REVIEW",
-          "E-DOC01-TERMINAL-CLOSURE"
+          "E-DOC01-TERMINAL-CLOSURE",
+          "E-APP01-FINAL-REVIEW",
+          "E-APP01-TERMINAL-CLOSURE",
+          "E-APP01-COMPLETE",
+          "E-APP01-TERMINAL-BOUNDARY"
         ]
       }
     ]
@@ -33248,6 +33812,15 @@
       "publication": "E-GAP-TERMINAL-STATUS01-20261024-PUBLICATION",
       "completed_service": "E-GAP-TERMINAL-STATUS01-20261024-SERVICE",
       "reconciliation": "E-GAP-TERMINAL-STATUS01-20261024-RECONCILIATION"
+    },
+    "app01_extension": {
+      "baseline_revision": "2.526",
+      "plan": {
+        "path": "docs/program/WORKSPACE_APPLICATION_VALIDATION_MASTER_2026_10_24.md",
+        "sha256": "b251e8a002eec2b1f93868b2ad05389c989a0682050ac13016c72384822d225e"
+      },
+      "scientific_acceptance": false,
+      "stage": "APP-01/DESIGN"
     }
   },
   "protocol_ownership_review": {
@@ -33346,6 +33919,9 @@
       ],
       "DOC-01": [
         "DOC-01/FINAL-REVIEW"
+      ],
+      "APP-01": [
+        "APP-01/FINAL-REVIEW"
       ]
     },
     "decision_resolution_steps": {

@@ -94,3 +94,15 @@ mutants
 !validation/artifacts/**/*.db
 !validation/artifacts/**/checkpoints/
 !validation/artifacts/**/checkpoints/**
+
+# APP-01 audited application evidence retains closed stores and execution logs.
+!docs/program/evidence/2026-10-24/app-01/**/*.sqlite
+!docs/program/evidence/2026-10-24/app-01/**/*.log
+docs/program/evidence/2026-10-24/app-01/operation.lock
+!docs/program/operations-runs/20261024T125023Z-checks-788f7f8a/*.log
+!docs/program/operations-runs/20261024T125132Z-checks-7cc0c412/*.log
+!docs/program/operations-runs/20261024T125412Z-checks-4ed3561f/*.log
+!docs/program/operations-runs/20261024T130459Z-checks-6f80c601/*.log
+!docs/program/operations-runs/20261024T131207Z-checks-8ce13a68/*.log
+!docs/program/operations-runs/20261024T131318Z-audit-closure-c6494e88/*.log
+!docs/program/operations-runs/20261024T131404Z-checks-17eb33ea/*.log

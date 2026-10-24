@@ -1,0 +1,7 @@
+{
+  "nas": {
+    "receipt": "/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-24/app-01/20261024T125945Z-nas-6bae1912/receipt.json",
+    "sha256": "9256bf7369fc7805062907b0ee2e8016966d6d57ac3681b2e144fe965140dbf4",
+    "policy": "Reuse all completed endpoint/vector studies; only the unlaunched streaming exercise remains."
+  }
+}
