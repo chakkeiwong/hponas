@@ -4,11 +4,11 @@ The product is a reusable HPO and moderate coordinate NAS workflow for
 universal-bank model families. The core accepts caller-owned data/model
 adapters; the implemented bank examples use independent synthetic generators and
 mathematical references. The [16 October product package](program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json)
-is the qualified finite local baseline for its original source. The current source passed qualification and GAP-01/FINAL-AUDIT; all 27 original clauses and the adopted finite local master are complete. [GAP-01](program/GAP_CLOSURE_PROGRAM_2026_10_18.md) implements the ten historical gaps and independently audits every original clause.
+is the qualified finite local baseline for its original source. The current source passed qualification and GAP-01/FINAL-AUDIT; all 27 original clauses and the revision 2.519 finite local baseline are complete. The user-authorized DOC-01 documentation/application extension is tracked separately in the live master. [GAP-01](program/GAP_CLOSURE_PROGRAM_2026_10_18.md) implements the ten historical gaps and independently audits every original clause.
 
 The 12 October baseline remains attached to its original source. The
 16 October product package binds fresh applicable scientific gates, finite bank
-references and configured workflows, installed use and live local evidence. The [semantic trace](program/evidence/2026-10-16/bank-final-qualification-08/coverage-qualified.json)
+references and configured workflows, installed use and live local evidence. The [semantic trace](program/evidence/2026-10-18/gap-qualification-04/coverage-qualified.json)
 maps the previously inventoried interface groups, product rows, build components,
 approval items and deferred methods. The [atomic gap ledger](program/gap_closure.json)
 adds the missing subclauses and distinguishes implementation from dispositions.
@@ -108,3 +108,5 @@ refresh affected evidence and the next bounded plan. The trace guard detects
 omitted rows, broken bindings and missing owners. Its success proves recorded
 consistency only; mathematical checks, behavioral tests and scientific gates
 retain their separate meanings.
+
+The current [product manual](../hpo-survey/main.pdf) and [LaTeX source](../hpo-survey/main.tex) replace the proposal as user guidance. The [24 October feature audit](audits/2026-10-24-product-documentation-audit.md) and self-contained application companions distinguish retained baseline evidence from new demonstrations.

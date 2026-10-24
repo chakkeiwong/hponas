@@ -1,0 +1,210 @@
+\chapter{Using the public workflow}
+\label{sec:current-guide}
+
+\section{Specify the tuning problem before the search}
+
+A model parameter is fitted within one trial, such as logistic coefficients
+or neural weights. A hyperparameter is selected between trials, such as a
+penalty or learning rate. Architecture coordinates change the model itself,
+such as width and depth. For each candidate configuration, the objective fits
+using only training identities, scores the declared tuning identities and
+returns a measured loss. The searcher receives the complete tuning mean.
+After selection is frozen, fresh fits use the declared final folds and seeds.
+
+Choose stable model, data, objective and protocol identities. Declare objective
+direction and physical units; define train/score membership for every fold;
+reserve final work separately. A known data generator supplies a mathematical
+reference but does not make finite-sample hyperparameter choice analytically
+obvious. The response example distinguishes those facts explicitly.
+
+\section{The caller objective contract}
+
+An endpoint callable accepts \texttt{config}, \texttt{seed},
+\texttt{evaluation} and \texttt{trial\_id}. The execution context identifies
+the role, fold and declaration. The adapter owns data loading, preprocessing,
+training, artifact serialization and reload. The return shape is:
+
+\begin{verbatim}
+def objective(config, seed, evaluation, trial_id):
+    train = load_rows(evaluation.fold.train_ids)
+    score = load_rows(evaluation.fold.score_ids)
+    model = fit(config, train, seed)
+    loss = evaluate_loss(model, score)
+    model_path = save_once(trial_id, model)
+    return {
+        "value": loss,
+        "artifacts": {"model": model_path},
+        "metadata": {"resource": {
+            "work": measured_work, "unit": "training_steps"
+        }},
+    }
+\end{verbatim}
+
+This fragment is a contract template: \texttt{load\_rows}, \texttt{fit},
+\texttt{evaluate\_loss}, \texttt{save\_once} and the meter are supplied by
+the caller. It is not a runnable model. The installed quick starts and complete
+application companion source provide executable implementations. Writes must
+be idempotent under the trial identity: an interruption may repeat an
+uncommitted call. Do not overwrite an incompatible existing artifact.
+
+The public wiring is illustrated by the following executable example. It uses
+the installed fitted-readout caller model; replacing that callable with a new
+model is the integration point. The command-line examples in the preceding
+chapter are the shorter route for first use.
+
+\begin{verbatim}
+from contextlib import closing
+from pathlib import Path
+from hponas.quickstart import make_study
+from hponas.store import Store
+
+directory = Path("/tmp/manual-caller-example")
+directory.mkdir(exist_ok=False)
+with closing(Store(directory / "study.sqlite")) as store:
+    study = make_study("hinge", directory, store)
+    result = study.run()
+    study.export_report(directory / "report.json")
+    print(result.best_config.values, result.best_value)
+    print(result.evaluation["outcome"])
+
+    resumed = make_study("hinge", directory, store)
+    resumed.load_checkpoint()
+    same_result = resumed.run()
+    assert same_result.best_value == result.best_value
+\end{verbatim}
+
+For a custom model, first construct a \texttt{StudyDeclaration}.
+
+Its objectives use \texttt{EvaluationObjective}; its folds use
+\texttt{EvaluationFold}. Pass the searcher, executor and callable to
+\texttt{Study}, together with that declaration, Store and budget.
+The full tested wiring appears in
+\path{hpo-survey/examples/application_examples.py}, functions
+\texttt{Objective} and \texttt{make\_study}. Architecture coordinates are
+explicitly supplied as \texttt{('width', 'depth')} for the neural example.
+The objective must actually construct the corresponding architecture; naming
+a coordinate cannot perform that work automatically.
+
+\section{Evaluation and leakage}
+
+The default declaration seeds are $(0,1)$ for tuning and $(1000,1001)$ for
+final evaluation. Defaults provide repetitions, not precision guarantees.
+Every candidate runs all declared fold/seed combinations; means weight each
+combination equally even when fold sizes differ. A failed or cancelled
+repetition invalidates its candidate rather than disappearing from the mean.
+Vector constraints use the worst repetition. Final data cannot alter the
+frozen selection or train the searcher.
+
+\texttt{rows} folds reject train/score identity overlap. \texttt{grouped}
+folds additionally separate entities. \texttt{temporal} folds declare
+information availability through \texttt{train\_until}, \texttt{score\_from},
+\texttt{score\_until} and a nonnegative gap. Final scoring identities cannot
+train another final fold. These checks cannot inspect arbitrary undeclared
+access inside caller code; the data adapter remains a trust boundary.
+To estimate the performance of the entire tuning procedure, use an appropriate
+outer design across separate studies. A final test of one frozen winner is not
+automatically nested validation of the selection procedure.
+
+Without a declaration, a nonempty persisted \texttt{legacy\_reason} is
+mandatory and the report says \texttt{legacy\_unqualified}. A deterministic
+fixture can explicitly opt out of final evaluation using
+\texttt{opt\_out\_reason} and empty final folds/seeds. Neither route creates
+protected-final evidence. Old snapshots cannot acquire a fabricated reason
+through recovery; changed protocols require a new study or an explicit
+retained migration.
+
+\section{Configuration count, work and time}
+
+\texttt{StudyBudget} separates configurations from calls. Folds, seeds,
+promotions, final fits and retries add work. Each call reserves a declared
+maximum; measured incremental work replaces that reservation on return.
+Uncommitted lost work consumes the full reservation, and a retry consumes a
+new one. Wrong units, nonfinite meters and exceeded bounds fail the measurement
+and stop further dispatch in that role.
+
+\begin{verbatim}
+from hponas import StudyBudget
+resources = StudyBudget(
+    configurations=8, work_unit="training_steps",
+    tuning_work=160, final_work=20,
+    max_work_per_call=10, worker_capacity=1,
+    tuning_seconds=60, final_seconds=20,
+    full_run_work=10,
+)
+\end{verbatim}
+
+This envelope can cover eight configurations, two tuning seeds and two final
+seeds with ten units per call; it provides no retry headroom at that maximum.
+The final reserve must cover one scalar winner or the maximum vector front.
+Time is summed measured call duration, not parallel wall time. Endpoint caps
+can overshoot by the final call; unknown elapsed work after a crash is not
+invented. This accounting is not a hard sandbox for arbitrary objective code.
+Use external process limits when needed, as the DOC-01 runner does.
+
+\section{Streaming, multiple objectives and populations}
+
+Repeated declared streaming \emph{is supported}. Set
+\texttt{streaming\_steps} to include every scheduler endpoint and any desired
+intermediate barrier. The callable accepts \texttt{reporter},
+\texttt{checkpoint} and \texttt{resume\_from}; each segment advances one
+repetition, reports its endpoint and returns a JSON checkpoint. Only complete
+cohorts reach the scheduler. A pause retains each repetition's checkpoint;
+final fits restart on final roles and their barriers never feed scheduling.
+Coarse barriers restrict pruning opportunities.
+
+For vector optimization, use \texttt{MultiObjectiveStudy} with an explicit
+\texttt{ObjectiveSpec}; return named objective/constraint mappings and work.
+The result is a feasible front, possibly empty. Do not conceal failed feasibility
+inside a small scalar training loss. Population adapters additionally implement
+model/optimizer state transfer and compatibility checks; saved lineage and
+schedules are first-class outputs. Finite local population support does not
+require the proposal's former eight-worker boundary or prove large-scale RL.
+
+\section{Recover and inspect}
+
+Retain matching code, dependency versions, declaration, searcher configuration,
+database/checkpoint and caller artifacts. Construct fresh searcher and executor
+objects, attach the same Store and call \texttt{load\_checkpoint()} before
+\texttt{run()}. Store snapshots are authoritative when both Store and file
+projections exist. Evaluation checkpoints use schema 4; resource-declared
+checkpoints use schema 5. A report cannot substitute for these snapshots.
+
+\texttt{study.report()} returns a detached report;
+\texttt{study.export\_report(path)} and the Store export interface refuse an
+existing destination. Reports retain complete raw roles, means, sample spread,
+counts, resource uncertainty, artifacts and tuning trajectories. Nonfinite
+values become JSON null with explicit classifications, not silently valid
+numbers. \texttt{reported} indicates that a workflow ended; inspect
+\texttt{outcome} for completed, failed, infeasible or no-selection status.
+
+Rung diagnostics compare observed completed full-fidelity tuning pairs and
+retain counts and censoring reasons. Protected final data is excluded. A rank
+correlation does not certify that pruning is safe on a different task.
+
+For Ray Core with \texttt{StudyBudget}, set \texttt{max\_retries=0}; hidden
+executor retries would bypass reservation accounting. Local recovery,
+PostgreSQL and service migrations have their own contracts in
+\path{docs/OPERATIONS.md}, \path{docs/POSTGRES.md} and
+\path{docs/REPORTS_AND_ADAPTERS.md}. Application roles are not an external
+authentication service. Scheduled local alerts require a local sink; external
+delivery is not automatically provided.
+
+\section{Troubleshooting}
+
+\begin{description}[style=nextline]
+\item[No valid selection.] Inspect every raw repetition, status, feasibility,
+fidelity and resource refusal. A missing/failed member cannot be dropped to
+make a successful candidate. Preserve the failed study before changing a design.
+\item[Resume refused.] Compare source, searcher state, declaration and budget
+identities. Do not edit a checkpoint to force acceptance. Start an explicitly
+new study when the protocol changes.
+\item[Unsupported composition.] Check Table~\ref{tab:current-composition} and
+the searcher's capabilities. Do not remove a declaration to disguise missing
+method support.
+\item[Search slower than grid.] Measure objective and orchestration/surrogate
+cost separately. Tiny finite problems often justify enumeration; the worked
+examples report this overhead instead of assuming HPO is faster.
+\item[Model looks good but violates task constraints.] Check physical value,
+derivative, boundary and identification conditions separately. Numerical
+training loss alone cannot certify a scientific task.
+\end{description}

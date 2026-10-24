@@ -231,3 +231,37 @@ TimeoutStopSec=30, exclusive outputs and the fixed stop handler apply. No
 campaign is allocated until complete review and fresh admission pass. Group
 any managed approval for this exact launcher and owned sockets/service/children;
 no global interpreter, shell, network or deployment rule is requested.
+
+
+## DOC-01 documentation and application operations (24 October 2026)
+
+Reviewed manifest: docs/program/evidence/2026-10-24/doc-01/operation-manifest-01.json.
+Commands own their environment, one CPU affinity, disabled GPU, fixed inputs,
+timeouts, outputs and logs. Companions are separately verified; core qualification
+is not transferred. Examples have 1,200 seconds each (2,400 combined); other
+subprocesses have 300 seconds. No network, sibling imports, services or campaign.
+
+| Exact command | Purpose |
+|---|---|
+| /home/ubuntu/workspace/hponas/program_operations/doc_ops.py audit | All 123 requirements, 131 semantic rows, 27 clauses and source/evidence |
+| /home/ubuntu/workspace/hponas/program_operations/doc_ops.py test | Companion numerical, derivative, role and tamper tests |
+| /home/ubuntu/workspace/hponas/program_operations/doc_ops.py response | One finite response HPO allocation, full oracle and 12 studies |
+| /home/ubuntu/workspace/hponas/program_operations/doc_ops.py equilibrium | One finite trained equilibrium NAS allocation and 12 studies |
+| /home/ubuntu/workspace/hponas/program_operations/doc_ops.py verify | Independently reconstruct both successful allocations |
+| /home/ubuntu/workspace/hponas/program_operations/doc_ops.py smoke | Shipped hinge/allocation commands and completed resume |
+| /home/ubuntu/workspace/hponas/program_operations/doc_ops.py render-results | Generate tables and standalone figure from retained summaries only |
+| /home/ubuntu/workspace/hponas/program_operations/doc_ops.py runtime | Read back fixed runtime versions/origins and source context hashes |
+| /home/ubuntu/workspace/hponas/program_operations/doc_ops.py build | Four-pass pdflatex/BibTeX build with retained logs |
+
+No automatic repeat of passing examples. Retain failed attempts; corrections
+need reviewed successor manifests. Managed approval rejection remains binding.
+
+DOC-01 successor manifest operation-manifest-03.json adds fixed result rendering and the executable manual snippet to smoke tests; prior consumed inputs remain bound in their receipts.
+
+DOC-01 successor manifest operation-manifest-04.json adds fixed runtime readback and a false-regret negative control. No accepted application allocation is repeated.
+
+DOC-01 final completion checker (no arguments):
+/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-24/doc-01/final_review.py
+The adjacent final-review-manifest.json pins all inputs and the checker. It has
+a 300-second bound, performs no fitting/network/service action and writes only
+final-review.json. The original terminal GAP-01 audit still follows it.

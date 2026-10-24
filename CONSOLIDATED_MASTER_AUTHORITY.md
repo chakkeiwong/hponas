@@ -1,6 +1,6 @@
 # HPO-NAS master program
 
-**Revision:** 2.519 — All adopted finite local master stages complete; terminal status reconciled
+**Revision:** 2.526 — DOC-01 manual, full feature audit and application examples complete; terminal master reconciled
 
 **Reconciliation date:** 2026-10-24 (Asia/Shanghai)
 
@@ -16,7 +16,11 @@ Scientific results follow frozen rules and raw evidence under explicit assumptio
 
 ## Current execution
 
-**Current action:** The master is complete for its adopted finite known-answer and trusted supervised local research scope. All 17 current-source campaigns, five gates, seven independent final audit groups, 27 original gap clauses, false-completion controls and exact governance/closure checks passed. The [final audit](docs/program/evidence/2026-10-18/gap-final-audit-15/execution-01/receipt.json) and matching publication commitment are retained. The [terminal reconciliation](docs/program/evidence/2026-10-18/gap-terminal-status-01/reconciliation.json) archives stale predecessor-service pointers without changing outcomes. All 38 work items and 212 stages are complete; no active work remains. Empirical bank usefulness, posterior convergence, general topology NAS and production-scale assurance remain unestablished. ifBO failure/cancellation, watchlists and the separate-machine waiver remain explicit.
+**Current action:** The extended adopted finite local master is complete: **39 work items, 217 stages and 126 requirements**. DOC-01 delivers the current [138-page product manual and user guide](hpo-survey/main.pdf), [historical feature audit](docs/audits/2026-10-24-product-documentation-audit.md), and self-contained response HPO / trained-equilibrium NAS examples. Its [final review](docs/program/evidence/2026-10-24/doc-01/final-review.json) verifies all 123 predecessor requirements, 131 semantic rows, 27 atomic clauses, 24 studies, 822 fitted models and 964 raw artifacts. The [terminal clause/source recheck](docs/program/operations-runs/20261024T112720Z-audit-closure-98982a5f/receipt.json) passed. No active required stage remains.
+
+The two bounded examples took 16.59 and 51.25 seconds. GP reached every finite tuning optimum, but one tuning-optimal neural architecture performed worse on fresh final seeds; this limitation is retained rather than overridden. No empirical superiority, real-bank effectiveness, posterior convergence or production readiness is claimed. The qualified scientific core and original historical chapters remain unchanged.
+
+**Accepted predecessor:** Revision 2.519 completed all 38 adopted work items and 212 stages, 123 requirements, 17 current-source campaigns, five gates, seven final audit groups and 27 atomic gap clauses. Its [archived authority](archive/program-2026-10-24/before-doc-01/manifest.json) and exact finite qualification remain intact. DOC-01/FINAL-REVIEW and the reopened terminal GAP-01/FINAL-AUDIT have now passed. The existing final-stage guard is preserved; no scientific campaign was repeated. Real-bank usefulness, posterior convergence, arbitrary topology NAS and production-scale assurance remain unestablished; failed/cancelled ifBO, watchlists and the separate-machine waiver remain explicit.
 
 The [16 October package](docs/program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json) remains the accepted finite baseline for its original source. Its 37 work items and 196 stages were completed under the earlier adopted scope; they do not discharge the newly registered missing subclauses. ifBO failure/cancellation, explicit watchlists, separate-machine waiver and empirical limits remain visible. No broad campaign, external release or production readiness is inferred.
 
@@ -62,7 +66,7 @@ The [repository publication plan](docs/program/evidence/2026-10-17/git-publicati
 
 ## Current execution status
 
-Program revision: **2.519**. Current phase: **Tier 1 development**.
+Program revision: **2.526**. Current phase: **Tier 1 development**.
 
 **Release status: LOCAL BASELINE ACCEPTED.** Tier-0 acceptance applies to the retained source. Current development and later phases require their own acceptance. No external release is recorded.
 
@@ -126,7 +130,8 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | REL-02 | Integrated-source qualification and release disposition | complete | verified | REL-01, T1-GATE | Preserve the qualified finite local baseline; PRD-01 owns omitted original product contracts and subsequent changed-source qualification. |
 | PRD-01 | Recover and repair the complete public product contract | complete | verified | REL-02, D-PRODUCT-CONTRACT-RECOVERY, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Retain engineering readiness; BANK-01 owns all final-source foundation and profile scientific qualification. |
 | BANK-01 | Reusable universal-bank model-family HPO/NAS workflows | complete | verified | PRD-01, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Preserve current qualified source; GAP-01/FINAL-AUDIT independently assesses complete gap closure. |
-| GAP-01 | Close historical implementation gaps and independently audit completion | complete | verified | PRD-01, D-GAP-CLOSURE-20261018 | Preserve all original obligations and qualified finite evidence; changed source or additional claims require prospective work. |
+| GAP-01 | Close historical implementation gaps and independently audit completion | complete | verified | PRD-01, D-GAP-CLOSURE-20261018 | Retain original gap and DOC-01 closure evidence. No required active work remains in the adopted finite local program; new application/production claims require a new bounded stage. |
+| DOC-01 | Product manual, complete feature audit and bounded application examples | complete | verified | BANK-01, D-DOC01-20261024 | Retain completed manual, feature ledger and independent finite application evidence; future scope/source changes require prospective work. |
 
 ## Decisions and unresolved conflicts
 
@@ -179,6 +184,7 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | D-SCOPED-PROGRAM-OPERATIONS | accepted | Stable exact local commands and grouped scoped approvals | Use the reviewed bounded operations manifest; preserve managed approvals and unrelated rules. Rule matching/installation does not itself prove host live reload or grant scientific acceptance. |
 | D-PRODUCT-FINAL-QUALIFICATION-ORDER | accepted | Qualify the complete product after all planned foundation and bank source repairs | PRD closes engineering readiness; BANK final review owns unchanged complete scientific obligations and exact final-source acceptance. No campaign is allocated here. |
 | D-GAP-CLOSURE-20261018 | accepted | Execute all ten historical gap closures with final independent completion audit | GAP-01 is active; BANK-01 requalification is open for the repaired source; no changed code inherits prior acceptance. |
+| D-DOC01-20261024 | accepted | Refresh the product manual, audit obligations and execute bounded application examples | DOC-01 extends the master without transferring scientific qualification; new deliverables require separate evidence. |
 
 <!-- END GENERATED PROGRAM STATUS -->
 

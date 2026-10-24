@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "revision": "2.519",
-  "local_date": "2026-10-18",
+  "revision": "2.526",
+  "local_date": "2026-10-24",
   "timezone": "Asia/Shanghai",
   "master": "CONSOLIDATED_MASTER_AUTHORITY.md",
   "current_phase": "tier1_development",
@@ -175,7 +175,7 @@
     {
       "id": "SRC-PROGRAM-OPERATIONS",
       "path": "docs/PROGRAM_OPERATIONS.md",
-      "sha256": "b4e6ddc256762e734c285a17928b2f32da6dd5c3942a863a2ece42262fdf897d"
+      "sha256": "ca82eb9c2076e0fe510091d1f886a5a0f24df9165463c632944342914d0e1a2e"
     },
     {
       "id": "SRC-GIT-PUBLICATION-CI",
@@ -191,6 +191,11 @@
       "id": "GAP-AUDIT",
       "path": "docs/audits/2026-10-17-historical-implementation-gap-audit.md",
       "sha256": "f0db0e7d23b32c60d8be02530209b42fbbe72134385e175afb5868349e3d9c83"
+    },
+    {
+      "id": "DOC01-PLAN",
+      "path": "docs/program/PRODUCT_DOCUMENTATION_AND_APPLICATION_PLAN_2026_10_24.md",
+      "sha256": "146d37554b2eb8684356d0445a761e81adace4f7b7576fe5f4bee9df5429066a"
     }
   ],
   "audit_findings": [
@@ -2390,6 +2395,48 @@
         "docs/program/GAP_CLOSURE_PROGRAM_2026_10_18.md"
       ],
       "reason": "Close G10 under the atomic contracts in docs/program/gap_closure.json; no count-only or undocumented scope closure."
+    },
+    {
+      "id": "DOC-01",
+      "title": "Current LaTeX product manual and executable user guide",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "DOC-01"
+      ],
+      "sources": [
+        "docs/program/PRODUCT_DOCUMENTATION_AND_APPLICATION_PLAN_2026_10_24.md"
+      ],
+      "reason": "Explicit user extension; completion requires DOC-01/FINAL-REVIEW evidence."
+    },
+    {
+      "id": "DOC-02",
+      "title": "Historical requirement and semantic feature completion audit",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "DOC-01"
+      ],
+      "sources": [
+        "docs/program/PRODUCT_DOCUMENTATION_AND_APPLICATION_PLAN_2026_10_24.md"
+      ],
+      "reason": "Explicit user extension; completion requires DOC-01/FINAL-REVIEW evidence."
+    },
+    {
+      "id": "DOC-03",
+      "title": "Response HPO and trained neural-equilibrium NAS examples with retained results",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "DOC-01"
+      ],
+      "sources": [
+        "docs/program/PRODUCT_DOCUMENTATION_AND_APPLICATION_PLAN_2026_10_24.md"
+      ],
+      "reason": "Explicit user extension; completion requires DOC-01/FINAL-REVIEW evidence."
     }
   ],
   "work_items": [
@@ -7333,10 +7380,13 @@
         "E-GAP-TERMINAL-STATUS01-20261024-ARCHIVE",
         "E-GAP-TERMINAL-STATUS01-20261024-FINAL-AUDIT",
         "E-GAP-TERMINAL-STATUS01-20261024-PUBLICATION",
-        "E-GAP-TERMINAL-STATUS01-20261024-SERVICE"
+        "E-GAP-TERMINAL-STATUS01-20261024-SERVICE",
+        "E-DOC01-GUARD-REVIEW",
+        "E-DOC01-FINAL-REVIEW",
+        "E-DOC01-TERMINAL-CLOSURE"
       ],
       "done_when": "All 27 atomic clauses have objective behavior/evidence or appropriate retained research outcomes, final current-source qualification passes and GAP-01/FINAL-AUDIT reconstructs complete closure with no unresolved required behavior.",
-      "next_action": "Preserve all original obligations and qualified finite evidence; changed source or additional claims require prospective work.",
+      "next_action": "Retain original gap and DOC-01 closure evidence. No required active work remains in the adopted finite local program; new application/production claims require a new bounded stage.",
       "budget": {
         "mode": "bounded_local_development",
         "cpu_count": 1,
@@ -7362,6 +7412,63 @@
             "obligations"
           ]
         }
+      }
+    },
+    {
+      "id": "DOC-01",
+      "title": "Product manual, complete feature audit and bounded application examples",
+      "phase": "documentation_and_application",
+      "owner": "Single implementation/review agent",
+      "state": "complete",
+      "implementation": "verified",
+      "dependencies": [
+        "BANK-01"
+      ],
+      "decision_dependencies": [
+        "D-DOC01-20261024"
+      ],
+      "code_refs": [
+        "hpo-survey/examples/application_examples.py",
+        "hpo-survey/examples/independent_checks.py"
+      ],
+      "test_refs": [
+        "hpo-survey/examples/test_application_examples.py"
+      ],
+      "acceptance_campaigns": [],
+      "evidence_refs": [
+        "E-DOC01-PLAN",
+        "E-DOC01-BASELINE",
+        "E-DOC01-REVIEW",
+        "E-DOC01-BASELINE-CLOSURE",
+        "E-DOC01-GUARD-REVIEW",
+        "E-DOC01-AUDIT",
+        "E-DOC01-AUDIT-RECEIPT",
+        "E-DOC01-FINDINGS",
+        "E-DOC01-DESIGN",
+        "E-DOC01-MANIFEST",
+        "E-DOC01-TEST",
+        "E-DOC01-RESPONSE",
+        "E-DOC01-EQUILIBRIUM",
+        "E-DOC01-RECONSTRUCTION",
+        "E-DOC01-MANUAL-SOURCE",
+        "E-DOC01-SMOKE",
+        "E-DOC01-RUNTIME",
+        "E-DOC01-VERIFY-FINAL",
+        "E-DOC01-TEST-FINAL",
+        "E-DOC01-DOC-REPAIR",
+        "E-DOC01-MANIFEST-FINAL",
+        "E-DOC01-FINAL-REVIEW"
+      ],
+      "done_when": "All original requirements and clauses reviewed; current manual built; both finite examples executed and independently reconstructed; final audit and governance pass.",
+      "next_action": "Retain completed manual, feature ledger and independent finite application evidence; future scope/source changes require prospective work.",
+      "budget": {
+        "mode": "bounded_documentation_and_application",
+        "cpu_count": 1,
+        "gpu": false,
+        "seconds_per_process": 300,
+        "seconds_per_example": 1200,
+        "combined_example_seconds": 2400,
+        "scientific_campaign_allocation": null
       }
     }
   ],
@@ -7998,6 +8105,19 @@
       "evidence_refs": [
         "E-GAP-20261018-PLAN",
         "E-GAP-20261017-AUDIT"
+      ]
+    },
+    {
+      "id": "D-DOC01-20261024",
+      "title": "Refresh the product manual, audit obligations and execute bounded application examples",
+      "kind": "execution_authorization",
+      "status": "accepted",
+      "authorization": "User 24 October 2026 requests all three plans, review and execution.",
+      "rationale": "LaTeX remains a proposal although the adopted finite local core is complete; document actual support and exercise response HPO and trained coordinate NAS.",
+      "consequence": "DOC-01 extends the master without transferring scientific qualification; new deliverables require separate evidence.",
+      "evidence_refs": [
+        "E-DOC01-PLAN",
+        "E-DOC01-REVIEW"
       ]
     }
   ],
@@ -25514,7 +25634,7 @@
     },
     {
       "id": "E-GAP-SURVIVOR-20261023-SUCCESSOR-RUNBOOK",
-      "path": "docs/PROGRAM_OPERATIONS.md",
+      "path": "archive/program-2026-10-24/before-doc-01/docs/PROGRAM_OPERATIONS.md",
       "sha256": "b4e6ddc256762e734c285a17928b2f32da6dd5c3942a863a2ece42262fdf897d",
       "note": "Bounded current-source repair and prospective successor; no qualification or scientific allocation."
     },
@@ -26238,11 +26358,149 @@
       "path": "docs/program/evidence/2026-10-18/gap-terminal-repair-01/execution-01/receipt.json",
       "sha256": "7820e66c9366597d7a4a6f08b1562d7607abd00763aa7bce96fb176c159b841a",
       "note": "Post-publication operational metadata reconciliation; no scientific or completion scope change."
+    },
+    {
+      "id": "E-DOC01-PLAN",
+      "path": "docs/program/PRODUCT_DOCUMENTATION_AND_APPLICATION_PLAN_2026_10_24.md",
+      "sha256": "146d37554b2eb8684356d0445a761e81adace4f7b7576fe5f4bee9df5429066a",
+      "note": "User-authorized documentation, feature audit and finite application extension."
+    },
+    {
+      "id": "E-DOC01-BASELINE",
+      "path": "archive/program-2026-10-24/before-doc-01/manifest.json",
+      "sha256": "1aa650e9fff2fd11023e7655ca582d7cf97ac434bc001ac990c626411702d22b",
+      "note": "Immutable pre-extension revision 2.519 and proposal sources."
+    },
+    {
+      "id": "E-DOC01-REVIEW",
+      "path": "docs/program/evidence/2026-10-24/doc-01/plan-review.json",
+      "sha256": "7e16c4436ebf33ccf809bc61eacae09f624198e32a2bbe0dd4c11c90e2598161",
+      "note": "Prospective scope/dependency/resource review; no scientific outcome."
+    },
+    {
+      "id": "E-DOC01-BASELINE-CLOSURE",
+      "path": "docs/program/operations-runs/20261024T110030Z-audit-closure-d29dbde7/receipt.json",
+      "sha256": "a6a9c01f8641197786b4d0fb1d0477d913e2e30864a388a43de33ce7580be979",
+      "note": "Fresh unchanged-core baseline closure check."
+    },
+    {
+      "id": "E-DOC01-GUARD-REVIEW",
+      "path": "docs/program/evidence/2026-10-24/doc-01/terminal-guard-review.json",
+      "sha256": "fd274c907deb599d912e08f237a44f73024df55d79733cc368a5b5af9c145c0f",
+      "note": "Preserve original terminal guard and explicitly reopen final master closure after the authorized extension."
+    },
+    {
+      "id": "E-DOC01-AUDIT",
+      "path": "docs/program/evidence/2026-10-24/doc-01/20261024T111005Z-audit-73ab3122/feature-ledger.json",
+      "sha256": "ade9d9aea6f81ec687d619ce6e65975368b465ea24733d8f3b6249858284f0a0",
+      "note": "DOC-01 separately retained audit/design and companion checks; no core requalification."
+    },
+    {
+      "id": "E-DOC01-AUDIT-RECEIPT",
+      "path": "docs/program/evidence/2026-10-24/doc-01/20261024T111005Z-audit-73ab3122/receipt.json",
+      "sha256": "7108f2e2652c9ab246d354fc580aff0d5711cf3fd04b966447ee0950bf289e0e",
+      "note": "DOC-01 separately retained audit/design and companion checks; no core requalification."
+    },
+    {
+      "id": "E-DOC01-FINDINGS",
+      "path": "docs/audits/2026-10-24-product-documentation-audit.md",
+      "sha256": "855d625b249698f0ce3b8b3b2b2aaeb059df2d6162dd8605026a0ad89c025588",
+      "note": "DOC-01 separately retained audit/design and companion checks; no core requalification."
+    },
+    {
+      "id": "E-DOC01-DESIGN",
+      "path": "hpo-survey/examples/design.json",
+      "sha256": "1ab4ec8e083bbe4663322a739045c2337c9f529d16ee5935bb88a25b42fc7a0a",
+      "note": "DOC-01 separately retained audit/design and companion checks; no core requalification."
+    },
+    {
+      "id": "E-DOC01-MANIFEST",
+      "path": "docs/program/evidence/2026-10-24/doc-01/operation-manifest-02.json",
+      "sha256": "69ab942c96200c9de49501867888deac0f32b60f2c0b4407b068e4a5f9399de6",
+      "note": "DOC-01 separately retained audit/design and companion checks; no core requalification."
+    },
+    {
+      "id": "E-DOC01-TEST",
+      "path": "docs/program/evidence/2026-10-24/doc-01/20261024T111015Z-test-c1c77425/receipt.json",
+      "sha256": "3746e9a34140ad846712ee4d370c5234a5d1ece22d9c686797313867fd4053f9",
+      "note": "DOC-01 separately retained audit/design and companion checks; no core requalification."
+    },
+    {
+      "id": "E-DOC01-RESPONSE",
+      "path": "docs/program/evidence/2026-10-24/doc-01/20261024T111043Z-response-1e2f304c/receipt.json",
+      "sha256": "22cfb1acf2e121bee505b714621e69e9474325f63c11513921178be3f26251b1",
+      "note": "Executed bounded demonstration and independent reconstruction; not broad scientific acceptance."
+    },
+    {
+      "id": "E-DOC01-EQUILIBRIUM",
+      "path": "docs/program/evidence/2026-10-24/doc-01/20261024T111117Z-equilibrium-9eae69cb/receipt.json",
+      "sha256": "251acf8c7604753deacb4c9159f7bedc6fa8562b563a5575964cc9ef4cac7887",
+      "note": "Executed bounded demonstration and independent reconstruction; not broad scientific acceptance."
+    },
+    {
+      "id": "E-DOC01-RECONSTRUCTION",
+      "path": "docs/program/evidence/2026-10-24/doc-01/20261024T111305Z-verify-bd58fa85/receipt.json",
+      "sha256": "b44e0a3896c983def0c8a033ca6dc398dd677fb3a55238e7871a2da2a7811e3d",
+      "note": "Executed bounded demonstration and independent reconstruction; not broad scientific acceptance."
+    },
+    {
+      "id": "E-DOC01-MANUAL-SOURCE",
+      "path": "hpo-survey/main.tex",
+      "sha256": "74d68aa5e91a5aa7e80fc1c7c90fc73d3871c94a755fcfcf96b5b35dbdb69ab9",
+      "note": "DOC-01 manual/final-review deliverable with explicit retained scope."
+    },
+    {
+      "id": "E-DOC01-SMOKE",
+      "path": "docs/program/evidence/2026-10-24/doc-01/20261024T111723Z-smoke-5377f756/receipt.json",
+      "sha256": "b88ee1bb3f1c844883f66ea1890b9608259da30b6aa027531f4bebfaa284eb95",
+      "note": "DOC-01 manual/final-review deliverable with explicit retained scope."
+    },
+    {
+      "id": "E-DOC01-RUNTIME",
+      "path": "docs/program/evidence/2026-10-24/doc-01/20261024T112027Z-runtime-40f76605/runtime.json",
+      "sha256": "9bcfb5bae268c8cfa245c60119937c79a2695e5c5357bbaf23b468b9a28f6bda",
+      "note": "DOC-01 manual/final-review deliverable with explicit retained scope."
+    },
+    {
+      "id": "E-DOC01-VERIFY-FINAL",
+      "path": "docs/program/evidence/2026-10-24/doc-01/20261024T112045Z-verify-9fb93633/receipt.json",
+      "sha256": "ea46f9709db1189928e7e048d393156d24a0e65f4c45161e9d254989965f0560",
+      "note": "DOC-01 manual/final-review deliverable with explicit retained scope."
+    },
+    {
+      "id": "E-DOC01-TEST-FINAL",
+      "path": "docs/program/evidence/2026-10-24/doc-01/20261024T112012Z-test-7f526d02/receipt.json",
+      "sha256": "bac045b2a823fecf56f6529ce8ad8a21d6950b3965273e99352f20959071b75d",
+      "note": "DOC-01 manual/final-review deliverable with explicit retained scope."
+    },
+    {
+      "id": "E-DOC01-DOC-REPAIR",
+      "path": "docs/program/evidence/2026-10-24/doc-01/documentation-repair-findings.json",
+      "sha256": "c3476bc616b2280d91379227eff933645e0f14d6da0acec055df5fa5431120c0",
+      "note": "DOC-01 manual/final-review deliverable with explicit retained scope."
+    },
+    {
+      "id": "E-DOC01-MANIFEST-FINAL",
+      "path": "docs/program/evidence/2026-10-24/doc-01/operation-manifest-04.json",
+      "sha256": "3e7fba1112fa3e1e9ededc61eaac78b54723ebc0af030d1dce300e516bd59bd6",
+      "note": "DOC-01 manual/final-review deliverable with explicit retained scope."
+    },
+    {
+      "id": "E-DOC01-FINAL-REVIEW",
+      "path": "docs/program/evidence/2026-10-24/doc-01/final-review.json",
+      "sha256": "285639b525a5aa9c006a932999bfcabfe93f22d3513e255e893c42feda9cff99",
+      "note": "All three deliverables independently checked; 123 requirements/131 semantic rows/27 clauses, 24 studies, 822 models, 964 raw artifacts and final rendered PDF."
+    },
+    {
+      "id": "E-DOC01-TERMINAL-CLOSURE",
+      "path": "docs/program/operations-runs/20261024T112720Z-audit-closure-98982a5f/receipt.json",
+      "sha256": "539258b21ba302fb028ddcf4adc6937e6dfc0ad797dc5f135694c5d81f5fc5eb",
+      "note": "Original exact clause/source completion audit passes after verified DOC-01 extension; no scientific source or outcome change."
     }
   ],
   "continuation": {
     "policy": "repair_verify_refresh_advance_v1",
-    "scope": "Continue GAP-01 closure of every historical gap, then BANK-01 current-source qualification and the last GAP-01 complete audit. Preserve prior finite evidence, terminal outcomes and explicit empirical/production limits.",
+    "scope": "Revision 2.526 completes DOC-01 and the terminal GAP-01 recheck: 39 work items, 217 stages, 126 requirements. Retain finite local qualification and explicit unestablished application/production/watchlist capabilities.",
     "steps": [
       {
         "id": "GOV-01/HANDOFF",
@@ -32534,14 +32792,107 @@
         ]
       },
       {
-        "id": "GAP-01/FINAL-AUDIT",
-        "work_item": "GAP-01",
+        "id": "DOC-01/AUDIT",
+        "work_item": "DOC-01",
         "kind": "preparation",
         "state": "complete",
         "dependencies": [
           "BANK-01/GAP-QUALIFICATION"
         ],
-        "action": "Recover the bound successful terminal report, then execute all seven final examination groups and exact completion checks.",
+        "action": "Reconcile baseline requirements, semantic clauses and proposal claims.",
+        "done_when": "Retain row-level audit, dispositions and documentation repair inventory.",
+        "evidence_refs": [
+          "E-DOC01-PLAN",
+          "E-DOC01-REVIEW",
+          "E-DOC01-AUDIT",
+          "E-DOC01-AUDIT-RECEIPT",
+          "E-DOC01-FINDINGS"
+        ]
+      },
+      {
+        "id": "DOC-01/DESIGN",
+        "work_item": "DOC-01",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "DOC-01/AUDIT"
+        ],
+        "action": "Freeze and review finite experiments and resource guards.",
+        "done_when": "Fix roles, seeds, grids, budgets, references, numerical checks and commands.",
+        "evidence_refs": [
+          "E-DOC01-PLAN",
+          "E-DOC01-REVIEW",
+          "E-DOC01-DESIGN",
+          "E-DOC01-MANIFEST",
+          "E-DOC01-TEST"
+        ]
+      },
+      {
+        "id": "DOC-01/EXECUTE",
+        "work_item": "DOC-01",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "DOC-01/DESIGN"
+        ],
+        "action": "Execute both examples with declared public interfaces and reconstruct outputs.",
+        "done_when": "Retain raw observations, fits, timing, final evaluation, resume and reconstruction.",
+        "evidence_refs": [
+          "E-DOC01-PLAN",
+          "E-DOC01-REVIEW",
+          "E-DOC01-RESPONSE",
+          "E-DOC01-EQUILIBRIUM",
+          "E-DOC01-RECONSTRUCTION"
+        ]
+      },
+      {
+        "id": "DOC-01/MANUAL",
+        "work_item": "DOC-01",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "DOC-01/EXECUTE"
+        ],
+        "action": "Write current user guide, feature matrix and worked results; retain history.",
+        "done_when": "Current manual supersedes proposal and documents actual outcomes.",
+        "evidence_refs": [
+          "E-DOC01-PLAN",
+          "E-DOC01-REVIEW",
+          "E-DOC01-MANUAL-SOURCE",
+          "E-DOC01-SMOKE",
+          "E-DOC01-DOC-REPAIR"
+        ]
+      },
+      {
+        "id": "DOC-01/FINAL-REVIEW",
+        "work_item": "DOC-01",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "DOC-01/MANUAL"
+        ],
+        "action": "Verify examples, audit coverage, rendered PDF, source and governance.",
+        "done_when": "All three deliverables pass final review; no required unresolved work.",
+        "evidence_refs": [
+          "E-DOC01-PLAN",
+          "E-DOC01-REVIEW",
+          "E-DOC01-RUNTIME",
+          "E-DOC01-VERIFY-FINAL",
+          "E-DOC01-TEST-FINAL",
+          "E-DOC01-MANIFEST-FINAL",
+          "E-DOC01-FINAL-REVIEW"
+        ]
+      },
+      {
+        "id": "GAP-01/FINAL-AUDIT",
+        "work_item": "GAP-01",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "BANK-01/GAP-QUALIFICATION",
+          "DOC-01/FINAL-REVIEW"
+        ],
+        "action": "After DOC-01 completes, rerun unchanged exact clause/source closure, confirm extension evidence and reconcile terminal master status.",
         "done_when": "Final behavioral audit covers all G01-G10 and atomic clauses, source/installation/recovery evidence is current, negative controls reject false completion, and no required obligation remains open.",
         "evidence_refs": [
           "E-GAP-REPAIR01-20261018-AUDIT09",
@@ -32570,7 +32921,10 @@
           "E-GAP-TERMINAL-STATUS01-20261024-ARCHIVE",
           "E-GAP-TERMINAL-STATUS01-20261024-FINAL-AUDIT",
           "E-GAP-TERMINAL-STATUS01-20261024-PUBLICATION",
-          "E-GAP-TERMINAL-STATUS01-20261024-SERVICE"
+          "E-GAP-TERMINAL-STATUS01-20261024-SERVICE",
+          "E-DOC01-GUARD-REVIEW",
+          "E-DOC01-FINAL-REVIEW",
+          "E-DOC01-TERMINAL-CLOSURE"
         ]
       }
     ]
@@ -32989,6 +33343,9 @@
       ],
       "GAP-01": [
         "GAP-01/FINAL-AUDIT"
+      ],
+      "DOC-01": [
+        "DOC-01/FINAL-REVIEW"
       ]
     },
     "decision_resolution_steps": {

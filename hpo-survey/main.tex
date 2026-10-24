@@ -15,6 +15,8 @@
 \usepackage{framed}
 \usepackage{caption}
 \usepackage{url}
+\usepackage{fancyvrb}
+\usepackage{graphicx}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,calc,decorations.pathreplacing}
 \usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!60!black]{hyperref}
@@ -37,46 +39,72 @@
 \newcommand{\N}{\mathcal{N}}
 \newcommand{\gp}{\mathcal{GP}}
 
-\title{Tuning the machines that tune themselves:\\
-a survey of hyperparameter optimization\\
-and a plan for building our own tuner}
-\author{Internal research note, prepared for the workspace projects\\
-(reinforcement learning, Hamiltonian networks, neural-transport samplers,\\
-multi-objective models)}
-\date{August 24, 2026}
+\title{HPO-NAS: product manual and user guide\\
+Implemented features, verified application examples,\\
+and the original research survey}
+\author{Internal research toolkit for universal-bank model families}
+\date{October 24, 2026 --- version 0.1.0}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-\input{sections/abstract}
+\input{sections/20-current-abstract}
 \end{abstract}
 
 \setcounter{tocdepth}{1}
 \tableofcontents
 \clearpage
 
-\part{The problem}
+\part{Current product and user guide}
+\input{sections/17-product-manual}
+\input{sections/18-user-guide}
+\input{sections/19-worked-applications}
+\input{sections/21-feature-audit}
+
+% Presentation-only wrapper; retained historical source files stay byte-identical.
+\clearpage
+\sloppy
+\addtolength{\textheight}{5pt}
+\part{Original research survey: historical design context}
+\chapter*{How to read the retained proposal}
+\addcontentsline{toc}{chapter}{How to read the retained proposal}
+The remaining chapters preserve the August 2026 survey, design judgments,
+original interface proposals and staged build obligations. Their text is kept
+for traceability, including methods later deferred, failed or excluded.
+They are not current API instructions or current execution status.
+Chapters~\ref{sec:current-product}--\ref{sec:current-audit} and the master
+authority supersede their operational claims. In particular, Ray Core serves
+current declared execution, population support is bounded local, ASHA/median
+remains opt-in, ifBO integration was cancelled after feasibility failure, and
+original PPO/production scale plans were explicitly narrowed.
+
+\begin{decisions}
+\textbf{Historical abstract (August 2026).} The retained abstract and survey
+describe the original rationale and proposal, not today's support.
+\end{decisions}
+\input{sections/abstract}
+\clearpage
 \input{sections/01-introduction}
 \input{sections/02-problem}
 
-\part{Methods that choose configurations}
+\part{Historical survey: methods that choose configurations}
 \input{sections/03-model-free}
 \input{sections/04-bayesian}
 
-\part{Methods that manage the budget}
+\part{Historical survey: methods that manage the budget}
 \input{sections/05-multifidelity}
 \input{sections/06-population}
 
-\part{Several objectives, and knowledge we already own}
+\part{Historical survey: several objectives and prior knowledge}
 \input{sections/07-multiobjective}
 \input{sections/08-priors-transfer}
 
-\part{From methods to our system}
+\part{Historical survey: from methods to a proposed system}
 \input{sections/09-workloads}
 \input{sections/10-libraries}
 
-\part{The product proposal}
+\part{Original product proposal: retained design history}
 \input{sections/14-product}
 \input{sections/11-architecture}
 \input{sections/15-contracts}

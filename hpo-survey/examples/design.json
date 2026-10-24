@@ -1,0 +1,62 @@
+{
+  "schema": "doc01-experiment-design-v1",
+  "scope": "Finite documentation demonstrations; no superiority, population inference or bank effectiveness claim",
+  "replicates": [101, 202, 303],
+  "methods": ["random", "sobol", "gp", "tpe"],
+  "search_budget": 12,
+  "tuning_seeds": [0, 1],
+  "final_seeds": [1000, 1001],
+  "response": {
+    "rows": [240, 160, 256],
+    "alpha": [0.0001, 0.001, 0.01, 0.1, 1.0],
+    "l1_ratio": [0.0, 0.5, 1.0],
+    "generator": "x~N(0,I2); p=sigmoid(-0.7+1.1*x1-0.6*x2); y~Bernoulli(p)",
+    "fit": "Mean logistic NLL + alpha*(r*L1(slopes)+(1-r)*L2(slopes)^2/2); intercept unpenalized; proximal gradient",
+    "kkt_tolerance": 1e-9,
+    "max_iterations": 20000,
+    "selection": "Mean validation NLL; no regularizer in scoring",
+    "final": "Refit selected configuration on train+validation; score untouched final rows"
+  },
+  "equilibrium": {
+    "rows": [48, 32, 64],
+    "width": [2, 4, 8],
+    "depth": [1, 2],
+    "learning_rate": [0.01, 0.03, 0.1],
+    "epochs": 120,
+    "beta": 0.91,
+    "rho": 0.72,
+    "lambda": 1.4,
+    "state_range": [-0.8, 0.8],
+    "parameter_range": [0.12, 0.48],
+    "equation": "y(x,a)-beta*y(rho*x,a)-a*x=0; z=lambda*y+x; deterministic transition (sigma=0)",
+    "model": "y=x*g_theta(x,a); g is fully trained tanh MLP, Adam, float64, no analytic target in training",
+    "selection": "Mean validation equilibrium residual squared across two independent initializations",
+    "final": "Refit on train+validation using fresh seeds; score untouched final states",
+    "reference": "y*=a*x/(1-beta*rho); dy/dx=a/(1-beta*rho); dy/da=x/(1-beta*rho)",
+    "assessment": "Report policy, state derivative, parameter derivative, residual and structural errors; no arbitrary learned-model acceptance threshold"
+  },
+  "method_settings": {
+    "random": "Public RandomSearcher; replacement allowed and duplicates charged",
+    "sobol": "Public scrambled SobolSearcher; ordinal indices map to physical choices",
+    "gp": "Public GPSearcher; minimize, 4 initial random samples, 2 acquisition restarts, finite domain",
+    "tpe": "Public TPESearcher unchanged Optuna defaults; 10 startup draws, only last 2 of 12 proposals may use density model",
+    "grid": "Exhaustive reference, 15/18 configurations, both tuning seeds; oracle validation minimum never supplied to searchers"
+  },
+  "numerical_review": {
+    "response": "Independent KKT residual and scalar stable log likelihood from retained coefficients; convex KKT certifies numerical stationarity",
+    "equilibrium": "Independent NumPy forward and chain-rule derivatives from weights; central differences; exact linear reference solves equations",
+    "regret": "Best tuning mean minus complete finite-reference minimum with identical data and training seeds; no final-score selection",
+    "resume": "Fresh objects and Store completed resume for every method/replicate; no additional objective calls or changed model/report bytes",
+    "adverse": "Perturbed parameters, overlapping roles, altered artifact digest, invalid configuration and false reference regret must be rejected"
+  },
+  "limits": {"cpu_count": 1, "gpu": false, "network": false, "seconds_per_example": 1200, "combined_seconds": 2400, "other_process_seconds": 300},
+  "review": [
+    "12 is smaller than both grids and larger than TPE startup; document weak adaptation opportunity without modifying defaults.",
+    "Three predetermined replicates and shared training seeds support descriptive comparisons only; no confidence or power claim.",
+    "Response fitting is deterministic; two seeds demonstrate workflow repetition, not extra information.",
+    "Neural width/depth alter trained layers and parameter count; analytic policy is verification only.",
+    "Shock variance is deliberately zero; this does not reproduce stochastic DSGE or posterior sampling.",
+    "Report full grid cost and optimizer overhead; tiny tasks can favor enumeration.",
+    "Retain raw failures, duplicates, charged work and immutable run directories."
+  ]
+}

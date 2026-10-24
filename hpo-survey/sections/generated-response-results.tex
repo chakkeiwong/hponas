@@ -1,0 +1,22 @@
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{rlrrrrr}
+\toprule
+Seed & Method & Tuning loss & Regret & Final loss & Unique & Seconds \\
+\midrule
+101 & Random & 0.476161 & 0 & 0.526931 & 9 & 0.76 \\
+101 & Sobol & 0.476161 & 0 & 0.526931 & 11 & 0.70 \\
+101 & GP & 0.476161 & 0 & 0.526931 & 12 & 2.33 \\
+101 & TPE & 0.476161 & 0 & 0.526931 & 9 & 0.77 \\
+202 & Random & 0.533606 & 0 & 0.518881 & 7 & 0.70 \\
+202 & Sobol & 0.533810 & 0.000204 & 0.518522 & 10 & 0.69 \\
+202 & GP & 0.533606 & 0 & 0.518881 & 12 & 1.59 \\
+202 & TPE & 0.533606 & 0 & 0.518881 & 8 & 0.79 \\
+303 & Random & 0.558299 & 0 & 0.498199 & 7 & 0.68 \\
+303 & Sobol & 0.558303 & 4.41e-06 & 0.498197 & 11 & 0.66 \\
+303 & GP & 0.558299 & 0 & 0.498199 & 12 & 1.73 \\
+303 & TPE & 0.558303 & 4.41e-06 & 0.498197 & 7 & 0.70 \\
+\bottomrule
+\end{tabular}
+\caption{Response NLL results. Each search spends 12 proposals. Unique counts include no free replacement for duplicates. Seconds measure the persisted search and protected final evaluation; full-grid reference time is separate.}
+\end{table}

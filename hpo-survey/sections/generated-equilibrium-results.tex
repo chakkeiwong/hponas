@@ -1,0 +1,22 @@
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{rlrrrrr}
+\toprule
+Seed & Method & Tuning loss & Regret & Final loss & Unique & Seconds \\
+\midrule
+101 & Random & 5.94e-06 & 0 & 6.77e-06 & 8 & 3.02 \\
+101 & Sobol & 6.61e-06 & 6.68e-07 & 1.76e-06 & 10 & 2.97 \\
+101 & GP & 5.94e-06 & 0 & 6.77e-06 & 11 & 4.23 \\
+101 & TPE & 5.94e-06 & 0 & 6.77e-06 & 9 & 2.97 \\
+202 & Random & 3.69e-06 & 0 & 5.33e-06 & 9 & 2.68 \\
+202 & Sobol & 3.69e-06 & 0 & 5.33e-06 & 10 & 2.69 \\
+202 & GP & 3.69e-06 & 0 & 5.33e-06 & 12 & 3.31 \\
+202 & TPE & 3.69e-06 & 0 & 5.33e-06 & 8 & 3.01 \\
+303 & Random & 9.98e-07 & 1.86e-07 & 5.52e-06 & 9 & 2.72 \\
+303 & Sobol & 1.75e-06 & 9.35e-07 & 1.38e-05 & 9 & 2.74 \\
+303 & GP & 8.13e-07 & 0 & 0.000108 & 12 & 3.91 \\
+303 & TPE & 9.98e-07 & 1.86e-07 & 5.52e-06 & 10 & 2.82 \\
+\bottomrule
+\end{tabular}
+\caption{Neural equilibrium residual MSE results. Each search spends 12 proposals. Unique counts include no free replacement for duplicates. Seconds measure the persisted search and protected final evaluation; full-grid reference time is separate.}
+\end{table}

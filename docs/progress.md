@@ -4,7 +4,7 @@ See [the master program](../CONSOLIDATED_MASTER_AUTHORITY.md) for authority, sco
 
 ## Current execution status
 
-Program revision: **2.519**. Current phase: **Tier 1 development**.
+Program revision: **2.526**. Current phase: **Tier 1 development**.
 
 **Release status: LOCAL BASELINE ACCEPTED.** Tier-0 acceptance applies to the retained source. Current development and later phases require their own acceptance. No external release is recorded.
 
@@ -68,7 +68,8 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | REL-02 | Integrated-source qualification and release disposition | complete | verified | REL-01, T1-GATE | Preserve the qualified finite local baseline; PRD-01 owns omitted original product contracts and subsequent changed-source qualification. |
 | PRD-01 | Recover and repair the complete public product contract | complete | verified | REL-02, D-PRODUCT-CONTRACT-RECOVERY, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Retain engineering readiness; BANK-01 owns all final-source foundation and profile scientific qualification. |
 | BANK-01 | Reusable universal-bank model-family HPO/NAS workflows | complete | verified | PRD-01, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Preserve current qualified source; GAP-01/FINAL-AUDIT independently assesses complete gap closure. |
-| GAP-01 | Close historical implementation gaps and independently audit completion | complete | verified | PRD-01, D-GAP-CLOSURE-20261018 | Preserve all original obligations and qualified finite evidence; changed source or additional claims require prospective work. |
+| GAP-01 | Close historical implementation gaps and independently audit completion | complete | verified | PRD-01, D-GAP-CLOSURE-20261018 | Retain original gap and DOC-01 closure evidence. No required active work remains in the adopted finite local program; new application/production claims require a new bounded stage. |
+| DOC-01 | Product manual, complete feature audit and bounded application examples | complete | verified | BANK-01, D-DOC01-20261024 | Retain completed manual, feature ledger and independent finite application evidence; future scope/source changes require prospective work. |
 
 ## Decisions and unresolved conflicts
 
@@ -121,3 +122,4 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | D-SCOPED-PROGRAM-OPERATIONS | accepted | Stable exact local commands and grouped scoped approvals | Use the reviewed bounded operations manifest; preserve managed approvals and unrelated rules. Rule matching/installation does not itself prove host live reload or grant scientific acceptance. |
 | D-PRODUCT-FINAL-QUALIFICATION-ORDER | accepted | Qualify the complete product after all planned foundation and bank source repairs | PRD closes engineering readiness; BANK final review owns unchanged complete scientific obligations and exact final-source acceptance. No campaign is allocated here. |
 | D-GAP-CLOSURE-20261018 | accepted | Execute all ten historical gap closures with final independent completion audit | GAP-01 is active; BANK-01 requalification is open for the repaired source; no changed code inherits prior acceptance. |
+| D-DOC01-20261024 | accepted | Refresh the product manual, audit obligations and execute bounded application examples | DOC-01 extends the master without transferring scientific qualification; new deliverables require separate evidence. |
