@@ -27,6 +27,8 @@ CHECKS = (
 )
 TESTS = {
     'test-study': (
+        'tests/unit/test_parallel_evaluation_controller.py',
+        'tests/unit/test_parallel_execution_context.py',
         'tests/unit/test_generational_transfer.py',
         'tests/unit/test_population_checkpoint.py',
         'tests/unit/test_architecture_coordinates.py',

@@ -2,7 +2,7 @@
 
 Reusable HPO and moderate architecture-coordinate NAS for the model families used by a universal retail bank. The [product contract](docs/program/BANK_HPO_NAS_PRODUCT_CONTRACT.md) covers prediction and forecasting, causal/policy models, financial inference, constrained neural solvers, valuation and allocation. Models, data and frameworks stay caller-owned; sibling repositories are not runtime dependencies. The initial qualified search spaces have roughly 2–10 coordinates. General cell search, supernets and weight sharing remain outside scope.
 
-**Status:** The [16 October qualification package](docs/program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json) is the accepted finite local baseline for its original source. The current source passed qualification and GAP-01/FINAL-AUDIT; all 27 original clauses and the adopted finite local master are complete. [GAP-01](docs/program/GAP_CLOSURE_PROGRAM_2026_10_18.md) implements the ten historical gaps; its final independent audit reconstructs all 27 original obligations. The qualified source and full scientific package are retained in [the new package](docs/program/evidence/2026-10-18/gap-qualification-04/accepted-package.json). Empirical application usefulness remains unestablished. See [support and limits](docs/PRODUCT_SUPPORT.md), [the master](CONSOLIDATED_MASTER_AUTHORITY.md) and [the lineage review](docs/program/MASTER_PROGRAM_LINEAGE_REVIEW_2026_10_12.md).
+**Status:** The accepted finite-local predecessor and its 27-clause GAP audit remain preserved in [the qualification package](docs/program/evidence/2026-10-18/gap-qualification-04/accepted-package.json). The current source passed qualification and GAP-01/FINAL-AUDIT; all 27 original clauses and the adopted finite local master are complete. [PAR-01](docs/program/PARALLEL_EXECUTION_EXTENSION_2026_10_26.md) implements and verifies resource-aware workers, Study repetitions/replicas and population/BG-PBT execution; PAR-QUAL-01 and the independent terminal audit have passed on the current source. Earlier completion applies to the retained source only. Empirical application usefulness remains unestablished. See [the master](CONSOLIDATED_MASTER_AUTHORITY.md), [qualification boundary](docs/program/PARALLEL_REQUALIFICATION_BOUNDARY_2026_10_26.md) and the [qualified LaTeX manual](docs/program/evidence/2026-10-26/parallel-publication-refresh-05/build-01/main-parallel-qualified.pdf), [buildable edition](docs/program/evidence/2026-10-26/parallel-publication-refresh-05/build-01/main-parallel-qualified.tex), and chapters “Parallel CPU and GPU execution” and “Parallel extension: qualification and delivery.”
 
 ## Install
 
@@ -114,7 +114,7 @@ python -m tools.gate_check --phase tier0 --mode dry-run
 
 V14 evaluates protected seed 999 only after the search result is committed. `workloads.rl_routine.evaluate_checkpoint` performs this separate evaluation. Passing V14 establishes an executable workflow, not statistical performance.
 
-V04-T0/V05 use self-contained fixed models with independently known tuning answers. Their finite conformance results do not establish general superiority or promote defaults. The previous PPO comparison/pilot/power design is retired under D-SELF-CONTAINED-VALIDATION. See [supported workloads](docs/WORKLOADS.md) and the [retained qualified package](docs/program/evidence/2026-10-12/final-qualification-11/accepted-package.json). PRD-01 foundation repairs and BANK-01/GAP-QUALIFICATION are complete; GAP-01/FINAL-AUDIT completed the final whole-gap closure examination.
+V04-T0/V05 use self-contained fixed models with independently known tuning answers. Their finite conformance results do not establish general superiority or promote defaults. The previous PPO comparison/pilot/power design is retired under D-SELF-CONTAINED-VALIDATION. See [supported workloads](docs/WORKLOADS.md) and the [retained qualified package](docs/program/evidence/2026-10-12/final-qualification-11/accepted-package.json). PRD-01 foundation repairs and BANK-01/GAP-QUALIFICATION completed their historical scope. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed.
 
 Every audited run preserves its protocol, raw results, package/source fingerprints, and a V16 receipt under `validation/artifacts/<ID>/<run>/`. Gates reject missing, stale, empty, or inconsistent evidence. See the [current master program](CONSOLIDATED_MASTER_AUTHORITY.md) for execution status.
 
@@ -131,4 +131,21 @@ python -m compileall -q hponas workloads validation tools examples
 
 ASHA, MO-ASHA, multi-objective search, cost-aware search, priors, trust regions, population methods, DEHB and ranked warm starts have retained finite qualification on the accepted source. Optional methods remain opt-in; broader effectiveness is unestablished. ifBO feasibility failed and integration is cancelled.
 
-The supported learned-transport fixture trains an explicit small tanh coupling. The legacy `workloads.sampler_neutra` callable remains ordinary HMC; see [workload identities and limits](docs/WORKLOADS.md). PRD-01 completed the foundation interfaces; GAP-01 restored the omitted vector batching, repeated streaming, TPE scheduling, population, operations, RGPE and installed-caller obligations. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed.
+The supported learned-transport fixture trains an explicit small tanh coupling. The legacy `workloads.sampler_neutra` callable remains ordinary HMC; see [workload identities and limits](docs/WORKLOADS.md). PRD-01 completed the foundation interfaces; GAP-01 restored the omitted vector batching, repeated streaming, TPE scheduling, population, operations, RGPE and installed-caller obligations. Their accepted qualification and final audit remain bound to the historical source. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed.
+
+## Optional scientific verification tools
+
+The optional [hponas-scientific-checks package](extensions/scientific-checks/README.md)
+provides a public Python API and JSON CLI for finite PI reconstruction, fixed-domain
+NAS derivative certificates, exact synthetic references, and deterministic wallet
+population enclosures. It is a separate installable distribution, not an added
+optimizer or a change to the qualified core wheel. Its [mathematical argument](extensions/scientific-checks/MATHEMATICS.md)
+and [SCI-03 plan](docs/program/SCIENTIFIC_DELIVERY_2026_10_25.md) define the supported
+scope. Installation and saved-artifact qualification are recorded under
+[SCI-03 evidence](docs/program/evidence/2026-10-25/scientific-delivery-03).
+
+The frozen wallet policies have positive synthetic utility bounds versus no action;
+selected-versus-likelihood superiority remains unresolved. The six saved ifBO
+performance failures and cancelled optimizer integration remain unchanged. These
+tools do not establish unseen-model guarantees, unknown-MNAR/causal identification,
+general sampler convergence, real-bank effectiveness or production readiness.

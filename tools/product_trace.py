@@ -84,6 +84,16 @@ def validate_trace(root, program):
         package = read_bound(root,evidence[ident])
         from tools.source_identity import source_digest
         if package.get('source_digest') != source_digest(root):
-            raise ValueError('Final product qualification is stale')
+            baseline=program.get('review_register',{}).get('historical_product_baseline',{})
+            successor=work.get(baseline.get('successor'),{})
+            terminal=stages.get(baseline.get('required_terminal_stage'),{})
+            gap=stages.get('GAP-01/FINAL-AUDIT',{})
+            if (baseline.get('package')!=ident or baseline.get('source_digest')!=package.get('source_digest')
+                    or baseline.get('boundary') not in evidence
+                    or successor.get('state') not in {'planned','in_progress','blocked'}
+                    or terminal.get('work_item')!=baseline.get('successor')
+                    or terminal.get('state')=='complete' or gap.get('state')=='complete'
+                    or baseline.get('required_terminal_stage') not in gap.get('dependencies',[])):
+                raise ValueError('Final product qualification is stale')
         # The stage's scientific verifier owns campaign/gate recomputation.
         # This guard only stops omission/staleness from becoming completion.

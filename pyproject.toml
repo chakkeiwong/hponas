@@ -26,6 +26,7 @@ dependencies = [
     "numpy>=2.0,<3",
     "scipy>=1.13,<2",
     "cloudpickle>=3,<4",
+    "threadpoolctl>=3,<4",
     "botorch>=0.18,<0.19",
     "gpytorch>=1.15,<1.16",
     "torch>=2.4,<3",
@@ -147,6 +148,16 @@ pytest_add_cli_args = [
     "-p", "tools.v03_test_order",
     "--ignore=tests/scale", "--ignore=tests/unit/test_ray_executor_tier0.py",
     "--ignore=tests/test_ray_executor.py", "-m", "not slow", "--tb=short", "-q",
+    # PAR-01 owns these new multi-resource/hardware/master-context tests.
+    # The inherited single-CPU mutation test roster stays unchanged.
+    "--ignore=tests/integration/test_resource_executor.py",
+    "--ignore=tests/integration/test_parallel_study.py",
+    "--ignore=tests/integration/test_parallel_population.py",
+    "--ignore=tests/integration/test_parallel_methods.py",
+    "--ignore=tests/integration/test_parallel_hardware.py",
+    "--ignore=tests/integration/test_parallel_ray.py",
+    "--ignore=tests/unit/test_parallel_resources.py",
+    "--ignore=tests/unit/test_parallel_program_boundary.py",
 ]
 
 [tool.ruff.lint]

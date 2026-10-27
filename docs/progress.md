@@ -4,22 +4,23 @@ See [the master program](../CONSOLIDATED_MASTER_AUTHORITY.md) for authority, sco
 
 ## Current execution status
 
-Program revision: **2.537**. Current phase: **Tier 1 development**.
+Program revision: **2.646**. Current phase: **Tier 1 development**.
 
 **Release status: LOCAL BASELINE ACCEPTED.** Tier-0 acceptance applies to the retained source. Current development and later phases require their own acceptance. No external release is recorded.
+**Current parallel source: UNQUALIFIED.** Historical product acceptance remains attached to its retained source; PAR-QUAL-01 and the final GAP guard are outstanding.
 
-Executable source fingerprint: `7a3975382cf19d55d3be3b653ccf5f860c576e13e7998a9dded47dff0a9adb17`.
+Executable source fingerprint: `fb5a83647bd5d73aaff21e360bab73432c670c6b08038e52507749a7de99e320`.
 
 These are stored evidence verdicts. CURRENT means source and protocol match; STALE requires revalidation. A new audit cannot make a HISTORICAL DIAGNOSTIC into fresh mutation execution. Full gate recomputation is required for acceptance.
 
 | Campaign | Recorded verdict | V16 receipt | Freshness | Run |
 |---|---|---|---|---|
-| V01 | PASS | PASS | CURRENT | `validation/artifacts/V01/20261023_gap_final_04` |
-| V02 | PASS | PASS | CURRENT | `validation/artifacts/V02/20261023_gap_final_04` |
-| V03 | PASS | PASS | STALE | `validation/artifacts/V03/20261023_gap_final_04` |
-| V04-T0 | PASS | PASS | CURRENT | `validation/artifacts/V04-T0/20261023_gap_final_04` |
-| V05 | PASS | PASS | CURRENT | `validation/artifacts/V05/20261023_gap_final_04` |
-| V14 | PASS | PASS | CURRENT | `validation/artifacts/V14/20261023_gap_final_04` |
+| V01 | PASS | PASS | CURRENT | `validation/artifacts/V01/20261026_parallel_qualification_04` |
+| V02 | PASS | PASS | CURRENT | `validation/artifacts/V02/20261026_parallel_qualification_04` |
+| V03 | PASS | PASS | STALE | `validation/artifacts/V03/20261026_parallel_qualification_04` |
+| V04-T0 | PASS | PASS | CURRENT | `validation/artifacts/V04-T0/20261026_parallel_qualification_04` |
+| V05 | PASS | PASS | CURRENT | `validation/artifacts/V05/20261026_parallel_qualification_04` |
+| V14 | PASS | PASS | CURRENT | `validation/artifacts/V14/20261026_parallel_qualification_04` |
 
 Active work item: **none**.
 
@@ -68,9 +69,16 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | REL-02 | Integrated-source qualification and release disposition | complete | verified | REL-01, T1-GATE | Preserve the qualified finite local baseline; PRD-01 owns omitted original product contracts and subsequent changed-source qualification. |
 | PRD-01 | Recover and repair the complete public product contract | complete | verified | REL-02, D-PRODUCT-CONTRACT-RECOVERY, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Retain engineering readiness; BANK-01 owns all final-source foundation and profile scientific qualification. |
 | BANK-01 | Reusable universal-bank model-family HPO/NAS workflows | complete | verified | PRD-01, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Preserve current qualified source; GAP-01/FINAL-AUDIT independently assesses complete gap closure. |
-| GAP-01 | Close historical implementation gaps and independently audit completion | complete | verified | PRD-01, D-GAP-CLOSURE-20261018 | Retain terminal closure after APP-01; any new scope or source change requires a prospective master amendment. |
+| GAP-01 | Close historical implementation gaps and independently audit completion | complete | verified | PRD-01, D-GAP-CLOSURE-20261018 | Preserve all original obligations and qualified finite evidence; changed source or additional claims require prospective work. |
 | DOC-01 | Product manual, complete feature audit and bounded application examples | complete | verified | BANK-01, D-DOC01-20261024 | Retain completed manual, feature ledger and independent finite application evidence; future scope/source changes require prospective work. |
 | APP-01 | Five-family workspace application validation | complete | verified | DOC-01, D-APP01-20261024 | Retain completed five-family finite evidence. NAS scientific nonattainment and short-chain discrepancies are explicit; new budgets/designs require successor work. |
+| APP-02 | Sequential diagnosis of application scientific nonattainment and test coverage | complete | verified | APP-01, D-APP02-20261025, D-APP02-WALLET-PRIORITY | Bounded investigation complete; retain unresolved scientific limits. No further training allocated. |
+| APP-03 | Repair application weaknesses with fresh objective evidence | complete | verified | APP-02, D-APP03-20261025 | Retain scoped APP-03 repairs, independent audit and explicit nonattainment; any broader effectiveness work requires a prospective bounded master stage. |
+| SCI-01 | Trace scientific gaps and verify closure routes | complete | verified | APP-03 | Retain SCI-01 findings and exact wrapper recovery; SCI-02 closes the bounded successor repair. |
+| SCI-02 | Repair closable scientific gaps with saved-artifact verification | complete | verified | SCI-01 | Bounded repair complete. Retain companion evidence; further empirical or installed-product integration requires a prospective successor and its prerequisites. |
+| SCI-03 | Certified synthetic evaluation and installable verification tools | complete | verified | SCI-02 | Retain audited bounded delivery; no allocated stage remains. Wallet precision and unsupported scientific claims remain open as explicit scope limits. |
+| PAR-01 | Parallel CPU/GPU execution for all supported tuning families | complete | verified | SCI-03, D-PAR01-20261026 | Preserve source-bound CPU/GPU implementation, manual and current-source qualification. |
+| PAR-QUAL-01 | Qualify changed parallel source before terminal product closure | complete | verified | PAR-01 | Preserve qualified source; GAP-01/FINAL-AUDIT remains the terminal master phase. |
 
 ## Decisions and unresolved conflicts
 
@@ -125,3 +133,7 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | D-GAP-CLOSURE-20261018 | accepted | Execute all ten historical gap closures with final independent completion audit | GAP-01 is active; BANK-01 requalification is open for the repaired source; no changed code inherits prior acceptance. |
 | D-DOC01-20261024 | accepted | Refresh the product manual, audit obligations and execute bounded application examples | DOC-01 extends the master without transferring scientific qualification; new deliverables require separate evidence. |
 | D-APP01-20261024 | accepted | Systematically validate five workspace-inspired application families | APP-01 precedes terminal GAP audit; no inherited qualification for companions. |
+| D-APP02-20261025 | accepted | Investigate problems1-5 sequentially, starting with NAS | APP-02 diagnosis follows completed APP-01; terminal GAP guard remains last. |
+| D-APP02-WALLET-PRIORITY | accepted | Investigate wallet coverage before remaining APP-02 cases | APP-02/COVERAGE-WALLET precedes queued refit, transport and policy work; original evidence and final GAP audit remain. |
+| D-APP03-20261025 | accepted | Execute reviewed bounded repairs and documentation after APP-02 diagnosis | Preserve accepted baseline; new bounded standalone repairs require fresh source-bound evidence; terminal audit remains last. |
+| D-PAR01-20261026 | accepted | Implement parallel CPU/GPU execution across tuning families | Add successor PAR-01 with terminal audit; preserve predecessor and unsupported outcomes. |

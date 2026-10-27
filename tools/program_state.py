@@ -504,6 +504,8 @@ def render_status(view):
              "These are stored evidence verdicts. CURRENT means source and protocol match; STALE requires revalidation. A new audit cannot make a HISTORICAL DIAGNOSTIC into fresh mutation execution. Full gate recomputation is required for acceptance.", "",
              "| Campaign | Recorded verdict | V16 receipt | Freshness | Run |",
              "|---|---|---|---|---|"]
+    if data.get('review_register',{}).get('historical_product_baseline'):
+        lines.insert(5, '**Current parallel source: UNQUALIFIED.** Historical product acceptance remains attached to its retained source; PAR-QUAL-01 and the final GAP guard are outstanding.')
     for c in view["campaigns"]:
         lines.append(f"| {c['id']} | {c['verdict']} | {'PASS' if c['audit_passed'] else 'FAIL'} | {c['status']} | `{c['run']}` |")
     lines += ["", f"Active work item: **{data['active_work_item'] or 'none'}**."]

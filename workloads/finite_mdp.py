@@ -13,6 +13,16 @@ import math
 import torch
 
 
+def _input_device(model, fallback):
+    """Place inputs for modules without requiring every callable to own parameters."""
+    if isinstance(model, torch.nn.Module):
+        for tensors in (model.parameters(), model.buffers()):
+            tensor = next(tensors, None)
+            if tensor is not None:
+                return tensor.device
+    return fallback
+
+
 class FiniteMDP:
     def __init__(self, initial, transitions, rewards, *, horizon, discount=1.0,
                  observations=None, rl_weight=None, policy_weight=1.0, value_weight=0.5):
@@ -81,9 +91,13 @@ class FiniteMDP:
         if (isinstance(imitation_weight, bool) or not math.isfinite(imitation_weight)
                 or not 0 <= imitation_weight <= 1):
             raise ValueError('Imitation weight must be in [0,1]')
-        outputs = student(self.observations)
+        observations = self.observations
+        outputs = student(observations.to(_input_device(student, observations.device)))
+        device = outputs.device
+        transitions = self.transitions.to(device)
+        rewards = self.rewards.to(device)
         with torch.no_grad():
-            targets = teacher(self.observations)
+            targets = teacher(observations.to(_input_device(teacher, device))).detach().to(device)
         expected_shape = (self.states, self.actions + 1)
         if outputs.shape != expected_shape or targets.shape != expected_shape:
             raise ValueError('Policy/value output shape differs from MDP')
@@ -92,9 +106,9 @@ class FiniteMDP:
         log_student = torch.log_softmax(outputs[:, :self.actions], dim=-1)
         log_teacher = torch.log_softmax(targets[:, :self.actions], dim=-1)
         probability = log_student.exp()
-        transition = torch.einsum('sa,san->sn', probability, self.transitions)
-        reward = (probability * self.rewards).sum(-1)
-        distribution = self.initial
+        transition = torch.einsum('sa,san->sn', probability, transitions)
+        reward = (probability * rewards).sum(-1)
+        distribution = self.initial.to(device)
         occupancy = torch.zeros_like(distribution)
         expected_return = outputs.new_zeros(())
         for step in range(self.horizon):

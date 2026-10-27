@@ -91,6 +91,7 @@ class Study:
         resource_budget=None,
         architecture_coordinates=(),
         legacy_reason=None,
+        evaluation_workers=1,
     ):
         if declaration is None:
             if not isinstance(legacy_reason, str) or not legacy_reason.strip():
@@ -204,6 +205,17 @@ class Study:
             self._streaming_objective = False
         self._evaluation = (evaluation_controller(declaration, maximize=maximize,
                             spec=getattr(self, "spec", None)) if declaration is not None else None)
+        if type(evaluation_workers) is not int or evaluation_workers < 1:
+            raise ValueError('evaluation_workers must be a positive integer')
+        if evaluation_workers > 1:
+            if declaration is None or declaration.streaming_steps:
+                raise ValueError('Parallel repetitions currently require an endpoint declaration')
+            capacity = getattr(executor, 'num_workers', getattr(executor, 'max_workers', 1))
+            if evaluation_workers > capacity or (self._resources and evaluation_workers > resource_budget.worker_capacity):
+                raise ValueError('Parallel repetitions exceed worker capacity')
+            from hponas.evaluation_parallel import ParallelEvaluationController
+            self._evaluation = ParallelEvaluationController(declaration, maximize=maximize,
+                spec=getattr(self, 'spec', None), workers=evaluation_workers)
         if self._evaluation is not None:
             self._evaluation.validate_callable(objective_fn, continuation=continuation)
             if declaration.streaming_steps:
@@ -672,8 +684,15 @@ class Study:
                 elif self._evaluation is not None:
                     # Persist each fold/seed endpoint before the single aggregate
                     # observation. Final evaluation uses a separate ledger below.
-                    for trial in batch:
-                        self._accept(self._evaluation.run_group(self, trial, "tuning"))
+                    if hasattr(self._evaluation, 'run_groups'):
+                        self._evaluation.run_groups(self, batch, 'tuning')
+                        for trial in batch:
+                            # _accept owns parent cancellation before observation.
+                            self._accept(self._evaluation.aggregate(
+                                trial, self._evaluation.state['tuning'][trial.trial_id]))
+                    else:
+                        for trial in batch:
+                            self._accept(self._evaluation.run_group(self, trial, "tuning"))
                 elif (
                     self.scheduler is not None
                     or self.compute_budget_seconds is not None

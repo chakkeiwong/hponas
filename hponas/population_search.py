@@ -17,9 +17,10 @@ from hponas.population import _digest, restore_member
 
 class LocalPBT:
     def __init__(self, path, population, *, seed=0, quantile=0.25,
-                 learning_rate_bounds=(0.001, 1.0), factors=(0.8, 1.2), explorer=None):
+                 learning_rate_bounds=(0.001, 1.0), factors=(0.8, 1.2), explorer=None, executor=None):
         self.path, self.population = Path(path), population
         self.explorer = explorer
+        self.executor = executor
         if type(seed) is not int or not 0 <= seed < 2**32:
             raise ValueError('PBT seed must be an unsigned 32-bit integer')
         if isinstance(quantile, bool) or not math.isfinite(quantile) or not 0 < quantile <= 0.5:
@@ -115,6 +116,13 @@ class LocalPBT:
                 if row['status'] == 'blocked':
                     return deepcopy(state)
                 if row['status'] == 'training':
+                    if self.executor is not None:
+                        from hponas.population_parallel import train_batch
+                        try:
+                            train_batch(self.population, f'pbt:{index}:train:', updates_per_round, self.executor)
+                        except Exception as exc:
+                            row.update(status='blocked', reason=str(exc));self._write(state)
+                            return deepcopy(state)
                     for member in sorted(self.population.snapshot()['members']):
                         result = self.population.train(f'pbt:{index}:train:{member}', member, updates_per_round)
                         if result['status'] != 'committed':

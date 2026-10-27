@@ -16,8 +16,9 @@ from hponas.population import PopulationCheckpoint, _digest, make_member, restor
 
 class ArchitectureGeneration:
     def __init__(self, directory, objective, teacher, proposals, *, survivors, rungs,
-                 seed=0, max_updates):
+                 seed=0, max_updates, executor=None):
         self.directory = Path(directory)
+        self.executor = executor
         self.objective = objective
         if (not isinstance(proposals, list) or not 1 <= survivors <= len(proposals) <= 32
                 or type(survivors) is not int or len(rungs) < 1
@@ -107,9 +108,16 @@ class ArchitectureGeneration:
                     alive = row['survivors']
                     continue
                 scores = {}
+                parallel_outcomes = None
+                if self.executor is not None:
+                    # Each candidate has its own durable reservation; the
+                    # generation coordinator serializes the halving barrier.
+                    from hponas.parallel_transfer import run_candidates
+                    parallel_outcomes=run_candidates(self,alive,target,self.executor)
                 for index in alive:
                     store = self._store(index)
-                    outcome = store.exploit(**self._request(index, target))
+                    outcome = (parallel_outcomes[index] if parallel_outcomes is not None else
+                               store.exploit(**self._request(index, target)))
                     if outcome['status'] not in {'pending', 'committed'}:
                         state.update(status='blocked', reason=f'candidate {index}: {outcome["status"]}')
                         self._write(state)

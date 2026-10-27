@@ -63,7 +63,7 @@ class ResourceController:
         if not isinstance(budget, StudyBudget):
             raise TypeError('resource_budget must be a StudyBudget')
         self.budget = budget
-        self.state = {'version': 1, 'contract': budget.contract, 'attempts': []}
+        self.state = {'version': 2, 'contract': budget.contract, 'attempts': [], 'events': []}
 
     def usage(self, role):
         attempts = [a for a in self.state['attempts'] if a['role'] == role]
@@ -77,26 +77,32 @@ class ResourceController:
                 'contract_breaches': sum(a['breach'] is not None for a in attempts)}
 
     def abandon_inflight(self):
-        for a in self.state['attempts']:
+        for i, a in enumerate(self.state['attempts']):
             if a['state'] == 'inflight':
                 a['state'] = 'lost'
+                self.state['events'].append({'kind': 'lost', 'index': i})
 
     def refusal(self, role):
+        if role not in ('tuning', 'final'):
+            raise ValueError('Unknown resource role')
         usage = self.usage(role)
         if usage['contract_breaches']:
             return role + '_resource_contract_breach'
         if usage['charged_work'] + self.budget.max_work_per_call > getattr(self.budget, role + '_work'):
             return role + '_work_exhausted'
         seconds = getattr(self.budget, role + '_seconds')
-        if seconds is not None and (not usage['elapsed_exact'] or usage['elapsed_seconds'] >= seconds):
-            return role + ('_elapsed_unknown' if not usage['elapsed_exact'] else '_seconds_exhausted')
+        unknown = any(a['role'] == role and a['state'] == 'lost' and a['elapsed'] is None for a in self.state['attempts'])
+        if seconds is not None and (unknown or usage['elapsed_seconds'] >= seconds):
+            return role + ('_elapsed_unknown' if unknown else '_seconds_exhausted')
         return None
 
     def begin(self, tid, role):
-        if self.refusal(role) or any(a['state'] == 'inflight' for a in self.state['attempts']):
+        if (self.refusal(role) or sum(a['state'] == 'inflight' for a in self.state['attempts']) >= self.budget.worker_capacity
+                or any(a['state'] == 'inflight' and a['trial_id'] == tid for a in self.state['attempts'])):
             raise ValueError('Resource reservation unavailable')
         self.state['attempts'].append({'trial_id': tid, 'role': role, 'state': 'inflight',
                                        'work': None, 'elapsed': None, 'breach': None})
+        self.state['events'].append({'kind': 'begin', 'index': len(self.state['attempts'])-1})
 
     def meter(self, result, spec):
         if spec is not None:
@@ -112,15 +118,17 @@ class ResourceController:
         return payload['work']
 
     def complete(self, result, spec):
-        attempt = self.state['attempts'][-1]
-        if attempt['state'] != 'inflight' or attempt['trial_id'] != result.trial_id:
+        matching = [(i,a) for i,a in enumerate(self.state['attempts']) if a['state'] == 'inflight' and a['trial_id'] == result.trial_id]
+        if len(matching) != 1:
             raise ValueError('Resource attempt identity differs')
+        index, attempt = matching[0]
         work = self.meter(result, spec)
         breach = ('missing_or_invalid_work_meter' if work is None else
                   'work_exceeds_declared_call_bound' if work > self.budget.max_work_per_call else None)
         elapsed = result.metadata.get('streaming_attempt', {}).get('elapsed_seconds', result.metadata['execution']['elapsed_seconds'])
         attempt.update(state='committed', work=work, elapsed=elapsed, breach=breach)
-        result.metadata['resource_attempt'] = len(self.state['attempts']) - 1
+        self.state['events'].append({'kind': 'complete', 'index': index})
+        result.metadata['resource_attempt'] = index
         if breach:
             result.metadata['resource_refusal'] = {'reason': breach, 'original_status': result.status}
             result.status = 'failed'
@@ -140,7 +148,66 @@ class ResourceController:
                 'uncertainty': 'lost or unmetered attempts consume a whole work reservation; measured work is a lower bound'}
 
     def restore(self, saved, evaluation, spec):
-        if (not isinstance(saved, dict) or set(saved) != set(self.state) or saved['version'] != 1
+        if isinstance(saved, dict) and saved.get('version') == 1:
+            return self._restore_v1(saved, evaluation, spec)
+        if (not isinstance(saved, dict) or set(saved) != set(self.state) or saved.get('version') != 2
+                or saved.get('contract') != self.budget.contract or not isinstance(saved.get('attempts'), list)
+                or not isinstance(saved.get('events'), list)):
+            raise ValueError('Checkpoint resource contract differs')
+        raw = evaluation.resource_records()
+        active = evaluation.state['inflight']
+        active_rows = active if isinstance(active, list) else ([] if active is None else [active])
+        candidate = ResourceController(self.budget)
+        committed = set()
+        for event in saved['events']:
+            if (not isinstance(event, dict) or set(event) != {'kind', 'index'}
+                    or type(event['index']) is not int or not 0 <= event['index'] < len(saved['attempts'])):
+                raise ValueError('Invalid resource event')
+            i = event['index']; attempt = saved['attempts'][i]
+            if (not isinstance(attempt, dict) or set(attempt) != {'trial_id', 'role', 'state', 'work', 'elapsed', 'breach'}):
+                raise ValueError('Invalid resource attempt')
+            tid, role = attempt['trial_id'], attempt['role']
+            if (not isinstance(tid, str) or not tid or role not in ('tuning', 'final')
+                    or not (evaluation.resource_role(tid) == role or any(a['trial_id'] == tid and a['role'] == role for a in active_rows))):
+                raise ValueError('Unknown resource attempt')
+            if event['kind'] == 'begin':
+                if i != len(candidate.state['attempts']) or tid in committed:
+                    raise ValueError('Resource admission order differs')
+                candidate.begin(tid, role)
+            elif event['kind'] in ('complete', 'lost'):
+                if i >= len(candidate.state['attempts']) or candidate.state['attempts'][i]['state'] != 'inflight':
+                    raise ValueError('Resource completion precedes admission or is repeated')
+                if event['kind'] == 'complete':
+                    if tid not in raw or tid in committed or raw[tid][0] != role:
+                        raise ValueError('Resource attempt lacks unique raw repetition')
+                    from hponas.types import Result
+                    result = Result(**deepcopy(raw[tid][1]))
+                    if type(result.metadata.get('resource_attempt')) is not int or result.metadata['resource_attempt'] != i:
+                        raise ValueError('Resource attempt index differs')
+                    original_status = result.status
+                    candidate.complete(result, spec)
+                    if candidate.state['attempts'][i]['breach'] is not None and original_status != 'failed':
+                        raise ValueError('Resource breach cannot be successful')
+                    committed.add(tid)
+                else:
+                    if tid not in evaluation.state['uncertain']:
+                        raise ValueError('Lost work lacks evaluation uncertainty')
+                    candidate.state['attempts'][i]['state'] = 'lost'
+                    candidate.state['events'].append(deepcopy(event))
+            else:
+                raise ValueError('Unknown resource event')
+        if candidate.state != saved:
+            raise ValueError('Resource event replay differs from saved accounting')
+        for attempt in candidate.state['attempts']:
+            if attempt['state'] == 'inflight' and not any(a['trial_id'] == attempt['trial_id'] and a['role'] == attempt['role'] for a in active_rows):
+                raise ValueError('Inflight resource and repetition ledgers differ')
+        for tid, (_, row) in raw.items():
+            if row['metadata']['execution']['accounting'] != 'not_dispatched' and tid not in committed:
+                raise ValueError('Dispatched repetition lacks a resource attempt')
+        self.state = deepcopy(saved)
+
+    def _restore_v1(self, saved, evaluation, spec):
+        if (not isinstance(saved, dict) or set(saved) != {'version', 'contract', 'attempts'} or saved['version'] != 1
                 or saved['contract'] != self.budget.contract or not isinstance(saved['attempts'], list)):
             raise ValueError('Checkpoint resource contract differs')
         raw = evaluation.resource_records()
@@ -152,7 +219,8 @@ class ResourceController:
                 raise ValueError('Invalid resource attempt')
             tid, role = attempt['trial_id'], attempt['role']
             active = evaluation.state['inflight']
-            known = evaluation.resource_role(tid) == role or active is not None and active['trial_id'] == tid and active['role'] == role
+            active_rows = active if isinstance(active,list) else ([] if active is None else [active])
+            known = evaluation.resource_role(tid) == role or any(a['trial_id'] == tid and a['role'] == role for a in active_rows)
             if not isinstance(tid, str) or not tid or not known or tid in committed or candidate.refusal(role):
                 raise ValueError('Resource attempt exceeds admission contract')
             if attempt['state'] == 'committed':
@@ -173,13 +241,16 @@ class ResourceController:
                 if attempt['work'] is not None or attempt['elapsed'] is not None or attempt['breach'] is not None:
                     raise ValueError('Uncommitted work must remain unknown')
                 candidate.state['attempts'].append(deepcopy(attempt))
+                candidate.state['events'].append({'kind': 'begin', 'index': i})
+                if attempt['state'] == 'lost':
+                    candidate.state['events'].append({'kind': 'lost', 'index': i})
                 if attempt['state'] == 'inflight':
-                    active = evaluation.state['inflight']
-                    if i != len(saved['attempts']) - 1 or active is None or active['trial_id'] != tid or active['role'] != role:
+                    if (not any(a['trial_id'] == tid and a['role'] == role for a in active_rows)
+                            or sum(a['state']=='inflight' for a in candidate.state['attempts']) > self.budget.worker_capacity):
                         raise ValueError('Inflight resource and repetition ledgers differ')
                 elif tid not in evaluation.state['uncertain']:
                     raise ValueError('Lost work lacks evaluation uncertainty')
         for tid, (_, row) in raw.items():
             if row['metadata']['execution']['accounting'] != 'not_dispatched' and tid not in committed:
                 raise ValueError('Dispatched repetition lacks a resource attempt')
-        self.state = deepcopy(saved)
+        self.state = deepcopy(candidate.state)

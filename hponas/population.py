@@ -89,7 +89,7 @@ def make_member(config, optimizer, *, seed=0):
             'updates': 0}
 
 
-def restore_member(member):
+def restore_member(member, *, device='cpu'):
     if not isinstance(member, dict) or set(member) != {'architecture', 'optimizer', 'tensors', 'velocity', 'updates'}:
         raise ValueError('Malformed population member')
     if type(member['updates']) is not int or member['updates'] < 0:
@@ -98,7 +98,7 @@ def restore_member(member):
     _options(member['optimizer'])
     model.load_state_dict(_restore_arrays(member['tensors'], model.state_dict()), strict=True)
     velocity = _restore_arrays(member['velocity'], dict(model.named_parameters()))
-    return model, velocity
+    return model.to(device), {key: value.to(device) for key, value in velocity.items()}
 
 
 class PopulationCheckpoint:
@@ -138,7 +138,7 @@ class PopulationCheckpoint:
                 fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
     def _check_member(self, member):
-        model, _ = restore_member(member)
+        model, _ = restore_member(member, device=getattr(self, 'device', 'cpu'))
         config = member['architecture']
         if (config['input_dim'] != self.objective.observations.shape[1]
                 or config['output_dim'] != self.objective.actions + 1):
@@ -209,6 +209,9 @@ class PopulationCheckpoint:
         for event in events:
             lower += event['completed_updates']
             upper += event['completed_updates'] + int(event['inflight'])
+        if getattr(self, 'path', None) is not None:
+            from hponas.population_parallel import uncertain_work
+            upper += uncertain_work(self.path)
         return {'work_unit': 'finite_expectation_gradient_update', 'lower': lower, 'upper': upper}
 
     def exploit(self, event_id, parent, child, *, architecture, optimizer,
@@ -248,6 +251,9 @@ class PopulationCheckpoint:
                    'weights': weights, 'seed': seed}
         with self._lock():
             state = self._read()
+            if getattr(self, 'path', None) is not None:
+                from hponas.population_parallel import guard_serial
+                guard_serial(self.path)
             if parent not in state['members'] or child not in state['members']:
                 raise ValueError('Unknown population member')
             if event_id in state['events']:
@@ -289,8 +295,8 @@ class PopulationCheckpoint:
             if target_updates < event['completed_updates']:
                 raise ValueError('Transfer cannot move backwards')
             try:
-                student, velocity = restore_member(event['candidate'])
-                teacher, _ = restore_member(event['teacher'])
+                student, velocity = restore_member(event['candidate'], device=getattr(self, 'device', 'cpu'))
+                teacher, _ = restore_member(event['teacher'], device=getattr(self, 'device', 'cpu'))
                 teacher.eval()
                 for parameter in teacher.parameters():
                     parameter.requires_grad_(False)
@@ -365,6 +371,8 @@ class PopulationCheckpoint:
         with self._lock():
             state = self._read()
             event = state['events'][event_id]
+            from hponas.population_parallel import guard_serial
+            guard_serial(self.path)
             if event['status'] != 'pending':
                 return deepcopy(event)
             event.update(status='failed', error='Cancelled: '+reason)

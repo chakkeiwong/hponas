@@ -208,6 +208,33 @@ assert not pathlib.Path.cwd().is_relative_to(pathlib.Path(sys.argv[2]).resolve()
 print(json.dumps({'origin':str(root),'matched_files':len(files),'cwd':str(pathlib.Path.cwd())}))
 """
 
+PARALLEL_CODE = """import importlib,importlib.metadata,json,os,pathlib,sys
+from hponas import ResourceExecutor,ResourceSpec
+from hponas.types import Trial,Config
+root=pathlib.Path(sys.prefix).resolve()
+outside=pathlib.Path(sys.argv[1])
+assert any(r.startswith('threadpoolctl') and ';' not in r
+           for r in importlib.metadata.requires('hponas'))
+modules=('adapter_parallel','evaluation_parallel','executors.leases','executors.ray_resources',
+    'executors.resource_executor','executors.resources','executors.worker_bootstrap',
+    'parallel','parallel_transfer','population_parallel')
+for name in modules:
+    assert pathlib.Path(importlib.import_module('hponas.'+name).__file__).resolve().is_relative_to(root)
+def objective(config,execution):
+    import hponas
+    assert pathlib.Path(hponas.__file__).resolve().is_relative_to(root)
+    assert pathlib.Path.cwd()==outside
+    assert execution.device=='cpu' and len(execution.cpu_ids)==1
+    assert os.environ.get('CUDA_VISIBLE_DEVICES')==''
+    return {'value':config['x']**2,'metadata':{'pid':os.getpid(),'worker':execution.to_dict()}}
+with ResourceExecutor(1,resources=ResourceSpec(),timeout=30) as executor:
+    result=executor.execute(Trial(Config({'x':3.}), 'installed-parallel-smoke'), objective)
+assert result.status=='completed' and result.objective_value==9., result.to_dict()
+assert result.metadata['pid']!=os.getpid()
+print(json.dumps({'value':result.objective_value,'worker':result.metadata['worker'],
+    'modules':list(modules),'outside_checkout':True,'distinct_pid':True}))
+"""
+
 
 def main():
     try:
@@ -299,6 +326,7 @@ def main():
                 str(wheel) + '[validation,cmaes,postgres,security]'])
             runner.run(runtime + '-dependencies', [uv, 'pip', 'check', '--python', python])
             runner.run(runtime + '-origins', [python, '-c', ORIGIN_CODE, wheel, ROOT])
+            runner.run(runtime + '-parallel-worker', [python, '-c', PARALLEL_CODE, outside])
             for model in ('hinge', 'allocation'):
                 directory = outside / (runtime + '-' + model)
                 command = [python, '-m', 'hponas.quickstart', '--model', model, '--output', directory]

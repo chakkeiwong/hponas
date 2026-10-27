@@ -4,7 +4,7 @@ The product is a reusable HPO and moderate coordinate NAS workflow for
 universal-bank model families. The core accepts caller-owned data/model
 adapters; the implemented bank examples use independent synthetic generators and
 mathematical references. The [16 October product package](program/evidence/2026-10-16/bank-final-qualification-08/accepted-package.json)
-is the qualified finite local baseline for its original source. The current source passed qualification and GAP-01/FINAL-AUDIT; all 27 original clauses and the revision 2.519 finite local baseline are complete. The user-authorized DOC-01 documentation/application extension is tracked separately in the live master. [GAP-01](program/GAP_CLOSURE_PROGRAM_2026_10_18.md) implements the ten historical gaps and independently audits every original clause.
+is the qualified finite local baseline for its original source. The retained predecessor passed qualification and GAP-01/FINAL-AUDIT for all 27 original clauses. The current source passed qualification and GAP-01/FINAL-AUDIT; all 27 original clauses and the adopted finite local master are complete. [GAP-01](program/GAP_CLOSURE_PROGRAM_2026_10_18.md) implements the ten historical gaps and independently audits every original clause.
 
 The 12 October baseline remains attached to its original source. The
 16 October product package binds fresh applicable scientific gates, finite bank
@@ -47,14 +47,14 @@ Knob.prior text is not silently made into a sampling distribution.
 | Robust GP | Refuses scheduler and concurrency | Refused because failed-repetition handling is unsupported |
 | RGPE | Refuses scheduler and concurrency | Scalar endpoint with matching declared source/target protocols and protected final roles |
 
-These interfaces have passed current-source finite qualification. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed. TPE checkpoints use identity-bound version 3; version 2 replay
+Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed. TPE checkpoints use identity-bound version 3; version 2 replay
 requires the retained source or an explicit migration. Direct dictionary TPE
 observations must name `trial_number` when equal configurations are pending.
 
 Finite optional-method evidence remains opt-in. DEHB and population controllers
 are implemented; the old word “deferred” is not their current implementation
 status. The bounded fixed-kernel RGPE searcher now supplies ranked initialization
-and actual surrogate transfer with current-source finite evidence; see
+and actual surrogate transfer with retained predecessor finite evidence; see
 [warm starts](WARM_START.md). ifBO feasibility failed and integration was
 cancelled. [Method outcomes](METHOD_OUTCOMES.md) enumerates each implemented,
 failed/cancelled and watchlist method separately. A cost predictor does not
@@ -63,10 +63,10 @@ posterior calibration. No empirical optimizer superiority or automatic default
 promotion follows from these finite examples.
 
 Operational scope is trusted supervised local research. The new local service
-has current-source finite evidence for committed-prefix PITR, incremental/scheduled backup,
+has retained predecessor finite evidence for committed-prefix PITR, incremental/scheduled backup,
 local alerts, application roles, caller-provided backup keys and authenticated
 encrypted event artifacts, plus cooperative measured device-time/currency quotas.
-Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed. Live databases remain plaintext;
+Historical qualification remains source-specific. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed. Live databases remain plaintext;
 authentication, external secret vaults, external alert delivery and hostile
 tenant isolation are separate integrations. The bounded eight-study/four-local-
 worker measurement does not qualify the original 100-study/50-distributed-worker
@@ -77,7 +77,7 @@ production banking readiness.
 The [bank profiles](BANK_PROFILES.md) now implement the following finite local
 workflows. Each has independent reference checks, adverse cases, public
 selection/evaluation, resume and reporting tests. Their 16 October baseline
-source passed BANK-01/INTEGRATED-REVIEW. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed.
+source passed BANK-01/INTEGRATED-REVIEW. Historical qualification remains source-specific. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed.
 
 | Model family | Implemented finite support | Explicit limit |
 |---|---|---|
@@ -96,7 +96,7 @@ enumeration or a feasible winner. Empty fronts, failed trials, uncertain work
 and unsupported identification remain visible. Separate final work is reserved.
 Core adapters remain caller-owned and require no sibling imports, services or
 private data. Python 3.12/3.13 installation evidence is bound to its tested
-source. GAP-01 retained installed-workflow evidence before its passing current-source qualification.
+source. GAP-01 retained installed-workflow evidence before its passing predecessor-source qualification.
 The wheel ships [two independent caller models](CALLER_MODELS.md) through
 `python -m hponas.quickstart`: fitted ReLU readout coordinate NAS and a tuned
 projected-gradient allocation solver. Their exact finite references and
@@ -109,4 +109,6 @@ omitted rows, broken bindings and missing owners. Its success proves recorded
 consistency only; mathematical checks, behavioral tests and scientific gates
 retain their separate meanings.
 
-The current [product manual](../hpo-survey/main.pdf) and [LaTeX source](../hpo-survey/main.tex) replace the proposal as user guidance. The [24 October feature audit](audits/2026-10-24-product-documentation-audit.md) and self-contained application companions distinguish retained baseline evidence from new demonstrations.
+The current LaTeX user manual is the [qualified parallel edition](../docs/program/evidence/2026-10-26/parallel-publication-refresh-05/build-01/main-parallel-qualified.pdf), with [buildable sources](../docs/program/evidence/2026-10-26/parallel-publication-refresh-05/build-01/main-parallel-qualified.tex), the parallel API chapter and the source-bound qualification/delivery supplement. Historical built manuals remain evidence for their original source. The [24 October feature audit](audits/2026-10-24-product-documentation-audit.md) and self-contained application companions distinguish retained baseline evidence from new demonstrations.
+
+PAR-01 adds ResourceSpec/ResourceExecutor, endpoint evaluation_workers, independent run_replicas, and parallel PBT/PB2/BG-PBT and caller adapters. Whole GPUs and Linux CPU affinity are supported; fractional GPUs, hard memory partitions and automatic DDP are not. Method-specific proposal restrictions remain. See the extension chapter, live master and current qualification evidence. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed.

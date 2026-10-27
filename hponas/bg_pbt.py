@@ -23,8 +23,9 @@ from hponas.population_search import LocalPBT
 class LocalBGPBT:
     def __init__(self, directory, objective, members, architecture_pool, *, increment_bound,
                  generations=2, max_rounds=4, patience=2, updates_per_round=1,
-                 distillation_rungs=(1, 2, 4), seed=0, max_updates, fit_iterations=4):
+                 distillation_rungs=(1, 2, 4), seed=0, max_updates, fit_iterations=4, executor=None):
         self.directory, self.objective = Path(directory), objective
+        self.executor = executor
         for value, bound in [(generations, 16), (max_rounds, 128), (patience, 128), (updates_per_round, 1024)]:
             if type(value) is not int or not 1 <= value <= bound:
                 raise ValueError('Bounded integer generation and training schedule required')
@@ -152,7 +153,7 @@ class LocalBGPBT:
                 row = state['generations'][index]
                 population = self._population(index, initial)
                 controller = LocalPBT(self.directory/f'generation-{index}/pbt.json', population,
-                                       seed=(self.contract['seed']+index) % 2**32, explorer=self._explorer())
+                                       seed=(self.contract['seed']+index) % 2**32, explorer=self._explorer(), executor=self.executor)
                 while row['status'] == 'training':
                     trained = controller.run(row['rounds']+1, updates_per_round=self.contract['updates_per_round'])
                     latest = trained['rounds'][-1]
@@ -182,7 +183,7 @@ class LocalBGPBT:
                     transfer = ArchitectureGeneration(self.directory/f'transfer-{index}', self.objective,
                         row['teacher'], row['proposals'], survivors=len(initial),
                         rungs=self.contract['distillation_rungs'], seed=(self.contract['seed']+index+1) % 2**32,
-                        max_updates=self.contract['generation_transfer_updates'])
+                        max_updates=self.contract['generation_transfer_updates'], executor=self.executor)
                     outcome = transfer.run()
                     if outcome['status'] != 'complete':
                         state.update(status='blocked', reason=outcome.get('reason', outcome['status']))

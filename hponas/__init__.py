@@ -12,6 +12,7 @@ __version__ = "0.1.0"
 from hponas.study import Study, StudyResult, IncompleteStudyError
 from hponas.evaluation import StudyDeclaration, EvaluationFold, EvaluationObjective, EvaluationContext
 from hponas.population_adapter import AdapterPopulation, PopulationAdapter, PopulationExecutionError
+from hponas.adapter_parallel import ParallelAdapterPopulation
 from hponas.local_service import ManagedStudyService, DirectoryAlertSink, import_legacy_store, migrate_service, rollback_migration, restore_events
 from hponas.backup_security import BackupKeyProvider
 from hponas.rgpe import RGPESearcher, prepare_rgpe_history
@@ -33,8 +34,9 @@ from hponas.executors.reporting import ProgressReport, ReportDecision
 from hponas.space import SearchSpace, Knob
 from hponas.types import Config, Trial, Result
 from hponas.searchers import CMAESSearcher, GPSearcher, RobustGPSearcher, RandomSearcher, SobolSearcher
-from hponas.executors import LocalExecutor, RayExecutor
+from hponas.executors import LocalExecutor, RayExecutor, ResourceExecutor, ResourceSpec, ExecutionContext
 from hponas.dehb import DEHBController
+from hponas.parallel import run_replicas
 
 __all__ = [
     "Study",
@@ -45,6 +47,7 @@ __all__ = [
     "EvaluationObjective",
     "EvaluationContext",
     "AdapterPopulation",
+    "ParallelAdapterPopulation",
     "PopulationAdapter",
     "PopulationExecutionError",
     "ManagedStudyService",
@@ -90,6 +93,10 @@ __all__ = [
     "SobolSearcher",
     "LocalExecutor",
     "RayExecutor",
+    "ResourceExecutor",
+    "ResourceSpec",
+    "ExecutionContext",
     "DEHBController",
+    "run_replicas",
     "__version__",
 ]

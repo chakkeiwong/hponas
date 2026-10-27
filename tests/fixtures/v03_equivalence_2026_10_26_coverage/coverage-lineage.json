@@ -1,0 +1,104 @@
+{
+  "kind": "grouped_cancellation_context_successor_v1",
+  "predecessor_files": [
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/base.py.txt",
+      "sha256": "461077e9edb572c7a932482073b268d2d08b7eaef9ccf3133c7e8865e85425a6"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/budgets.py.txt",
+      "sha256": "57ce4768febddae22c0e6169ae22f8f77fdfd5e79449f2ac4d0b0ecda78eb900"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/capabilities.py.txt",
+      "sha256": "5aa5a71637f92e295da4558c646bb84e9b5d9d59f5f683630a344958684faa6a"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/cmaes_searcher.py.txt",
+      "sha256": "5fb40c8def5908e2640d8529297ef968ad4b5aa303982659834a59382d05ccc0"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/encoding.py.txt",
+      "sha256": "54675a16db37aacbd2d7b9f04d67916a775fb3b867e81fcc76047818fb8b6ac0"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/evaluation.py.txt",
+      "sha256": "8869d0a1c3bf2adcc0eea9fd8b78f7a2cbdb41c8da2259a48a23a815e1651e5b"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/evaluation_parallel.py.txt",
+      "sha256": "560e986b76055d9e3ab2e8ba2bad085da71d571961265cf9e4966b01f7452f06"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/evaluation_streaming.py.txt",
+      "sha256": "d527b5412d48f179f338ad1b60aa7599850360c2aad3d8511a0e2af85dcf2792"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/gp_searcher.py.txt",
+      "sha256": "78804381622efd55de8ec363d770457a143cfef9d72edff38083ea149eb92be7"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/lineage.json",
+      "sha256": "08018808935ca9443307551b9a43bd225660f588865802030c21cc90c0a900ce"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/multi_objective.py.txt",
+      "sha256": "afee087d5622a6017ceaffc924f5ca0d4062032e8a174367dd97eaf451b1b42a"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/predecessor-checker.py.txt",
+      "sha256": "a99a53f2ac466dcc70de17bbdfff7a54619c7ad034f3fdd030281c3dc015c878"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/prospective_cases.json",
+      "sha256": "ea234f9cd7c5c85b2c7f82ff0f5b3afb5d7bf1e51541339109a785d31c881823"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/ray_executor.py.txt",
+      "sha256": "677184156c215bb0236117212795ae9c7ace87fd93ef7e23eac89d9e60f01d82"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/replay.py.txt",
+      "sha256": "59658c7dd15c9933eb26a66b64b276d1be5921bf3510cfb036c6c05a84d42688"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/reviewed-bindings.json",
+      "sha256": "c5e48943b2a533acbbe9296745989621fe58b87aca2f94756fe1beca103fd54d"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/schedulers.py.txt",
+      "sha256": "22a00c3c288fe5759c709c6e0407d49f26dc72913ad1cc9b7083366b51baac8c"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/searchers_gp.py.txt",
+      "sha256": "d94fa38d591f5a59e3bc43a62808f969d8a6a29a9681a4d73013a3de038e1a12"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/searchers_tpe.py.txt",
+      "sha256": "47b92a56fe1018525eeb44450dbee9bba6fe020f1a58e5be71a7a5086375978b"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/space.py.txt",
+      "sha256": "8c508dc0bd1ef8962433ace32f5a89a4fc3c693e661c74d31a787001494aa1f8"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/study.py.txt",
+      "sha256": "5710a45de521ac9d5ee5c9567dff39e86f36272a526b60f590664713d6a5ce10"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/study_mo.py.txt",
+      "sha256": "74cf4c79349eb6b46e6ef4ebe0782679573cb00dbff6f51fb8ea4b965c00caa4"
+    },
+    {
+      "path": "tests/fixtures/v03_equivalence_2026_10_26/types.py.txt",
+      "sha256": "0b7e28ba19bded3a8211d03e883aeaa468ba1635a35eb9e4cac622bc86638304"
+    }
+  ],
+  "review": {
+    "path": "docs/program/evidence/2026-10-26/parallel-critical-coverage-repair-01/cancellation-review.md",
+    "sha256": "cd4ae03f0836308588eb9c1585e41f2eda0e6923374e8e2c7adf687cf418792c"
+  },
+  "old_study": "5710a45de521ac9d5ee5c9567dff39e86f36272a526b60f590664713d6a5ce10",
+  "new_study": "bdb6353b74733e5ecb2128f09e2e7c63da4b3993f2bcf5598d224c57adfb442e",
+  "rules_unchanged": true
+}

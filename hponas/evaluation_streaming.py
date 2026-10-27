@@ -23,9 +23,9 @@ class _StreamingRoleObjective:
         self.parameters = inspect.signature(fn).parameters
 
     def __call__(self, config, fidelity=1., seed=None, trial_id=None, root_trial_id=None,
-                 checkpoint=None, resume_from=0., reporter=None):
+                 checkpoint=None, resume_from=0., reporter=None, execution=None):
         values = dict(fidelity=fidelity, seed=seed, trial_id=trial_id, root_trial_id=root_trial_id,
-                      checkpoint=checkpoint, resume_from=resume_from, reporter=reporter, evaluation=self.context)
+                      checkpoint=checkpoint, resume_from=resume_from, reporter=reporter, evaluation=self.context, execution=execution)
         return self.fn(config, **{k: v for k, v in values.items() if k in self.parameters})
 
 

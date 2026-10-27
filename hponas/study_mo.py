@@ -36,9 +36,9 @@ class _VectorObjective:
         self.parameters = inspect.signature(fn).parameters
 
     def __call__(self, config, fidelity=1., seed=None, trial_id=None, root_trial_id=None,
-                 checkpoint=None, resume_from=0., evaluation=None):
+                 checkpoint=None, resume_from=0., evaluation=None, execution=None):
         context = dict(fidelity=fidelity, seed=seed, trial_id=trial_id, root_trial_id=root_trial_id,
-                       checkpoint=checkpoint, resume_from=resume_from, evaluation=evaluation)
+                       checkpoint=checkpoint, resume_from=resume_from, evaluation=evaluation, execution=execution)
         if resume_from > 0 and not {"checkpoint", "resume_from"} <= set(self.parameters):
             raise ValueError("Resumed vector objective must accept checkpoint and resume_from")
         row = self.fn(config, **{k: v for k, v in context.items() if k in self.parameters})
@@ -64,10 +64,10 @@ class _VectorReporter:
 
 class _StreamingVectorObjective(_VectorObjective):
     def __call__(self, config, fidelity=1., seed=None, trial_id=None, root_trial_id=None,
-                 checkpoint=None, resume_from=0., evaluation=None, reporter=None):
+                 checkpoint=None, resume_from=0., evaluation=None, reporter=None, execution=None):
         context = dict(fidelity=fidelity, seed=seed, trial_id=trial_id, root_trial_id=root_trial_id,
                        checkpoint=checkpoint, resume_from=resume_from, evaluation=evaluation,
-                       reporter=_VectorReporter(reporter, self.spec))
+                       reporter=_VectorReporter(reporter, self.spec), execution=execution)
         row = self.fn(config, **{k: v for k, v in context.items() if k in self.parameters})
         if not isinstance(row, dict) or not {'objectives', 'constraints', 'work'} <= set(row):
             raise ValueError('Streaming vector objective requires an endpoint measurement')

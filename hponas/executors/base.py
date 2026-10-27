@@ -38,7 +38,7 @@ class BaseExecutor(ABC):
         pass
 
 
-def evaluate_trial(trial, objective_fn, on_report=None):
+def evaluate_trial(trial, objective_fn, on_report=None, *, execution_context=None):
     """Evaluate scalar or workload-dictionary objectives with explicit trial context."""
     import inspect
     import math
@@ -76,6 +76,7 @@ def evaluate_trial(trial, objective_fn, on_report=None):
             ("resume_from", trial.resume_from),
             ("checkpoint", trial.checkpoint),
             ("reporter", reporter),
+            ("execution", execution_context),
         ):
             if (
                 name in signature.parameters

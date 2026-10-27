@@ -244,7 +244,8 @@ class AdapterPopulation:
 
     def run(self):
         """Resume committed calls; a failed/lost call is terminal, never retried."""
-        with self._lock():
+        with Path(str(self.path)+'.coordinator.lock').open('a') as coordinator, self._lock():
+            fcntl.flock(coordinator,fcntl.LOCK_EX|fcntl.LOCK_NB)
             self._state, self._cursor = self._read(), 0
             try:
                 self._execute()

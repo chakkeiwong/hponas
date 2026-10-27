@@ -302,6 +302,25 @@ def test_streaming_product_module_has_gap_owner_without_changing_mutation_popula
         library_ownership(ROOT)
 
 
+@pytest.mark.parametrize('module', [
+    'adapter_parallel', 'evaluation_parallel', 'executors.leases',
+    'executors.ray_resources', 'executors.resource_executor',
+    'executors.resources', 'executors.worker_bootstrap', 'parallel',
+    'parallel_transfer', 'population_parallel',
+])
+def test_parallel_modules_have_explicit_nonmutation_owners(monkeypatch, module):
+    from validation import v03_mutation_testing as mutation
+
+    name = 'hponas.' + module
+    row = next(row for row in library_ownership(ROOT) if row['module'] == name)
+    assert (row['disposition'], row['work_item']) == ('deferred', 'PAR-01')
+    assert name not in IN_SCOPE_MODULES
+    assert len(IN_SCOPE_MODULES) == 24
+    monkeypatch.delitem(mutation.DEFERRED_MODULES, name)
+    with pytest.raises(ValueError, match='Unassigned or missing'):
+        library_ownership(ROOT)
+
+
 def test_required_legacy_gp_and_architecture_are_configured_before_freezing():
     import tomllib
 
@@ -324,6 +343,27 @@ def test_configured_population_is_exact_despite_later_modules_in_same_directorie
     assert all((ROOT / name).is_file() for name in config["source_paths"])
     assert (ROOT / "hponas/searchers/prior.py").is_file()
     assert "hponas/searchers/prior.py" not in expected
+
+
+@pytest.mark.parametrize('damage', [None, 'omit_hardware_boundary', 'drop_inherited_tests', 'change_marker'])
+def test_mutation_test_selection_preserves_inherited_single_cpu_roster(damage):
+    import tomllib
+    from validation.v03_mutation_testing import verify_test_selection, PARALLEL_TEST_BOUNDARIES
+
+    config = tomllib.loads((ROOT / 'pyproject.toml').read_text())['tool']['mutmut']
+    if damage == 'omit_hardware_boundary':
+        config['pytest_add_cli_args'].remove('--ignore=tests/integration/test_parallel_hardware.py')
+    elif damage == 'drop_inherited_tests':
+        config['pytest_add_cli_args'].append('--ignore=tests/unit/test_study_checkpoint_contract.py')
+    elif damage == 'change_marker':
+        config['pytest_add_cli_args'][config['pytest_add_cli_args'].index('not slow')] = 'not slow and not integration'
+    if damage:
+        with pytest.raises(ValueError, match='test selection'):
+            verify_test_selection(config)
+    else:
+        verify_test_selection(config)
+        assert len(PARALLEL_TEST_BOUNDARIES) == 8
+        assert all((ROOT / path).is_file() for path in PARALLEL_TEST_BOUNDARIES)
 
 
 def test_workspace_preserves_selected_document_bytes_without_copying_environments(tmp_path, monkeypatch):
@@ -698,7 +738,7 @@ def test_prospective_launch_refuses_stale_or_weakened_phase_register(tmp_path, d
     if damage == "version":
         entry["version"] = "2.6"
     elif damage == "markdown":
-        markdown = markdown.replace("**Version:** 2.30", "**Version:** 2.20")
+        markdown = markdown.replace("**Version:** 2.31", "**Version:** 2.20")
     elif damage == "tool_manifest":
         entry["tool_source_manifest"].pop()
     elif damage == "missing_admission":

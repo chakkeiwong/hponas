@@ -18,3 +18,5 @@ docs/program/evidence/2026-10-18/gap-qualification-repair-01/measurement-roster-
 validation/artifacts/V03/20261018_gap_final_01/mutation/mutmut-schedule.json filter=lfs diff=lfs merge=lfs -text
 validation/artifacts/V03/20261023_gap_final_03/mutation/mutmut-schedule.json filter=lfs diff=lfs merge=lfs -text
 validation/artifacts/V03/20261023_gap_final_04/mutation/mutmut-schedule.json filter=lfs diff=lfs merge=lfs -text
+validation/artifacts/V03/20261026_parallel_qualification_03/mutation/mutmut-schedule.json filter=lfs diff=lfs merge=lfs -text
+validation/artifacts/V03/20261026_parallel_qualification_04/mutation/mutmut-schedule.json filter=lfs diff=lfs merge=lfs -text

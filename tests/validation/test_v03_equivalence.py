@@ -15,7 +15,7 @@ from validation.v03_equivalence import (
 )
 from validation.v03_mutation_testing import _binding
 
-FIXTURE_ROOT = ROOT / "tests/fixtures/v03_equivalence_2026_10_18"
+FIXTURE_ROOT = ROOT / "tests/fixtures/v03_equivalence_2026_10_26_coverage"
 
 
 def proof_source(path):
@@ -279,8 +279,34 @@ def test_restore_vector_default_proof_changes_only_one_reviewed_truth_site(posit
     assert lemma(original, mutated, source, path, 'Study') == 'study_restore_falsey_default_v1'
 
 
+def test_coverage_successor_retains_immediate_proof_predecessor_and_exact_rules():
+    lineage = json.loads((FIXTURE_ROOT / 'coverage-lineage.json').read_text())
+    predecessor = ROOT / 'tests/fixtures/v03_equivalence_2026_10_26'
+    assert {row['path'] for row in lineage['predecessor_files']} == {
+        str(path.relative_to(ROOT)) for path in predecessor.iterdir() if path.is_file()}
+    for row in lineage['predecessor_files']:
+        assert _binding(ROOT / row['path'])['sha256'] == row['sha256']
+    assert lineage['new_study'] == CONTEXTS['hponas/study.py']
+    assert lineage['old_study'] == _binding(predecessor / 'study.py.txt')['sha256']
+    assert lineage['rules_unchanged'] is True
+    old = ast.parse((FIXTURE_ROOT / 'coverage-predecessor-checker.py.txt').read_text())
+    # Compare checker functions independently of the reviewed module hash.
+    current = ast.parse((ROOT / 'validation/v03_equivalence.py').read_text())
+    functions = lambda tree: {n.name: ast.dump(n) for n in tree.body if isinstance(n, ast.FunctionDef)}
+    assert functions(old) == functions(current)
+    assert (FIXTURE_ROOT / 'prospective_cases.json').read_bytes() == (predecessor / 'prospective_cases.json').read_bytes()
+
+
 def test_successor_proof_controls_preserve_historical_examples_and_explicit_lineage():
     lineage = json.loads((FIXTURE_ROOT / 'lineage.json').read_text())
+    predecessor = ROOT / 'tests/fixtures/v03_equivalence_2026_10_18'
+    assert {row['path'] for row in lineage['predecessor_files']} == {
+        str(path.relative_to(ROOT)) for path in predecessor.iterdir() if path.is_file()}
+    for binding in lineage['predecessor_files']:
+        assert _binding(ROOT / binding['path'])['sha256'] == binding['sha256']
+    old_cases = json.loads((predecessor / 'prospective_cases.json').read_text())
+    assert len(old_cases) == len(PROSPECTIVE_CASES) == len(lineage['cases']) == 55
+    assert {row['predecessor_id'] for row in lineage['cases']} == {row['id'] for row in old_cases}
     for binding in lineage['historical_files']:
         assert _binding(ROOT / binding['path'])['sha256'] == binding['sha256']
     historical = json.loads((ROOT / 'tests/fixtures/v03_equivalence/prospective_cases.json').read_text())
@@ -299,7 +325,7 @@ def test_successor_proof_controls_preserve_historical_examples_and_explicit_line
             assert row['current_method'] == '_tell'
 
 
-@pytest.mark.parametrize("damage", [None, "scheduler", "dependency", "missing", "fixture_only"])
+@pytest.mark.parametrize("damage", [None, "scheduler", "dependency", "missing", "fixture_only", "parallel_override"])
 def test_proof_context_preflight_checks_actual_source_not_only_historical_fixtures(tmp_path, damage):
     from validation.v03_equivalence import verify_proof_source_contexts
 
@@ -316,6 +342,9 @@ def test_proof_context_preflight_checks_actual_source_not_only_historical_fixtur
         actual.write_text(actual.read_text() + "\n# changed scalar domain\n")
     elif damage == "missing":
         (tmp_path / "hponas/schedulers.py").unlink()
+    elif damage == "parallel_override":
+        actual = tmp_path / 'hponas/evaluation_parallel.py'
+        actual.write_text(actual.read_text() + '\n    def aggregate(self, *args, **kwargs): return None\n')
     if damage is None:
         verify_proof_source_contexts(tmp_path)
     else:

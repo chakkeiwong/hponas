@@ -225,6 +225,18 @@ IN_SCOPE_MODULES = [
     "hponas.store",
 ]
 DEFERRED_MODULES = {
+    # PAR-01 has separate finite/resource/hardware conformance evidence.
+    # These owners do not claim Tier-0 mutation coverage or narrow its scope.
+    "hponas.adapter_parallel": "PAR-01",
+    "hponas.evaluation_parallel": "PAR-01",
+    "hponas.executors.leases": "PAR-01",
+    "hponas.executors.ray_resources": "PAR-01",
+    "hponas.executors.resource_executor": "PAR-01",
+    "hponas.executors.resources": "PAR-01",
+    "hponas.executors.worker_bootstrap": "PAR-01",
+    "hponas.parallel": "PAR-01",
+    "hponas.parallel_transfer": "PAR-01",
+    "hponas.population_parallel": "PAR-01",
     # Restored product contracts use finite behavioral qualification; BANK-01
     # owns their final-source integration. This is not mutation coverage.
     "hponas.evaluation": "PRD-01",
@@ -281,6 +293,30 @@ DEFERRED_MODULES = {
     "hponas.warm_history": "T1-WARM",
 }
 FACADE_MODULES = {"hponas.__init__", "hponas.executors.__init__", "hponas.searchers.__init__"}
+PARALLEL_TEST_BOUNDARIES = (
+    'tests/integration/test_resource_executor.py',
+    'tests/integration/test_parallel_study.py',
+    'tests/integration/test_parallel_population.py',
+    'tests/integration/test_parallel_methods.py',
+    'tests/integration/test_parallel_hardware.py',
+    'tests/integration/test_parallel_ray.py',
+    'tests/unit/test_parallel_resources.py',
+    'tests/unit/test_parallel_program_boundary.py',
+)
+MUTATION_TEST_ARGUMENTS = (
+    '-p', 'tools.v03_test_order', '--ignore=tests/scale',
+    '--ignore=tests/unit/test_ray_executor_tier0.py',
+    '--ignore=tests/test_ray_executor.py', '-m', 'not slow', '--tb=short', '-q',
+    *('--ignore=' + path for path in PARALLEL_TEST_BOUNDARIES),
+)
+
+
+def verify_test_selection(config):
+    """Keep inherited tests and explicitly separate new PAR-01 resources."""
+    if config.get('pytest_add_cli_args') != list(MUTATION_TEST_ARGUMENTS):
+        raise ValueError('V03 test selection differs from the reviewed resource boundary')
+
+
 CRITICAL_PATHS = (
     "evaluate_trial",
     "GPSearcherǁsuggest",
@@ -691,6 +727,7 @@ def mutation_freeze(workspace):
     if sum(arguments[index:index + 2] == ["-p", "tools.v03_test_order"]
            for index in range(len(arguments))) != 1:
         raise ValueError("V03 requires the inventory-preserving deterministic test order")
+    verify_test_selection(config)
     if (config.get("only_mutate") or config.get("do_not_mutate") or config.get("do_not_mutate_patterns")
             or config.get("type_check_command") or config.get("mutate_only_covered_lines", False)):
         raise ValueError("V03 forbids narrowing the complete configured population")
@@ -737,9 +774,10 @@ def verify_phase_register(workspace):
                 "minimum_mutants": MIN_MUTANTS, "timeout_maximum_fraction": MAX_TIMEOUT_RATE,
                 "abnormal_or_unchecked": "INCONCLUSIVE", "equivalence_rules": list(RULES),
                 "raw_outcome_policy": RAW_OUTCOME_POLICY, "raw_kill_exit_code": 1, "raw_timeout_exit_code": -24}
-    if (entry.get("version") != "2.30" or any(decision.get(key) != value for key, value in expected.items())
+    if (entry.get("version") != "2.31" or any(decision.get(key) != value for key, value in expected.items())
             or entry.get("tool_source_manifest") != REQUIRED_TOOL_SOURCES
             or entry.get("execution_admission") != EXECUTION_ADMISSION
+            or entry.get("test_selection") != list(MUTATION_TEST_ARGUMENTS)
             or entry.get("execution_resources") != {"workers": MAX_MUTATION_WORKERS,
                 "cpu_slots": "distinct_inherited_cpu_per_live_child",
                 "wall_seconds": MAX_CAMPAIGN_WALL_SECONDS,
@@ -748,7 +786,7 @@ def verify_phase_register(workspace):
             or entry.get("module_ownership") != {
                 "required": IN_SCOPE_MODULES, "outside_scope": DEFERRED_MODULES,
                 "import_facades": sorted(FACADE_MODULES)}
-            or "**Version:** 2.30" not in (workspace / "validation/protocols/v03_protocol.md").read_text()):
+            or "**Version:** 2.31" not in (workspace / "validation/protocols/v03_protocol.md").read_text()):
         raise ValueError("V03 phase register differs from the prospective executable contract")
 
 

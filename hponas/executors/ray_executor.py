@@ -33,6 +33,7 @@ class RayExecutor(BaseExecutor):
         resources_per_trial: Optional[dict] = None,
         max_retries: int = 3,
         timeout: Optional[float] = None,
+        *, resources=None,
     ):
         """Initialize Ray executor.
 
@@ -56,6 +57,14 @@ class RayExecutor(BaseExecutor):
             raise ValueError("max_retries must be nonnegative")
         if timeout is not None and (not math.isfinite(timeout) or timeout <= 0):
             raise ValueError("timeout must be positive")
+        if resources is not None:
+            from hponas.executors.resources import ResourceSpec
+            if not isinstance(resources, ResourceSpec) or resources_per_trial is not None:
+                raise ValueError('Use a ResourceSpec or legacy resources_per_trial, not both')
+            if max_retries != 0:
+                raise ValueError('ResourceSpec requires explicit max_retries=0')
+            resources_per_trial = {'num_cpus': resources.cpu_cores, 'num_gpus': resources.gpus}
+        self.resources = resources
         self.num_workers = num_workers
         self.resources_per_trial = resources_per_trial or {"num_cpus": 1}
         self.max_retries = max_retries
@@ -81,10 +90,16 @@ class RayExecutor(BaseExecutor):
             if not ray.is_initialized():
                 ray.init(
                     ignore_reinit_error=True,
-                    num_cpus=self.num_workers,
+                    num_cpus=self.num_workers * (self.resources.cpu_cores if self.resources else 1),
                     include_dashboard=False,
                 )
                 self._owns_ray = True
+
+            if self.resources is not None:
+                capacity = ray.cluster_resources()
+                if (capacity.get('CPU', 0) < self.resources.cpu_cores * self.num_workers
+                        or capacity.get('GPU', 0) < self.resources.gpus * self.num_workers):
+                    raise ValueError('Ray cluster cannot satisfy requested concurrent workers')
 
             self._ray_initialized = True
 
@@ -165,6 +180,7 @@ class RayExecutor(BaseExecutor):
                 options = dict(
                     self.resources_per_trial, max_retries=0, retry_exceptions=False
                 )
+                resource_spec = self.resources
 
                 @ray.remote(**options)
                 def evaluate_stream(trial, objective, requests, replies):
@@ -174,6 +190,9 @@ class RayExecutor(BaseExecutor):
                         requests.put(progress)
                         return replies.get()
 
+                    if resource_spec is not None:
+                        from hponas.executors.ray_resources import evaluate_assigned
+                        return evaluate_assigned(trial, objective, resource_spec, report).to_dict()
                     return evaluate_trial(trial, objective, report).to_dict()
 
                 future = evaluate_stream.remote(trial, objective_fn, requests, replies)
@@ -388,12 +407,16 @@ class RayExecutor(BaseExecutor):
         remote_options = dict(
             self.resources_per_trial, max_retries=0, retry_exceptions=False
         )
+        resource_spec = self.resources
 
         @ray.remote(**remote_options)
         def execute_remote(config_values: dict) -> dict:
             """Execute trial remotely."""
             from hponas.executors.base import evaluate_trial
 
+            if resource_spec is not None:
+                from hponas.executors.ray_resources import evaluate_assigned
+                return evaluate_assigned(trial, objective_fn, resource_spec).to_dict()
             return evaluate_trial(trial, objective_fn).to_dict()
 
         # Submit task

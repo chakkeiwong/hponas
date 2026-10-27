@@ -7,7 +7,7 @@ requirement IDs below are in [the program register](program/program.json).
 
 | Method and original requirement | Current outcome | Evidence and boundary |
 |---|---|---|
-| PBT — REQ-ch06-01 | Implemented, bounded local | `hponas/population.py`; retained V13 finite qualification. New model-neutral local adapters have current-source finite qualification; no distributed training claim. |
+| PBT — REQ-ch06-01 | Implemented, bounded local | `hponas/population.py`; retained V13 finite qualification. Model-neutral local adapters have current-source finite qualification; no distributed training claim. |
 | PB2-Mix — REQ-roadmap-13, REQ-ch06-02 | Implemented, bounded local | Retained V13 population controllers; categorical/continuous schedules within the declared fixture contract. |
 | BG-PBT — REQ-roadmap-13, REQ-ch06-03 | Implemented, bounded local | Retained V13 architecture lineage/transfer controls; not arbitrary topology NAS. |
 | Large-parallel RL — REQ-ch09-02 | Finite local controller only | V13's finite-MDP evidence does not establish large distributed RL capacity or effectiveness. |

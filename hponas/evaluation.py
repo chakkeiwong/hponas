@@ -216,9 +216,9 @@ class _RoleObjective:
         self.parameters = inspect.signature(fn).parameters
 
     def __call__(self, config, fidelity=1., seed=None, trial_id=None, root_trial_id=None,
-                 checkpoint=None, resume_from=0.):
+                 checkpoint=None, resume_from=0., execution=None):
         values = dict(fidelity=fidelity, seed=seed, trial_id=trial_id, root_trial_id=root_trial_id,
-                      checkpoint=checkpoint, resume_from=resume_from, evaluation=self.context)
+                      checkpoint=checkpoint, resume_from=resume_from, evaluation=self.context, execution=execution)
         return self.fn(config, **{k: v for k, v in values.items() if k in self.parameters})
 
 
@@ -442,7 +442,7 @@ class EvaluationController:
 
     def restore(self, saved, trials, results, *, finished, maximize, endpoint, cancelled):
         expected_keys = set(self.state)
-        if (not isinstance(saved, dict) or set(saved) != expected_keys or saved['version'] != 1
+        if (not isinstance(saved, dict) or set(saved) != expected_keys or saved['version'] != self.state['version']
                 or saved['identity'] != self.declaration.identity or saved['contract'] != self.declaration.contract):
             raise ValueError("Checkpoint declaration/evaluation identity differs")
         if saved['phase'] not in {'tuning', 'selection_frozen', 'final_evaluation', 'reported', 'opted_out'}:
@@ -469,16 +469,25 @@ class EvaluationController:
         task_ids = {rid for role in ('tuning', 'final') for trial in trials.values() for _, _, rid in self.tasks(trial, role)}
         if not set(saved['uncertain']) <= task_ids:
             raise ValueError("Unknown uncertain repetition")
-        active = saved['inflight']
-        if active is not None:
+        parallel = saved['version'] == 2 and 'streaming' not in saved
+        if parallel and not isinstance(saved['inflight'], list):
+            raise ValueError('Parallel inflight ledger must be a list')
+        active_rows = saved['inflight'] if parallel else ([] if saved['inflight'] is None else [saved['inflight']])
+        offsets = {}
+        seen_active = set()
+        for active in active_rows:
             if not isinstance(active, dict) or set(active) != {'role', 'parent', 'index', 'trial_id'}:
                 raise ValueError("Invalid inflight repetition")
             role, tid, i = active['role'], active['parent'], active['index']
             if role not in {'tuning', 'final'} or tid not in trials or type(i) is not int or i < 0:
                 raise ValueError("Invalid inflight repetition role")
             tasks = self.tasks(trials[tid], role)
-            if i != len(saved[role].get(tid, [])) or i >= len(tasks) or active['trial_id'] != tasks[i][2]:
+            offset = offsets.get((role, tid), 0)
+            if (i != len(saved[role].get(tid, [])) + offset or i >= len(tasks)
+                    or active['trial_id'] != tasks[i][2] or active['trial_id'] in seen_active):
                 raise ValueError("Inflight repetition disagrees with committed ledger")
+            offsets[role, tid] = offset + 1
+            seen_active.add(active['trial_id'])
             if role == 'tuning' and tid in results:
                 raise ValueError("Completed candidate has inflight repetition")
         candidate_state = deepcopy(self.state)
@@ -507,7 +516,7 @@ class EvaluationController:
                 or len(selection) != len(set(selection)) or not set(selection) <= set(results)):
             raise ValueError("Invalid frozen selection")
         if saved['phase'] != 'tuning':
-            if finished is not True or set(trials) != set(results) or active is not None and active['role'] == 'tuning':
+            if finished is not True or set(trials) != set(results) or any(a['role'] == 'tuning' for a in active_rows):
                 raise ValueError("Final evaluation began before tuning finished")
             if self.spec:
                 expected = self.spec.summarize(list(results.values()), endpoint_fidelity=endpoint)['front_trial_ids']
@@ -517,16 +526,16 @@ class EvaluationController:
                 expected = [best.trial_id] if best else []
             if selection != expected:
                 raise ValueError("Frozen selection differs from tuning-only result")
-        elif selection or saved['final'] or active and active['role'] == 'final':
+        elif selection or saved['final'] or any(a['role'] == 'final' for a in active_rows):
             raise ValueError("Final data entered tuning phase")
         if not set(saved['final']) <= set(selection):
             raise ValueError("Final evaluation contains an unselected candidate")
-        if saved['phase'] in {'selection_frozen', 'opted_out'} and (saved['final'] or active is not None):
+        if saved['phase'] in {'selection_frozen', 'opted_out'} and (saved['final'] or active_rows):
             raise ValueError("Final data contradicts frozen/opt-out phase")
         if (saved['phase'] == 'opted_out') != (bool(self.declaration.opt_out_reason) and saved['phase'] not in {'tuning', 'selection_frozen'}):
             raise ValueError("Evaluation opt-out phase differs")
         if saved['phase'] == 'reported':
-            if active is not None or any(len(saved['final'].get(tid, [])) != len(self.tasks(trials[tid], 'final')) for tid in selection):
+            if active_rows or any(len(saved['final'].get(tid, [])) != len(self.tasks(trials[tid], 'final')) for tid in selection):
                 raise ValueError("Reported evaluation is incomplete")
         self.state = deepcopy(saved)
 

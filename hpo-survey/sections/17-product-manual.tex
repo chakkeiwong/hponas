@@ -2,7 +2,7 @@
 \label{sec:current-product}
 
 This is the user manual for the repository's \textbf{HPO-NAS 0.1.0}, reviewed
-on 24 October 2026. The implemented product is a Python toolkit for
+on 26 October 2026. The implemented product is a Python toolkit for
 hyperparameter optimization and moderate architecture-coordinate search. Its
 intended users build prediction, forecasting, causal/policy, inference,
 constrained neural-solver, valuation and allocation models for a universal
@@ -15,6 +15,10 @@ The adopted \emph{finite known-answer and trusted supervised local research}
 program is implemented and qualified on its retained source. This is not a
 production-banking certification, a universal best-optimizer claim, or evidence
 of accuracy on real customer data. Package metadata still says Alpha.
+The new CPU/GPU extension changes core source and awaits current-source
+requalification; Chapter~\ref{sec:parallel-extension} documents its actual
+interfaces, development evidence and limits. Historical qualification does
+not certify these changed bytes.
 Chapters~\ref{sec:current-product}--\ref{sec:worked-applications} describe
 current behavior. The subsequent survey and proposal are explicitly preserved
 as design history; their future-tense defaults, interfaces and schedules are
@@ -29,8 +33,9 @@ local and Ray Core executors, vector objective specifications, population
 adapters, local service operations, and transfer/prior methods. SQLite and
 optional PostgreSQL retain authoritative study snapshots. Installed users can
 run two small caller-owned models through \texttt{hponas.quickstart}; the
-repository also contains bank profiles and the fuller application companions
-in Chapter~\ref{sec:worked-applications}.
+repository also contains bank profiles, the fuller application companions in
+Chapter~\ref{sec:worked-applications}, and the workspace/RL crosswalk in
+Chapter~\ref{sec:workspace-cases}.
 
 \begin{longtable}{p{0.23\textwidth}p{0.69\textwidth}}
 \toprule Feature & Available behavior and material boundary \\
@@ -60,7 +65,7 @@ rank-weighted GP ensemble (RGPE) with declared source/target compatibility. \\
 Evolution and populations & DEHB; bounded local PBT, PB2-Mix and BG-PBT;
 model/optimizer-neutral population adapter, saved schedules and lineage,
 charged transfer, protected evaluation and compatible checkpoint copying. \\
-Execution and recovery & Local and Ray Core endpoint/streaming execution,
+Execution and recovery & Local, isolated resource-aware CPU/GPU and Ray Core endpoint/streaming execution,
 cooperative stop/pause, checkpoint recovery and supported event replay. The
 legacy Ray Tune adapter is a separate compatibility path. \\
 Reports and artifacts & Full tuning/final records, curves, constraints,

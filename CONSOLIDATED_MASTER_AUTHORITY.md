@@ -1,8 +1,8 @@
 # HPO-NAS master program
 
-**Revision:** 2.537 — five-family application program and terminal master audit complete
+**Revision:** 2.646 — parallel extension and final manual complete
 
-**Reconciliation date:** 2026-10-24 (Asia/Shanghai)
+**Reconciliation date:** 2026-10-26 (Asia/Shanghai)
 
 **Purpose:** A reusable HPO and moderate architecture-coordinate NAS tool for a universal retail bank and the model families represented under `~/workspace`: prediction/forecasting, causal and policy models, financial inference, constrained neural solvers, valuation and allocation. The [product contract](docs/program/BANK_HPO_NAS_PRODUCT_CONTRACT.md) defines evaluation, reuse and completion; universal reuse is not a universal-optimizer claim. This document is the execution authority; mutation and Tier 0 are milestones within the full program.
 
@@ -16,9 +16,15 @@ Scientific results follow frozen rules and raw evidence under explicit assumptio
 
 ## Current execution
 
-**Current action:** No required stage remains. APP-01 completes all five families and its independent final review; GAP-01/FINAL-AUDIT passes afterward. The master contains 40 completed work items, 226 completed stages and 132 requirements. The [five-problem plan](docs/program/WORKSPACE_APPLICATION_VALIDATION_MASTER_2026_10_24.md), [results](hpo-survey/applications/RESULTS.md), [guide](hpo-survey/applications/README.md) and [completion record](docs/program/evidence/2026-10-24/app-01/completion.json) retain the evidence. Execution stops because the authorized program is complete, not at an intermediate boundary.
+**Current action:** All adopted master stages are complete for the qualified finite-local source. The final audit covers all 27 original clauses; terminal manual publication preserves historical evidence and passes the exact governance and closure checks. Parallel GPU/CPU limits and unsupported claims remain explicit.
 
-**Scientific outcomes:** 60 scalar studies and three constrained NAS studies were completed; 3,064 model records and 34,560 HMC transitions were independently reconstructed. No constrained NAS final passes the frozen limits. All 108 map/sampler pairs pass finite numerical checks, while short-chain discrepancies remain. These negative outcomes do not imply optimizer, posterior-convergence or production acceptance. The existing LaTeX manual remains the accepted predecessor; this extension is documented in the linked guide and results.
+**SCI-03 outcomes:** The optional hponas-scientific-checks distribution is built and installed offline with a documented API/CLI and separate source qualification. The installed wheel replays all 138 PI calls, six retained ifBO FAILs, six NAS models/297 leaves, and all three wallet partitions (3,609 leaves). All six frozen wallet policies have positive synthetic utility enclosures versus no action; all three selected-versus-likelihood differences remain UNRESOLVED. No new fits, observations, sampler chains or pretrained forwards occurred. The audit checks 2,183 files and nine false-evidence controls. The accepted core wheel/source remains unchanged; this is a separately installable add-on, not optimizer integration. [Guide](extensions/scientific-checks/README.md); [mathematical argument](extensions/scientific-checks/MATHEMATICS.md).
+
+**SCI-02 outcomes:** Exact old SCI-01 wrapper bytes recovered; all 138 saved ifBO PI calls conform (maximum independent error 1.70834e-7 versus unchanged 5e-6 tolerance), while all six saved performance comparisons remain FAIL. The optional NAS companion certifies all six saved mathematical networks across 297 leaves (worst displayed ratio 0.997644), with 14 refusal controls. Exact synthetic transport identities and the frozen wallet prospective protocol/three policy pairs are verified; zero new observations, training fits, pretrained forwards or chains were run. Twenty terminal false-evidence controls and the 27-clause GAP guard pass. The [companion guide](hpo-survey/repairs/sci02/README.md) defines the tested interfaces. At SCI-02 these companions were outside the installed wheel. SCI-03 subsequently delivered them in a separately qualified optional distribution; the accepted core wheel and its qualification remain unchanged. Wallet superiority, unknown MNAR/causal identification, existing sampler convergence, ifBO performance, NAS unseen seeds/training/inference rounding and real-bank effectiveness remain unresolved. Their concrete resumption requirements are recorded in the closure report.
+
+**APP-03 repair outcomes:** Wallet decision-aligned selection and bounded uncertainty are verified across72 fits; comparison with likelihood selection is mixed and no95% gain over no-action is certified. NAS normalized derivative training/tensor geometry/polishing yields6/6 fresh confirmations under unchanged finite mesh/random limits (worst mesh ratio0.57538). All20 fixed sampler pairs and193,460 transitions are independently replayed under equal gradient budgets; diagnostics do not prove convergence. Cross-fitted policy selection matches the exact512-policy optimum in3/3 synthetic datasets (21 nuisance fits,291 scores). All27 rolling forecast fits and information-boundary controls pass. The [repair guide](docs/APP03_REPAIR_GUIDE.md) and [141-page versioned manual](docs/program/evidence/2026-10-25/app-03/20261025T055335Z-documentation-8a0b99d4/main-app03.pdf) document actual outcomes. The original main.tex/main.pdf and all consumed evidence remain immutable. Core source qualification is unchanged. APP-03 alone established no continuous-domain guarantee; SCI-01/SCI-02 subsequently proved the explicitly bounded six-model mathematical claim. No general superiority, real-bank effectiveness or production readiness is claimed.
+
+**Scientific outcomes:** APP-02 independently verified 762 wallet fits, 96 fresh NAS checkpoints, 19,200 matched transport transitions, 512 exact policy values and 222 policy scores. The wallet benchmark now includes structural zeros, censoring, conditional variance and capped allocation. Its 468-fit search diagnostic took 55.26 seconds; the 294-fit fresh selection comparison took 23.88 seconds. CV outcomes are mixed. Boundary sampling improves all 24 paired fresh NAS contrasts, but only 16/24 boundary fits pass the original mesh limits. Longer trajectories improve finite sampler exploration, with higher gradient cost and no convergence guarantee. Adding decreasing policy thresholds includes the exact optimum and selected it in all three fresh datasets. SCI-01 independently rederived complete interval certificates for all six saved NAS networks, with worst upper ratio 0.997644; this closes only that stated mathematical claim. The synthesis also isolates the ifBO float32/double conformance defect while retaining the 6/6 saved-performance failure, and preserves the MNAR, sampler-convergence and real-bank limits. These are bounded synthetic results, not full sibling-project or real-bank effectiveness. The APP-01 predecessor's negative outcomes and unchanged qualified core remain retained.
 
 **Accepted predecessor:** Revision 2.526 completed 39 work items, 217 stages and 126 requirements, including the 138-page manual and 24 application studies. The [pre-extension archive](archive/program-2026-10-24/before-app-01/manifest.json) preserves it. Core qualification remains attached to its exact source; APP-01 companions now have separately bound execution and reconstruction evidence. Negative results, unsupported outcomes, watchlists and the separate-machine waiver remain explicit.
 
@@ -52,6 +58,10 @@ completion is a historical baseline, not the status of successor BANK runs. Sepa
 
 The generated phase label records the earlier Tier-0-to-Tier-1 adoption boundary. The active work, current action and continuation status identify current whole-product execution or scoped completion. REL-02 closes the declared qualification baseline; PRD-01 and BANK-01 prevent that milestone from being mistaken for whole-product completion.
 
+## Parallel CPU/GPU extension (PAR-01)
+
+The user-authorized [successor program](docs/program/PARALLEL_EXECUTION_EXTENSION_2026_10_26.md) adds persistent resource-aware workers, device assignment, public Study/repetition support and parallel PBT/PB2/BG-PBT. CONTRACT → RESOURCES → EXECUTORS → STUDY → POPULATION → CONFORMANCE → HARDWARE → DOCUMENTATION → AUDIT. The last audit depends on every stage. The retained finite-local predecessor remains source-specific. PAR-QUAL-01 and GAP-01/FINAL-AUDIT now independently qualify the parallel extension on its exact current source. The adopted finite-local master is complete. The [qualified manual](docs/program/evidence/2026-10-26/parallel-publication-refresh-05/build-01/main-parallel-qualified.pdf) documents APIs, actual CPU/GPU evidence, repaired failures and explicit limitations.
+
 ## Banking product execution
 
 The [bank product contract](docs/program/BANK_HPO_NAS_PRODUCT_CONTRACT.md) is the current interpretation of the user’s goal. The [repair design](docs/program/PRODUCT_REPAIR_CONTRACT_2026_10_12.md) closed declaration/evaluation, capability/budget, joint GP batching, diagnostics, adapter/output and local-operations engineering contracts. BANK-01 implemented prediction, causal, inference, constrained-solver, valuation/allocation and cross-profile NAS examples with independent finite references. Its final integrated stage owns exact-source scientific qualification. They use synthetic data and caller-owned adapters; sibling code and real bank data are not prerequisites.
@@ -66,22 +76,23 @@ The [repository publication plan](docs/program/evidence/2026-10-17/git-publicati
 
 ## Current execution status
 
-Program revision: **2.537**. Current phase: **Tier 1 development**.
+Program revision: **2.646**. Current phase: **Tier 1 development**.
 
 **Release status: LOCAL BASELINE ACCEPTED.** Tier-0 acceptance applies to the retained source. Current development and later phases require their own acceptance. No external release is recorded.
+**Current parallel source: UNQUALIFIED.** Historical product acceptance remains attached to its retained source; PAR-QUAL-01 and the final GAP guard are outstanding.
 
-Executable source fingerprint: `7a3975382cf19d55d3be3b653ccf5f860c576e13e7998a9dded47dff0a9adb17`.
+Executable source fingerprint: `fb5a83647bd5d73aaff21e360bab73432c670c6b08038e52507749a7de99e320`.
 
 These are stored evidence verdicts. CURRENT means source and protocol match; STALE requires revalidation. A new audit cannot make a HISTORICAL DIAGNOSTIC into fresh mutation execution. Full gate recomputation is required for acceptance.
 
 | Campaign | Recorded verdict | V16 receipt | Freshness | Run |
 |---|---|---|---|---|
-| V01 | PASS | PASS | CURRENT | `validation/artifacts/V01/20261023_gap_final_04` |
-| V02 | PASS | PASS | CURRENT | `validation/artifacts/V02/20261023_gap_final_04` |
-| V03 | PASS | PASS | STALE | `validation/artifacts/V03/20261023_gap_final_04` |
-| V04-T0 | PASS | PASS | CURRENT | `validation/artifacts/V04-T0/20261023_gap_final_04` |
-| V05 | PASS | PASS | CURRENT | `validation/artifacts/V05/20261023_gap_final_04` |
-| V14 | PASS | PASS | CURRENT | `validation/artifacts/V14/20261023_gap_final_04` |
+| V01 | PASS | PASS | CURRENT | `validation/artifacts/V01/20261026_parallel_qualification_04` |
+| V02 | PASS | PASS | CURRENT | `validation/artifacts/V02/20261026_parallel_qualification_04` |
+| V03 | PASS | PASS | STALE | `validation/artifacts/V03/20261026_parallel_qualification_04` |
+| V04-T0 | PASS | PASS | CURRENT | `validation/artifacts/V04-T0/20261026_parallel_qualification_04` |
+| V05 | PASS | PASS | CURRENT | `validation/artifacts/V05/20261026_parallel_qualification_04` |
+| V14 | PASS | PASS | CURRENT | `validation/artifacts/V14/20261026_parallel_qualification_04` |
 
 Active work item: **none**.
 
@@ -130,9 +141,16 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | REL-02 | Integrated-source qualification and release disposition | complete | verified | REL-01, T1-GATE | Preserve the qualified finite local baseline; PRD-01 owns omitted original product contracts and subsequent changed-source qualification. |
 | PRD-01 | Recover and repair the complete public product contract | complete | verified | REL-02, D-PRODUCT-CONTRACT-RECOVERY, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Retain engineering readiness; BANK-01 owns all final-source foundation and profile scientific qualification. |
 | BANK-01 | Reusable universal-bank model-family HPO/NAS workflows | complete | verified | PRD-01, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Preserve current qualified source; GAP-01/FINAL-AUDIT independently assesses complete gap closure. |
-| GAP-01 | Close historical implementation gaps and independently audit completion | complete | verified | PRD-01, D-GAP-CLOSURE-20261018 | Retain terminal closure after APP-01; any new scope or source change requires a prospective master amendment. |
+| GAP-01 | Close historical implementation gaps and independently audit completion | complete | verified | PRD-01, D-GAP-CLOSURE-20261018 | Preserve all original obligations and qualified finite evidence; changed source or additional claims require prospective work. |
 | DOC-01 | Product manual, complete feature audit and bounded application examples | complete | verified | BANK-01, D-DOC01-20261024 | Retain completed manual, feature ledger and independent finite application evidence; future scope/source changes require prospective work. |
 | APP-01 | Five-family workspace application validation | complete | verified | DOC-01, D-APP01-20261024 | Retain completed five-family finite evidence. NAS scientific nonattainment and short-chain discrepancies are explicit; new budgets/designs require successor work. |
+| APP-02 | Sequential diagnosis of application scientific nonattainment and test coverage | complete | verified | APP-01, D-APP02-20261025, D-APP02-WALLET-PRIORITY | Bounded investigation complete; retain unresolved scientific limits. No further training allocated. |
+| APP-03 | Repair application weaknesses with fresh objective evidence | complete | verified | APP-02, D-APP03-20261025 | Retain scoped APP-03 repairs, independent audit and explicit nonattainment; any broader effectiveness work requires a prospective bounded master stage. |
+| SCI-01 | Trace scientific gaps and verify closure routes | complete | verified | APP-03 | Retain SCI-01 findings and exact wrapper recovery; SCI-02 closes the bounded successor repair. |
+| SCI-02 | Repair closable scientific gaps with saved-artifact verification | complete | verified | SCI-01 | Bounded repair complete. Retain companion evidence; further empirical or installed-product integration requires a prospective successor and its prerequisites. |
+| SCI-03 | Certified synthetic evaluation and installable verification tools | complete | verified | SCI-02 | Retain audited bounded delivery; no allocated stage remains. Wallet precision and unsupported scientific claims remain open as explicit scope limits. |
+| PAR-01 | Parallel CPU/GPU execution for all supported tuning families | complete | verified | SCI-03, D-PAR01-20261026 | Preserve source-bound CPU/GPU implementation, manual and current-source qualification. |
+| PAR-QUAL-01 | Qualify changed parallel source before terminal product closure | complete | verified | PAR-01 | Preserve qualified source; GAP-01/FINAL-AUDIT remains the terminal master phase. |
 
 ## Decisions and unresolved conflicts
 
@@ -187,6 +205,10 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | D-GAP-CLOSURE-20261018 | accepted | Execute all ten historical gap closures with final independent completion audit | GAP-01 is active; BANK-01 requalification is open for the repaired source; no changed code inherits prior acceptance. |
 | D-DOC01-20261024 | accepted | Refresh the product manual, audit obligations and execute bounded application examples | DOC-01 extends the master without transferring scientific qualification; new deliverables require separate evidence. |
 | D-APP01-20261024 | accepted | Systematically validate five workspace-inspired application families | APP-01 precedes terminal GAP audit; no inherited qualification for companions. |
+| D-APP02-20261025 | accepted | Investigate problems1-5 sequentially, starting with NAS | APP-02 diagnosis follows completed APP-01; terminal GAP guard remains last. |
+| D-APP02-WALLET-PRIORITY | accepted | Investigate wallet coverage before remaining APP-02 cases | APP-02/COVERAGE-WALLET precedes queued refit, transport and policy work; original evidence and final GAP audit remain. |
+| D-APP03-20261025 | accepted | Execute reviewed bounded repairs and documentation after APP-02 diagnosis | Preserve accepted baseline; new bounded standalone repairs require fresh source-bound evidence; terminal audit remains last. |
+| D-PAR01-20261026 | accepted | Implement parallel CPU/GPU execution across tuning families | Add successor PAR-01 with terminal audit; preserve predecessor and unsupported outcomes. |
 
 <!-- END GENERATED PROGRAM STATUS -->
 

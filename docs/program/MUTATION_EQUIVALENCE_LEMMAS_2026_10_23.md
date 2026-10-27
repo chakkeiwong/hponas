@@ -671,3 +671,69 @@ requirement, five-percent equivalence cap, twenty-percent timeout cap, complete
 population, default operators, test selection and resource ceilings remain.
 Fresh complete source-bound execution must verify any actual exclusions; the
 existing allocation and its verdict cannot be reused or relabelled.
+
+## Prospective 2.31 parallel integration review, 26 October 2026
+
+No new equivalence rule is introduced. The original transformations, domain
+restrictions, actual generated-function comparison, runtime conditions and
+five-percent cap remain. The 2026-10-18 fixtures and their predecessor remain
+immutable. The successor directory is tests/fixtures/v03_equivalence_2026_10_26;
+its lineage binds every predecessor file and all 55 inherited transformations.
+Constructed controls are checker tests, not observed campaign mutants.
+
+The changed Study constructor can select ParallelEvaluationController only for
+endpoint declarations. This concrete subclass adds a positive integer workers
+field and overrides dispatch/finish, but inherits aggregate and restore without
+overriding any helper used by those two methods. workers is immutable during
+restoration and neither aggregate nor restore reads it. The common lemma domain
+still excludes arbitrary subclasses, custom copy hooks and concurrent checkpoint
+edits. The following is a semantic review of every changed relevant path.
+
+* **Controller copy.** Endpoint restore reads the saved inflight list and its
+  rows without mutation. offsets, seen_active and candidate_state are fresh.
+  Before aggregate reconstruction it assigns self.state=deepcopy(saved); its
+  rollback assigns a fresh copy, and later phase checks read only saved/local
+  containers. Therefore both shallow and deep controller copies leave the live
+  controller unchanged on each success or exception. Streaming's replacement
+  candidate construction is unchanged; forwarding execution context affects
+  objective invocation only and restore invokes no objective. Resource v2
+  restore replays every begin/complete/lost event into a fresh ResourceController;
+  each raw Result is deep copied before complete mutates metadata. The saved
+  event list and the receiver's old attempt/event lists are read only. The sole
+  final receiver-state assignment deep copies saved. Legacy v1 migration likewise
+  builds a fresh candidate, deep copies completed results and copies candidate
+  state only on success. Thus the new nested event list introduces no shared
+  mutation or escaping alias at Study's controller-copy sites.
+* **Cancelled reaggregation.** The parallel dispatcher commits rows in dispatch
+  order before calling the same aggregate function. aggregate itself is unchanged
+  and reads only trial, rows, declaration, specification and uncertainty state.
+  If a result is already cancelled and its root is cancelled, explicitly True
+  selects the identical cancellation-precedence branch, including NaN, status,
+  work/cost, raw records and vector failure fields. Otherwise the original and
+  the two literal-rewrite variants take the same reaggregation branch. Dispatch
+  concurrency does not enter this synchronous reconstruction.
+* **Falsey defaults.** Study.load_checkpoint is AST-identical at both vector
+  truth sites and the finished restore argument. Endpoint restore still consumes
+  finished solely through finished is not True outside tuning. New any checks
+  over inflight rows do not read finished. Streaming's consumers and vector
+  budget validation are unchanged. False and None therefore induce identical
+  supported branches; the later live finished assignment stays outside the rule.
+* **Local streamed flag.** evaluate_trial adds the optional execution keyword
+  to signature-filtered objective arguments. The local streamed flag is still
+  initially falsey, subsequently assigned True, and consumed only as a truth
+  test. The objective receives neither the flag nor its identity. Replacing only
+  its False initialization by None preserves the flag relation under all branches.
+* **Ray terminal retry bound.** The changed remote wrapper may call the resource
+  assignment helper, but the outer loop still returns on success, returns on a
+  RayError at attempt=max_retries, and propagates other exceptions. Every path
+  runs the same finally cleanup. By induction the added range iteration is
+  unreachable, including resources with the required max_retries=0. Resource
+  setup failures obey the same outer return/raise cases. No retry suppression,
+  exception swallowing or changed attempt comparison is covered.
+
+Unchanged GP, TPE, scheduler and replay contexts keep their exact existing
+bindings and arguments. The successor additionally binds evaluation_parallel.py
+for the three Study rules so a future helper override cannot silently invalidate
+this review. Drift in any source/dependency and adjacent observable rewrites
+must still refuse. Original proofs remain source-specific historical evidence;
+only fresh current-source qualification can accept a new integrated package.

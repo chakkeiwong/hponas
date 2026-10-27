@@ -1004,7 +1004,7 @@
         "Version 2.27: copy and bind the explicitly selected installation-test support script; make gap-governance unit counterexamples independent of mutable checkout evidence while retaining real-register checks in mandatory program and operation gates. Add bounded actual isolated-input verification before admission. No test-selection exclusion, operator, module, threshold, equivalence, timeout or resource change; no campaign allocation.",
         "Version 2.30: preserve completed final03 FAIL; strengthen TPE, recovery and metadata contracts and add only the exact optional-fidelity default equivalence proof with adjacent refusal controls. Complete fresh qualification is required; no threshold, population, operator, selection or resource change."
       ],
-      "version": "2.30",
+      "version": "2.31",
       "scope_contract": "fresh_complete_mutation_population_v2",
       "decision_rule": {
         "overall_minimum": 0.9,
@@ -1075,6 +1075,27 @@
           "hponas.store"
         ],
         "outside_scope": {
+          "hponas.adapter_parallel": "PAR-01",
+          "hponas.evaluation_parallel": "PAR-01",
+          "hponas.executors.leases": "PAR-01",
+          "hponas.executors.ray_resources": "PAR-01",
+          "hponas.executors.resource_executor": "PAR-01",
+          "hponas.executors.resources": "PAR-01",
+          "hponas.executors.worker_bootstrap": "PAR-01",
+          "hponas.parallel": "PAR-01",
+          "hponas.parallel_transfer": "PAR-01",
+          "hponas.population_parallel": "PAR-01",
+          "hponas.evaluation": "PRD-01",
+          "hponas.evaluation_streaming": "GAP-01",
+          "hponas.population_adapter": "GAP-01",
+          "hponas.local_service": "GAP-01",
+          "hponas.backup_security": "GAP-01",
+          "hponas.rgpe": "GAP-01",
+          "hponas.quickstart": "GAP-01",
+          "hponas.budgets": "PRD-01",
+          "hponas.capabilities": "PRD-01",
+          "hponas.diagnostics": "PRD-01",
+          "hponas.reporting": "PRD-01",
           "hponas.searchers_cost": "T1-COST",
           "hponas.searchers_mo": "T1-MO",
           "hponas.reporting_mo": "T1-MO",
@@ -1113,18 +1134,7 @@
           "hponas.trust_controller": "T1-TRUST",
           "hponas.trust_searcher": "T1-TRUST",
           "hponas.trust_space": "T1-TRUST",
-          "hponas.warm_history": "T1-WARM",
-          "hponas.evaluation": "PRD-01",
-          "hponas.budgets": "PRD-01",
-          "hponas.capabilities": "PRD-01",
-          "hponas.diagnostics": "PRD-01",
-          "hponas.reporting": "PRD-01",
-          "hponas.evaluation_streaming": "GAP-01",
-          "hponas.population_adapter": "GAP-01",
-          "hponas.local_service": "GAP-01",
-          "hponas.backup_security": "GAP-01",
-          "hponas.rgpe": "GAP-01",
-          "hponas.quickstart": "GAP-01"
+          "hponas.warm_history": "T1-WARM"
         },
         "import_facades": [
           "hponas.__init__",
@@ -1336,6 +1346,25 @@
           "relative_path": "workers/timeout.py",
           "sha256": "ff5027bdae778385ce4cecc6c883ee1fde78c8a7d403a4af318145451700527c"
         }
+      ],
+      "test_selection": [
+        "-p",
+        "tools.v03_test_order",
+        "--ignore=tests/scale",
+        "--ignore=tests/unit/test_ray_executor_tier0.py",
+        "--ignore=tests/test_ray_executor.py",
+        "-m",
+        "not slow",
+        "--tb=short",
+        "-q",
+        "--ignore=tests/integration/test_resource_executor.py",
+        "--ignore=tests/integration/test_parallel_study.py",
+        "--ignore=tests/integration/test_parallel_population.py",
+        "--ignore=tests/integration/test_parallel_methods.py",
+        "--ignore=tests/integration/test_parallel_hardware.py",
+        "--ignore=tests/integration/test_parallel_ray.py",
+        "--ignore=tests/unit/test_parallel_resources.py",
+        "--ignore=tests/unit/test_parallel_program_boundary.py"
       ]
     },
     "V04-T0": {

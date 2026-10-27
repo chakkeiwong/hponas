@@ -1,0 +1,146 @@
+\chapter{Application repairs and fresh evidence: 25 October 2026}
+\label{sec:app03-repairs}
+This chapter updates the retained 24 October product manual with APP-03.
+The package source remains qualified at its existing fingerprint. These are
+standalone companion workflows; no sibling code, data, runtime or services
+are required. They exercise public \texttt{Study}, declarations, budgets,
+finite enumeration and final-role isolation. They do not promote new defaults.
+The live master, rather than this frozen chapter, owns execution status.
+
+\section{Repair contract and interpretation}
+The reviewed sequence is wallet objective alignment, controlled NAS repair,
+fresh NAS confirmation, equal-work transport comparison, policy cross-fitting,
+forecast information controls, documentation and independent final review.
+The terminal GAP audit remains last. Repair success is separate from successful
+execution. Mixed or unsupported outcomes remain visible. The frozen original
+plan's transport-count typo is superseded prospectively by the retained
+\texttt{transport-plan-review-01.json}: the ceiling is 200,240 transitions,
+655,360 gradient evaluations. No scientific threshold changed.
+
+\begin{longtable}{p{.15\textwidth}p{.29\textwidth}p{.46\textwidth}}
+\toprule Family & Executed work & Objective outcome and limit\\\midrule
+Wallet & 72 fits; 75 evaluation records & Decision utility alignment verified;
+mixed comparison with likelihood selection; no certified gain.\\
+NAS & 24 development fits, six fresh confirmation fits & Six of six models
+pass original mesh and random-point limits; finite evidence only.\\
+Transport & 20 fixed map/policy/seed pairs, four chains each & Equal gradient
+budgets, retained warmup/remainder and diagnostics; no convergence certificate.\\
+Policy & 21 nuisance fits, 291 evaluations & Three of three selections match
+the exact synthetic optimum; identification assumptions remain essential.\\
+Forecast & 27 fits across three datasets & Independent conditioning and
+four information-boundary refusal controls pass.\\\bottomrule
+\end{longtable}
+
+\section{Wallet: select the declared decision objective}
+The model includes structural zeros, censoring, conditional variance and
+optional incidence. The 24 configurations vary mean, scale, incidence and
+regularization. Each is fit once on training observations. The selection score
+is observed validation utility: capped wallet less fee, including a no-action
+option. Model likelihood is reported as a comparator, not silently substituted
+for utility. Final scoring uses the same frozen training-only model.
+Across seeds 5301--5303 the selected-policy final utility differences relative
+to likelihood selection are $-0.0000151980$, $-0.0018289500$ and $0.0013524612$.
+This is mixed empirical performance, not demonstrated superiority.
+
+Conditional on training, let $\widehat U_j$ be the mean of $n$ independent
+MCAR validation utilities for fixed policy $j$, $j=1,\ldots,24$. Each utility
+lies in the conservative interval $[-0.15,3]$. Hoeffding's inequality and a
+union bound give simultaneous two-sided intervals of radius
+\[
+ r_\alpha=3.15\sqrt{\frac{\log(48/\alpha)}{2n}},\qquad
+ U_j\in[\widehat U_j-r_\alpha,\widehat U_j+r_\alpha]\cap[-0.15,3].
+\]
+We report 90, 95 and 99 percent intervals. None of the selected policies is
+certified above zero at 95 percent. The formula does not cover unbounded NLL,
+dependent validation samples, adaptive refits or improvement over the comparator.
+
+Under unknown MNAR observation, optimization cannot restore identification.
+If observation probability is $0.75$, observed capped-wallet mean is $1$ and
+the cap is $3$, the population mean has sharp bounds $[0.75,1.5]$.
+Unobserved wallets all zero or all three give the same observed law but
+different population means. Point identification requires additional assumptions.
+
+\section{NAS: repair training, then confirm a frozen recipe}
+The target is $f(x,a)=\exp(-ax)$ for $x\in[-0.5,0.5]$ and $a\in[0.2,0.6]$.
+Two-layer SiLU networks use width four or eight and 81 training points.
+Training geometries are random points including eight boundary points, or
+a $9\times9$ tensor grid. Three recipes use 480 Adam steps at learning rate
+$0.03$: raw loss, loss normalized by squared derivative limits, or normalized
+loss followed by at most 80 L-BFGS iterations/100 evaluations.
+The unchanged derivative limits are $0.12148729268184028$ for $x$ and
+$0.0843661754735002$ for $a$.
+
+Development seeds 6401 and 6402 and a $41\times41$ validation mesh choose
+among jointly feasible recipes by parameter count, worst limit ratio, then
+mean validation loss. Width four, tensor geometry and polishing are selected
+(37 parameters). Confirmation seeds 7401--7406 each use an $81\times81$ mesh
+and 512 fresh random points. All six pass both checks; worst mesh ratio is
+$0.5753800514$. This does not prove a continuous-domain or all-seed guarantee.
+NumPy derivatives independently reconstruct saved network scores.
+An initial failed attempt rounded restored weights through float32; its source
+and evidence are retained. The successor explicitly restores float64 tensors.
+One failed fit is charged in addition to the successful roster.
+
+\section{Transport: charge work and retain every comparison}
+The banana target uses identity, exact and three frozen learned triangular
+maps. Fixed HMC policies use step $0.15$ with length one, or independent
+random lengths eight/twelve. Two fresh seeds and four chains per cell receive
+8,192 gradient evaluations per chain, including 2,048 warmup evaluations.
+Incomplete final work is retained as unused remainder. A trajectory of length
+$L$ costs $L+1$ gradients. All 20 comparisons are reported; posterior
+diagnostics do not rank native-inference candidates.
+For stationary exact harmonic flow with independently refreshed momenta and
+iid integration times, $\rho=\E[\cos T]$ and integrated autocorrelation time
+is $(1+\rho)/(1-\rho)$. This analytic reference is not asserted for the
+Metropolized leapfrog kernel. Basic split-$\widehat R$, 16-batch MCSE and ESS
+are finite diagnostics, not rank-normalized diagnostics or convergence proofs.
+
+\section{Policy: cross-fit under an explicit identification contract}
+The synthetic MDP has three states, two actions and three steps. The repaired
+policy class includes both threshold directions, with 48 configurations.
+Two-fold cross-fitting shares nuisance fits only for identical fold/smoothing
+inputs; final evaluation uses independent trajectories. Three fresh datasets
+require 21 nuisance fits and 291 scores. Independent path enumeration
+reconstructs doubly robust scores and all 512 deterministic Markov policy
+values. Every selected policy equals the exact optimum $0.7601944790$.
+The final estimates are $0.83612$, $0.88357$, $0.85316$, with descriptive iid
+standard errors $0.07650$, $0.21066$, $0.06975$.
+Known randomized logging and positive overlap are required. Unknown
+identification or zero overlap is refused. The worlds $Y(a)=a$ and
+$Y(a)=U$, $A=U$, share observed $Y=A$ but have ATE one and zero.
+Observed data alone do not distinguish them; no real-bank recommendation follows.
+
+\section{Forecast: respect information availability}
+A ridge covariate model with linear Gaussian latent state varies lag one/two
+and ridge $0.01/1$, with observation variance $0.4$. Two rolling folds train
+on indices $[0,32)$ and $[0,48)$, scoring $[34,48)$ and $[50,64)$.
+The final fold trains on $[0,72)$ and scores $[74,96)$.
+Two embargo outcomes are masked while latent state propagates. Evaluation
+is one-step sequential: each outcome updates state only after it is scored.
+Independent full Gaussian conditioning and augmented ridge least squares
+reconstruct all 27 fits. Future feature release, gap violations, entity overlap
+and final-score exposure are refused. The grouped refusal is a separate
+control, not proof of a jointly grouped-temporal workflow.
+Final NLLs are $1.2568684$, $0.9817669$ and $1.3772477$; no universal
+forecasting effectiveness claim is made.
+
+\section{Operating and auditing the companions}
+The source entry points are under \path{hpo-survey/repairs/};
+\path{docs/APP03_REPAIR_GUIDE.md} maps each source, outcome and restriction.
+Exact allocated commands are in \path{docs/PROGRAM_OPERATIONS.md}.
+For example the suffixes \texttt{forecast}, \texttt{documentation} and
+\texttt{audit} belong to the fixed executable
+\path{/home/ubuntu/workspace/hponas/program_operations/app_repair_v2.py}.
+They require the matching active master stage and reviewed input manifest.
+Consumed allocations refuse repetition, including failed runs. A new experiment
+requires a versioned source/manifest, bounded roster and independent reference;
+deleting intents or editing consumed source is not a restart procedure.
+
+Receipts retain exact input and output hashes. The final audit performs no
+fitting: it checks model rosters, reconstructs scores and selection, verifies
+roles and work, and submits altered records to the actual validators.
+Its result and the terminal GAP audit are separate from this documentation
+build. The 24 October \texttt{main.tex/main.pdf} remain immutable; this
+versioned manual is \texttt{main-app03.tex}, with its built PDF located by
+the documentation receipt. No package requalification, production readiness,
+real-bank effectiveness or unsupported scientific claim is implied.

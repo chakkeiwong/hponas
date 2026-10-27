@@ -878,11 +878,31 @@
   ],
   "baseline_qualification": "E-BANK-FINAL08-20261016-PACKAGE",
   "final_audit": {
-    "path": "docs/program/evidence/2026-10-18/gap-final-audit-15/execution-01/audit.json",
-    "sha256": "61fd2f7e6efe5ae32fd45cff48289161ce0b994e75a6fad39d75d8fcd47905f9"
+    "path": "docs/program/evidence/2026-10-26/parallel-final-audit-04/execution-01/audit.json",
+    "sha256": "bf08dc45820907d94dfb4cf8a3014a845aee38c8a9d1c663a74c4c7dffd38cba"
   },
   "qualification": {
-    "path": "docs/program/evidence/2026-10-18/gap-qualification-04/gap-qualification.json",
-    "sha256": "ba882bfe24e873fc289815c9eafc2dfd4d9abcce3fe64ffc1ff7c3ea2a1b6e65"
-  }
+    "path": "docs/program/evidence/2026-10-26/parallel-qualification-run-04/gap-qualification.json",
+    "sha256": "079b357a4def411ab111196918217c478226b4d541993bc229edf94596a2c7e6"
+  },
+  "historical_parallel_predecessor": {
+    "qualification": {
+      "path": "docs/program/evidence/2026-10-18/gap-qualification-04/gap-qualification.json",
+      "sha256": "ba882bfe24e873fc289815c9eafc2dfd4d9abcce3fe64ffc1ff7c3ea2a1b6e65"
+    },
+    "final_audit": {
+      "path": "docs/program/evidence/2026-10-18/gap-final-audit-15/execution-01/audit.json",
+      "sha256": "61fd2f7e6efe5ae32fd45cff48289161ce0b994e75a6fad39d75d8fcd47905f9"
+    }
+  },
+  "retained_parallel_attempts": [
+    {
+      "qualification": null,
+      "final_audit": null,
+      "failed_allocation": {
+        "path": "docs/program/evidence/2026-10-26/parallel-qualification-run-03/allocation.json",
+        "sha256": "b4fe9fbe069da1efec3cf2acd43068faa4d1354d863d2893eb37fbf252b27ed8"
+      }
+    }
+  ]
 }

@@ -1,8 +1,8 @@
 # V03 Protocol: complete mutation conformance
 
-**Version:** 2.30
+**Version:** 2.31
 **Phase:** Tier 0 deterministic veto
-**Reconciled:** 2026-10-19 Asia/Shanghai, prospectively for reviewed runtime admission
+**Reconciled:** 2026-10-26 Asia/Shanghai, prospectively for parallel integration admission
 
 This phase protocol reconciles the original markdown, DRAFT register and the
 2026-09-26 execution profile. Their immutable snapshots and diagnostic failures
@@ -17,7 +17,30 @@ survivors, modules or abnormal outcomes are removed to improve the score.
 D-PROTOCOL remains open for other phases. This finite deterministic check does
 not assert a general probability of detecting real software defects.
 
-## Prospective 2.30 exact optional-fidelity equivalence
+## Prospective 2.31 parallel extension ownership and isolation
+
+Assign the ten new parallel implementation modules explicitly to PAR-01 for
+separate finite/resource/hardware conformance. The executable ownership map
+and phase register must agree; an unassigned module refuses admission. These
+assignments do not claim mutation coverage. All 24 original required modules,
+operators, score and critical-survivor thresholds, timeout rules and immutable
+prior results remain. Current-source proof contexts and single-CPU test
+isolation must be reviewed before allocation; changing this register does not
+qualify the extension or allocate a campaign.
+
+The exact inherited single-CPU selected-test arguments remain, followed only by
+eight explicit PAR-01 boundaries: the six new integration files resource_executor,
+parallel_study, parallel_population, parallel_methods, parallel_hardware and
+parallel_ray, plus unit files parallel_resources and parallel_program_boundary.
+These require multiple CPU/GPU resources or the live master/evidence context;
+their separate zero-skip PAR-01 receipts remain mandatory. No inherited test file
+is removed. The executable/register pins the complete argument list; added
+exclusions or omitted resource boundaries refuse admission. Actual isolated
+collection verifies those boundaries before allocation. Source-bound proof
+successors are reviewed in MUTATION_EQUIVALENCE_LEMMAS_2026_10_23.md and preserve
+every original transformation, numerical rule and immutable predecessor fixture.
+
+## Historical 2.30 exact optional-fidelity equivalence
 
 Add only tpe_optional_fidelity_default_v1 for the two exact source-bound
 missing-key default rewrites proved in MUTATION_EQUIVALENCE_LEMMAS_2026_10_23.md.

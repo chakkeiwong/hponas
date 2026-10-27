@@ -17,7 +17,8 @@ def bind(path):return dict(path=str(path),sha256=hashlib.sha256(path.read_bytes(
 
 def main():
     if len(sys.argv)!=1:raise ValueError('No arguments accepted')
-    from validation.v03_mutation_testing import prepare_mutation_workspace,test_data_inventory,same_test_data
+    from validation.v03_mutation_testing import (prepare_mutation_workspace,test_data_inventory,
+        same_test_data,verify_test_selection,PARALLEL_TEST_BOUNDARIES)
     from tools.source_identity import source_digest
     out=Path(os.environ['HPONAS_OPERATION_DIRECTORY'])/'isolated-inputs'
     assert out.parent.parent==ROOT/'docs/program/operations-runs'
@@ -34,12 +35,16 @@ def main():
         'tests/unit/test_gap_installation_operations.py']
     began=time.monotonic()
     config=tomllib.loads((work/'pyproject.toml').read_text())['tool']['mutmut']
+    verify_test_selection(config)
     collection=[sys.executable,'-m','pytest',*config['pytest_add_cli_args'],
                 '-p','no:cacheprovider','--collect-only']
     with (out/'collection.log').open('x') as log:
         collected=subprocess.run(collection,cwd=work,env=env,stdout=log,
             stderr=subprocess.STDOUT,timeout=240)
     assert collected.returncode==0, 'Actual isolated collection failed; inspect collection.log'
+    selected=[line.strip() for line in (out/'collection.log').read_text().splitlines()
+              if line.startswith('tests/') and '::' in line]
+    assert selected and not any(node.split('::')[0] in PARALLEL_TEST_BOUNDARIES for node in selected)
     with (out/'tests.log').open('x') as log:
         result=subprocess.run(command,cwd=work,env=env,stdout=log,stderr=subprocess.STDOUT,
             timeout=max(.1,240-(time.monotonic()-began)))
@@ -48,7 +53,8 @@ def main():
         source_digest=source,end_source_digest=source_digest(),workspace=str(work),
         command=command,returncode=result.returncode,elapsed_seconds=time.monotonic()-began,
         log=bind(out/'tests.log'),copied_input_inventory=test_data_inventory(work),
-        collection=dict(command=collection,returncode=collected.returncode,log=bind(out/'collection.log')),
+        collection=dict(command=collection,returncode=collected.returncode,log=bind(out/'collection.log'),
+                        selected_tests=len(selected),separate_resource_tests=list(PARALLEL_TEST_BOUNDARIES)),
         scientific_acceptance=False,official_campaigns=0)
     with (out/'receipt.json').open('x') as stream:json.dump(report,stream,indent=2);stream.write('\n')
     print(json.dumps(dict(passed=passed,receipt=str(out/'receipt.json'))))

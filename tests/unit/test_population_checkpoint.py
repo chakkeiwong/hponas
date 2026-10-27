@@ -55,6 +55,39 @@ def table_model(probabilities, values):
     return model
 
 
+@pytest.mark.parametrize('wrapper', ['callable', 'buffer_only', 'parameterless'])
+def test_finite_mdp_callable_and_parameterless_known_answer(wrapper):
+    outputs = torch.tensor([[0.0, 0.0, 0.25]], dtype=torch.float64, requires_grad=True)
+    targets = torch.tensor([[math.log(3), 0.0, 0.75]], dtype=torch.float64, requires_grad=True)
+
+    class Table(torch.nn.Module):
+        def __init__(self, value):
+            super().__init__()
+            if wrapper == 'buffer_only':
+                self.register_buffer('value', value)
+            else:
+                self.value = value
+
+        def forward(self, observations):
+            assert observations.device == self.value.device
+            return self.value
+
+    student = (lambda observations: outputs) if wrapper == 'callable' else Table(outputs)
+    teacher = (lambda observations: targets) if wrapper == 'callable' else Table(targets)
+    result = mdp().components(student, teacher, 0.0)
+    assert result['return'].item() == pytest.approx(0.5, abs=1e-14)
+    assert result['loss'].item() == pytest.approx(-0.5, abs=1e-14)
+    assert result['occupancy'].tolist() == [1.0]
+    result['loss'].backward()
+    assert outputs.grad.tolist()[0] == pytest.approx([-0.25, 0.25, 0.0], abs=1e-14)
+    assert targets.grad is None
+    outputs.grad = None
+    result = mdp().components(student, teacher, 1.0)
+    result['loss'].backward()
+    assert outputs.grad.tolist()[0] == pytest.approx([-0.25, 0.25, -0.5], abs=1e-14)
+    assert targets.grad is None
+
+
 def test_exact_path_expectation_occupancy_and_independent_gradients():
     # The root action selects one of two terminal contexts. Enumerate its
     # path probabilities with Fractions independently of the implementation.
