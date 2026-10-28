@@ -1,0 +1,122 @@
+% Hyperparameter optimization survey and implementation guide.
+% Build: pdflatex main && bibtex main && pdflatex main && pdflatex main
+% Fonts: mathptmx + helvet (newtxtext/sourcesanspro are not installed on this machine).
+\documentclass[11pt]{report}
+
+\usepackage[margin=1.1in]{geometry}
+\usepackage{mathptmx}
+\usepackage[scaled=0.92]{helvet}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{booktabs,longtable,array,tabularx}
+\usepackage{enumitem}
+\usepackage[round]{natbib}
+\usepackage{xcolor}
+\usepackage{framed}
+\usepackage{caption}
+\usepackage{url}
+\usepackage{fancyvrb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc,decorations.pathreplacing}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!60!black]{hyperref}
+
+\setlength{\emergencystretch}{2em}
+\bibliographystyle{plainnat}
+
+% Decision boxes: the operational layer for readers deciding what to build.
+% A thick left rule marks them; they restate section verdicts in plain terms
+% and are skippable by readers following the teaching layer.
+\newenvironment{decisions}{%
+  \def\FrameCommand{{\color{blue!50!black}\vrule width 2.5pt}\hspace{8pt}}%
+  \MakeFramed{\advance\hsize-\width\FrameRestore}\small}%
+{\endMakeFramed}
+
+\newcommand{\config}{\bm{\lambda}}
+\newcommand{\cspace}{\Lambda}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\gp}{\mathcal{GP}}
+
+\title{HPO-NAS: product manual and user guide\\
+Implemented features, verified application examples,\\
+and the original research survey}
+\author{Internal research toolkit for universal-bank model families}
+\date{PAR-01 CPU/GPU extension --- qualified finite-local edition}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{published/20-current-abstract}
+\end{abstract}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+\clearpage
+
+\part{Current product and user guide}
+\input{published/25-parallel-delivery}
+\input{published/17-product-manual}
+\input{sections/18-user-guide}
+\input{sections/19-worked-applications}
+\input{published/21-feature-audit}
+\input{sections/22-app03-repairs}
+\input{published/23-workspace-cases}
+\input{published/24-parallel-execution}
+
+% Presentation-only wrapper; retained historical source files stay byte-identical.
+\clearpage
+\sloppy
+\addtolength{\textheight}{5pt}
+\part{Original research survey: historical design context}
+\chapter*{How to read the retained proposal}
+\addcontentsline{toc}{chapter}{How to read the retained proposal}
+The remaining chapters preserve the August 2026 survey, design judgments,
+original interface proposals and staged build obligations. Their text is kept
+for traceability, including methods later deferred, failed or excluded.
+They are not current API instructions or current execution status.
+Chapters~\ref{sec:current-product}--\ref{sec:current-audit} and the master
+authority supersede their operational claims. In particular, Ray Core serves
+current declared execution, population support is bounded local, ASHA/median
+remains opt-in, ifBO integration was cancelled after feasibility failure, and
+original PPO/production scale plans were explicitly narrowed.
+
+\begin{decisions}
+\textbf{Historical abstract (August 2026).} The retained abstract and survey
+describe the original rationale and proposal, not today's support.
+\end{decisions}
+\input{sections/abstract}
+\clearpage
+\input{sections/01-introduction}
+\input{sections/02-problem}
+
+\part{Historical survey: methods that choose configurations}
+\input{sections/03-model-free}
+\input{sections/04-bayesian}
+
+\part{Historical survey: methods that manage the budget}
+\input{sections/05-multifidelity}
+\input{sections/06-population}
+
+\part{Historical survey: several objectives and prior knowledge}
+\input{sections/07-multiobjective}
+\input{sections/08-priors-transfer}
+
+\part{Historical survey: from methods to a proposed system}
+\input{sections/09-workloads}
+\input{sections/10-libraries}
+
+\part{Original product proposal: retained design history}
+\input{sections/14-product}
+\input{sections/11-architecture}
+\input{sections/15-contracts}
+\input{sections/16-validation}
+\input{sections/12-roadmap}
+\input{sections/13-glossary}
+
+\clearpage
+\bibliography{refs}
+
+\end{document}

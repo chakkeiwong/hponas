@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "forbidden_prefixes": [
+    "docs/program/evidence/",
+    "docs/program/operations-runs/",
+    "validation/artifacts/",
+    "archive/",
+    "docs/audits/evidence/",
+    ".local-archives/"
+  ],
+  "forbidden_suffixes": [
+    ".pt",
+    ".pth",
+    ".pkl",
+    ".pickle",
+    ".whl",
+    ".tar",
+    ".gz",
+    ".zst",
+    ".zip",
+    ".db",
+    ".sqlite",
+    ".sqlite3",
+    ".pdf"
+  ],
+  "allowed_binary_fixture_prefixes": [
+    "tests/fixtures/"
+  ],
+  "max_file_bytes": 5242880,
+  "max_tree_bytes": 67108864,
+  "forbidden_root_prefixes": [
+    "mutation_",
+    "v03_"
+  ],
+  "raw_archive": "local-only",
+  "lfs": false,
+  "allowed_documentation_assets": [
+    "hpo-survey/figures/doc01-results.pdf"
+  ]
+}

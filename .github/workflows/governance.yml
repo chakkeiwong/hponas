@@ -13,18 +13,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1  # status comes from bound evidence, not tags
-          lfs: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
 
-      - name: Verify current master, scope and evidence consistency
-        run: python3 tools/check_program_sync.py
-
-      - name: Verify generated program views
-        run: python3 tools/update_progress.py --verify
+      - name: Verify source and summary publication boundary
+        run: python3 program_operations/publication_guard.py
 
       - name: Install governance test dependency
         run: python3 -m pip install pytest

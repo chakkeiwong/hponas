@@ -1,0 +1,24 @@
+{
+  "scope": "Archive-independent regression subset. Historical scientific acceptance is not recomputed by these checks.",
+  "tests": [
+    "tests/unit/test_space.py",
+    "tests/unit/test_types.py",
+    "tests/unit/test_architecture_coordinates.py",
+    "tests/unit/test_scheduler_state.py",
+    "tests/unit/test_scheduler_rung_progress.py",
+    "tests/unit/test_store.py",
+    "tests/unit/test_random_searcher.py",
+    "tests/unit/test_events.py",
+    "tests/unit/test_population_checkpoint.py",
+    "tests/unit/test_parallel_resources.py",
+    "tests/unit/test_parallel_evaluation_controller.py",
+    "tests/unit/test_parallel_execution_context.py",
+    "tests/unit/test_bg_population.py",
+    "tests/unit/test_pb2_mix.py",
+    "tests/test_program_phase_gate.py",
+    "program_operations/tests/test_publication_guard.py",
+    "tests/test_program_governance.py"
+  ],
+  "timeout_seconds": 300,
+  "cpus": 2
+}

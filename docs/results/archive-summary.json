@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-28",
+  "original_commit": "1e9a311bac5a3b0cd68bf6068d5e777cb6855f67",
+  "raw_file_count": 246460,
+  "local_archive": "/home/ubuntu/workspace/hponas/.local-archives/publication-cleanup-2026-10-28",
+  "archive_verification": {
+    "passed": true,
+    "tar_compare": true,
+    "git_bundle_verify": true,
+    "files": [
+      {
+        "name": "raw-evidence.tar.zst",
+        "bytes": 3638687168,
+        "sha256": "67e3a7afa558a772ab12c2040cc7ebe1b80e66b5a189802c41a2fea77f3b8828"
+      },
+      {
+        "name": "original-history.bundle",
+        "bytes": 463491697,
+        "sha256": "bae8e96ee028a14f3a2257b42b860919af9258016c24b3267fac7f6dd5965d59"
+      }
+    ]
+  },
+  "filtered_history": {
+    "history_objects": 2622,
+    "all_blob_bytes": 34711823,
+    "max_blob_bytes": 2154806,
+    "lfs_pointers": [],
+    "oversized_blobs": [],
+    "packed_history_bytes": 4725453
+  },
+  "publication": "Only source, tests, small fixtures, buildable documents and concise summaries. Raw evidence stays local.",
+  "server_caveat": "Unreachable server caches and uploaded LFS storage may require GitHub-side cleanup; neither is fetched by the rewritten source-only refs.",
+  "lean_verification": {
+    "passed": true,
+    "tests": 388,
+    "subtests": 16,
+    "seconds": 29.36,
+    "guard": "passed",
+    "source_inputs_unchanged": 569,
+    "receipt_sha256": "b498db6b80e39ba6983ba61573d060aad2fb2c60d8f511e59b98240178e05bb1",
+    "scope": "Archive-independent regression subset, not a new scientific campaign."
+  }
+}

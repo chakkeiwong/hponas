@@ -6,6 +6,12 @@
 
 **Purpose:** A reusable HPO and moderate architecture-coordinate NAS tool for a universal retail bank and the model families represented under `~/workspace`: prediction/forecasting, causal and policy models, financial inference, constrained neural solvers, valuation and allocation. The [product contract](docs/program/BANK_HPO_NAS_PRODUCT_CONTRACT.md) defines evaluation, reuse and completion; universal reuse is not a universal-optimizer claim. This document is the execution authority; mutation and Tier 0 are milestones within the full program.
 
+## Repository storage and publication
+
+On 28 October 2026 the user directed that raw evidence and large artifacts be archived locally and removed from GitHub, including earlier history. The scientific program remains at revision 2.727; this is a repository-storage change, with no new training or scientific claim. Source, tests, small fixtures, plans, LaTeX sources and [concise results](docs/results/README.md) remain published. Raw evidence references throughout this authority and its register are local archive-relative paths. A summary-only clone cannot recompute historical audits without restoring that archive.
+
+The [storage policy](docs/ARTIFACT_STORAGE.md) owns the archive, history rewrite and future size guard. The cleanup sequence is archive and verify → summarize and guard → rewrite all published refs → verify a lean clone → publish with exact leases. Retained evidence and original Git lineage remain recoverable locally; removing them from Git does not erase unfavorable outcomes or change their hashes.
+
 ## Authority, scope and result rules
 
 The user's continuing authorization covers repair, review, bounded local verification and phase-plan refresh. [NAS scope](NAS_SCOPE_DECISION.md), the [survey roadmap](hpo-survey/sections/12-roadmap.tex), [build requirements](BUILD_PROGRAM_v3.md) and [review verdict](BUILD_PROGRAM_REVIEW_VERDICT.md) retain the product obligations. The [structured register](docs/program/program.json) owns work, dependencies, decisions and exact evidence bindings; [traceability](TRACEABILITY_MATRIX_v1.md) maps the registered requirements, including the restored product contracts, explicit local-operations reconciliation and nine bank-product obligations.

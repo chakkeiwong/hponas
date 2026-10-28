@@ -4,13 +4,6 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
-  workflow_dispatch:
-    inputs:
-      run_mutation_campaign:
-        description: 'Run an independently allocated full mutation campaign'
-        type: boolean
-        default: false
-        required: false
 
 jobs:
   test:
@@ -20,15 +13,21 @@ jobs:
         python-version: ['3.12', '3.13']
     steps:
       - uses: actions/checkout@v4
-        with:
-          lfs: true
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install -e '.[dev,test,ray,tpe,cmaes,validation]'
       - run: python -m compileall -q hponas workloads validation tools examples
       - run: ruff check hponas workloads validation tools
-      - run: python -m pytest tests -m 'not slow' --ignore=tests/scale -q
+      - name: Run archive-independent regressions
+        run: |
+          python - <<'PYCODE'
+          import json, subprocess, sys
+          roster = json.load(open('docs/lean-checks.json'))
+          subprocess.run([sys.executable, '-m', 'pytest', *roster['tests'], '-q'], check=True)
+          PYCODE
+      - name: Enforce source-and-summary publication
+        run: python program_operations/publication_guard.py
       - run: python -m pip wheel --no-deps --no-build-isolation . -w dist
       - name: Verify isolated wheel and maintained examples
         shell: bash
@@ -46,21 +45,3 @@ jobs:
         with:
           name: wheel-${{ matrix.python-version }}
           path: dist/*.whl
-  mutation-test:
-    if: github.event_name == 'workflow_dispatch' && inputs.run_mutation_campaign
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: true
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-      - run: python -m pip install -e '.[test,ray,tpe,cmaes,validation]'
-      - run: python -m validation.run_validation_with_audit V03 --run-mutations
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: mutation-evidence
-          path: validation/artifacts/V03

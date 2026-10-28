@@ -2,11 +2,11 @@
 
 Reusable HPO and moderate architecture-coordinate NAS for the model families used by a universal retail bank. The [product contract](docs/program/BANK_HPO_NAS_PRODUCT_CONTRACT.md) covers prediction and forecasting, causal/policy models, financial inference, constrained neural solvers, valuation and allocation. Models, data and frameworks stay caller-owned; sibling repositories are not runtime dependencies. The initial qualified search spaces have roughly 2–10 coordinates. General cell search, supernets and weight sharing remain outside scope.
 
-**Status:** The accepted finite-local predecessor and its 27-clause GAP audit remain preserved in [the qualification package](docs/program/evidence/2026-10-18/gap-qualification-04/accepted-package.json). The current source passed qualification and GAP-01/FINAL-AUDIT; all 27 original clauses and the adopted finite local master are complete. [PAR-01](docs/program/PARALLEL_EXECUTION_EXTENSION_2026_10_26.md) implements and verifies resource-aware workers, Study repetitions/replicas and population/BG-PBT execution; PAR-QUAL-01 and the independent terminal audit have passed on the current source. Earlier completion applies to the retained source only. Empirical application usefulness remains unestablished. See [the master](CONSOLIDATED_MASTER_AUTHORITY.md), [qualification boundary](docs/program/PARALLEL_REQUALIFICATION_BOUNDARY_2026_10_26.md) and the [qualified LaTeX manual](docs/program/evidence/2026-10-26/parallel-publication-refresh-05/build-01/main-parallel-qualified.pdf), [buildable edition](docs/program/evidence/2026-10-26/parallel-publication-refresh-05/build-01/main-parallel-qualified.tex), and chapters “Parallel CPU and GPU execution” and “Parallel extension: qualification and delivery.”
+**Status:** The adopted finite local program and RL-LQR-09 dimensional study are summarized in [results](docs/results/README.md), with numerical limitations retained. The [master](CONSOLIDATED_MASTER_AUTHORITY.md) and [product contract](docs/program/BANK_HPO_NAS_PRODUCT_CONTRACT.md) define scope. Raw qualification evidence and original history are preserved locally, outside Git. This summary-only checkout does not itself requalify historical results. Buildable manual sources are in [hpo-survey/published](hpo-survey/published/README.md).
 
 ## Install
 
-This checkout retains qualification evidence with Git LFS. Install Git LFS before cloning, or run `git lfs install --local` and `git lfs pull` after cloning, to retrieve the large evidence files. Local environments and caches are reconstructed separately. Historical receipts retain their original absolute paths; archived pytest aliases and reference-weight links may require the original checkout location. The package and maintained examples do not depend on those aliases.
+Ordinary clones contain source, tests, documentation and concise summaries. Git LFS and raw evidence downloads are not required. See the [artifact storage policy](docs/ARTIFACT_STORAGE.md) for the local archive and historical reconstruction.
 
 Python 3.12+ is required. Clean CPU installations are checked on Python 3.12 and 3.13; other versions and platforms are not verified. Keep the environment separate from other projects.
 
@@ -97,7 +97,7 @@ The public `SearchSpace` uses `Knob`. `hponas.types.SearchSpace`/`Parameter` rem
 
 ## Real PPO and validation
 
-The [maintained examples](examples/README.md) run against either checkout or installed library code. They preserve unique run directories and do not certify acceptance. Audited campaigns below require the full Git checkout because their source fingerprint covers tests, examples, build inputs and protocols omitted from the wheel. A wheel-only invocation is rejected before campaign artifacts are written. Use `python -m tools.check_installed --output receipt.json` from outside the checkout to verify an isolated wheel installation.
+The [maintained examples](examples/README.md) run against either checkout or installed library code. They preserve unique run directories and do not certify acceptance. Audited campaigns below require a restored evidence archive and their original source-bound runtime; a summary-only clone is insufficient. Their source fingerprint covers tests, examples, build inputs and protocols omitted from the wheel. A wheel-only invocation is rejected before campaign artifacts are written. Use `python -m tools.check_installed --output receipt.json` from outside the checkout to verify an isolated wheel installation.
 
 ```bash
 # Real bounded CPU PPO, policy checkpoint, SQLite ledger and separate protected evaluation:
@@ -114,17 +114,17 @@ python -m tools.gate_check --phase tier0 --mode dry-run
 
 V14 evaluates protected seed 999 only after the search result is committed. `workloads.rl_routine.evaluate_checkpoint` performs this separate evaluation. Passing V14 establishes an executable workflow, not statistical performance.
 
-V04-T0/V05 use self-contained fixed models with independently known tuning answers. Their finite conformance results do not establish general superiority or promote defaults. The previous PPO comparison/pilot/power design is retired under D-SELF-CONTAINED-VALIDATION. See [supported workloads](docs/WORKLOADS.md) and the [retained qualified package](docs/program/evidence/2026-10-12/final-qualification-11/accepted-package.json). PRD-01 foundation repairs and BANK-01/GAP-QUALIFICATION completed their historical scope. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed.
+V04-T0/V05 use self-contained fixed models with independently known tuning answers. Their finite conformance results do not establish general superiority or promote defaults. The previous PPO comparison/pilot/power design is retired under D-SELF-CONTAINED-VALIDATION. See [supported workloads](docs/WORKLOADS.md) and the [historical qualification summary](docs/results/README.md). PRD-01 foundation repairs and BANK-01/GAP-QUALIFICATION completed their historical scope. Current-source qualification and the final independent GAP-01/FINAL-AUDIT have passed.
 
 Every audited run preserves its protocol, raw results, package/source fingerprints, and a V16 receipt under `validation/artifacts/<ID>/<run>/`. Gates reject missing, stale, empty, or inconsistent evidence. See the [current master program](CONSOLIDATED_MASTER_AUTHORITY.md) for execution status.
 
 ## Development
 
-Use the [fixed local operations commands](docs/PROGRAM_OPERATIONS.md) for ongoing master-program work. They set the tested environment and resource limits and avoid repeated dated command approvals.
+Use the [fixed local operations commands](docs/PROGRAM_OPERATIONS.md). The publication roster in docs/lean-checks.json is archive-independent. The full historical test/audit roster additionally requires restored evidence; no archived scientific test is silently treated as passed.
 
 ```bash
 python -m pip install -e '.[dev,test,ray,tpe,cmaes,validation]'
-python -m pytest tests -m 'not slow' -q
+python -m pytest $(python -c "import json; print(' '.join(json.load(open('docs/lean-checks.json'))['tests']))") -q
 python -m ruff check hponas workloads validation tools
 python -m compileall -q hponas workloads validation tools examples
 ```

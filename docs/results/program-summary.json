@@ -1,0 +1,811 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-28",
+  "program_revision": "2.727",
+  "original_commit": "1e9a311bac5a3b0cd68bf6068d5e777cb6855f67",
+  "scope": "Reported historical results; raw verification requires the local archive.",
+  "work_items": [
+    {
+      "id": "GOV-01",
+      "title": "Reconcile master and enforce drift detection",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "All source decisions, exact protocol IDs, repair findings and approval requirements traced; negative consistency tests and generated-view checks pass.",
+      "next_action": "Retain complete current-source reconciliation and rerun all program checks after each material amendment."
+    },
+    {
+      "id": "GOV-02",
+      "title": "Enforce master prerequisites in the Tier 0 release command",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "The release command requires consistent program/evidence bindings, recorded protocol evidence validation, resolved Tier 0 identities and requirements, and completed release prerequisites in addition to recomputed campaign PASS. Negative fixtures prove that passing campaigns cannot bypass these guards.",
+      "next_action": "Retain release-prerequisite regressions as scoped repair and campaign dependencies advance; consistency and acceptance remain separate."
+    },
+    {
+      "id": "RPR-01",
+      "title": "Audited implementation repair pass",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Prior audit counterexamples repaired and verification retained; broader specification and acceptance work remains separate.",
+      "next_action": "Retain regressions and rerun affected evidence when source changes."
+    },
+    {
+      "id": "V03-01",
+      "title": "Cover Ray controller without cluster startup",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Included deterministic tests cover submission limits, retry/cost, deadlines, payloads and cluster ownership; focused mutation inventory is preserved.",
+      "next_action": "Retain controller conformance and the complete accepted Attempt12 mutation evidence; refresh after relevant source changes."
+    },
+    {
+      "id": "V03-02",
+      "title": "Close remaining mutation coverage and survivor gaps",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Review each critical survivor and deficient module; add behavior assertions and diagnose abnormal exits before frozen full run.",
+      "next_action": "Retain the covered contracts, survivor proofs and accepted full mutation result; repair and revalidate only when new evidence warrants it."
+    },
+    {
+      "id": "V03-03",
+      "title": "Frozen full mutation acceptance",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Fresh complete inventory meets unchanged protocol overall/module/critical-path and abnormal-outcome criteria with V16 PASS.",
+      "next_action": "Retain the complete passing final-source V03 population in E-FINAL11-20261012-PACKAGE; refresh after relevant source changes."
+    },
+    {
+      "id": "SPEC-01",
+      "title": "Verify dimension-scaled GP priors, progressive PASHA and CMA-ES",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Dimension-scaled GP priors, faithful PASHA, CMA-ES disposition and baseline contract are implemented/verified or explicitly amended.",
+      "next_action": "Retain verified dimension-prior, PASHA and CMA-ES contracts plus current engineering acceptance; refresh after relevant source changes."
+    },
+    {
+      "id": "SPEC-02",
+      "title": "Close ASHA and median reference and streaming conformance",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "The chosen ASHA promotion reference, underfilled-rung policy, full-fidelity budget behavior, and median completion/streaming contract are frozen and implemented with independent reference and lifecycle tests; no acceptance of a lower-fidelity substitute is implied.",
+      "next_action": "Retain archived scheduler conformance; current Tier-1 V06 checks finite decisions/work and cannot activate ASHA/median defaults."
+    },
+    {
+      "id": "SPEC-03",
+      "title": "Correct reference scheduler promotion and PASHA recovery",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "The reproduced scheduler promotion defects are corrected against pinned independent reference traces, including singleton/quantile eligibility, extreme finite losses, tied-result arrival order, paused late eligibility, highest rung, progressive caps, incremental budget and versioned checkpoint recovery. Finite evidence does not certify V01 equality in distribution.",
+      "next_action": "Retain verified scheduler promotion and recovery contracts plus current engineering acceptance; refresh after relevant source changes."
+    },
+    {
+      "id": "SPEC-02A",
+      "title": "Prepare the scheduler contract and independent counterexamples",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "A concrete ASHA/median/streaming contract recommendation, implementation sequence, migration boundaries and independently bound counterexamples are reviewable. No default change or certification is inferred.",
+      "next_action": "Retain archived scheduler conformance; current Tier-1 V06 checks finite decisions/work and cannot activate ASHA/median defaults."
+    },
+    {
+      "id": "VAL-01",
+      "title": "Align Tier 0 validators with the agreed claims",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Executable arms/endpoints/accounting and independent decision recomputation match the agreed Tier 0 claims; V01 includes shipped wrappers, V02 covers the frozen event grammar, negative fixtures reject missing/mislabeled evidence, and smoke/diagnostic outputs cannot certify acceptance.",
+      "next_action": "Retain accepted self-contained V04-T0/V05 known-answer contracts and independent reconstruction; native-project diagnostics remain historical."
+    },
+    {
+      "id": "PILOT-01",
+      "title": "Retire the obsolete PPO pilot with explicit evidence disposition",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "PPO pilot retired for the changed finite claim; no pilot observations or superiority result claimed.",
+      "next_action": "Retain E-R191-REVIEW disposition; refresh affected source evidence at phase boundaries."
+    },
+    {
+      "id": "STAT-01",
+      "title": "Reconcile protocol identity and gate mappings",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Reviewable claim/ID/gate reconciliation covers all 19 entries and identifies protocol amendments needed before confirmation.",
+      "next_action": "Retain all 20 exact protocol ownership/identity dispositions; later phase protocols remain separately gated."
+    },
+    {
+      "id": "STAT-02",
+      "title": "Prepare Tier 0 study design and sizing procedure",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "A versioned candidate task/arm/endpoint/seed schema, strict refusal checks, deterministic analysis and sizing procedure, and pilot resource formula are reviewable and tested. Unknown scientific inputs are explicit and non-executable; STAT-03 owns their final freeze and certification package.",
+      "next_action": "Retain the completed historical statistical framework. The PPO pilot and sizing obligations for V04-T0/V05 were prospectively retired; current finite acceptance is complete and later protocols retain separate design and resource stages."
+    },
+    {
+      "id": "STAT-03",
+      "title": "Derive and freeze the scientific design and resource envelope",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Objective phase-specific framework, disclosed sampling contract, protected bounded inference, independent-pilot sizing verifier, conformance adapters and measured development resource proposal are verified. Pilot observations belong to PILOT-01 and actual confirmation sizing to CAP-01; neither is a prerequisite for the pilot framework.",
+      "next_action": "Retain the completed historical statistical framework. The PPO pilot and sizing obligations for V04-T0/V05 were prospectively retired; current finite acceptance is complete and later protocols retain separate design and resource stages."
+    },
+    {
+      "id": "PPO-01",
+      "title": "Execute finite known-answer Tier-0 acceptance (legacy PPO-01 ID)",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "All 1,152 proposals and 40 probes independently reconstruct under v4, with complete current-source V16 receipts; no superiority/default claim.",
+      "next_action": "Current-source V04-T0/V05 finite conformance passes; retain per-case regret without superiority/default claims. Refresh only after source change or failure."
+    },
+    {
+      "id": "TST-01",
+      "title": "Resolve skipped and incomplete conformance checks",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Stale skips removed; each placeholder becomes a meaningful test or an explicitly tracked unsupported guarantee.",
+      "next_action": "Retain final-source recovery, conformance, finite streaming/resume and local operations evidence; broader deployment claims require a prospective amendment."
+    },
+    {
+      "id": "PKG-01",
+      "title": "Dependency-resolved installation and support envelope",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Clean dependency-resolved installation and maintained examples pass on declared supported configurations.",
+      "next_action": "Repaired source verified offline on Python 3.12/3.13; retain bound baseline and installation evidence."
+    },
+    {
+      "id": "CAP-01",
+      "title": "Bind finite Tier-0 capacity and retain later phase resource ownership",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Fixed finite local counts/caps bound; old PPO sizing retired; later capabilities retain their own measured allocation stages.",
+      "next_action": "Retain E-R191-REVIEW disposition; refresh affected source evidence at phase boundaries."
+    },
+    {
+      "id": "REL-01",
+      "title": "Tier 0 release decision",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Every Tier-0 requirement, exact campaign receipt, protocol decision, source identity, resource decision and release prerequisite is closed by the recomputed gate; no human certificate substitutes for missing evidence.",
+      "next_action": "Retain the accepted Tier-0 baseline and completed later-phase qualification under E-FINAL11-20261012-PACKAGE."
+    },
+    {
+      "id": "PRI-01",
+      "title": "Optional prior recovery and V11 conformance",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Declared method contracts are verified and every assigned finite Tier-1 entry has an audited objective disposition with opt-in consequences. No retired superiority/default claim can be marked passed.",
+      "next_action": "Retain finite opt-in results; refresh after relevant source or contract changes."
+    },
+    {
+      "id": "T1-TRUST",
+      "title": "Trust-region finite conformance acceptance",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Declared method contracts are verified and every assigned finite Tier-1 entry has an audited objective disposition with opt-in consequences. No retired superiority/default claim can be marked passed.",
+      "next_action": "Retain finite opt-in results; refresh after relevant source or contract changes."
+    },
+    {
+      "id": "T1-MF",
+      "title": "Multifidelity finite work and decision conformance",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Declared method contracts are verified and every assigned finite Tier-1 entry has an audited objective disposition with opt-in consequences. No retired superiority/default claim can be marked passed.",
+      "next_action": "Retain finite opt-in results; refresh after relevant source or contract changes."
+    },
+    {
+      "id": "T1-MO",
+      "title": "Multi-objective orchestration and acceptance",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Declared method contracts are verified and every assigned finite Tier-1 entry has an audited objective disposition with opt-in consequences. No retired superiority/default claim can be marked passed.",
+      "next_action": "Retain finite opt-in results; refresh after relevant source or contract changes."
+    },
+    {
+      "id": "T1-COST",
+      "title": "Predictive censored cost and cooling acceptance",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Declared method contracts are verified and every assigned finite Tier-1 entry has an audited objective disposition with opt-in consequences. No retired superiority/default claim can be marked passed.",
+      "next_action": "Retain finite opt-in results; refresh after relevant source or contract changes."
+    },
+    {
+      "id": "T1-WARM",
+      "title": "Ranked warm starts and store eligibility",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Ranked retrieval and finite V12 have audited source-bound conformance; historical empirical claims explicitly unestablished.",
+      "next_action": "Retain exact finite warm-start acceptance; refresh on source changes and preserve adverse outcomes and empirical claim limits."
+    },
+    {
+      "id": "T2-POP",
+      "title": "Local PBT/PB2-Mix/BG-PBT finite conformance",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Declared local method contracts verified and finite V08 audited with explicit opt-in consequence; unsupported broader envelopes remain unaccepted.",
+      "next_action": "Retain finite local V08 acceptance and exact source; require fresh qualification for changed code and separate protocols for broader claims."
+    },
+    {
+      "id": "WL-01",
+      "title": "Held-out workload templates and finance disposition",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Each supported finite workload has a schema, objective, fidelity/work account, pinned known-answer/evaluation fixtures, independent verification and maintained installed example. Empirical scope is not inferred.",
+      "next_action": "Retain qualified finite workload identities and final integrated source; require prospective contracts for broader applications."
+    },
+    {
+      "id": "OPS-01",
+      "title": "Local concurrent operations, backup, monitoring, security and budgets",
+      "state": "complete",
+      "implementation": "implemented",
+      "done_when": "Named trusted local PostgreSQL/Ray scope has verified concurrency, recovery, access-control, monitoring and global-budget evidence; separate-machine testing is explicitly waived and untested claims remain excluded.",
+      "next_action": "Retain qualified local operations and final integrated-source package; separate-machine and unattended production claims remain outside acceptance."
+    },
+    {
+      "id": "T3-01",
+      "title": "Selective DEHB, pretrained ifBO and GP robustness",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Each elective has a retained objective terminal disposition: reference feasibility before owned DEHB implementation; pretrained ifBO V15a before V15b integration; GP robustness after the base is stable. A protocol-directed rejection cancels integration and does not trigger favorable reruns.",
+      "next_action": "Retain final-source finite DEHB and robust-GP qualification, the failed ifBO result and cancelled V15b."
+    },
+    {
+      "id": "SCOPE-01",
+      "title": "Maintain exclusions and unresolved scope dispositions",
+      "state": "complete",
+      "implementation": "not_applicable",
+      "done_when": "All 63 source decisions have a visible disposition, including omissions, optional methods and exclusions.",
+      "next_action": "Require a recorded scope decision before reopening excluded features."
+    },
+    {
+      "id": "STAT-03P",
+      "title": "Adopt self-contained finite tuning validation",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Maintained fixtures, independent oracles, legal acquisition and exact v4 protocol/source/resource scope verified.",
+      "next_action": "Retain E-R191-REVIEW disposition; refresh affected source evidence at phase boundaries."
+    },
+    {
+      "id": "WL-00",
+      "title": "Tier-0 real RL and architecture-coordinate workload contract",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "The supported Tier-0 workload has explicit search axes, actual architecture effects, objective/fidelity/cost semantics, separate test seeds, maintained example and bounded acceptance; broader workload claims remain separately owned.",
+      "next_action": "Retain the qualified bounded workload contract, current V14 and finite T1-MF streaming conformance within their stated claim limits."
+    },
+    {
+      "id": "T1-GATE",
+      "title": "Tier-1 finite capability reconciliation",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "All eight finite entry outcomes and V16 audits are reconstructed with explicit opt-in dispositions. Archived Tier-0 acceptance and integrated-source release remain separate.",
+      "next_action": "Retain the finite Tier-1 package and completed final integrated-source qualification in E-FINAL11-20261012-PACKAGE."
+    },
+    {
+      "id": "REL-02",
+      "title": "Integrated-source qualification and release disposition",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Final supported source has its exact qualified evidence and explicit release disposition; no archived PASS is transferred to changed code.",
+      "next_action": "Preserve the qualified finite local baseline; PRD-01 owns omitted original product contracts and subsequent changed-source qualification."
+    },
+    {
+      "id": "PRD-01",
+      "title": "Recover and repair the complete public product contract",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "All restored clauses have engineering behavior, relevant checks and explicit scope dispositions; final scientific acceptance remains pending under BANK-01/INTEGRATED-REVIEW.",
+      "next_action": "Retain engineering readiness; BANK-01 owns all final-source foundation and profile scientific qualification."
+    },
+    {
+      "id": "BANK-01",
+      "title": "Reusable universal-bank model-family HPO/NAS workflows",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Every required bank profile has a configured public study, independent finite reference and adverse cases, explicit evaluation/cost/artifact contracts and precise support status; integrated semantic and affected-source reviews pass. Final integrated qualification includes all changed PRD foundation source and every retained scientific gate; old source acceptance cannot close this work.",
+      "next_action": "Preserve current qualified source; GAP-01/FINAL-AUDIT independently assesses complete gap closure."
+    },
+    {
+      "id": "GAP-01",
+      "title": "Close historical implementation gaps and independently audit completion",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "All 27 atomic clauses have objective behavior/evidence or appropriate retained research outcomes, final current-source qualification passes and GAP-01/FINAL-AUDIT reconstructs complete closure with no unresolved required behavior.",
+      "next_action": "Expanded bounded repair reconciled; retain scientific limits."
+    },
+    {
+      "id": "DOC-01",
+      "title": "Product manual, complete feature audit and bounded application examples",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "All original requirements and clauses reviewed; current manual built; both finite examples executed and independently reconstructed; final audit and governance pass.",
+      "next_action": "Retain completed manual, feature ledger and independent finite application evidence; future scope/source changes require prospective work."
+    },
+    {
+      "id": "APP-01",
+      "title": "Five-family workspace application validation",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Five families executed, independently reconstructed; recovery, negative controls and final audit pass with limitations retained.",
+      "next_action": "Retain completed five-family finite evidence. NAS scientific nonattainment and short-chain discrepancies are explicit; new budgets/designs require successor work."
+    },
+    {
+      "id": "APP-02",
+      "title": "Sequential diagnosis of application scientific nonattainment and test coverage",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Problems1-5 have evidence-backed causes or bounded unresolved diagnoses, appropriate repairs and verification, reviewed coverage and final audit.",
+      "next_action": "Bounded investigation complete; retain unresolved scientific limits. No further training allocated."
+    },
+    {
+      "id": "APP-03",
+      "title": "Repair application weaknesses with fresh objective evidence",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "All five initial problems receive implemented controls and fresh evaluation, repair success separated from nonattainment, guide/LaTeX built and full independent audit passes.",
+      "next_action": "Retain scoped APP-03 repairs, independent audit and explicit nonattainment; any broader effectiveness work requires a prospective bounded master stage."
+    },
+    {
+      "id": "SCI-01",
+      "title": "Trace scientific gaps and verify closure routes",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Every remaining scientific claim traced to code and classified with falsifiable closure criteria; bounded mathematical analyses and independent review retained.",
+      "next_action": "Retain SCI-01 findings and exact wrapper recovery; SCI-02 closes the bounded successor repair."
+    },
+    {
+      "id": "SCI-02",
+      "title": "Repair closable scientific gaps with saved-artifact verification",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "All bounded companion repairs independently checked, remaining empirical/impossibility claims explicit, SCI-02 terminal audit passes.",
+      "next_action": "Bounded repair complete. Retain companion evidence; further empirical or installed-product integration requires a prospective successor and its prerequisites."
+    },
+    {
+      "id": "SCI-03",
+      "title": "Certified synthetic evaluation and installable verification tools",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Certified evaluator and bounded frozen-policy results, installable add-on with saved-artifact verification, final audit and honest unresolved claims.",
+      "next_action": "Retain audited bounded delivery; no allocated stage remains. Wallet precision and unsupported scientific claims remain open as explicit scope limits."
+    },
+    {
+      "id": "PAR-01",
+      "title": "Parallel CPU/GPU execution for all supported tuning families",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "All preceding stages complete; current-source audit passes; historical evidence unchanged",
+      "next_action": "Preserve source-bound CPU/GPU implementation, manual and current-source qualification."
+    },
+    {
+      "id": "PAR-QUAL-01",
+      "title": "Qualify changed parallel source before terminal product closure",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Current-source original integrated acceptance obligations pass a reviewed authorized allocation; final GAP guard still required.",
+      "next_action": "Preserve qualified source; GAP-01/FINAL-AUDIT remains the terminal master phase."
+    },
+    {
+      "id": "RL-LQR-01",
+      "title": "Known-answer RLlib SAC and joint actor/critic HPO/NAS",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Reviewed finite LQR reference, real SAC, joint search, restore, CPU/GPU execution, documentation and audit have bound evidence; no convergence or BG-PBT/SAC claim is inferred.",
+      "next_action": "Preserve independently audited finite results and explicit poor-learning outcome; no additional training allocated."
+    },
+    {
+      "id": "RL-LQR-02",
+      "title": "Five-state LQR joint search definition and BG-PBT readiness",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Five-state reference, actual RLlib architectures and continuous-rate conditional search pass bounded preflight; independent audit reports current BG-PBT adapter limitations truthfully.",
+      "next_action": "Retain verified five-state/search definition. BG-PBT/SAC adapter, conditional Bayesian search and distillation remain undelivered; no training allocated by this capability assessment."
+    },
+    {
+      "id": "RL-LQR-03",
+      "title": "Five-state SAC BG-PBT implementation and bounded learning study",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "State/search/transfer/recovery and CPU/GPU evidence verified; prospective learning study documented honestly; independent audit reconstructs all evidence.",
+      "next_action": "Bounded companion extension, repaired procedure comparison and shared GPU evidence audited; no automatic new campaign."
+    },
+    {
+      "id": "RL-LQR-04",
+      "title": "Ten-state horizon-thirty joint SAC BG-PBT study",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Oracle, sampled regret evaluation, paired searches, holdout scores and independent audit complete with explicit outcomes.",
+      "next_action": "Retain all paired test outcomes; no convergence or global-optimality claim."
+    },
+    {
+      "id": "RL-LQR-05",
+      "title": "Ten-state multi-action joint SAC BG-PBT study",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Oracle, sampled regret evaluation, paired searches, holdout scores and independent audit complete with explicit outcomes.",
+      "next_action": "Retain all paired test outcomes; no convergence or global-optimality claim."
+    },
+    {
+      "id": "RL-LQR-06",
+      "title": "Scalar-state diagnostic joint SAC BG-PBT study",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Oracle, sampled regret evaluation, paired searches, holdout scores and independent audit complete with explicit outcomes.",
+      "next_action": "Retain all paired test outcomes; no convergence or global-optimality claim."
+    },
+    {
+      "id": "RL-LQR-07",
+      "title": "Trace scalar-state SAC critic and population failures",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Source trace, saved-checkpoint diagnostics, evidence-based repair priorities and independent audit complete; unproven mechanisms explicit.",
+      "next_action": "Diagnosis complete; learning repairs require a separate prospective bounded comparison, not claims from exposed diagnostic policies."
+    },
+    {
+      "id": "RL-LQR-08",
+      "title": "Scalar learner, safe handoff and protected joint tuning repair",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "Reviewed learner comparison, handoff repairs, fresh confirmation, conditional joint disposition and independent audit complete; learning gaps explicit.",
+      "next_action": "Retain numerical outcomes and explicit unresolved convergence/generalization limits."
+    },
+    {
+      "id": "RL-LQR-09",
+      "title": "Structured SAC action and state dimensional scaling",
+      "state": "complete",
+      "implementation": "verified",
+      "done_when": "All 12 cases, paired actor comparison, fresh confirmation, learned-controller diagnostics and independent audit complete with explicit limitations.",
+      "next_action": "Bounded dimensional extension complete. Retain all outcomes: symmetry improves 11/12 case means; ten-state/eight-action exception and nonzero neural gaps remain."
+    }
+  ],
+  "stages_count": 325,
+  "requirements_count": 196,
+  "active_work_item": null,
+  "archived_evidence_roots": [
+    "docs/program/evidence/",
+    "docs/program/operations-runs/",
+    "validation/artifacts/",
+    "archive/",
+    "docs/audits/evidence/"
+  ],
+  "limitations": [
+    "Finite source-specific qualification does not prove general optimizer superiority.",
+    "Negative/inconclusive outcomes remain part of the reported record.",
+    "Summary-only clones cannot reconstruct archived campaigns without their raw evidence."
+  ],
+  "rl_lqr_09": {
+    "source_sha256": "84869b0aebd03e9472b3565a8a44113e9d370fc18ac8cc7a7a76f8733e0fcb64",
+    "reconstructed_endpoints": 120,
+    "reconstructed_linear_controllers": 240,
+    "source_snapshots_verified": 295,
+    "results": [
+      {
+        "case": "s1a5",
+        "optimal_cost": 0.28666258546745116,
+        "selected": "symmetric",
+        "methods": {
+          "matrix": {
+            "mean_cost": 0.28817768829633095,
+            "mean_gap_percent": 0.5285317672026075,
+            "min_gap_percent": 0.15630560273954616,
+            "max_gap_percent": 1.089840022579209,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.0033091340263102626,
+            "greedy_max_gap_percent": 0.008883535174879508
+          },
+          "symmetric": {
+            "mean_cost": 0.28675700588580916,
+            "mean_gap_percent": 0.032937824168449835,
+            "min_gap_percent": 0.006427171253798934,
+            "max_gap_percent": 0.06994456298361747,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.0034499867214325447,
+            "greedy_max_gap_percent": 0.009283158167565506
+          }
+        }
+      },
+      {
+        "case": "s1a6",
+        "optimal_cost": 0.2866625854674511,
+        "selected": "symmetric",
+        "methods": {
+          "matrix": {
+            "mean_cost": 0.29088449727151366,
+            "mean_gap_percent": 1.4727808992506055,
+            "min_gap_percent": 0.5771391065890953,
+            "max_gap_percent": 2.1635913606732107,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.0014734886960841333,
+            "greedy_max_gap_percent": 0.00481732215333557
+          },
+          "symmetric": {
+            "mean_cost": 0.2867555927630387,
+            "mean_gap_percent": 0.03244486734672165,
+            "min_gap_percent": 0.005452468307587465,
+            "max_gap_percent": 0.06179971162980734,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.0012725837902881332,
+            "greedy_max_gap_percent": 0.004051224564778177
+          }
+        }
+      },
+      {
+        "case": "s1a7",
+        "optimal_cost": 0.2866625854674512,
+        "selected": "symmetric",
+        "methods": {
+          "matrix": {
+            "mean_cost": 0.2943308807394281,
+            "mean_gap_percent": 2.6750248064191666,
+            "min_gap_percent": 0.8621734629928332,
+            "max_gap_percent": 6.298012760105023,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.00027728986312147615,
+            "greedy_max_gap_percent": 0.0004834566878816151
+          },
+          "symmetric": {
+            "mean_cost": 0.28677322070500216,
+            "mean_gap_percent": 0.03859423697393669,
+            "min_gap_percent": 0.0185611863333717,
+            "max_gap_percent": 0.0634463496614191,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.00027944740853773467,
+            "greedy_max_gap_percent": 0.0006150219838893724
+          }
+        }
+      },
+      {
+        "case": "s1a8",
+        "optimal_cost": 0.28666258546745116,
+        "selected": "symmetric",
+        "methods": {
+          "matrix": {
+            "mean_cost": 0.29387569658258156,
+            "mean_gap_percent": 2.516237374810616,
+            "min_gap_percent": 0.22491144316779477,
+            "max_gap_percent": 5.09512000979595,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.00021213350555088922,
+            "greedy_max_gap_percent": 0.0006462493281937993
+          },
+          "symmetric": {
+            "mean_cost": 0.2868203347088885,
+            "mean_gap_percent": 0.05502958859458937,
+            "min_gap_percent": 0.027492668361460575,
+            "max_gap_percent": 0.09995966985275628,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.0003113737265193141,
+            "greedy_max_gap_percent": 0.0010804072858300936
+          }
+        }
+      },
+      {
+        "case": "s1a9",
+        "optimal_cost": 0.28666258546745116,
+        "selected": "symmetric",
+        "methods": {
+          "matrix": {
+            "mean_cost": 0.30452148265983076,
+            "mean_gap_percent": 6.229936551802763,
+            "min_gap_percent": 0.7367050423693637,
+            "max_gap_percent": 11.257255113723488,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.0012717134542586449,
+            "greedy_max_gap_percent": 0.002982252768972225
+          },
+          "symmetric": {
+            "mean_cost": 0.28672356664574034,
+            "mean_gap_percent": 0.021272806909792538,
+            "min_gap_percent": 0.013954138075820462,
+            "max_gap_percent": 0.032246306042453717,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.0015714698124806986,
+            "greedy_max_gap_percent": 0.004299258708555657
+          }
+        }
+      },
+      {
+        "case": "s1a10",
+        "optimal_cost": 0.28666258546745105,
+        "selected": "symmetric",
+        "methods": {
+          "matrix": {
+            "mean_cost": 0.28986739933149813,
+            "mean_gap_percent": 1.1179742409778086,
+            "min_gap_percent": 0.4816619932948857,
+            "max_gap_percent": 2.190560882107256,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.0008409020697910428,
+            "greedy_max_gap_percent": 0.002195132455923754
+          },
+          "symmetric": {
+            "mean_cost": 0.2867346046565922,
+            "mean_gap_percent": 0.02512333063056803,
+            "min_gap_percent": 0.014380098005135341,
+            "max_gap_percent": 0.033728998311221184,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.0009055296871562968,
+            "greedy_max_gap_percent": 0.002344309907996817
+          }
+        }
+      },
+      {
+        "case": "s10a5",
+        "optimal_cost": 5.513247623466912,
+        "selected": "symmetric",
+        "methods": {
+          "matrix": {
+            "mean_cost": 5.5692220902846685,
+            "mean_gap_percent": 1.0152721343315587,
+            "min_gap_percent": 0.6460400484364078,
+            "max_gap_percent": 1.3988674028121748,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 1.075579770375941,
+            "greedy_max_gap_percent": 1.4373404418785747
+          },
+          "symmetric": {
+            "mean_cost": 5.564914794678377,
+            "mean_gap_percent": 0.9371458483298648,
+            "min_gap_percent": 0.6819533264042656,
+            "max_gap_percent": 1.1516343040554027,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 1.187993726384337,
+            "greedy_max_gap_percent": 1.500028118885732
+          }
+        }
+      },
+      {
+        "case": "s10a6",
+        "optimal_cost": 4.925009291454583,
+        "selected": "symmetric",
+        "methods": {
+          "matrix": {
+            "mean_cost": 4.985675979625128,
+            "mean_gap_percent": 1.2318086034032036,
+            "min_gap_percent": 1.0057411716233449,
+            "max_gap_percent": 1.5756277180711695,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 1.190169377594403,
+            "greedy_max_gap_percent": 1.3400927190626908
+          },
+          "symmetric": {
+            "mean_cost": 4.974033695684143,
+            "mean_gap_percent": 0.9954174972750169,
+            "min_gap_percent": 0.8498338981157385,
+            "max_gap_percent": 1.2454820409035028,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 1.400776625038526,
+            "greedy_max_gap_percent": 1.9925193482034376
+          }
+        }
+      },
+      {
+        "case": "s10a7",
+        "optimal_cost": 4.340798859832524,
+        "selected": "symmetric",
+        "methods": {
+          "matrix": {
+            "mean_cost": 4.399727403833887,
+            "mean_gap_percent": 1.3575506699160238,
+            "min_gap_percent": 0.9459441596993746,
+            "max_gap_percent": 1.8546566687550652,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 1.0939679724419005,
+            "greedy_max_gap_percent": 1.6810994459472997
+          },
+          "symmetric": {
+            "mean_cost": 4.389521752205031,
+            "mean_gap_percent": 1.122440683058663,
+            "min_gap_percent": 1.0862060442323322,
+            "max_gap_percent": 1.1901740337103695,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 1.1333780235725925,
+            "greedy_max_gap_percent": 1.3917413287945417
+          }
+        }
+      },
+      {
+        "case": "s10a8",
+        "optimal_cost": 3.769376837198849,
+        "selected": "symmetric",
+        "methods": {
+          "matrix": {
+            "mean_cost": 3.8302285895782817,
+            "mean_gap_percent": 1.614371685497306,
+            "min_gap_percent": 1.135590887799118,
+            "max_gap_percent": 2.3086258273944202,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 1.329967511864001,
+            "greedy_max_gap_percent": 2.77163427709701
+          },
+          "symmetric": {
+            "mean_cost": 3.833123663168827,
+            "mean_gap_percent": 1.6911767839415657,
+            "min_gap_percent": 0.6608762704834287,
+            "max_gap_percent": 2.913334397009328,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 1.9192276081656725,
+            "greedy_max_gap_percent": 3.8088299035684132
+          }
+        }
+      },
+      {
+        "case": "s10a9",
+        "optimal_cost": 3.237842285282573,
+        "selected": "symmetric",
+        "methods": {
+          "matrix": {
+            "mean_cost": 3.2796185099908706,
+            "mean_gap_percent": 1.2902489073723464,
+            "min_gap_percent": 1.1833398588075292,
+            "max_gap_percent": 1.3553067572715511,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.5209602998051902,
+            "greedy_max_gap_percent": 0.6640951642316862
+          },
+          "symmetric": {
+            "mean_cost": 3.2704722799078887,
+            "mean_gap_percent": 1.007769735222552,
+            "min_gap_percent": 0.8147379306649472,
+            "max_gap_percent": 1.1867012670526869,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.8577410289077649,
+            "greedy_max_gap_percent": 1.086132117758882
+          }
+        }
+      },
+      {
+        "case": "s10a10",
+        "optimal_cost": 2.8170477252454678,
+        "selected": "symmetric",
+        "methods": {
+          "matrix": {
+            "mean_cost": 2.8516123842614327,
+            "mean_gap_percent": 1.2269816626181893,
+            "min_gap_percent": 1.0158259041286324,
+            "max_gap_percent": 1.3355725604500246,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.006949266135214637,
+            "greedy_max_gap_percent": 0.008579268293233694
+          },
+          "symmetric": {
+            "mean_cost": 2.8261077256104126,
+            "mean_gap_percent": 0.32161330756848494,
+            "min_gap_percent": 0.28792939332779116,
+            "max_gap_percent": 0.34170603522684284,
+            "greedy_feasible": 6,
+            "greedy_count": 6,
+            "greedy_mean_gap_percent": 0.007386285066471751,
+            "greedy_max_gap_percent": 0.010813079741379154
+          }
+        }
+      }
+    ],
+    "limitations": [
+      "Known linear dynamics/quadratic reward and sign symmetry are fixture assumptions.",
+      "Full quadratic continuation approximates bounded-action soft values; generic SAC is unqualified.",
+      "Three fresh training seeds give descriptive replication, not population-wide significance.",
+      "Neural actor regret remains measured; exact cost of a learned feasible linear controller does not prove neural optimality.",
+      "No new BG-PBT/NAS comparison is allocated; architecture is held fixed to isolate dimensional learning."
+    ]
+  }
+}

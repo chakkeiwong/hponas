@@ -175,7 +175,7 @@
     {
       "id": "SRC-PROGRAM-OPERATIONS",
       "path": "docs/PROGRAM_OPERATIONS.md",
-      "sha256": "2a98d8f45f976ef7b7b53a7d1aa615af549f73561b864aa51baff272c6f597f0"
+      "sha256": "861ed7395069dae26f9c161a06219db2ac99232c1042a6209e9346faf6ee613f"
     },
     {
       "id": "SRC-GIT-PUBLICATION-CI",
@@ -42502,6 +42502,16 @@
         "sha256": "f0a5239914f0c20dae46c4affe63e54c426c342d8bcb127f11f219924b676a46"
       },
       "master_audit": "E-RL-LQR03-MASTER-AUDIT-RESULT"
+    },
+    "source_only_publication": {
+      "date": "2026-10-28",
+      "authorization": "User directed raw evidence be archived locally and removed from GitHub, including prior large artifacts.",
+      "summary": "docs/results/archive-summary.json",
+      "policy": "docs/ARTIFACT_STORAGE.md",
+      "scientific_source_changed": false,
+      "scientific_results_changed": false,
+      "raw_paths": "Local archive-relative references; not present in a normal clone.",
+      "verification": "388 archive-independent tests and 16 subtests pass; publication guard passes."
     }
   },
   "protocol_ownership_review": {

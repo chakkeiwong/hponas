@@ -1,0 +1,311 @@
+\chapter{Parallel CPU and GPU execution}
+\label{sec:parallel-extension}
+
+\begin{decisions}
+\textbf{Qualified finite-local extension.} PAR-01 implements isolated CPU/GPU
+workers, endpoint repetitions, independent study replicas and parallel population
+training/transfer. PAR-QUAL-01 and the final GAP-01 audit passed on the exact
+current source identified in Chapter~\ref{sec:parallel-delivery}. Earlier
+measurements and failures retain their dates and original source bindings.
+\end{decisions}
+
+\section{What parallelism means}
+The execution layer separates four decisions: concurrent objective calls,
+method-valid batched proposals, independent complete studies and parallelism
+inside a caller's training model. The first three have public routes here.
+Giving one trial several GPUs makes those devices visible but does not create
+DDP, model sharding or data loaders. Sequential adaptive methods preserve their
+ask/tell dependency; their parallel route is independent replicas or endpoint
+folds/seeds. Replicas remain separate experiments. Protected final evaluations
+must never be used to choose the best replica retrospectively.
+
+\section{Resource-aware workers}
+\texttt{ResourceSpec(cpu\_cores=1, threads=1, gpus=0)} declares resources
+\emph{per worker}. Counts are integers; threads cannot exceed reserved cores.
+\texttt{ResourceExecutor(num\_workers, resources=..., cpu\_ids=...,
+gpu\_ids=..., timeout=...)} validates capacity, partitions CPU affinity and
+whole GPU devices, and keeps fresh-interpreter processes alive across calls.
+Omitted CPU IDs use the coordinator's permitted affinity. GPU IDs must be
+explicit physical indices or UUIDs; indices are canonicalized to UUIDs before
+cooperative host leases are acquired. Use UUIDs for reproducible placement.
+
+CUDA visibility and numerical thread environment variables are configured
+before objective deserialization. Torch and threadpool limits are set in each
+worker. CPU workers receive empty CUDA visibility. Objectives may declare an
+\texttt{execution} parameter; its \texttt{ExecutionContext} contains worker,
+task and attempt identities, CPU IDs, physical GPU UUIDs, thread count and the
+logical device (\texttt{cpu} or \texttt{cuda:0}). Multi-device callers can use
+logical indices within their assigned visible set. Returned trials include
+worker identity and process metadata. Arbitrary mapped functions receive
+\texttt{function(task, execution)} and return results in input order.
+
+\begin{Verbatim}[fontsize=\small]
+from hponas import ResourceExecutor, ResourceSpec, Config, Trial
+
+def objective(config, execution):
+    import torch
+    x = torch.tensor(config['x'], dtype=torch.float64,
+                     device=execution.device)
+    return {'value': float((x - 0.375).square().cpu()),
+            'cost': 1.0}
+
+trials = [Trial(Config({'x': x}), str(i))
+          for i, x in enumerate([0.1, 0.3, 0.5, 0.7])]
+with ResourceExecutor(2, resources=ResourceSpec(), timeout=60) as ex:
+    results = ex.execute_batch(trials, objective)
+# GPU alternative: ResourceSpec(gpus=1), gpu_ids=[uuid_a, uuid_b].
+# uuid_a and uuid_b must name available devices allocated to this run.
+\end{Verbatim}
+
+The local implementation requires Linux affinity, file locking and parent-death
+signals. A persistent launcher thread owns worker creation so a replacement
+worker survives the short-lived collection thread that requested it. A dead
+coordinator terminates its workers; shutdown reclaims owned processes and
+releases leases. Leases exclude other cooperating HPO-NAS executors, not
+arbitrary applications. These are trusted Python workers, not a security
+sandbox. Fractional GPU allocation and hard CPU/GPU memory partitions are
+unsupported. Objective stdout/stderr are currently discarded by the worker
+transport; application diagnostics should be returned as metadata or written
+to caller-owned artifact paths.
+
+\section{Study evaluation, budgets and recovery}
+\texttt{Study(..., max\_concurrent=k)} controls outstanding configurations
+subject to the searcher's capability contract. The separate
+\texttt{evaluation\_workers=k} enables concurrent endpoint folds and seeds;
+it defaults to one. Its capacity must fit both the executor and any
+\texttt{StudyBudget.worker\_capacity}. Parallel declared streaming repetitions
+are explicitly refused; ordinary streaming trial execution, reports,
+coordinator stop decisions and cancellation remain supported.
+
+\begin{Verbatim}[fontsize=\small]
+# With a caller-defined StudyDeclaration and metered objective:
+with ResourceExecutor(2, timeout=60) as ex:
+    study = Study(searcher, ex, objective_fn,
+        declaration=declaration, maximize=False,
+        max_concurrent=1, evaluation_workers=2,
+        resource_budget=StudyBudget(
+            configurations=3, work_unit='updates',
+            tuning_work=20, final_work=4, max_work_per_call=1,
+            worker_capacity=2),
+        checkpoint_dir='run-unique', study_name='declared')
+    result = study.run()
+\end{Verbatim}
+
+An objective with this budget reports
+\texttt{metadata['resource'] = \{'unit': 'updates', 'work': measured\}}.
+The declaration owns disjoint tuning/final roles, folds, seeds and objective
+identity. The coordinator durably reserves every admitted call before dispatch,
+aggregates in fixed order and freezes selection before final evaluation.
+Resource ledger version 2 records begin/complete/lost events in their actual
+order: two calls admitted together remain legitimate if the first later
+breaches a meter or elapsed limit. Recovery replays admission before completion,
+validates raw measurements and rejects fabricated order or capacity.
+Version 1 serial ledgers migrate through their original admission semantics.
+
+Unknown interrupted work consumes the full declared per-call bound; measured
+work is then a lower bound. No hidden retry is performed. An interrupted run
+can continue only within its remaining admissible budget; lost time under a
+time cap remains unknown. Endpoint time limits can overshoot by already
+admitted calls. Worker timeouts are elapsed deadlines after worker admission,
+not an end-to-end deadline including queue wait. Startup has its own deadline. A Study owns its executor and calls shutdown on completion or error; create a fresh executor for another Study. Independent replicas use the assigned no-op-shutdown wrapper inside the shared pool.
+
+\section{Independent sequential-method replicas}
+\begin{Verbatim}[fontsize=\small]
+from hponas import run_replicas
+
+def factory(seed, assigned_executor):
+    # Make a fresh searcher and a different checkpoint path for each seed.
+    return Study(make_searcher(seed), assigned_executor, objective_fn,
+        declaration=declaration, budget=8, maximize=False,
+        study_name=f'replica-{seed}',
+        checkpoint_dir=f'replicas/{seed}').run()
+
+with ResourceExecutor(2, timeout=120) as ex:
+    independent_results = run_replicas(ex, factory, [7, 11])
+\end{Verbatim}
+\texttt{AssignedExecutor} executes inside an already placed worker and prevents
+nested resource pools. The factory owns independent mutable state and paths.
+The outer timeout bounds each complete replica task; size it for the bounded
+study, not just one objective call. This interface does not synthesize a new
+batch acquisition method or establish statistical superiority.
+
+\section{Population and architecture transfer}
+The classes \texttt{LocalPBT}, \texttt{LocalBGPBT} and \texttt{ArchitectureGeneration} share the resource pool when given \texttt{executor=ex}.
+Without the optional executor they retain serial behavior. The supported
+BG-PBT model remains the finite policy/value task with a shared
+\texttt{CoordinateMLP} trunk; this change does not expand it to arbitrary PPO
+simulators. The real finite-MDP objective, optimizer state and architecture
+transfer execute on assigned devices.
+
+The coordinator reserves an immutable population snapshot and ordered events,
+then releases the population data lock during numerical work. Independent
+members and transfer candidates run concurrently. Distillation rungs,
+selection, temporal GP updates, exploitation and architecture-generation
+barriers remain ordered. A separate lifetime coordinator lease prevents two
+writers; it is distinct from the short data-journal lock. Results are saved
+before publication, checked against target versions and replay-validated before
+commit. Acknowledgement is idempotent. Dependent parent/child updates in the
+same batch and stale writers are refused. Unknown failed batches retain their
+full reservations. Serialized tensors and optimizer state remain CPU-portable.
+
+The finite-MDP objective accepts both ordinary callables and Torch modules.
+Module observations follow the first parameter or buffer; parameterless
+callables receive the workload observations. Expectation tensors follow the
+student output device, while teacher inputs follow the teacher's own placement.
+Teacher outputs are explicitly detached before imitation loss construction.
+This permits a GPU student with a CPU teacher and preserves the callable
+known-answer references. The first PAR-QUAL-01 calibration exposed an
+unconditional parameter lookup that broke these references; its failed
+allocation is retained, and the compatibility repair is checked against the
+original independent gradient and evidence-reconstruction tests.
+
+\begin{Verbatim}[fontsize=\small]
+from hponas.bg_pbt import LocalBGPBT
+with ResourceExecutor(2, timeout=90) as ex:
+    engine = LocalBGPBT('bg-run-unique', finite_objective,
+        initial_members, architecture_pool,
+        increment_bound=analytic_gain_bound,
+        generations=2, max_rounds=1, patience=1,
+        updates_per_round=1, distillation_rungs=(1, 2),
+        max_updates=10, seed=7, fit_iterations=1, executor=ex)
+    result = engine.run()
+\end{Verbatim}
+This small allocation assumes two members and four distinct architecture
+candidates; the constructor derives and rejects insufficient update budgets.
+The caller supplies valid objective/checkpoint/architecture objects as described
+in the population guide. Reopening the same completed run returns its journal
+without retraining.
+
+\texttt{ParallelAdapterPopulation(..., executor=ex)} extends the model-neutral
+adapter with ordered member/fold/seed batches and the same frozen final refit
+schedule. GPU adapters must explicitly accept \texttt{execution} in
+\texttt{initialize}, \texttt{restore}, \texttt{train}, \texttt{evaluate} and
+\texttt{transfer}; they must place tensors on the assigned device and export
+JSON/CPU-portable checkpoints. Missing GPU placement support is refused.
+Partial uncertain adapter batches become an explicit terminal failure with
+lower/upper work accounting; they are not silently retried.
+
+\section{Algorithm routes and evidence}
+\begin{longtable}{p{.26\textwidth}p{.34\textwidth}p{.31\textwidth}}
+\toprule Family & Parallel route & Development evidence \\
+\midrule\endhead
+Random, Sobol, TPE, GP, CMA-ES & Independent same-seed replicas; existing pending/batch capabilities also govern Study & Analytic serial/replica traces; vector and scalar GPU fixtures \\
+Robust GP, trust-region, cost GP, DEHB & Sequential updates inside independent replicas & Same-seed objective/configuration/fidelity traces \\
+ASHA, PASHA, product/categorical PriorBand & Independent replicas preserve promotion and rung barriers & Same-seed scheduling traces and existing scheduler regressions \\
+Finite guarded prior, $\pi$BO & Independent replicas preserve prior law/acquisition & Prior-route trace comparisons \\
+Warm-start and ranked warm history & Separate replicas with frozen history & Seed queue, target identity and trace comparisons \\
+RGPE & Parallel endpoint repetitions & Known-answer declared target; protected final selection \\
+Vector random, qLogNEHVI, Chebyshev, NSGA-II & Existing batch proposals and concurrent trial evaluation & Actual two-worker analytic vector calls \\
+PBT, PB2-Mix, BG-PBT & Independent members and transfer candidates within barriers & Exact CPU serial equality, recovery boundaries; real CUDA BG-PBT tolerance \\
+Caller population adapter & Independent members and repetitions & Known-answer linear model, final refit, failure charging \\
+\bottomrule
+\end{longtable}
+The executable roster lives under \path{tests/integration/}: \path{test_parallel_methods.py},
+\path{test_parallel_population.py}, \path{test_parallel_study.py},
+\path{test_resource_executor.py} and \path{test_parallel_hardware.py} under the
+same test directory. Each receipt identifies its source and precise test count.
+CPU evidence for a method is not evidence of that method's GPU execution.
+ifBO remains the previously cancelled integration, not a newly supported family.
+Legacy wrappers preserve their prior capability limits.
+
+\section{Hardware observations and failure ledger}
+The initial actual GPU check used two idle devices (physical indices 1 and 3,
+recorded by UUID); unrelated jobs on devices 0 and 2 were untouched. Three
+hardware tests passed in 21.24 seconds: isolated CUDA tensor evaluation against
+an independent NumPy answer, CPU/CUDA BG-PBT with portable restore, and an
+injected out-of-memory exception after a real CUDA allocation. The tiny tensor
+fixture measured 0.0056793 seconds for one worker versus 0.00306712 for two:
+speedup 1.85167 and efficiency 0.92584. These short measurements are descriptive,
+not representative scaling results or an acceptance threshold. Subsequent
+source repairs require new receipts; the initial measurements remain historical.
+
+The earlier expanded hardware successor passed all 12 tests in 83.79 seconds.
+It additionally executes 16 scalar/scheduler/prior/warm families at two seeds
+on real CUDA objectives, all four vector methods, RGPE endpoint repetitions,
+PBT, PB2-Mix and a caller-owned CUDA linear adapter with portable checkpoints.
+The same tensor timing now measures 0.00513631 versus 0.00311590 seconds
+(speedup 1.64842; efficiency 0.82421), illustrating timing variability. Both
+runs remain visible; neither is a representative benchmark. The complete
+receipt is \path{20261025T190115Z-hardware-18860743/receipt.json} under the
+PAR-01 evidence directory. Ranked warm-history selection was verified on CPU;
+its GPU placement uses the same wrapper route but lacks a separate direct
+GPU-specific selection test. Ray multi-GPU placement remains unverified.
+
+The initial real local Ray test also passed with two logical CPU workers.
+\texttt{RayExecutor} with a \texttt{ResourceSpec} and explicit \texttt{max\_retries=0} validates
+cluster capacity and forwards execution context. Ray CPU reservations are
+logical scheduler resources, not exclusive OS affinity. Ray GPU scheduling
+uses its assigned visibility; local multi-GPU evidence does not qualify Ray
+multi-GPU operation automatically.
+
+Failures are preserved: initial recovery metadata tuple/list mismatch;
+a vector-fixture schema mistake; sandbox restrictions on Ray sockets and GPU
+inspection; and a development receipt invalidated by a mid-run test edit. Two expanded method-fixture runs also correctly refused a closed shared executor and overlapping CPU leases; ownership and disjoint test allocations were corrected before the passing 22-case rerun.
+The boundary review repaired event-ordered budget replay, worker replacement
+lifetime, pending population reservations, stale publication and process-ID
+reuse in cleanup. Current-source reruns determine closure, never deletion of
+these observations. The callable-repair successor later passed thirteen actual
+GPU tests; Chapter~\ref{sec:parallel-delivery} records the final disposition.
+
+\section{Acceptance, limits and master execution}
+\subsection{Critical-path qualification repair}
+The third parallel qualification allocation completed all sixteen finite
+campaigns and four capability gates, but its mutation run exposed missing
+eligible coverage in the inherited \texttt{Study.run} grouped-dispatch branch.
+Hardware-specific files were deliberately outside the single-CPU mutation
+roster; that separation did not discharge the changed inherited critical path.
+The run was stopped after concrete zero-return witnesses were retained. Its
+disposition is \textbf{INCONCLUSIVE}, with 1,211 killed, 86 surviving, three
+timed-out and 9,820 unchecked mutations; 21 critical survivors were unproved.
+These partial counts are not a completed mutation score. The unchanged
+zero-unproved-critical-survivor rule prevents acceptance. The stopped service
+released its source freeze, and the publication waiter correctly refused to
+publish a qualified manual.
+
+The repair adds hardware-independent controller tests to the normal mutation
+roster. On one CPU, real asynchronous endpoint calls must overlap across two
+candidates, finish in reverse order and commit in declaration order. Analytic
+scores, tuning-only selection, final-role separation, paid cancellation, lost
+reservations and completed recovery are asserted. Separate tests execute the
+actual Ray worker closures with a transport double and verify resource-spec
+routing and execution-context propagation. Such tests establish controller
+contracts; the independent real CPU/GPU tests still establish device execution.
+
+A bounded diagnostic ran two clean controls and 28 exact retained mutations.
+It detected 26 changes, including all original seven dispatch witnesses and
+both Ray resource-dispatch changes. The two survivors only removed a redundant
+cancellation argument. Parent cancellation is already normalized by
+\texttt{Study.\_accept} before ledger publication, searcher observation and
+scheduler reporting. The redundant argument is removed and scalar/vector
+cancellation and recovery are checked. No new equivalence exclusion, weaker
+threshold or reduced mutation population is introduced. The previous checker
+and fixtures remain immutable; the successor binds the reviewed source while
+preserving all 55 exact proof transformations.
+
+This repair remained in PAR-QUAL-01. Current-source installation, regression,
+isolation calibration and the prospectively reviewed qualification04 allocation
+passed before GAP-01/FINAL-AUDIT. Historical finite and hardware receipts
+retain their original source identities. Chapter~\ref{sec:parallel-delivery}
+identifies the actual terminal evidence; neither a diagnostic nor a layout
+rehearsal establishes qualification.
+
+Exact CPU fixtures use exact equality. Prospective floating envelopes are
+absolute/relative $10^{-9}/10^{-7}$ for float64 and $10^{-5}/10^{-4}$ for
+float32. GPU timing synchronizes device work. Tests inspect placement, real
+computation, ordering, accounting, restoration and failures; a missing GPU is
+an unavailable result, never a pass. No global optimum, universal workload
+speedup, arbitrary simulator compatibility or real-bank effectiveness is claimed.
+
+PAR-01 follows CONTRACT, RESOURCES, EXECUTORS, STUDY, POPULATION, CONFORMANCE,
+HARDWARE, DOCUMENTATION and AUDIT. At each boundary retain evidence, repair
+observed defects, refresh the next bounded plan and continue. Development
+rosters use four CPU cores at most, one numerical thread per worker, 300 seconds
+per group and 8 GiB owned RSS; hardware uses at most two idle GPUs and 600
+seconds. No sibling import, dataset or service is required. Separate-machine
+testing remains waived. The final extension audit reconstructs source,
+manifest, test, document and requirement coverage; PAR-QUAL-01 then addresses
+current-source scientific qualification before GAP's terminal guard.
+
+Authoritative plan: \path{docs/program/PARALLEL_EXECUTION_EXTENSION_2026_10_26.md}.
+Exact operations: \path{docs/PROGRAM_OPERATIONS.md}.
+Evidence and retained failures: \path{docs/program/evidence/2026-10-26/parallel-01/}.

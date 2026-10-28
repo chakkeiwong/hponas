@@ -942,3 +942,11 @@ Reviewed plan: docs/program/LQR_DIMENSION_SCALING_2026_10_28.md. Four one-thread
 | /home/ubuntu/workspace/hponas/program_operations/lqr_scale_ops.py confirm | Twelve cases,two methods,three fresh seeds;589824transitions/142848SAC;7200seconds |
 | /home/ubuntu/workspace/hponas/program_operations/lqr_scale_ops.py audit | Independent scores/references/ledgers/source and learned-controller audit;zero training;1800seconds |
 | /home/ubuntu/workspace/hponas/program_operations/lqr_scale_ops.py master-audit | Expanded master completeness and false-completion controls;zero training;600seconds |
+
+## Summary-only publication checks (28 October 2026)
+
+| Exact standalone command | Scope |
+| --- | --- |
+| /home/ubuntu/workspace/hponas/program_operations/publication_ops.py checks | Publication index guard and reviewed archive-independent regression roster; two serial processes, 300 seconds each, two CPU slots with one numerical thread, no GPU or scientific training; logs stay under ignored .local-archives. |
+
+Historical operations that bind raw evidence require restoration of the local archive. Publication checks do not substitute for those scientific audits. Raw evidence, generated checkpoints and LFS pointers must not be committed. See docs/ARTIFACT_STORAGE.md and docs/publication-policy.json.

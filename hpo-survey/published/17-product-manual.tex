@@ -1,0 +1,213 @@
+\chapter{The implemented product}
+\label{sec:current-product}
+
+This is the user manual for the repository's \textbf{HPO-NAS 0.1.0}, reviewed
+on 26 October 2026. The implemented product is a Python toolkit for
+hyperparameter optimization and moderate architecture-coordinate search. Its
+intended users build prediction, forecasting, causal/policy, inference,
+constrained neural-solver, valuation and allocation models for a universal
+retail bank. A model owner supplies the training and scoring code; HPO-NAS
+proposes configurations, enforces declared evaluation and resource contracts,
+persists progress, and reports the selected model or feasible Pareto front.
+
+\begin{decisions}
+The adopted \emph{finite known-answer and trusted supervised local research}
+program is implemented and qualified on its retained source. This is not a
+production-banking certification, a universal best-optimizer claim, or evidence
+of accuracy on real customer data. Package metadata still says Alpha.
+The CPU/GPU extension has passed current-source finite qualification and
+the final independent audit. Chapter~\ref{sec:parallel-extension} documents
+its interfaces and limits; Chapter~\ref{sec:parallel-delivery} identifies
+the exact qualification evidence. Historical qualification remains
+bound to its original source.
+Chapters~\ref{sec:current-product}--\ref{sec:worked-applications} describe
+current behavior. The subsequent survey and proposal are explicitly preserved
+as design history; their future-tense defaults, interfaces and schedules are
+not current usage instructions.
+\end{decisions}
+
+\section{What is delivered}
+
+The main package exports \texttt{Study}, \texttt{MultiObjectiveStudy},
+\texttt{StudyDeclaration}, \texttt{StudyBudget}, search spaces and searchers,
+local and Ray Core executors, vector objective specifications, population
+adapters, local service operations, and transfer/prior methods. SQLite and
+optional PostgreSQL retain authoritative study snapshots. Installed users can
+run two small caller-owned models through \texttt{hponas.quickstart}; the
+repository also contains bank profiles, the fuller application companions in
+Chapter~\ref{sec:worked-applications}, and the workspace/RL crosswalk in
+Chapter~\ref{sec:workspace-cases}.
+
+\begin{longtable}{p{0.23\textwidth}p{0.69\textwidth}}
+\toprule Feature & Available behavior and material boundary \\
+\midrule\endhead
+Space and admission & Continuous, ordinal and categorical knobs; conditional
+activation, supported transforms, explicit architecture axes, static
+capabilities and refusals before dispatch. Ordinal bounds represent integer
+intervals; arbitrary finite physical grids can use ordinal indices. \\
+Declared evaluation & Stable objective/model/data/protocol identities,
+fold/seed repetitions, complete-cohort means, frozen selection, disjoint final
+evaluation. Row, grouped and temporal folds have distinct checks. \\
+Scalar search & Random, Sobol, wrapped Optuna TPE, GP with joint qLogEI,
+dimension-scaled GP priors and wrapped CMA-ES. Composition limits are explicit
+in Table~\ref{tab:current-composition}. \\
+Multi-fidelity & ASHA, median stopping and PASHA; supported declared streaming
+advances whole fold/seed cohorts to specified barriers. These are opt-in;
+finite checks did not establish a generally safe pruning default. \\
+Multiple objectives & Named objectives, directions and upper-bounded
+constraints; vector random search, qLogNEHVI, Chebyshev scalarization and
+wrapped NSGA-II; matching multi-objective scheduling and feasible-front output. \\
+Optional sequential methods & Trust-region, cost-aware proposals and selected
+robust GP behavior. Robust GP does not support declared repeated evaluation
+because its failed-observation contract is insufficient. \\
+Priors and transfer & Explicit finite prior laws, prior-weighted search and
+PriorBand variants; ranked warm initialization; bounded fixed-kernel
+rank-weighted GP ensemble (RGPE) with declared source/target compatibility. \\
+Evolution and populations & DEHB; bounded local PBT, PB2-Mix and BG-PBT;
+model/optimizer-neutral population adapter, saved schedules and lineage,
+charged transfer, protected evaluation and compatible checkpoint copying. \\
+Execution and recovery & Local, isolated resource-aware CPU/GPU and Ray Core endpoint/streaming execution,
+cooperative stop/pause, checkpoint recovery and supported event replay. The
+legacy Ray Tune adapter is a separate compatibility path. \\
+Reports and artifacts & Full tuning/final records, curves, constraints,
+lineage, artifacts, incumbent/front trajectories, work/cost/time accounting,
+and diagnostics. Exported reports are not restart checkpoints. \\
+Local operations & SQLite/PostgreSQL, transactional recovery, full backup;
+local managed service migration/rollback, incremental committed-prefix replay,
+scheduled backup and local alerts, application roles and device/currency
+quotas. Encryption applies to exported event backups with caller-owned keys;
+live databases remain plaintext. \\
+\bottomrule
+\end{longtable}
+
+\section{Installation and first run}
+
+Use Python 3.12 or later. Retained installation checks cover Python 3.12 and
+3.13; they do not establish compatibility with every future dependency version.
+The base dependencies are NumPy, SciPy, cloudpickle, PyTorch, GPyTorch and
+BoTorch. From a local source checkout, create a dedicated environment and
+install the package; adding TPE requires its optional extra:
+
+\begin{verbatim}
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install .
+# Only when TPE is wanted:
+python -m pip install '.[tpe]'
+\end{verbatim}
+
+Installation may need a configured package index or a suitable local wheel
+cache. These commands describe installation; DOC-01 does not download packages
+or change the retained runtime. Optional extras are \texttt{tpe},
+\texttt{cmaes}, \texttt{ray}, \texttt{postgres}, \texttt{security} and
+\texttt{validation}. Install only those needed. Reproduce a qualified run with
+its retained dependency manifest, not merely an unconstrained newest package
+resolution. The offline installation evidence exercises built wheels outside
+the source tree on both tested Python versions.
+
+The following commands work from an installed package. Each new output
+directory must be empty. Choose different directories for separate studies.
+
+\begin{verbatim}
+python -m hponas.quickstart --model hinge \
+  --output /tmp/hinge-study
+python -m hponas.quickstart --model allocation \
+  --output /tmp/allocation-study
+python -m hponas.quickstart --model hinge \
+  --output /tmp/hinge-study --resume
+\end{verbatim}
+
+The hinge example fits the readout of a fixed-hidden ReLU network. Width two
+and zero ridge penalty represent $1+2\max(x,0)-\max(x-1,0)$ exactly, up to
+floating-point error. Hidden weights are \emph{not} trained. The allocation
+example tunes a projected-gradient solver for $J(w)=2w^2-3w$, $0\leq w\leq1$;
+the exact optimum is $w=3/4$, $J=-9/8$. Both use four finite configurations,
+retained model artifacts and protected final evaluation. Their deterministic
+repetitions do not provide independent statistical information.
+
+Inspect \texttt{report.json}, \texttt{study.sqlite}, the JSON checkpoint and
+the \texttt{models/} directory. The report separates tuning selection from
+final scoring; a lower tuning loss does not guarantee a lower final loss.
+Resume requires matching model, declaration and resource contracts. A completed
+resume performs no new objective evaluations. Model paths remain
+caller-owned; relocation to a different directory layout is not promised.
+
+\section{Choosing supported methods}
+
+There is no automatically promoted universal default. Start with a declared
+evaluation design, a resource envelope and a method compatible with the model.
+For small finite domains, enumeration supplies a transparent reference and may
+be cheaper than fitting an optimization surrogate. A bounded coordinate search
+cannot prove that its domain includes the best possible architecture.
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabularx}{\textwidth}{p{0.25\textwidth}XX}
+\toprule Method & Scheduling & Declared evaluation \\
+\midrule
+Random/Sobol & Scalar ASHA/PASHA & Endpoint or repeated barriers \\
+Optuna TPE & ASHA; model fidelity equals maximum & Endpoint or repeated
+barriers; only complete endpoint scores train TPE \\
+Scalar GP/CMA-ES & Scheduled partial-fidelity use refused & Endpoint;
+unscheduled streaming barriers \\
+Vector random / Bayesian / NSGA-II & Matching vector scheduler & Named
+vectors; every repetition must satisfy constraints \\
+PriorBand & Matching prior scheduler required & Explicit law and sampler
+restrictions apply \\
+Trust/cost wrappers & External scheduling refused; sequential &
+Wrapper-specific controls \\
+Robust GP & Scheduler and concurrency refused & Repeated declared workflow
+refused \\
+RGPE & Scheduler and concurrency refused & Scalar endpoint; declared
+compatible histories and protected final roles \\
+\bottomrule
+\end{tabularx}
+\caption{Current composition boundaries. Capabilities are executable
+contracts, not suggestions that arbitrary combinations will work.}
+\label{tab:current-composition}
+\end{table}
+
+GP joint batches are limited to eight proposals and at most 4,096 finite
+candidate subsets; unsupported mixed/unbounded discrete joint domains are
+refused. Pending locations participate in shared posterior acquisition
+samples. A textual \texttt{Knob.prior} is not automatically a probability law:
+use the selected prior method's explicit supported law. The RGPE variant uses
+fixed kernels, rank weights, target leave-one-out ranking and equal tie shares;
+it is not a claim to implement every variant in the literature.
+
+\section{Bank model-family support}
+
+The reusable contract accepts caller-owned models. Included bank profiles
+are self-contained synthetic examples, not dependencies on sibling projects.
+Prediction covers ridge, Bernoulli and right-censored geometric hazards with
+fold-local fitting; forecasting adds chronological folds and availability gaps.
+Causal/policy examples require overlap and identification or return conservative
+bounds. Inference includes linear-Gaussian filtering, verified native numerical
+handoffs and affine density corrections: posterior diagnostics do not rank
+native candidates, and posterior convergence remains unassessed.
+
+Neural-solver profiles verify values, derivatives, boundaries and feasibility
+independently of normalized training loss. Valuation/wallet examples retain
+signed cashflows, censoring and unidentified latent tails rather than inventing
+point values. Allocation separates statistical mean shrinkage from exact
+constrained optimization. Coordinate NAS changes model arrays and computation,
+records size/work and verifies artifact reload and compatible transfer. The
+new trained equilibrium example extends demonstration depth while retaining
+these finite and local boundaries.
+
+\section{What is not delivered or established}
+
+ifBO feasibility is a retained \textbf{FAIL}; its integration was cancelled.
+SAASBO, SMAC product integration, FIRE-PBT, MF-PBT, IPBT, SEARL, MORBO,
+hypervolume knowledge gradient, general PFNs, CARBS and muP/scaling-law methods
+are research watchlists, not implemented features. General cell/topology NAS,
+supernets, weight sharing, differentiable NAS and zero-cost proxy subsystems
+are outside the adopted scope.
+
+Local evidence includes an eight-study/four-worker setting; it does not qualify
+the proposal's 100-study/50-distributed-worker capacity or production p99
+targets. Authentication services, external secret vaults and alert delivery,
+hostile tenants, remote partitions and unattended banking deployment require
+separate integration and evidence. Separate-machine testing was waived,
+\emph{not passed}. No synthetic result establishes real-bank usefulness,
+posterior convergence or empirical optimizer superiority.

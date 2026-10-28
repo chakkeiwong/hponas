@@ -1,0 +1,115 @@
+\chapter{Workspace case ledger and reinforcement-learning scope}
+\label{sec:workspace-cases}
+
+This chapter records how the executed, self-contained application cases relate
+to the model families found under \path{/home/ubuntu/workspace}. The sibling
+repositories supplied read-only contract context. The companions do not import
+their code, data, services or runtime environments. The distinction matters:
+an integration check can show that a caller can use the public workflow, while
+only a declared objective and its reference can support an optimization result.
+
+\section{Crosswalk from workspace families to executed cases}
+
+\begin{longtable}{@{}p{.17\textwidth}p{.25\textwidth}p{.29\textwidth}p{.16\textwidth}@{}}
+\toprule
+Workspace context & Executed case and objective & Reference and result & Scientific boundary\\
+\midrule
+\texttt{FinMarketing} & Native response diagnostic; tune penalized logistic response settings and minimize validation log loss. & Fifteen reference configurations and sixty-four search trials completed; independent reconstruction differed by at most $1.12\times10^{-16}$. The self-contained response companion found the finite minimum with random and GP on all three replicates. & Integration and finite objective evidence; no bank-portfolio or causal claim.\\
+\texttt{MacroFinance},\newline forecasting & Linear-Gaussian latent-state forecast with delayed and missing observations; tune lag and ridge settings on rolling predictive NLL. & Twenty-seven repaired fits across three data replicates. Lag two with ridge one was selected in every replicate; joint Gaussian conditioning and an independent ridge solve agree. & One-step synthetic temporal fixture; no simultaneous grouped-temporal or real-bank claim.\\
+\texttt{SMEwallet} & Censored wallet model; the application companion tunes degree, ridge and noise scale against held-out likelihood, while the repaired decision study tunes twenty-four training-only wallet policies against capped-wallet validation utility. & The companion enumerates its twenty-seven configurations. The repaired decision study enumerates all twenty-four policies in each of three datasets and selects the best observed finite validation utility in each. & The later selected-versus-likelihood population comparison is mixed, and its rigorous paired signs remain unresolved. Unknown missingness is not identified by optimization.\\
+\texttt{causal},\newline policy workflows & Three-state, two-action, three-step servicing MDP; tune threshold direction, threshold, time slope and nuisance smoothing. & Cross-fitting uses training folds only. Independent dynamic programming enumerates all $512$ deterministic Markov policies; the selected policy reaches the exact synthetic optimum in all three replicates to numerical roundoff. & Known logger and positive overlap are required. Observational causal identification is refused when its assumptions fail.\\
+\texttt{dsge\_hmc},\newline \texttt{MOONeural} & Constrained neural solver and manufactured-equilibrium NAS; width, depth, activation, geometry, normalization and polishing alter trained networks. & The repaired solver selects width four/tensor/polish from twenty-four development fits; six fresh models pass the finite derivative checks and the subsequent interval certificate covers the stated rectangle. The earlier equilibrium companion also retains a complete eighteen-coordinate grid. & Certificates apply to the named models and domain. They do not prove all-seed training adequacy or unrestricted topology search.\\
+\texttt{MacroFinance},\newline \texttt{BayesFilter}, inference & Triangular neural transport for a transformed Gaussian target; tune architecture and training settings on held-out likelihood, then freeze maps for numerical HMC checks. & The GP search reaches the complete twenty-four-configuration minimum in two of three replicates; its largest observed finite regret in the third is $7.5356\times10^{-4}$ nats. Fresh reversibility, volume and gradient checks retain all valid map/sampler pairs. & Posterior diagnostics are not selection objectives and do not certify finite-chain convergence or population inference quality.\\
+\texttt{RLlib}/Brax & Bounded CPU PPO day-one walk with a protected evaluation seed. & V14 passes on the real Brax workload with one training trial, training seed $42$, protected seed $999$, a persisted checkpoint and a separate evaluation. & This is an integration and artifact-separation check, not a comparison of tuning algorithms.\\
+\bottomrule
+\end{longtable}
+
+The finite companion results use three fixed data replicates, disjoint training,
+tuning and final roles, charged duplicate proposals and a complete finite grid
+as a reference. A zero finite regret statement means that the observed search
+found the best member of that declared grid under the fixed fitting procedure.
+It is not a population guarantee, a universal optimizer ranking or evidence of
+real-bank effectiveness. The full application outcomes and adverse results are
+retained in \path{hpo-survey/applications/RESULTS.md} and the immutable APP-01
+and APP-03 evidence directories.
+
+\section{The direct FinMarketing integration evidence}
+
+The native diagnostic used the actual FinMarketing response fitting and
+evaluation path through the public HPO-NAS Study API. It evaluated the declared
+fifteen-point regularization grid, then ran random, Sobol, GP and TPE studies
+with sixteen proposals per method. All sixty-four search trials completed, a
+separate final evaluation followed each persisted selection, and the complete
+operation took 9.172 seconds on the recorded machine. The independently
+assembled validation log loss differed from the stored value by at most
+$1.12\times10^{-16}$. GP spent 5.485 seconds in acquisition and orchestration
+outside the objective fits, which is why grid cost and search overhead are
+reported separately.
+
+This native run is an integration result, not a replacement for the later
+self-contained reproducible examples. The companion response fixture removes
+the sibling dependency, uses three fixed data replicates and a protected final
+fold, and supplies an independent scalar reconstruction. Neither result claims
+that the selected regularization is best for the full FinMarketing project.
+The native summary is retained under
+\path{docs/program/evidence/2026-10-05/workspace-validation-01/run01/summary.json};
+the self-contained five-family summaries are under
+\path{docs/program/evidence/2026-10-24/app-01/}, and the repaired forecast,
+policy, NAS and transport records are under
+\path{docs/program/evidence/2026-10-25/app-03/}.
+
+\section{What has and has not been tested for RL tuning}
+
+The current real-RL evidence is the V14 bounded CPU PPO walk. It trains one
+policy on Brax \texttt{inverted\_pendulum}, writes the learning curve and
+checkpoint to the SQLite-backed ledger, and evaluates the frozen checkpoint on
+protected seed $999$. Its PASS establishes executable PPO, checkpoint and
+search/final seed separation. It does not compare searchers or establish a
+best PPO configuration.
+
+Earlier real-PPO random/pathological and GP experiments are retained as
+historical diagnostics. They include incomplete or retired comparison paths,
+and the original statistical superiority/pilot design was prospectively
+retired. They cannot be relabelled as a successful RL tuning study. The
+sequential policy companion is a finite MDP tuning test with an exact oracle;
+it exercises policy selection and causal safeguards, but it does not train a
+neural RL agent.
+
+\section{A minimal RL case suitable for a bounded integration test}
+
+The smallest useful next RL test is a self-contained two-state, two-action,
+four-step MDP with deterministic transitions and rewards. Start in $s_0$.
+Action $a_0$ gives reward zero and leaves the state unchanged. Action $a_1$
+from $s_0$ gives reward one and moves to $s_1$; action $a_1$ from $s_1$ gives
+reward two and leaves the state at $s_1$; the remaining state/action pairs give
+zero reward and leave the state unchanged. Thus backward induction gives the
+known optimal undiscounted return $1+3\cdot2=7$. At each trial a tabular
+Q-learning caller is trained from a fixed set of training episodes.
+The finite hyperparameter domain is
+\[
+ \alpha\in\{0.1,0.5\},\qquad
+ \epsilon\in\{0,0.1\},\qquad
+ N_{\rm episode}\in\{8,32\}.
+\]
+The tuning score is mean undiscounted return on fixed validation episodes;
+final episodes are independent and remain outside the search history. A
+backward-induction dynamic program supplies the exact optimal return and the
+complete eight-configuration enumeration supplies the finite HPO reference.
+
+This case is small enough to run on one CPU in seconds and still tests the
+important interfaces: a caller-owned training loop, maximization, separate
+roles and seeds, model and optimizer-state artifacts, work accounting,
+checkpoint/resume after an interruption, and refusal of final-data leakage.
+The objective is an objective result: the report states the selected return,
+finite regret against the eight-point reference and exact dynamic-programming
+regret. It has no human acceptance threshold and no claim about PPO or
+large-scale RL. A new run would require a versioned bounded manifest and a
+successor master stage; it is not silently added to the completed APP-01
+allocation.
+
+\begin{decisions}
+\textbf{RL disposition.} V14 establishes the bounded real-PPO integration path. The
+two-state Q-learning case is the recommended inexpensive known-answer RL
+integration test if RL tuning is reopened. Neither result should be described
+as universal RL tuning evidence or as production policy performance.
+\end{decisions}

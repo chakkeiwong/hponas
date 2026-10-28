@@ -130,3 +130,23 @@ docs/program/evidence/2026-10-27/**/session_latest
 docs/program/evidence/2026-10-28/**/session_latest
 docs/program/evidence/2026-10-27/**/pytest/*current
 docs/program/evidence/2026-10-28/**/pytest/*current
+
+# Local raw evidence archives never belong in Git or LFS.
+/.local-archives/
+
+# Publication policy: source and concise summaries only.
+/docs/program/evidence/
+/docs/program/operations-runs/
+/validation/artifacts/
+/archive/
+/docs/audits/evidence/
+/mutation_*.txt
+/v03_*.txt
+/coverage.xml
+/hpo-survey/main.pdf
+*.pt
+*.pth
+*.pkl
+*.pickle
+*.tar.zst
+*.bundle
