@@ -1,0 +1,13 @@
+{
+  "preflight": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-02/20261027T103732Z-preflight-1cc589c5/preflight-result.json",
+    "sha256": "10c77cd09ef51bf4af1e26debf26bcd3710812d4c33204bd3ed52e122217f1ab"
+  },
+  "audit": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-02/20261027T103849Z-audit-4bb3b19b/audit-result.json",
+    "sha256": "60dadbad178e57ba63422b80555432dc98dd2cef0d400148bc7a9bb5e6484167"
+  },
+  "scope": "Five-state definition and readiness only",
+  "bgpbt_sac_supported": false,
+  "training_transitions": 0
+}

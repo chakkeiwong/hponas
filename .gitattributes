@@ -20,3 +20,15 @@ validation/artifacts/V03/20261023_gap_final_03/mutation/mutmut-schedule.json fil
 validation/artifacts/V03/20261023_gap_final_04/mutation/mutmut-schedule.json filter=lfs diff=lfs merge=lfs -text
 validation/artifacts/V03/20261026_parallel_qualification_03/mutation/mutmut-schedule.json filter=lfs diff=lfs merge=lfs -text
 validation/artifacts/V03/20261026_parallel_qualification_04/mutation/mutmut-schedule.json filter=lfs diff=lfs merge=lfs -text
+
+# RL-LQR immutable model and binary evidence; preserve hash-verifiable bytes.
+docs/program/evidence/2026-10-27/**/*.pt filter=lfs diff=lfs merge=lfs -text
+docs/program/evidence/2026-10-28/**/*.pt filter=lfs diff=lfs merge=lfs -text
+docs/program/evidence/2026-10-27/**/*.pkl filter=lfs diff=lfs merge=lfs -text
+docs/program/evidence/2026-10-28/**/*.pkl filter=lfs diff=lfs merge=lfs -text
+docs/program/evidence/2026-10-27/**/*.pdf filter=lfs diff=lfs merge=lfs -text
+docs/program/evidence/2026-10-28/**/*.pdf filter=lfs diff=lfs merge=lfs -text
+docs/program/evidence/2026-10-27/**/*.whl filter=lfs diff=lfs merge=lfs -text
+docs/program/evidence/2026-10-28/**/*.whl filter=lfs diff=lfs merge=lfs -text
+docs/program/evidence/2026-10-27/**/*.npz filter=lfs diff=lfs merge=lfs -text
+docs/program/evidence/2026-10-28/**/*.npz filter=lfs diff=lfs merge=lfs -text

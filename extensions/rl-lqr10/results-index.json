@@ -1,0 +1,18 @@
+{
+  "engineering": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-04/20261027T142443Z-engineering-67c19fae/engineering-result.json",
+    "sha256": "5ea16adbcef1ac00466e37507cfdce2a8576455708cf72354772cbd71d050a54"
+  },
+  "study": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-04/20261027T142542Z-study-22923d3e/study-result.json",
+    "sha256": "91ddcedc4d7f5d1913100c751698115242c9457c5d156243db6b53c54366fc12"
+  },
+  "audit": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-04/20261027T143801Z-audit-c234155c/audit-result.json",
+    "sha256": "470ba8de200cf23c465cc90bc82ee535e1855140f646454590c90fdb66c3c71e"
+  },
+  "master-audit": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-04/20261027T143915Z-master-audit-87cbf8b4/master-audit-result.json",
+    "sha256": "459fb3291e8ea163aa10c61ee4155d302762301b650c0062bbe4ca9bd2fc7574"
+  }
+}

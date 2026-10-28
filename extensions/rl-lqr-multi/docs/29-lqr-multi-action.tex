@@ -1,0 +1,68 @@
+\chapter{Multi-action joint SAC tuning}
+\label{sec:lqr-multi-action}
+
+\section{What is the action network?}
+RL-LQR-05 retains ten physical states and thirty time steps and varies the
+number of control inputs $m\in\{2,3,4,5\}$. Control inputs are the action
+vector, distinct from the eleven observation features (state and time).
+The actor is the action network: eleven inputs pass through two to four tanh
+hidden layers, each having eight to sixty-four neurons, then a $2m$-output
+Gaussian head. It emits $m$ means and $m$ log standard deviations during
+training. Exported deterministic actions are $\tanh(\mu)\in[-1,1]^m$.
+Each of two independent critics takes eleven observation values plus $m$
+actions and outputs one soft-Q value. The critics share a selected layer
+layout, not weights. Actor and critic layouts are searched independently
+with their respective learning rates in $[10^{-5},10^{-2}]$ on log scale.
+The architecture/rate candidate is evaluated only after real SAC training.
+
+\section{Fixed model family and analytical comparison}
+For each $m$, $B=[e_1,\ldots,e_m]$ and $R=0.1I_m$. All other dynamics,
+initial and noise laws, discount and terminal conventions are those of the
+ten-state predecessor. Adjacent actuation and rank-one process noise are
+explicit properties of this family, not a universal control benchmark.
+The attainable reference uses backward Riccati recursion with independent
+condensed block-matrix elimination and forward covariance checks. For each
+action coordinate, the sum of the absolute sign coefficients bounds its
+largest possible value over all $2^{40}$ initial/noise histories. Feasibility
+is checked coordinate by coordinate, without summing different controls.
+
+The excess-cost identity retains all off-diagonal curvature terms:
+\[
+ J(\pi)-J^*=\mathbb E\sum_{t=0}^{29}0.99^t
+ (u_t+K_tx_t)^\top (R+0.99 B^\top P_{t+1}B)(u_t+K_tx_t).
+\]
+Small multi-action nonlinear policies are exhaustively enumerated to verify
+the identity; every evaluated path also checks its telescoping equality,
+including the realized noise martingale. The optimal cost is exact up to
+floating-point reference checks. Neural-policy expectation is sampled.
+
+\section{Frozen comparison and resources}
+Seeds 10501--10503 are paired within each action dimension. Selection uses
+1,024 IID validation paths with seed 1050001. All twelve paired procedures
+are frozen before any outcomes on 16,384 holdout paths with seed 1050002
+are computed. Those paths share initial/noise signs for paired contrasts.
+Normal 95\% intervals measure conditional test-path uncertainty only; they
+are neither finite-sample certificates nor intervals over optimizer seeds.
+All results are retained, with no selected performance threshold or
+outcome-dependent training extension.
+
+Each method receives 77,824 transitions per pair. Four architecture proposals
+receive 64 distillation updates and 2,048 SAC transitions before elimination;
+two survivors receive another 2,048 transitions. The static search has equal
+transition and component-gradient-minibatch work. Default results reuse its
+best validation checkpoint from the default static member with actor and
+critic widths [32,32] and learning rates 0.001. That member receives 19,456
+transitions, so the default comparison has a smaller total tuning budget.
+Equal component work does not imply equal FLOPs or wall time.
+
+Across four dimensions and three paired seeds, the budget is 1,867,776
+transitions, 463,104 SAC updates and 3,072 distillation updates, totaling
+1,861,632 component-gradient minibatches. Four single-thread CPU workers
+execute under a 90-minute, 16-GiB owned-RSS guard with a coordinator. These
+small-network experiments do not require idle GPUs or establish GPU speedup.
+Checkpoint contracts prevent cross-dimension restoration/replay/transfer.
+Architecture mutation within a dimension retains the environment contract.
+No oracle actions are used in training or distillation.
+
+\section{Measured outcomes and limitations}
+\input{lqr-multi-measured-results}

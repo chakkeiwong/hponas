@@ -4,7 +4,7 @@ See [the master program](../CONSOLIDATED_MASTER_AUTHORITY.md) for authority, sco
 
 ## Current execution status
 
-Program revision: **2.646**. Current phase: **Tier 1 development**.
+Program revision: **2.727**. Current phase: **Tier 1 development**.
 
 **Release status: LOCAL BASELINE ACCEPTED.** Tier-0 acceptance applies to the retained source. Current development and later phases require their own acceptance. No external release is recorded.
 **Current parallel source: UNQUALIFIED.** Historical product acceptance remains attached to its retained source; PAR-QUAL-01 and the final GAP guard are outstanding.
@@ -69,7 +69,7 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | REL-02 | Integrated-source qualification and release disposition | complete | verified | REL-01, T1-GATE | Preserve the qualified finite local baseline; PRD-01 owns omitted original product contracts and subsequent changed-source qualification. |
 | PRD-01 | Recover and repair the complete public product contract | complete | verified | REL-02, D-PRODUCT-CONTRACT-RECOVERY, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Retain engineering readiness; BANK-01 owns all final-source foundation and profile scientific qualification. |
 | BANK-01 | Reusable universal-bank model-family HPO/NAS workflows | complete | verified | PRD-01, D-BANK-PRODUCT-SCOPE, D-PRODUCT-FINAL-QUALIFICATION-ORDER | Preserve current qualified source; GAP-01/FINAL-AUDIT independently assesses complete gap closure. |
-| GAP-01 | Close historical implementation gaps and independently audit completion | complete | verified | PRD-01, D-GAP-CLOSURE-20261018 | Preserve all original obligations and qualified finite evidence; changed source or additional claims require prospective work. |
+| GAP-01 | Close historical implementation gaps and independently audit completion | complete | verified | PRD-01, D-GAP-CLOSURE-20261018 | Expanded bounded repair reconciled; retain scientific limits. |
 | DOC-01 | Product manual, complete feature audit and bounded application examples | complete | verified | BANK-01, D-DOC01-20261024 | Retain completed manual, feature ledger and independent finite application evidence; future scope/source changes require prospective work. |
 | APP-01 | Five-family workspace application validation | complete | verified | DOC-01, D-APP01-20261024 | Retain completed five-family finite evidence. NAS scientific nonattainment and short-chain discrepancies are explicit; new budgets/designs require successor work. |
 | APP-02 | Sequential diagnosis of application scientific nonattainment and test coverage | complete | verified | APP-01, D-APP02-20261025, D-APP02-WALLET-PRIORITY | Bounded investigation complete; retain unresolved scientific limits. No further training allocated. |
@@ -79,6 +79,15 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | SCI-03 | Certified synthetic evaluation and installable verification tools | complete | verified | SCI-02 | Retain audited bounded delivery; no allocated stage remains. Wallet precision and unsupported scientific claims remain open as explicit scope limits. |
 | PAR-01 | Parallel CPU/GPU execution for all supported tuning families | complete | verified | SCI-03, D-PAR01-20261026 | Preserve source-bound CPU/GPU implementation, manual and current-source qualification. |
 | PAR-QUAL-01 | Qualify changed parallel source before terminal product closure | complete | verified | PAR-01 | Preserve qualified source; GAP-01/FINAL-AUDIT remains the terminal master phase. |
+| RL-LQR-01 | Known-answer RLlib SAC and joint actor/critic HPO/NAS | complete | verified | PAR-QUAL-01, D-RL-LQR01-20261027 | Preserve independently audited finite results and explicit poor-learning outcome; no additional training allocated. |
+| RL-LQR-02 | Five-state LQR joint search definition and BG-PBT readiness | complete | verified | RL-LQR-01, D-RL-LQR02-20261027 | Retain verified five-state/search definition. BG-PBT/SAC adapter, conditional Bayesian search and distillation remain undelivered; no training allocated by this capability assessment. |
+| RL-LQR-03 | Five-state SAC BG-PBT implementation and bounded learning study | complete | verified | RL-LQR-02, D-RL-LQR03-20261027 | Bounded companion extension, repaired procedure comparison and shared GPU evidence audited; no automatic new campaign. |
+| RL-LQR-04 | Ten-state horizon-thirty joint SAC BG-PBT study | complete | verified | RL-LQR-03, D-RL-LQR04-20261027 | Retain all paired test outcomes; no convergence or global-optimality claim. |
+| RL-LQR-05 | Ten-state multi-action joint SAC BG-PBT study | complete | verified | RL-LQR-04, D-RL-LQR05-20261027 | Retain all paired test outcomes; no convergence or global-optimality claim. |
+| RL-LQR-06 | Scalar-state diagnostic joint SAC BG-PBT study | complete | verified | RL-LQR-05, D-RL-LQR06-20261028 | Retain all paired test outcomes; no convergence or global-optimality claim. |
+| RL-LQR-07 | Trace scalar-state SAC critic and population failures | complete | verified | RL-LQR-06, D-RL-LQR07-20261028 | Diagnosis complete; learning repairs require a separate prospective bounded comparison, not claims from exposed diagnostic policies. |
+| RL-LQR-08 | Scalar learner, safe handoff and protected joint tuning repair | complete | verified | RL-LQR-07, D-RL-LQR08-20261028 | Retain numerical outcomes and explicit unresolved convergence/generalization limits. |
+| RL-LQR-09 | Structured SAC action and state dimensional scaling | complete | verified | RL-LQR-08, D-RL-LQR09-20261028 | Bounded dimensional extension complete. Retain all outcomes: symmetry improves 11/12 case means; ten-state/eight-action exception and nonzero neural gaps remain. |
 
 ## Decisions and unresolved conflicts
 
@@ -137,3 +146,12 @@ Execution and implementation states are separate from campaign acceptance. Compl
 | D-APP02-WALLET-PRIORITY | accepted | Investigate wallet coverage before remaining APP-02 cases | APP-02/COVERAGE-WALLET precedes queued refit, transport and policy work; original evidence and final GAP audit remain. |
 | D-APP03-20261025 | accepted | Execute reviewed bounded repairs and documentation after APP-02 diagnosis | Preserve accepted baseline; new bounded standalone repairs require fresh source-bound evidence; terminal audit remains last. |
 | D-PAR01-20261026 | accepted | Implement parallel CPU/GPU execution across tuning families | Add successor PAR-01 with terminal audit; preserve predecessor and unsupported outcomes. |
+| D-RL-LQR01-20261027 | accepted | Execute bounded known-answer RLlib joint actor/critic tuning example | Execute RL-LQR-01 with explicit small resource envelope and terminal master audit. |
+| D-RL-LQR02-20261027 | accepted | Five-state LQR and joint architecture/continuous-rate definition with BG-PBT readiness assessment | Bounded no-training preflight and capability audit; no population campaign allocated. |
+| D-RL-LQR03-20261027 | accepted | Execute the five-state SAC BG-PBT implementation sequence | Add RL-LQR-03, preserve historical evidence and core, require final audit. |
+| D-RL-LQR04-20261027 | accepted | Execute ten-state horizon-thirty joint SAC benchmark | Register RL-LQR-04 and reopen final reconciliation; retain predecessor evidence. |
+| D-RL-LQR05-20261027 | accepted | Execute ten-state multi-action joint SAC benchmark | Register RL-LQR-05 and reopen final reconciliation; retain predecessor evidence. |
+| D-RL-LQR06-20261028 | accepted | Execute scalar-state diagnostic joint SAC benchmark | Register RL-LQR-06 and reopen final reconciliation; retain predecessor evidence. |
+| D-RL-LQR07-20261028 | accepted | Trace the scalar-state SAC and population failures | Register zero-training RL-LQR-07 diagnosis and reopen final reconciliation. |
+| D-RL-LQR08-20261028 | accepted | Repair scalar learner before architecture handoff and joint search | RL-LQR-08 reopens final reconciliation; separate structured controls and generic claims. |
+| D-RL-LQR09-20261028 | accepted | Scale structured SAC to5--10actions and10active states | Register RL-LQR-09 and reopen final audit; no renewed generic superiority claim. |

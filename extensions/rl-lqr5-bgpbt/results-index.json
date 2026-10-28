@@ -1,0 +1,62 @@
+{
+  "engineering": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113509Z-engineering-ec00e45f/engineering-result.json",
+    "sha256": "3b047856bf2934caa4a1c6deb1e90f2ad4afa4a19c970f82ac93988726010cef"
+  },
+  "calibration": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113806Z-calibration-35c1d548/calibration-result.json",
+    "sha256": "84a0852f00b1360ee9503d403ece9cb53cbaa32696a0dd42987a476672f65f00"
+  },
+  "search": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113933Z-search-68a2e9a1/search-result.json",
+    "sha256": "7620c28bb1608a9cff4898c579c1c9a4302d5aae25a507b5b16b920fd0ca0d81"
+  },
+  "confirmation": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T114330Z-confirmation-efda08b6/confirmation-result.json",
+    "sha256": "fae696ea9c9bea277525a858482151397a884ca43902cc6754a7cd29a5aa02b1"
+  },
+  "documentation": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125923Z-hardware-documentation-a1e74359/documentation-result.json",
+    "sha256": "c4733eef2548994ede4f6f3c6af1ef21971a42b18c450142e4149e26637f1042"
+  },
+  "cpu_audit": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T120447Z-documentation-38aa2443/cpu-audit-result.json",
+    "sha256": "8de8f38c87ad45b95d07b9783df0f8c7787d4c656461af72b8aec21a4e80d2eb"
+  },
+  "repair-engineering": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T123950Z-repair-engineering-834b98b2/engineering-result.json",
+    "sha256": "4d1b15c10bde501676ca3176b2723720256ea8162e14afa7ea81b2cc840fa06b"
+  },
+  "procedure-check": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T124229Z-procedure-check-8860a4e3/procedure-check-result.json",
+    "sha256": "70cc72aafb32d4901e3765723a6a6dee69968790e12d98accf6ec09f114326fd"
+  },
+  "selection-reconciliation": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125120Z-selection-reconciliation-853a58ed/selection-reconciliation-result.json",
+    "sha256": "2feb26910376fa1fc2f3bd2d52acb1f5a903e3ea9deb569bf2b540af4bc4ac61"
+  },
+  "hardware-startup-cleanup": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/startup-failure-cleanup.json",
+    "sha256": "1c3f9953b669bb6ac1df8193909a992334ac1d605d518a01740abaf2f053ddc3"
+  },
+  "device-repair": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125634Z-device-repair-60f8b8c1/device-repair-result.json",
+    "sha256": "65dbbe165524a7e3e57930e92e7f67f9a524a743d24b227739686d25e4308303"
+  },
+  "hardware": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125719Z-hardware-3b59183d/hardware-result.json",
+    "sha256": "8250edd78be1d4917729002c221db7197e946c7a96b9c110504fdb53c084687d"
+  },
+  "hardware-documentation": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125923Z-hardware-documentation-a1e74359/documentation-result.json",
+    "sha256": "c4733eef2548994ede4f6f3c6af1ef21971a42b18c450142e4149e26637f1042"
+  },
+  "audit": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T130059Z-audit-93b1fc5e/audit-result.json",
+    "sha256": "f0a5239914f0c20dae46c4affe63e54c426c342d8bcb127f11f219924b676a46"
+  },
+  "master-audit": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T130218Z-master-audit-f1cc7c92/master-audit-result.json",
+    "sha256": "1db50ab4aa368f1ec337e9c18f7be6ae7ed9bffc26176c23dc7da2f20268e9aa"
+  }
+}

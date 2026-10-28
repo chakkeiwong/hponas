@@ -106,3 +106,27 @@ docs/program/evidence/2026-10-24/app-01/operation.lock
 !docs/program/operations-runs/20261024T131207Z-checks-8ce13a68/*.log
 !docs/program/operations-runs/20261024T131318Z-audit-closure-c6494e88/*.log
 !docs/program/operations-runs/20261024T131404Z-checks-17eb33ea/*.log
+
+# RL-LQR evidence includes immutable execution and document-build records.
+!docs/program/evidence/2026-10-27/**/*.log
+!docs/program/evidence/2026-10-28/**/*.log
+!docs/program/evidence/2026-10-27/**/*.out
+!docs/program/evidence/2026-10-28/**/*.out
+!docs/program/evidence/2026-10-27/**/*.aux
+!docs/program/evidence/2026-10-28/**/*.aux
+!docs/program/evidence/2026-10-27/**/*.bbl
+!docs/program/evidence/2026-10-28/**/*.bbl
+!docs/program/evidence/2026-10-27/**/*.blg
+!docs/program/evidence/2026-10-28/**/*.blg
+!docs/program/evidence/2026-10-27/**/*.toc
+!docs/program/evidence/2026-10-28/**/*.toc
+!docs/program/operations-runs/20261027*/*.log
+# Locks and machine-local Ray aliases do not carry immutable evidence.
+docs/program/evidence/2026-10-27/**/operation.lock
+docs/program/evidence/2026-10-28/**/operation.lock
+docs/program/evidence/2026-10-27/**/work.jsonl.lock
+docs/program/evidence/2026-10-28/**/work.jsonl.lock
+docs/program/evidence/2026-10-27/**/session_latest
+docs/program/evidence/2026-10-28/**/session_latest
+docs/program/evidence/2026-10-27/**/pytest/*current
+docs/program/evidence/2026-10-28/**/pytest/*current

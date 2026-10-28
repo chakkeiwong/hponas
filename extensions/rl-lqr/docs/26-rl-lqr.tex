@@ -1,0 +1,206 @@
+\chapter{Known-answer control and joint SAC tuning}
+\label{sec:rl-lqr}
+
+\begin{decisions}
+\textbf{Delivered scope.} RL-LQR-01 adds an optional, self-contained PyTorch
+RLlib SAC example to HPO-NAS, including independent actor/critic architecture
+coordinates, joint hyperparameter search, complete-path scoring and CPU/GPU
+execution checks. The core remains qualified on its original source. This
+bounded experiment did \emph{not} establish reliable learning: the selected
+configuration's two fresh retrainings both cost more than taking no action.
+No global neural optimum or BG-PBT/SAC architecture transfer is claimed.
+\end{decisions}
+
+\section{The model and what is tuned}
+The fully observed scalar stochastic control problem has discrete time and
+continuous states/actions:
+\begin{align}
+ x_{t+1}&=0.8x_t+u_t+w_t, & -1\leq u_t\leq1,\\
+ x_0&\sim\operatorname{Uniform}\{-1,1\}, &
+ w_t&\overset{\mathrm{iid}}{\sim}\operatorname{Uniform}\{-0.05,0.05\},\\
+ J(\pi)&=\mathbb{E}\left[\sum_{t=0}^{7}0.99^t(x_t^2+0.1u_t^2)
+                  +0.99^8x_8^2\right].
+\end{align}
+The observation is $(x_t,(8-t)/8)$; time is needed for a finite-horizon Markov
+policy. The last environment reward includes $0.99x_8^2$ once. There is no
+state clipping or environment-side action clipping. This is not a
+discrete-action benchmark and its noise is not Gaussian LQG noise.
+
+HPO-NAS minimizes the unregularized expected cost of the delivered deterministic
+policy, $u=\tanh(\mu_\theta(x,t))$. Standard SAC trains an entropy-regularized
+soft value objective. The two objectives differ: the soft critic is not being
+certified as the ordinary LQR value function. The objective definition is
+frozen before fitting, and every reported cost uses that definition.
+
+The actor architecture coordinate is either $[16]$ or $[32,32]$; the critic
+coordinate is $[32]$ or $[64,64]$. The actor uses its coordinate for both its
+encoder and distribution head. Each critic uses its own coordinate for state
+and action streams, fusion, and scalar head. Thus these coordinates are not
+literal full-network layer lists. Actor, twin critics and target copies have
+separate parameter tensors. Four construction checks exercise every network
+pair, forward shapes, independent coordinates and refusal of nonfinite tensors.
+
+Two learning-rate recipes are crossed with all four network pairs: recipe 0
+is $(\eta_\pi,\eta_Q)=(0.0003,0.001)$, recipe 1 is $(0.001,0.003)$.
+Every network pair gets both recipes and fresh model/optimizer state. This
+implements the joint problem; changing architecture does not inherit an
+already-selected learning rate. It is an exhaustive eight-row Study with
+three categorical coordinates, not a global architecture search.
+
+\section{An attainable optimum and independent scoring}
+Let $\gamma=0.99$, $a=0.8$, $b=1$, $q=1$, $r=0.1$, $\sigma_w^2=0.0025$.
+With $P_8=1$ and $c_8=0$, backward dynamic programming gives
+\begin{align}
+ S_t&=r+\gamma b^2P_{t+1}, & K_t&=\gamma baP_{t+1}/S_t,\\
+ P_t&=q+\gamma a^2P_{t+1}-S_tK_t^2, &
+ c_t&=\gamma(c_{t+1}+P_{t+1}\sigma_w^2).
+\end{align}
+An independent exact rational calculation uses
+$P_t=q+\gamma a^2P_{t+1}r/(r+\gamma b^2P_{t+1})$.
+The attainable optimum is $J^*=P_0+c_0=1.078527$ (rounded).
+The largest oracle action on any reachable path is $0.730304<1$.
+Consequently the unconstrained lower bound is attained in this bounded-action
+problem. This feasibility argument is essential: a generic unconstrained
+Riccati solution is not automatically the bounded-action optimum.
+
+All $2^9=512$ initial-state/noise paths have equal probability. Every saved
+deterministic actor is evaluated over this complete law. There is no Monte
+Carlo error in the evaluation expectation; training randomness and numerical
+roundoff remain. The independent audit reconstructs trajectories, rewards,
+terminal discounting and the performance-difference identity
+\[
+ J(\pi)-J^*=\mathbb{E}\sum_{t=0}^{7}\gamma^tS_t(u_t+K_tx_t)^2.
+\]
+The tolerance concerns floating-point identities only, bounded by machine
+precision, horizon and magnitude. It is not a learning-success threshold.
+Fifteen reference tests include rational/numerical agreement, direct one-step
+quadratic minimization, the discounted SciPy DARE limit, policy-gap identities,
+Gymnasium seeding/rewards, invalid actions and a wrong-terminal negative case.
+
+\section{Frozen experiment and measured result}
+Each fit receives exactly 4,096 transitions, batch size 64, 64 updates per
+optimizer, replay capacity 1,024, training intensity 1, initial temperature
+0.01, temperature learning rate 0.0003 and target smoothing $\tau=0.005$.
+Tuning seeds 1101 and 1102 score every candidate. Selection is durably frozen
+before fitting final seeds 2101 and 2102. Both phases use the same known law:
+fresh seeds test retraining variability, not held-out dynamics or economic
+generalization. All candidate outcomes, including unfavorable ones, are retained.
+
+\begin{center}
+\begin{tabular}{llllr}
+\toprule
+Actor coordinate & Critic coordinate & Recipe & Tuning fits & Mean cost\\
+\midrule
+$[16]$ & $[32]$ & 0 & 2 & 2.529902\\
+$[16]$ & $[32]$ & 1 & 2 & \textbf{1.699976}\\
+$[16]$ & $[64,64]$ & 0 & 2 & 4.029705\\
+$[16]$ & $[64,64]$ & 1 & 2 & 5.146045\\
+$[32,32]$ & $[32]$ & 0 & 2 & 10.548371\\
+$[32,32]$ & $[32]$ & 1 & 2 & 38.232926\\
+$[32,32]$ & $[64,64]$ & 0 & 2 & 9.849207\\
+$[32,32]$ & $[64,64]$ & 1 & 2 & 4.199699\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The selected $[16]/[32]$ recipe-1 configuration has final costs 13.049656 and
+3.265531, mean \textbf{8.157594}; the no-action cost is 2.725760. The two final
+optimality gaps are 11.971130 and 2.187005. Both final fits are worse than the
+no-action benchmark. Engineering completion does not convert these observations
+into scientific success. The small 64-update budget and training sensitivity
+are practical limitations; the experiment does not isolate a unique cause of
+poor learning. There is no automatic increase in budget to obtain a favorable
+result. The search establishes only the best observed mean among its eight
+candidate/seed/budget combinations, not the expected-seed or global optimum.
+
+\section{Recovery and actual parallel execution}
+HPO-NAS supplies Study selection, the durable evaluation/work ledger and
+ResourceExecutor. RLlib supplies SAC's learner, twin targets, replay sampling
+and optimizer losses. HPO-NAS is not built on Ray Tune: Ray Core execution is
+optional in the core, while this companion specifically uses RLlib/Ray.
+MacroFinance supplied read-only interface context; no sibling data, imports,
+runtime environment or services are used.
+
+The installed Ray 2.58.0 deterministic squashed-Gaussian conversion exposes
+the pre-tanh mean. The companion overrides deterministic conversion to
+$\tanh(\mu)$, preserving seeded stochastic actions and log probabilities.
+Its catalog separates actor and critic architecture construction without
+replacing the SAC training losses. No installed Ray source is modified.
+
+The learner check performs 512 transitions, saves state, restores and performs
+512 more. All four optimizers advance from 8 to 16 updates. Model and target
+parameters, optimizer state, replay, replay RNG and temperature identities
+match at restoration. The companion supplements RLlib's new-stack checkpoint
+with the omitted replay and standalone temperature. Bitwise future environment
+trajectories and GPU numerical reproduction are not claimed. A completed Study
+restore returns exactly the retained result with an objective that refuses
+calls, zero worker startup and zero extra transitions.
+
+CPU repetitions use two distinct assigned cores, one numerical thread per
+worker, with overlapping measured training intervals. GPU tests use two
+physical GPU UUIDs, one device-local \texttt{cuda:0} per worker, actual CUDA
+learner tensors and nonzero optimizer updates. The first hardware attempt's
+training intervals did not overlap because setup durations differed. A reviewed
+successor waits at a two-worker ready barrier after construction and times
+training with CUDA synchronization; measured training overlap is 2.104343 seconds.
+The predecessor remains a failure; its
+1,024 transitions are counted. Total measured work is \textbf{76,800}
+transitions, including the 73,728-transition joint study, 1,024 learner-resume
+transitions, and two 1,024-transition hardware attempts. No speedup or
+multi-machine fault-tolerance claim follows from the overlap check.
+
+Other preserved failures were an oracle assertion using literal zero instead
+of a floating-point tolerance, an overly long UNIX socket path (repaired with
+an owned short alias), and a resume fixture that eagerly started its own worker
+pool before asserting none existed. The latter is repaired by constructing
+the executor without entering its eager context. No scientific fits were
+repeated to repair Study resume, and no core defect was inferred from that fixture.
+
+\section{User guide and artifact contract}
+The source is \path{extensions/rl-lqr}; the guide is its \path{README.md}.
+The tested runtime is Python 3.13, Ray 2.58.0, Torch 2.13.0+cu130, NumPy 2.5.2,
+SciPy 1.18.1, with an isolated overlay containing Gymnasium 1.2.2,
+farama-notifications 0.0.4, lz4 4.4.5 and ormsgpack 1.13.0. The runtime lock
+retains wheel/file hashes. TensorFlow is not required. Add the companion
+directory to the Python import path after installing the documented runtime:
+\begin{Verbatim}[fontsize=\small]
+from hponas_rl_lqr.reference import oracle_report
+from hponas_rl_lqr.environment import FiniteLQREnv
+print(oracle_report())
+env = FiniteLQREnv()
+observation, info = env.reset(seed=7)
+\end{Verbatim}
+For a separately allocated fit, use:
+\begin{Verbatim}[fontsize=\small]
+experiment.fit(config, seed, fresh_directory, transitions=4096)
+\end{Verbatim}
+The tested roster and declaration are exposed by \texttt{roster()} and
+\texttt{declaration()}. Set \texttt{use\_gpu=True} only within the intended
+worker device assignment. Each fit owns and shuts down its one-CPU Ray instance.
+The registered checkout runner imposes four-core, two-GPU, 16-GiB RSS, 2-GiB
+output and disk-floor guards. A standalone caller owns those operational limits.
+
+Use the exact absolute commands in \path{docs/PROGRAM_OPERATIONS.md}:
+\texttt{rl\_lqr\_ops.py} with \texttt{oracle}, \texttt{learner},
+\texttt{joint}, \texttt{joint-replay}, \texttt{hardware}, \texttt{build},
+\texttt{audit} or \texttt{master-audit}. They require the registered active
+stage and reviewed manifest; consumed training is not automatically rerun.
+
+Each fit retains \path{actor.pt} (standalone TorchScript inference),
+\path{paths.npz} (all states, actions, disturbances and path costs),
+\path{training.json}, \path{fit-result.json} and the learner/replay checkpoint.
+Only trusted local checkpoints may be loaded: they contain Python pickle state.
+\path{results-index.json} binds operation receipts. The final audit replays
+saved actors and independently reconstructs scores, selection, prospective
+freeze, budgets, checkpoint Adam counts and device intervals. Negative controls
+alter scores, disturbances, actions, selection, freeze timing and GPU evidence.
+All original chapters and consumed artifacts remain unchanged in this edition.
+
+\begin{decisions}
+\textbf{Explicit limits.} Known-answer controller gaps are measured, not assumed
+small. Two fresh seeds do not establish statistical superiority or reliable
+learning. Existing finite-MDP BG-PBT acceptance does not establish SAC replay
+transfer, cross-shape distillation or actor/critic population search; those are
+unsupported here. Broader architectures, environments, PPO comparisons,
+economic effectiveness and production deployment are outside this allocation.
+\end{decisions}

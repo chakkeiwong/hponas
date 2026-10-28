@@ -1,0 +1,78 @@
+\chapter{Scalar state and redundant-action diagnosis}
+\label{sec:lqr-scalar-state}
+
+\section{Question and matched controls}
+RL-LQR-06 investigates whether a high state dimension is necessary for the
+learning gaps observed in the preceding three-action experiment. Three
+cases share the same attainable optimum: one state/one action (scalar1), one
+state/three actions (scalar3), and the same scalar control problem with nine
+irrelevant observed states (padded3). The scalar actor has two input features,
+state and remaining-time fraction; the padded actor has eleven.
+
+For $m=1$ or $3$, define $b=\mathbf 1_m^\top/\sqrt m$ and
+\[
+ x_{t+1}=0.92x_t+bu_t+w_t,\qquad
+ \ell(x_t,u_t)=x_t^2+0.1u_t^\top u_t.
+\]
+The horizon is thirty, discount $0.99$, terminal cost $x_{30}^2$, initial
+state an independent sign times $0.5$, noise a fresh sign times $0.025$,
+and each action is in $[-1,1]$. Padded coordinates follow stable $0.8$ dynamics
+with independent initial signs and shared scalar-sign noise, but do not enter
+the active equation or cost. Sampling draws ten initial signs then slices,
+so identical evaluation seeds pair the active scalar and noise in all cases.
+
+\section{Redundant controls and exact decomposition}
+Three controls cannot independently drive three directions in a scalar state.
+Write $v=bu$ and $u_\perp=u-b^\top v$. Since $bb^\top=1$,
+\[
+ u^\top u=v^2+\lVert u_\perp\rVert^2.
+\]
+Only $v$ changes the state. The optimum sets the two redundant directions to
+zero. Independent Riccati, condensed quadratic elimination and covariance
+propagation give the common optimum $0.286662585467451$, compared with
+$1.620099849071693$ for zero action. Row-wise sign-coefficient bounds prove
+oracle feasibility. The effective feasible action range differs between
+$m=1$ and $m=3$, but the common oracle is inside both.
+
+With scalar Riccati curvature $p_{t+1}$ and optimal effective gain $k_t$,
+\[
+ J(\pi)-J^*=\mathbb E\sum_t0.99^t\left[
+ (0.1+0.99p_{t+1})(v_t+k_tx_t)^2+0.1\lVert u_{\perp,t}\rVert^2\right].
+\]
+The first term measures incorrect effective control, and the second wasted
+action effort. Full matrix cross terms and a pathwise martingale identity
+are checked; small nonlinear fixtures verify expected cost by full enumeration.
+The decomposition does not identify the training algorithm's causal failure
+mechanism by itself.
+
+\section{Tuning, comparison and interpretation limits}
+The actor emits $m$ means and $m$ log standard deviations. Training uses its
+squashed Gaussian; deterministic evaluation uses $\tanh(\mu)$. Twin critics
+receive the state/time observation and all actions. Actor and critic layouts
+are independently searched over two to four layers of eight to sixty-four
+units, with separate continuous log-scale rates $10^{-5}$ to $10^{-2}$.
+No oracle actions enter gradient training or distillation. Checkpoint contracts
+reject cross-case replay and transfer.
+
+Each case has paired procedure seeds 10601--10603 and four initial members.
+BG-PBT and static search receive equal transition and component-gradient
+minibatch work. Default results reuse one static lineage and have lower total
+work. Selection uses 1,024 validation paths, seed1060001; all nine pairs freeze
+before any16,384-path holdout outcomes with seed1060002. Normal95 intervals
+are conditional test-path approximations, not uncertainty over optimizer seeds.
+The once-only allocation is1,400,832transitions,347,328SAC updates and2,304
+training-replay distillation updates (1,396,224component-gradient minibatches),
+with four one-thread CPU workers and a coordinator. Equal component work does
+not mean equal FLOPs. All unfavorable results remain reported.
+
+Scalar3 versus scalar1 diagnoses redundant action learning but also changes
+the automatic entropy target and stochastic policy dimension. Padded3 versus
+scalar3 tests sensitivity to irrelevant observations while preserving the
+cost-relevant model. Padded states are not the original ten coupled penalized
+states. Three seeds and a fixed training budget cannot establish a general
+causal explanation, global architecture optimality or convergence. SAC's
+entropy-regularized training objective and deterministic quadratic selection
+objective are distinct; objective mismatch remains a hypothesis to isolate.
+
+\section{Measured results}
+\input{lqr-scalar-measured-results}

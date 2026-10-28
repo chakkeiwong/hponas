@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "revision": "2.646",
-  "local_date": "2026-10-26",
+  "revision": "2.727",
+  "local_date": "2026-10-27",
   "timezone": "Asia/Shanghai",
   "master": "CONSOLIDATED_MASTER_AUTHORITY.md",
   "current_phase": "tier1_development",
@@ -175,7 +175,7 @@
     {
       "id": "SRC-PROGRAM-OPERATIONS",
       "path": "docs/PROGRAM_OPERATIONS.md",
-      "sha256": "e650fc2ea5f7a4be29386e7a891f063c31fa1138c2eadc8e58fc838dd24e9d27"
+      "sha256": "2a98d8f45f976ef7b7b53a7d1aa615af549f73561b864aa51baff272c6f597f0"
     },
     {
       "id": "SRC-GIT-PUBLICATION-CI",
@@ -261,6 +261,76 @@
       "id": "SRC-PAR01-QUALIFICATION",
       "path": "docs/program/PARALLEL_REQUALIFICATION_BOUNDARY_2026_10_26.md",
       "sha256": "4b42c6ee29c16f9491612a94c6dabe43902cafbbbcc772f6c10f32e186c9ecf8"
+    },
+    {
+      "id": "SRC-RL-LQR-01",
+      "path": "docs/program/RL_LQR_EXTENSION_2026_10_27.md",
+      "sha256": "68c31cc45a63ecd8672b90502a2f4397a9a75087ed28180e15fb0d839deaf42c"
+    },
+    {
+      "id": "SRC-RL-LQR02-PLAN",
+      "path": "docs/program/LQR5_BG_PBT_FEASIBILITY_2026_10_27.md",
+      "sha256": "2f6567431223dcf5b726829c6b05b07f7538cfd78147f02b59c66f29e0310035"
+    },
+    {
+      "id": "SRC-RL-LQR03-PLAN",
+      "path": "docs/program/LQR5_SAC_BGPBT_IMPLEMENTATION_2026_10_27.md",
+      "sha256": "c32fd97f5a9c97051dfc3876372df1b89e4dcebb1c6abd914ea6a5644e69e118"
+    },
+    {
+      "id": "SRC-RL-LQR03-HANDOFF",
+      "path": "docs/program/LQR5_SAC_BGPBT_HANDOFF_2026_10_27.md",
+      "sha256": "98ac96f10790699b594eedd036681184dd90a0ad64cb50c09e2a3e258ebc207c"
+    },
+    {
+      "id": "SRC-RL-LQR03-HANDOFF-V2",
+      "path": "docs/program/LQR5_SAC_BGPBT_HANDOFF_V2_2026_10_27.md",
+      "sha256": "2ea23b9bc79ca1f172c32072a7fefba480cfa69880a265a27381ea1195cb6aca"
+    },
+    {
+      "id": "SRC-25",
+      "path": "docs/program/LQR5_SAC_BGPBT_REVIEW_REPAIR_2026_10_27.md",
+      "sha256": "1d7a6e1b579fd272197b05fef1a603dd04f5bf96fd24adcc9acfecdfdc9a1d5d"
+    },
+    {
+      "id": "SRC-26",
+      "path": "docs/program/LQR5_SELECTION_ATTRIBUTION_REPAIR_2026_10_27.md",
+      "sha256": "c7f74782e2b6789cebfcf13c4f1863f8aae745b872e798ec14faec7253763379"
+    },
+    {
+      "id": "S-RL-LQR04-PLAN",
+      "path": "docs/program/LQR10_H30_STUDY_2026_10_27.md",
+      "sha256": "f9594fca02ca4e5cbfd482e41393f616ed646f2ada77386f671c204ce8fc8eee"
+    },
+    {
+      "id": "S-RL-LQR05-PLAN",
+      "path": "docs/program/LQR_MULTI_ACTION_STUDY_2026_10_27.md",
+      "sha256": "4393b69692b2c2c4a32519705adebb718d8cc3afe8f6277d7abf0c640e0d6a1e"
+    },
+    {
+      "id": "S-RL-LQR06-PLAN",
+      "path": "docs/program/LQR_SCALAR_STATE_DIAGNOSTIC_2026_10_28.md",
+      "sha256": "731967706945b2622ad58c98e28ea9f42440b95cc696d3916bfa0ad44514d5e0"
+    },
+    {
+      "id": "S-RL-LQR07-PLAN",
+      "path": "docs/program/LQR_SCALAR_FAILURE_TRACE_2026_10_28.md",
+      "sha256": "e21e7f5b67c4725b9d5e478c98762a81d328ee9f02214be448c396fe85ed26dc"
+    },
+    {
+      "id": "S-RL-LQR08-PLAN",
+      "path": "docs/program/LQR_SCALAR_REPAIR_2026_10_28.md",
+      "sha256": "fb551317ddff13567de74aa208720186958dcce95c51bb8a60e7b3c9a1f0f01d"
+    },
+    {
+      "id": "S-RL-LQR08-BOUNDARY-REVIEW",
+      "path": "docs/program/LQR_SCALAR_REPAIR_REVIEW_2026_10_28.md",
+      "sha256": "286e099ddb20077723bbde6597d13f405ab1f9c906d75c3c49c4c95b7a0fb230"
+    },
+    {
+      "id": "S-RL-LQR09-PLAN",
+      "path": "docs/program/LQR_DIMENSION_SCALING_2026_10_28.md",
+      "sha256": "fb70c63b2bff378d2e026a3911794983aa439f8598ecca1645dc57bafce3e416"
     }
   ],
   "audit_findings": [
@@ -3007,6 +3077,514 @@
         "docs/program/PARALLEL_REQUALIFICATION_BOUNDARY_2026_10_26.md"
       ],
       "reason": "Core edits cannot inherit predecessor scientific acceptance"
+    },
+    {
+      "id": "RL-LQR-REFERENCE",
+      "title": "Finite stochastic LQR with independently derived attainable optimum",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-01"
+      ],
+      "sources": [
+        "docs/program/RL_LQR_EXTENSION_2026_10_27.md"
+      ],
+      "reason": "User-authorized known-answer RL extension"
+    },
+    {
+      "id": "RL-LQR-LEARNER",
+      "title": "Standard RLlib SAC with separate actor and critic architecture controls",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-01"
+      ],
+      "sources": [
+        "docs/program/RL_LQR_EXTENSION_2026_10_27.md"
+      ],
+      "reason": "User-authorized known-answer RL extension"
+    },
+    {
+      "id": "RL-LQR-JOINT",
+      "title": "Budgeted exhaustive joint search with fresh final training seeds",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-01"
+      ],
+      "sources": [
+        "docs/program/RL_LQR_EXTENSION_2026_10_27.md"
+      ],
+      "reason": "User-authorized known-answer RL extension"
+    },
+    {
+      "id": "RL-LQR-RECOVERY",
+      "title": "Checkpoint restore and completed Study resume",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-01"
+      ],
+      "sources": [
+        "docs/program/RL_LQR_EXTENSION_2026_10_27.md"
+      ],
+      "reason": "User-authorized known-answer RL extension"
+    },
+    {
+      "id": "RL-LQR-PARALLEL",
+      "title": "Actual concurrent CPU and two-GPU learning workloads",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-01"
+      ],
+      "sources": [
+        "docs/program/RL_LQR_EXTENSION_2026_10_27.md"
+      ],
+      "reason": "User-authorized known-answer RL extension"
+    },
+    {
+      "id": "RL-LQR-DELIVERY",
+      "title": "Runnable guide, LaTeX example and independent evidence audit",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-01"
+      ],
+      "sources": [
+        "docs/program/RL_LQR_EXTENSION_2026_10_27.md"
+      ],
+      "reason": "User-authorized known-answer RL extension"
+    },
+    {
+      "id": "RL-LQR02-REFERENCE",
+      "title": "Five coupled states and an attainable independently checked matrix Riccati reference",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-02"
+      ],
+      "sources": [
+        "docs/program/LQR5_BG_PBT_FEASIBILITY_2026_10_27.md"
+      ],
+      "reason": "Requested five-state benchmark and BG-PBT feasibility assessment"
+    },
+    {
+      "id": "RL-LQR02-SEARCH",
+      "title": "Independent literal 2-4 layer networks, widths 8-64, two continuous log-scale rates",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-02"
+      ],
+      "sources": [
+        "docs/program/LQR5_BG_PBT_FEASIBILITY_2026_10_27.md"
+      ],
+      "reason": "Requested five-state benchmark and BG-PBT feasibility assessment"
+    },
+    {
+      "id": "RL-LQR02-READINESS",
+      "title": "Trace BG-PBT/SAC capability gaps without unsupported execution or performance claims",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-02"
+      ],
+      "sources": [
+        "docs/program/LQR5_BG_PBT_FEASIBILITY_2026_10_27.md"
+      ],
+      "reason": "Requested five-state benchmark and BG-PBT feasibility assessment"
+    },
+    {
+      "id": "RL-LQR03-STATE",
+      "title": "Full SAC learner/replay/environment continuation and compatible exploit",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-03"
+      ],
+      "sources": [
+        "docs/program/LQR5_SAC_BGPBT_IMPLEMENTATION_2026_10_27.md",
+        "docs/program/LQR5_SAC_BGPBT_REVIEW_REPAIR_2026_10_27.md"
+      ],
+      "reason": "User-authorized actual BG-PBT/SAC extension, beyond the earlier readiness assessment.",
+      "implementation_status": "Verified by source-bound extension audit, including repaired objective selection and shared GPU execution; bounded SAC adaptation, no global optimum claim."
+    },
+    {
+      "id": "RL-LQR03-SEARCH",
+      "title": "Conditional architecture and two-rate temporal Bayesian generational exploration",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-03"
+      ],
+      "sources": [
+        "docs/program/LQR5_SAC_BGPBT_IMPLEMENTATION_2026_10_27.md",
+        "docs/program/LQR5_SAC_BGPBT_REVIEW_REPAIR_2026_10_27.md"
+      ],
+      "reason": "User-authorized actual BG-PBT/SAC extension, beyond the earlier readiness assessment.",
+      "implementation_status": "Verified by source-bound extension audit, including repaired objective selection and shared GPU execution; bounded SAC adaptation, no global optimum claim."
+    },
+    {
+      "id": "RL-LQR03-TRANSFER",
+      "title": "Charged Gaussian and twin soft-Q distillation with explicit target and Adam policy",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-03"
+      ],
+      "sources": [
+        "docs/program/LQR5_SAC_BGPBT_IMPLEMENTATION_2026_10_27.md",
+        "docs/program/LQR5_SAC_BGPBT_REVIEW_REPAIR_2026_10_27.md"
+      ],
+      "reason": "User-authorized actual BG-PBT/SAC extension, beyond the earlier readiness assessment.",
+      "implementation_status": "Verified by source-bound extension audit, including repaired objective selection and shared GPU execution; bounded SAC adaptation, no global optimum claim."
+    },
+    {
+      "id": "RL-LQR03-RECOVERY",
+      "title": "At-most-once committed training and truthful interrupted-work accounting",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-03"
+      ],
+      "sources": [
+        "docs/program/LQR5_SAC_BGPBT_IMPLEMENTATION_2026_10_27.md",
+        "docs/program/LQR5_SAC_BGPBT_REVIEW_REPAIR_2026_10_27.md"
+      ],
+      "reason": "User-authorized actual BG-PBT/SAC extension, beyond the earlier readiness assessment.",
+      "implementation_status": "Verified by source-bound extension audit, including repaired objective selection and shared GPU execution; bounded SAC adaptation, no global optimum claim."
+    },
+    {
+      "id": "RL-LQR03-LEARNING",
+      "title": "Prospective pilot calibration/static confirmation and repaired complete-procedure replications",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-03"
+      ],
+      "sources": [
+        "docs/program/LQR5_SAC_BGPBT_IMPLEMENTATION_2026_10_27.md",
+        "docs/program/LQR5_SAC_BGPBT_REVIEW_REPAIR_2026_10_27.md"
+      ],
+      "reason": "User-authorized actual BG-PBT/SAC extension, beyond the earlier readiness assessment.",
+      "implementation_status": "Verified by source-bound extension audit, including repaired objective selection and shared GPU execution; bounded SAC adaptation, no global optimum claim."
+    },
+    {
+      "id": "RL-LQR03-PARALLEL",
+      "title": "Real disjoint CPU and shared two-GPU SAC population concurrency",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-03"
+      ],
+      "sources": [
+        "docs/program/LQR5_SAC_BGPBT_IMPLEMENTATION_2026_10_27.md",
+        "docs/program/LQR5_SAC_BGPBT_REVIEW_REPAIR_2026_10_27.md"
+      ],
+      "reason": "User-authorized actual BG-PBT/SAC extension, beyond the earlier readiness assessment.",
+      "implementation_status": "Verified by source-bound extension audit, including repaired objective selection and shared GPU execution; bounded SAC adaptation, no global optimum claim."
+    },
+    {
+      "id": "RL-LQR03-DELIVERY",
+      "title": "User guide, successor LaTeX manual and independent reconstruction audit",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-03"
+      ],
+      "sources": [
+        "docs/program/LQR5_SAC_BGPBT_IMPLEMENTATION_2026_10_27.md",
+        "docs/program/LQR5_SAC_BGPBT_REVIEW_REPAIR_2026_10_27.md"
+      ],
+      "reason": "User-authorized actual BG-PBT/SAC extension, beyond the earlier readiness assessment.",
+      "implementation_status": "Verified by source-bound extension audit, including repaired objective selection and shared GPU execution; bounded SAC adaptation, no global optimum claim."
+    },
+    {
+      "id": "RL-LQR04-MODEL",
+      "title": "Ten-state thirty-step attainable analytical reference",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-04"
+      ],
+      "sources": [
+        "docs/program/LQR10_H30_STUDY_2026_10_27.md"
+      ],
+      "reason": "User-authorized dimension and horizon extension.",
+      "implementation_status": "Study and reconstruction verified; sampled gap and limited seed evidence remain explicit."
+    },
+    {
+      "id": "RL-LQR04-STUDY",
+      "title": "Paired joint procedures and separate holdout scoring",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-04"
+      ],
+      "sources": [
+        "docs/program/LQR10_H30_STUDY_2026_10_27.md"
+      ],
+      "reason": "User-authorized dimension and horizon extension.",
+      "implementation_status": "Study and reconstruction verified; sampled gap and limited seed evidence remain explicit."
+    },
+    {
+      "id": "RL-LQR04-AUDIT",
+      "title": "Source, accounting and evidence reconstruction audit",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-04"
+      ],
+      "sources": [
+        "docs/program/LQR10_H30_STUDY_2026_10_27.md"
+      ],
+      "reason": "User-authorized dimension and horizon extension.",
+      "implementation_status": "Study and reconstruction verified; sampled gap and limited seed evidence remain explicit."
+    },
+    {
+      "id": "RL-LQR05-MODEL",
+      "title": "Ten-state thirty-step attainable analytical reference",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-05"
+      ],
+      "sources": [
+        "docs/program/LQR_MULTI_ACTION_STUDY_2026_10_27.md"
+      ],
+      "reason": "User-authorized dimension and horizon extension.",
+      "implementation_status": "Study and reconstruction verified; sampled gap and limited seed evidence remain explicit."
+    },
+    {
+      "id": "RL-LQR05-STUDY",
+      "title": "Paired joint procedures and separate holdout scoring",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-05"
+      ],
+      "sources": [
+        "docs/program/LQR_MULTI_ACTION_STUDY_2026_10_27.md"
+      ],
+      "reason": "User-authorized dimension and horizon extension.",
+      "implementation_status": "Study and reconstruction verified; sampled gap and limited seed evidence remain explicit."
+    },
+    {
+      "id": "RL-LQR05-AUDIT",
+      "title": "Source, accounting and evidence reconstruction audit",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-05"
+      ],
+      "sources": [
+        "docs/program/LQR_MULTI_ACTION_STUDY_2026_10_27.md"
+      ],
+      "reason": "User-authorized dimension and horizon extension.",
+      "implementation_status": "Study and reconstruction verified; sampled gap and limited seed evidence remain explicit."
+    },
+    {
+      "id": "RL-LQR06-MODEL",
+      "title": "Matched scalar and nuisance-state analytical references",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-06"
+      ],
+      "sources": [
+        "docs/program/LQR_SCALAR_STATE_DIAGNOSTIC_2026_10_28.md"
+      ],
+      "reason": "User-authorized state-dimension and redundant-action diagnosis.",
+      "implementation_status": "Study and reconstruction verified; sampled gap and limited seed evidence remain explicit."
+    },
+    {
+      "id": "RL-LQR06-STUDY",
+      "title": "Paired joint procedures and separate holdout scoring",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-06"
+      ],
+      "sources": [
+        "docs/program/LQR_SCALAR_STATE_DIAGNOSTIC_2026_10_28.md"
+      ],
+      "reason": "User-authorized state-dimension and redundant-action diagnosis.",
+      "implementation_status": "Study and reconstruction verified; sampled gap and limited seed evidence remain explicit."
+    },
+    {
+      "id": "RL-LQR06-AUDIT",
+      "title": "Source, accounting and evidence reconstruction audit",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-06"
+      ],
+      "sources": [
+        "docs/program/LQR_SCALAR_STATE_DIAGNOSTIC_2026_10_28.md"
+      ],
+      "reason": "User-authorized state-dimension and redundant-action diagnosis.",
+      "implementation_status": "Study and reconstruction verified; sampled gap and limited seed evidence remain explicit."
+    },
+    {
+      "id": "RL-LQR07-DIAGNOSIS",
+      "title": "Identify evidence-supported causes of scalar-state learning failure",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-07"
+      ],
+      "sources": [
+        "docs/program/LQR_SCALAR_FAILURE_TRACE_2026_10_28.md"
+      ],
+      "reason": "User requests code tracing and diagnosis before more tuning.",
+      "implementation_status": "Exact critic contradictions, frozen-policy bias interventions and transfer/replacement deterioration audited; causal origin and repair effectiveness remain partly unestablished."
+    },
+    {
+      "id": "RL-LQR08-LEARNER",
+      "title": "Controlled scalar learner repair with mathematical diagnostics",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-08"
+      ],
+      "sources": [
+        "docs/program/LQR_SCALAR_REPAIR_2026_10_28.md"
+      ],
+      "reason": "Execute user-authorized repair of observed scalar SAC failures.",
+      "implementation_status": "Bounded repair and independent audit complete; numerical scientific outcomes govern claims."
+    },
+    {
+      "id": "RL-LQR08-HANDOFF",
+      "title": "Validated architecture handoff and protected incumbents",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-08"
+      ],
+      "sources": [
+        "docs/program/LQR_SCALAR_REPAIR_2026_10_28.md"
+      ],
+      "reason": "Execute user-authorized repair of observed scalar SAC failures.",
+      "implementation_status": "Bounded repair and independent audit complete; numerical scientific outcomes govern claims."
+    },
+    {
+      "id": "RL-LQR08-CONFIRM",
+      "title": "Fresh confirmation and gated joint-search allocation",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-08"
+      ],
+      "sources": [
+        "docs/program/LQR_SCALAR_REPAIR_2026_10_28.md"
+      ],
+      "reason": "Execute user-authorized repair of observed scalar SAC failures.",
+      "implementation_status": "Bounded repair and independent audit complete; numerical scientific outcomes govern claims."
+    },
+    {
+      "id": "RL-LQR08-AUDIT",
+      "title": "Independent accounting and scientific outcome audit",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-08"
+      ],
+      "sources": [
+        "docs/program/LQR_SCALAR_REPAIR_2026_10_28.md"
+      ],
+      "reason": "Execute user-authorized repair of observed scalar SAC failures.",
+      "implementation_status": "Bounded repair and independent audit complete; numerical scientific outcomes govern claims."
+    },
+    {
+      "id": "RL-LQR09-MODEL",
+      "title": "Dimension-generic exact reference and structured critic",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-09"
+      ],
+      "sources": [
+        "docs/program/LQR_DIMENSION_SCALING_2026_10_28.md"
+      ],
+      "reason": "User-authorized dimensional extension.",
+      "implementation_status": "Implemented and independently audited on 12 bounded cases; reported empirical gaps and explicit scope govern claims."
+    },
+    {
+      "id": "RL-LQR09-STUDY",
+      "title": "Action then active-state paired learning study",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-09"
+      ],
+      "sources": [
+        "docs/program/LQR_DIMENSION_SCALING_2026_10_28.md"
+      ],
+      "reason": "User-authorized dimensional extension.",
+      "implementation_status": "Implemented and independently audited on 12 bounded cases; reported empirical gaps and explicit scope govern claims."
+    },
+    {
+      "id": "RL-LQR09-CONFIRM",
+      "title": "Fresh fixed-method confirmation and learned-controller diagnostic",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-09"
+      ],
+      "sources": [
+        "docs/program/LQR_DIMENSION_SCALING_2026_10_28.md"
+      ],
+      "reason": "User-authorized dimensional extension.",
+      "implementation_status": "Implemented and independently audited on 12 bounded cases; reported empirical gaps and explicit scope govern claims."
+    },
+    {
+      "id": "RL-LQR09-AUDIT",
+      "title": "Independent evidence and scientific limits audit",
+      "decision_ids": [],
+      "audit_findings": [],
+      "disposition": "required",
+      "work_items": [
+        "RL-LQR-09"
+      ],
+      "sources": [
+        "docs/program/LQR_DIMENSION_SCALING_2026_10_28.md"
+      ],
+      "reason": "User-authorized dimensional extension.",
+      "implementation_status": "Implemented and independently audited on 12 bounded cases; reported empirical gaps and explicit scope govern claims."
     }
   ],
   "work_items": [
@@ -8014,10 +8592,29 @@
         "E-PAR-PUBLICATION05-GUIDANCE-PREIMAGES",
         "E-PAR-PUBLICATION05-CHECKS",
         "E-PAR-PUBLICATION05-AUDIT-CLOSURE",
-        "E-PAR-PUBLICATION05-READY"
+        "E-PAR-PUBLICATION05-READY",
+        "E-RL-LQR01-MASTER-AUDIT-1",
+        "E-RL-LQR01-MASTER-AUDIT-2",
+        "E-RL-LQR01-MASTER-AUDIT-2-RESULT",
+        "E-RL-LQR02-MASTER-AUDIT",
+        "E-RL-LQR02-MASTER-AUDIT-RESULT",
+        "E-RL-LQR03-MASTER-AUDIT-RECEIPT",
+        "E-RL-LQR03-MASTER-AUDIT-RESULT",
+        "E-RL-LQR04-MASTER-AUDIT-RECEIPT",
+        "E-RL-LQR04-MASTER-AUDIT-RESULT",
+        "E-RL-LQR05-MASTER-AUDIT-RECEIPT",
+        "E-RL-LQR05-MASTER-AUDIT-RESULT",
+        "E-RL-LQR06-MASTER-AUDIT-RECEIPT",
+        "E-RL-LQR06-MASTER-AUDIT-RESULT",
+        "E-RL-LQR07-MASTER-RECEIPT",
+        "E-RL-LQR07-MASTER-RESULT",
+        "E-RL-LQR08-MASTER-AUDIT-RECEIPT",
+        "E-RL-LQR08-MASTER-AUDIT-RESULT",
+        "E-RL-LQR09-MASTER-AUDIT-RECEIPT",
+        "E-RL-LQR09-MASTER-AUDIT-RESULT"
       ],
       "done_when": "All 27 atomic clauses have objective behavior/evidence or appropriate retained research outcomes, final current-source qualification passes and GAP-01/FINAL-AUDIT reconstructs complete closure with no unresolved required behavior.",
-      "next_action": "Preserve all original obligations and qualified finite evidence; changed source or additional claims require prospective work.",
+      "next_action": "Expanded bounded repair reconciled; retain scientific limits.",
       "budget": {
         "mode": "bounded_local_development",
         "cpu_count": 1,
@@ -8836,6 +9433,544 @@
         "finite_runs": 16,
         "gpu": false
       }
+    },
+    {
+      "id": "RL-LQR-01",
+      "title": "Known-answer RLlib SAC and joint actor/critic HPO/NAS",
+      "phase": "rl_lqr_extension",
+      "owner": "Single inspector/editor",
+      "state": "complete",
+      "implementation": "verified",
+      "dependencies": [
+        "PAR-QUAL-01"
+      ],
+      "decision_dependencies": [
+        "D-RL-LQR01-20261027"
+      ],
+      "code_refs": [
+        "extensions/rl-lqr/run_operation.py"
+      ],
+      "test_refs": [
+        "extensions/rl-lqr/tests/test_reference.py",
+        "extensions/rl-lqr/tests/test_learner_contract.py"
+      ],
+      "acceptance_campaigns": [],
+      "evidence_refs": [
+        "E-RL-LQR01-PLAN",
+        "E-RL-LQR01-PREDECESSOR",
+        "E-RL-LQR01-RUNTIME",
+        "E-RL-LQR01-RUNTIME-LOCK",
+        "E-RL-LQR01-ORACLE-FAIL",
+        "E-RL-LQR01-ORACLE",
+        "E-RL-LQR01-ORACLE-RESULT",
+        "E-RL-LQR01-GOVERNANCE-FAIL",
+        "E-RL-LQR01-LEARNER-ATTEMPT-1",
+        "E-RL-LQR01-LEARNER-ATTEMPT-2",
+        "E-RL-LQR01-LEARNER-ATTEMPT-2-RESULT",
+        "E-RL-LQR01-JOINT-REPLAY-ATTEMPT-1",
+        "E-RL-LQR01-JOINT-REPLAY-ATTEMPT-2",
+        "E-RL-LQR01-JOINT-REPLAY-ATTEMPT-2-RESULT",
+        "E-RL-LQR01-HARDWARE-ATTEMPT-1",
+        "E-RL-LQR01-HARDWARE-ATTEMPT-2",
+        "E-RL-LQR01-HARDWARE-ATTEMPT-2-RESULT",
+        "E-RL-LQR01-JOINT-EXECUTION",
+        "E-RL-LQR01-JOINT-RESULT",
+        "E-RL-LQR01-HARDWARE-REPAIR",
+        "E-RL-LQR01-BUILD-ATTEMPT-1",
+        "E-RL-LQR01-BUILD-ATTEMPT-1-RESULT",
+        "E-RL-LQR01-BUILD-ATTEMPT-2",
+        "E-RL-LQR01-BUILD-ATTEMPT-2-RESULT",
+        "E-RL-LQR01-AUDIT-ATTEMPT-1",
+        "E-RL-LQR01-AUDIT-ATTEMPT-1-RESULT"
+      ],
+      "done_when": "Reviewed finite LQR reference, real SAC, joint search, restore, CPU/GPU execution, documentation and audit have bound evidence; no convergence or BG-PBT/SAC claim is inferred.",
+      "next_action": "Preserve independently audited finite results and explicit poor-learning outcome; no additional training allocated.",
+      "budget": {
+        "cpu_cores": 4,
+        "max_gpus": 2,
+        "numerical_threads_per_worker": 1,
+        "host_rss_bytes": 17179869184,
+        "training_transitions": 76800,
+        "joint_seconds": 3600,
+        "other_stage_seconds": 600,
+        "network": "Four missing Python wheel families only",
+        "broad_campaign": false,
+        "engineering_successor_transitions": 1024
+      }
+    },
+    {
+      "id": "RL-LQR-02",
+      "title": "Five-state LQR joint search definition and BG-PBT readiness",
+      "phase": "rl_lqr_extension",
+      "owner": "Single inspector/editor",
+      "state": "complete",
+      "implementation": "verified",
+      "dependencies": [
+        "RL-LQR-01"
+      ],
+      "decision_dependencies": [
+        "D-RL-LQR02-20261027"
+      ],
+      "code_refs": [
+        "extensions/rl-lqr5/hponas_rl_lqr5/__init__.py",
+        "extensions/rl-lqr5/hponas_rl_lqr5/catalog.py",
+        "extensions/rl-lqr5/hponas_rl_lqr5/environment.py",
+        "extensions/rl-lqr5/hponas_rl_lqr5/reference.py",
+        "extensions/rl-lqr5/hponas_rl_lqr5/search.py"
+      ],
+      "test_refs": [
+        "extensions/rl-lqr5/tests/test_catalog.py",
+        "extensions/rl-lqr5/tests/test_reference.py",
+        "extensions/rl-lqr5/tests/test_search.py"
+      ],
+      "acceptance_campaigns": [],
+      "evidence_refs": [
+        "E-RL-LQR02-PLAN",
+        "E-RL-LQR02-PREDECESSOR",
+        "E-RL-LQR02-PREFLIGHT",
+        "E-RL-LQR02-PREFLIGHT-RESULT",
+        "E-RL-LQR02-AUDIT",
+        "E-RL-LQR02-AUDIT-RESULT"
+      ],
+      "done_when": "Five-state reference, actual RLlib architectures and continuous-rate conditional search pass bounded preflight; independent audit reports current BG-PBT adapter limitations truthfully.",
+      "next_action": "Retain verified five-state/search definition. BG-PBT/SAC adapter, conditional Bayesian search and distillation remain undelivered; no training allocated by this capability assessment.",
+      "budget": {
+        "cpu_cores": 1,
+        "gpus": 0,
+        "stage_seconds": 300,
+        "host_rss_bytes": 8589934592,
+        "output_bytes": 134217728,
+        "training_transitions": 0
+      }
+    },
+    {
+      "id": "RL-LQR-03",
+      "title": "Five-state SAC BG-PBT implementation and bounded learning study",
+      "phase": "rl_lqr_extension",
+      "owner": "Single inspector/editor",
+      "state": "complete",
+      "implementation": "verified",
+      "dependencies": [
+        "RL-LQR-02"
+      ],
+      "decision_dependencies": [
+        "D-RL-LQR03-20261027"
+      ],
+      "code_refs": [
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/__init__.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/adapter.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/audit.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/delivery.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/explorer.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/explorer_v2.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/hardware.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/local_learner.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/operations.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/reconciliation.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/scoring.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/study.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/study_v2.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/tasks.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/transfer.py",
+        "extensions/rl-lqr5-bgpbt/hponas_rl_bgpbt/work.py"
+      ],
+      "test_refs": [
+        "extensions/rl-lqr5-bgpbt/tests/test_adapter.py",
+        "extensions/rl-lqr5-bgpbt/tests/test_explorer.py",
+        "extensions/rl-lqr5-bgpbt/tests/test_local_learner.py",
+        "extensions/rl-lqr5-bgpbt/tests/test_repair.py",
+        "extensions/rl-lqr5-bgpbt/tests/test_study.py",
+        "extensions/rl-lqr5-bgpbt/tests/test_tasks.py"
+      ],
+      "acceptance_campaigns": [],
+      "evidence_refs": [
+        "E-RL-LQR03-PLAN",
+        "E-RL-LQR03-PREDECESSOR",
+        "E-RL-LQR03-ENGINEERING-1",
+        "E-RL-LQR03-ENGINEERING-2",
+        "E-RL-LQR03-ENGINEERING-3",
+        "E-RL-LQR03-ENGINEERING-4",
+        "E-RL-LQR03-ENGINEERING-RESULT",
+        "E-RL-LQR03-CALIBRATION-RECEIPT",
+        "E-RL-LQR03-CALIBRATION-RESULT",
+        "E-RL-LQR03-SEARCH-RECEIPT",
+        "E-RL-LQR03-SEARCH-RESULT",
+        "E-RL-LQR03-CONFIRMATION-RECEIPT",
+        "E-RL-LQR03-CONFIRMATION-RESULT",
+        "E-RL-LQR03-HARDWARE-1",
+        "E-RL-LQR03-HARDWARE-2",
+        "E-RL-LQR03-HARDWARE-ADMISSION",
+        "E-RL-LQR03-DOCUMENTATION-RECEIPT",
+        "E-RL-LQR03-DOCUMENTATION-RESULT",
+        "E-RL-LQR03-DOCUMENTATION-CPU-AUDIT",
+        "E-RL-LQR03-DOCUMENTATION-MANUAL",
+        "E-RL-LQR03-CPU-COMPLETION",
+        "E-RL-LQR03-HANDOFF",
+        "E-RL-LQR03-HANDOFF-V2",
+        "E-RL-LQR03-REPAIR-PLAN",
+        "E-RL-LQR03-REPAIR-ENGINEERING-RECEIPT",
+        "E-RL-LQR03-REPAIR-ENGINEERING-RESULT",
+        "E-RL-LQR03-PROCEDURE-CHECK-RECEIPT",
+        "E-RL-LQR03-PROCEDURE-CHECK-RESULT",
+        "E-RL-LQR03-ATTRIBUTION-PLAN",
+        "E-RL-LQR03-SELECTION-RECONCILIATION-RECEIPT",
+        "E-RL-LQR03-SELECTION-RECONCILIATION-RESULT",
+        "E-RL-LQR03-DEVICE-PLAN",
+        "E-RL-LQR03-STARTUP-FAILURE",
+        "E-RL-LQR03-STARTUP-CLEANUP",
+        "E-RL-LQR03-DEVICE-REPAIR-RECEIPT",
+        "E-RL-LQR03-DEVICE-REPAIR-RESULT",
+        "E-RL-LQR03-HARDWARE-RECEIPT",
+        "E-RL-LQR03-HARDWARE-RESULT",
+        "E-RL-LQR03-HARDWARE-DOCUMENTATION-RECEIPT",
+        "E-RL-LQR03-HARDWARE-DOCUMENTATION-RESULT",
+        "E-RL-LQR03-AUDIT-RECEIPT",
+        "E-RL-LQR03-AUDIT-RESULT",
+        "E-RL-LQR03-MASTER-AUDIT-RECEIPT",
+        "E-RL-LQR03-MASTER-AUDIT-RESULT"
+      ],
+      "done_when": "State/search/transfer/recovery and CPU/GPU evidence verified; prospective learning study documented honestly; independent audit reconstructs all evidence.",
+      "next_action": "Bounded companion extension, repaired procedure comparison and shared GPU evidence audited; no automatic new campaign.",
+      "budget": {
+        "cpu_cores": 3,
+        "gpus_hardware_only": 2,
+        "scientific_transitions_max": 133120,
+        "per_operation_seconds": 1800,
+        "owned_rss_bytes": 17179869184,
+        "output_bytes": 4294967296,
+        "hardware_distillation_updates_max": 64,
+        "repair_procedure_transitions_max": 233472
+      }
+    },
+    {
+      "id": "RL-LQR-04",
+      "title": "Ten-state horizon-thirty joint SAC BG-PBT study",
+      "phase": "rl_lqr_extension",
+      "owner": "Single inspector/editor",
+      "state": "complete",
+      "implementation": "verified",
+      "dependencies": [
+        "RL-LQR-03"
+      ],
+      "decision_dependencies": [
+        "D-RL-LQR04-20261027"
+      ],
+      "code_refs": [
+        "extensions/rl-lqr10/hponas_rl_lqr10/__init__.py",
+        "extensions/rl-lqr10/hponas_rl_lqr10/adapter.py",
+        "extensions/rl-lqr10/hponas_rl_lqr10/catalog.py",
+        "extensions/rl-lqr10/hponas_rl_lqr10/environment.py",
+        "extensions/rl-lqr10/hponas_rl_lqr10/operations.py",
+        "extensions/rl-lqr10/hponas_rl_lqr10/reference.py",
+        "extensions/rl-lqr10/hponas_rl_lqr10/scoring.py",
+        "extensions/rl-lqr10/hponas_rl_lqr10/study_v2.py",
+        "extensions/rl-lqr10/hponas_rl_lqr10/tasks.py",
+        "extensions/rl-lqr10/hponas_rl_lqr10/transfer.py"
+      ],
+      "test_refs": [
+        "extensions/rl-lqr10/tests/test_learner.py",
+        "extensions/rl-lqr10/tests/test_reference.py"
+      ],
+      "acceptance_campaigns": [],
+      "evidence_refs": [
+        "E-RL-LQR04-PLAN",
+        "E-RL-LQR04-ENGINEERING-RECEIPT",
+        "E-RL-LQR04-ENGINEERING-RESULT",
+        "E-RL-LQR04-STUDY-RECEIPT",
+        "E-RL-LQR04-STUDY-RESULT",
+        "E-RL-LQR04-DOCUMENTATION",
+        "E-RL-LQR04-GUIDE",
+        "E-RL-LQR04-RESULTS",
+        "E-RL-LQR04-AUDIT-RECEIPT",
+        "E-RL-LQR04-AUDIT-RESULT"
+      ],
+      "done_when": "Oracle, sampled regret evaluation, paired searches, holdout scores and independent audit complete with explicit outcomes.",
+      "next_action": "Retain all paired test outcomes; no convergence or global-optimality claim.",
+      "budget": {
+        "cpu_cores": 3,
+        "study_seconds": 3600,
+        "scientific_transitions_max": 466944,
+        "sac_updates_max": 115776,
+        "distillation_updates_max": 768,
+        "owned_rss_bytes": 17179869184,
+        "output_bytes": 8589934592
+      }
+    },
+    {
+      "id": "RL-LQR-05",
+      "title": "Ten-state multi-action joint SAC BG-PBT study",
+      "phase": "rl_lqr_extension",
+      "owner": "Single inspector/editor",
+      "state": "complete",
+      "implementation": "verified",
+      "dependencies": [
+        "RL-LQR-04"
+      ],
+      "decision_dependencies": [
+        "D-RL-LQR05-20261027"
+      ],
+      "code_refs": [
+        "extensions/rl-lqr-multi/hponas_rl_lqr_multi/__init__.py",
+        "extensions/rl-lqr-multi/hponas_rl_lqr_multi/adapter.py",
+        "extensions/rl-lqr-multi/hponas_rl_lqr_multi/catalog.py",
+        "extensions/rl-lqr-multi/hponas_rl_lqr_multi/environment.py",
+        "extensions/rl-lqr-multi/hponas_rl_lqr_multi/operations.py",
+        "extensions/rl-lqr-multi/hponas_rl_lqr_multi/reference.py",
+        "extensions/rl-lqr-multi/hponas_rl_lqr_multi/scoring.py",
+        "extensions/rl-lqr-multi/hponas_rl_lqr_multi/study_v2.py",
+        "extensions/rl-lqr-multi/hponas_rl_lqr_multi/tasks.py",
+        "extensions/rl-lqr-multi/hponas_rl_lqr_multi/transfer.py"
+      ],
+      "test_refs": [
+        "extensions/rl-lqr-multi/tests/test_learner.py",
+        "extensions/rl-lqr-multi/tests/test_reference.py"
+      ],
+      "acceptance_campaigns": [],
+      "evidence_refs": [
+        "E-RL-LQR05-PLAN",
+        "E-RL-LQR05-ENGINEERING-RECEIPT",
+        "E-RL-LQR05-ENGINEERING-RESULT",
+        "E-RL-LQR05-STUDY-RECEIPT",
+        "E-RL-LQR05-STUDY-RESULT",
+        "E-RL-LQR05-AUDIT-RECEIPT",
+        "E-RL-LQR05-AUDIT-RESULT",
+        "E-RL-LQR05-DOCUMENTATION"
+      ],
+      "done_when": "Oracle, sampled regret evaluation, paired searches, holdout scores and independent audit complete with explicit outcomes.",
+      "next_action": "Retain all paired test outcomes; no convergence or global-optimality claim.",
+      "budget": {
+        "cpu_cores": 5,
+        "study_seconds": 5400,
+        "scientific_transitions_max": 1867776,
+        "sac_updates_max": 463104,
+        "distillation_updates_max": 3072,
+        "owned_rss_bytes": 17179869184,
+        "output_bytes": 17179869184
+      }
+    },
+    {
+      "id": "RL-LQR-06",
+      "title": "Scalar-state diagnostic joint SAC BG-PBT study",
+      "phase": "rl_lqr_extension",
+      "owner": "Single inspector/editor",
+      "state": "complete",
+      "implementation": "verified",
+      "dependencies": [
+        "RL-LQR-05"
+      ],
+      "decision_dependencies": [
+        "D-RL-LQR06-20261028"
+      ],
+      "code_refs": [
+        "extensions/rl-lqr-scalar/hponas_rl_lqr_scalar/__init__.py",
+        "extensions/rl-lqr-scalar/hponas_rl_lqr_scalar/adapter.py",
+        "extensions/rl-lqr-scalar/hponas_rl_lqr_scalar/catalog.py",
+        "extensions/rl-lqr-scalar/hponas_rl_lqr_scalar/environment.py",
+        "extensions/rl-lqr-scalar/hponas_rl_lqr_scalar/operations.py",
+        "extensions/rl-lqr-scalar/hponas_rl_lqr_scalar/reference.py",
+        "extensions/rl-lqr-scalar/hponas_rl_lqr_scalar/scoring.py",
+        "extensions/rl-lqr-scalar/hponas_rl_lqr_scalar/study_v2.py",
+        "extensions/rl-lqr-scalar/hponas_rl_lqr_scalar/tasks.py",
+        "extensions/rl-lqr-scalar/hponas_rl_lqr_scalar/transfer.py"
+      ],
+      "test_refs": [
+        "extensions/rl-lqr-scalar/tests/test_learner.py",
+        "extensions/rl-lqr-scalar/tests/test_reference.py"
+      ],
+      "acceptance_campaigns": [],
+      "evidence_refs": [
+        "E-RL-LQR06-PLAN",
+        "E-RL-LQR06-ENGINEERING-RECEIPT",
+        "E-RL-LQR06-ENGINEERING-RESULT",
+        "E-RL-LQR06-STUDY-RECEIPT",
+        "E-RL-LQR06-STUDY-RESULT",
+        "E-RL-LQR06-AUDIT-RECEIPT",
+        "E-RL-LQR06-AUDIT-RESULT",
+        "E-RL-LQR06-DOCUMENTATION"
+      ],
+      "done_when": "Oracle, sampled regret evaluation, paired searches, holdout scores and independent audit complete with explicit outcomes.",
+      "next_action": "Retain all paired test outcomes; no convergence or global-optimality claim.",
+      "budget": {
+        "cpu_cores": 5,
+        "study_seconds": 5400,
+        "scientific_transitions_max": 1400832,
+        "sac_updates_max": 347328,
+        "distillation_updates_max": 2304,
+        "owned_rss_bytes": 17179869184,
+        "output_bytes": 17179869184
+      }
+    },
+    {
+      "id": "RL-LQR-07",
+      "title": "Trace scalar-state SAC critic and population failures",
+      "phase": "rl_lqr_extension",
+      "owner": "Single inspector/editor",
+      "state": "complete",
+      "implementation": "verified",
+      "dependencies": [
+        "RL-LQR-06"
+      ],
+      "decision_dependencies": [
+        "D-RL-LQR07-20261028"
+      ],
+      "code_refs": [
+        "extensions/rl-lqr-debug/diagnose.py",
+        "program_operations/lqr_debug_ops.py",
+        "program_operations/lqr_debug_audit.py",
+        "extensions/rl-lqr-debug/run_audit.py"
+      ],
+      "test_refs": [
+        "extensions/rl-lqr-debug/audit.py"
+      ],
+      "acceptance_campaigns": [],
+      "evidence_refs": [
+        "E-RL-LQR07-PLAN",
+        "E-RL-LQR07-TRACE",
+        "E-RL-LQR07-DIAGNOSE-RECEIPT",
+        "E-RL-LQR07-DIAGNOSE-RESULT",
+        "E-RL-LQR07-REPORT-FINDINGS",
+        "E-RL-LQR07-REPORT-RESULT",
+        "E-RL-LQR07-OPERATIONS-RECONCILIATION",
+        "E-RL-LQR07-AUDIT-OPS",
+        "E-RL-LQR07-AUDIT-RECEIPT",
+        "E-RL-LQR07-AUDIT-RESULT",
+        "E-RL-LQR07-AUDIT-ROUNDING-REPAIR",
+        "E-RL-LQR07-AUDIT-SERIALIZATION-REPAIR"
+      ],
+      "done_when": "Source trace, saved-checkpoint diagnostics, evidence-based repair priorities and independent audit complete; unproven mechanisms explicit.",
+      "next_action": "Diagnosis complete; learning repairs require a separate prospective bounded comparison, not claims from exposed diagnostic policies.",
+      "budget": {
+        "cpu_cores": 1,
+        "seconds": 900,
+        "transitions": 0,
+        "sac_updates": 0,
+        "distillation_updates": 0,
+        "host_rss_bytes": 8589934592,
+        "output_bytes": 1073741824
+      }
+    },
+    {
+      "id": "RL-LQR-08",
+      "title": "Scalar learner, safe handoff and protected joint tuning repair",
+      "phase": "rl_lqr_extension",
+      "owner": "Single inspector/editor",
+      "state": "complete",
+      "implementation": "verified",
+      "dependencies": [
+        "RL-LQR-07"
+      ],
+      "decision_dependencies": [
+        "D-RL-LQR08-20261028"
+      ],
+      "code_refs": [
+        "extensions/rl-lqr-repair/hponas_rl_lqr_repair/__init__.py",
+        "extensions/rl-lqr-repair/hponas_rl_lqr_repair/adapter.py",
+        "extensions/rl-lqr-repair/hponas_rl_lqr_repair/audit.py",
+        "extensions/rl-lqr-repair/hponas_rl_lqr_repair/catalog.py",
+        "extensions/rl-lqr-repair/hponas_rl_lqr_repair/diagnostics.py",
+        "extensions/rl-lqr-repair/hponas_rl_lqr_repair/experiments.py",
+        "extensions/rl-lqr-repair/hponas_rl_lqr_repair/joint.py",
+        "extensions/rl-lqr-repair/hponas_rl_lqr_repair/transfer.py"
+      ],
+      "test_refs": [
+        "extensions/rl-lqr-repair/tests/test_contracts.py",
+        "extensions/rl-lqr-repair/tests/test_joint.py",
+        "extensions/rl-lqr-repair/tests/test_transfer.py"
+      ],
+      "acceptance_campaigns": [],
+      "evidence_refs": [
+        "E-RL-LQR08-PLAN",
+        "E-RL-LQR08-ENGINEERING-RECEIPT",
+        "E-RL-LQR08-ENGINEERING-RESULT",
+        "E-RL-LQR08-LEARNER-RECEIPT",
+        "E-RL-LQR08-LEARNER-RESULT",
+        "E-RL-LQR08-REVIEW-RECEIPT",
+        "E-RL-LQR08-REVIEW-RESULT",
+        "E-RL-LQR08-HANDOFF-ENGINEERING-RECEIPT",
+        "E-RL-LQR08-HANDOFF-ENGINEERING-RESULT",
+        "E-RL-LQR08-HANDOFF-RECEIPT",
+        "E-RL-LQR08-HANDOFF-RESULT",
+        "E-RL-LQR08-CONFIRM-RECEIPT",
+        "E-RL-LQR08-CONFIRM-RESULT",
+        "E-RL-LQR08-JOINT-ENGINEERING-RECEIPT",
+        "E-RL-LQR08-JOINT-ENGINEERING-RESULT",
+        "E-RL-LQR08-JOINT-RECEIPT",
+        "E-RL-LQR08-JOINT-RESULT",
+        "E-RL-LQR08-REPORT",
+        "E-RL-LQR08-REPORT-RECEIPT",
+        "E-RL-LQR08-AUDIT-RECEIPT",
+        "E-RL-LQR08-AUDIT-RESULT"
+      ],
+      "done_when": "Reviewed learner comparison, handoff repairs, fresh confirmation, conditional joint disposition and independent audit complete; learning gaps explicit.",
+      "next_action": "Retain numerical outcomes and explicit unresolved convergence/generalization limits.",
+      "budget": {
+        "cpu_cores": 5,
+        "owned_rss_bytes": 17179869184,
+        "output_bytes": 8589934592
+      }
+    },
+    {
+      "id": "RL-LQR-09",
+      "title": "Structured SAC action and state dimensional scaling",
+      "phase": "rl_lqr_extension",
+      "owner": "Single inspector/editor",
+      "state": "complete",
+      "implementation": "verified",
+      "dependencies": [
+        "RL-LQR-08"
+      ],
+      "decision_dependencies": [
+        "D-RL-LQR09-20261028"
+      ],
+      "code_refs": [
+        "extensions/rl-lqr-scale/hponas_rl_lqr_scale/__init__.py",
+        "extensions/rl-lqr-scale/hponas_rl_lqr_scale/adapter.py",
+        "extensions/rl-lqr-scale/hponas_rl_lqr_scale/audit.py",
+        "extensions/rl-lqr-scale/hponas_rl_lqr_scale/catalog.py",
+        "extensions/rl-lqr-scale/hponas_rl_lqr_scale/controller.py",
+        "extensions/rl-lqr-scale/hponas_rl_lqr_scale/diagnostics.py",
+        "extensions/rl-lqr-scale/hponas_rl_lqr_scale/environment.py",
+        "extensions/rl-lqr-scale/hponas_rl_lqr_scale/experiments.py",
+        "extensions/rl-lqr-scale/hponas_rl_lqr_scale/reference.py"
+      ],
+      "test_refs": [
+        "extensions/rl-lqr-scale/tests/test_audit.py",
+        "extensions/rl-lqr-scale/tests/test_controller.py",
+        "extensions/rl-lqr-scale/tests/test_scale.py"
+      ],
+      "acceptance_campaigns": [],
+      "evidence_refs": [
+        "E-RL-LQR09-PLAN",
+        "E-RL-LQR09-ENGINEERING-RECEIPT",
+        "E-RL-LQR09-ENGINEERING-RESULT",
+        "E-RL-LQR09-ACTIONS-RECEIPT",
+        "E-RL-LQR09-ACTIONS-RESULT",
+        "E-RL-LQR09-REVIEW-RECEIPT",
+        "E-RL-LQR09-REVIEW-RESULT",
+        "E-RL-LQR09-STATES-RECEIPT",
+        "E-RL-LQR09-STATES-RESULT",
+        "E-RL-LQR09-FREEZE-RECEIPT",
+        "E-RL-LQR09-FREEZE-RESULT",
+        "E-RL-LQR09-CONFIRM-RECEIPT",
+        "E-RL-LQR09-CONFIRM-RESULT",
+        "E-RL-LQR09-AUDIT-RECEIPT",
+        "E-RL-LQR09-AUDIT-RESULT",
+        "E-RL-LQR09-REPORT",
+        "E-RL-LQR09-GUIDE",
+        "E-RL-LQR09-AUDIT-BOUNDARY",
+        "E-RL-LQR09-AUDIT-FLOAT-REPAIR",
+        "E-RL-LQR09-AUDIT-FAILED-RECEIPT",
+        "E-RL-LQR09-TERMINAL-READBACK"
+      ],
+      "done_when": "All 12 cases, paired actor comparison, fresh confirmation, learned-controller diagnostics and independent audit complete with explicit limitations.",
+      "next_action": "Bounded dimensional extension complete. Retain all outcomes: symmetry improves 11/12 case means; ten-state/eight-action exception and nonzero neural gaps remain.",
+      "budget": {
+        "cpu_cores": 5,
+        "transitions": 983040,
+        "sac_updates": 238080,
+        "host_rss_bytes": 17179869184,
+        "output_bytes": 8589934592
+      }
     }
   ],
   "decisions": [
@@ -9545,6 +10680,107 @@
       "consequence": "Add successor PAR-01 with terminal audit; preserve predecessor and unsupported outcomes.",
       "evidence_refs": [
         "E-PAR01-PLAN"
+      ]
+    },
+    {
+      "id": "D-RL-LQR01-20261027",
+      "title": "Execute bounded known-answer RLlib joint actor/critic tuning example",
+      "status": "accepted",
+      "kind": "execution_authorization",
+      "authorization": "User: review the plan thoroughly. execute.",
+      "rationale": "Finite-MDP population checks do not establish real SAC learning or separate actor/critic architecture tuning.",
+      "consequence": "Execute RL-LQR-01 with explicit small resource envelope and terminal master audit.",
+      "evidence_refs": [
+        "E-RL-LQR01-PLAN"
+      ]
+    },
+    {
+      "id": "D-RL-LQR02-20261027",
+      "title": "Five-state LQR and joint architecture/continuous-rate definition with BG-PBT readiness assessment",
+      "status": "accepted",
+      "kind": "execution_authorization",
+      "authorization": "User: let us increase the state size to 5, layers min 2 max 4, neurons 8 to 64, learning rate continuous; can BG-PBT handle this problem?",
+      "rationale": "Implement the requested benchmark/search definition and inspect actual BG-PBT support before claiming an executable SAC population method.",
+      "consequence": "Bounded no-training preflight and capability audit; no population campaign allocated.",
+      "evidence_refs": [
+        "E-RL-LQR02-PLAN"
+      ]
+    },
+    {
+      "id": "D-RL-LQR03-20261027",
+      "title": "Execute the five-state SAC BG-PBT implementation sequence",
+      "status": "accepted",
+      "authorization": "User: review the plan thoroughly, execute the plan. Prior request specifies five states, independent 2-4 layer actor/critic networks, widths 8-64 and continuous learning rates.",
+      "rationale": "The RL-LQR-02 readiness assessment identified the remaining implementation stages; this instruction authorizes their bounded execution.",
+      "consequence": "Add RL-LQR-03, preserve historical evidence and core, require final audit.",
+      "evidence_refs": [
+        "E-RL-LQR03-PLAN"
+      ]
+    },
+    {
+      "id": "D-RL-LQR04-20261027",
+      "title": "Execute ten-state horizon-thirty joint SAC benchmark",
+      "status": "accepted",
+      "authorization": "User: try a higher dimension case, and test a 10 dimension case with time horizon = 30.",
+      "rationale": "Extend the preceding joint actor/critic HPO/NAS benchmark with bounded work and scalable evaluation.",
+      "consequence": "Register RL-LQR-04 and reopen final reconciliation; retain predecessor evidence.",
+      "evidence_refs": [
+        "E-RL-LQR04-PLAN"
+      ]
+    },
+    {
+      "id": "D-RL-LQR05-20261027",
+      "title": "Execute ten-state multi-action joint SAC benchmark",
+      "status": "accepted",
+      "authorization": "User: can we try 2 to 5 input dimensions and see if the tuning works? do we have a network for the action?",
+      "rationale": "Extend the preceding joint actor/critic HPO/NAS benchmark with bounded work and scalable evaluation.",
+      "consequence": "Register RL-LQR-05 and reopen final reconciliation; retain predecessor evidence.",
+      "evidence_refs": [
+        "E-RL-LQR05-PLAN"
+      ]
+    },
+    {
+      "id": "D-RL-LQR06-20261028",
+      "title": "Execute scalar-state diagnostic joint SAC benchmark",
+      "status": "accepted",
+      "authorization": "User: Is the dimension of the state a problem; suppose we have 3 actions but 1-d state, do we have the same issues?",
+      "rationale": "Extend the preceding joint actor/critic HPO/NAS benchmark with bounded work and scalable evaluation.",
+      "consequence": "Register RL-LQR-06 and reopen final reconciliation; retain predecessor evidence.",
+      "evidence_refs": [
+        "E-RL-LQR06-PLAN"
+      ]
+    },
+    {
+      "id": "D-RL-LQR07-20261028",
+      "title": "Trace the scalar-state SAC and population failures",
+      "status": "accepted",
+      "authorization": "User: pursue this simple case, trace the code and understand what we have done wrong.",
+      "rationale": "Use saved checkpoints and exact action-value identities before proposing learning repairs.",
+      "consequence": "Register zero-training RL-LQR-07 diagnosis and reopen final reconciliation.",
+      "evidence_refs": [
+        "E-RL-LQR07-PLAN"
+      ]
+    },
+    {
+      "id": "D-RL-LQR08-20261028",
+      "title": "Repair scalar learner before architecture handoff and joint search",
+      "status": "accepted",
+      "authorization": "User: review the program and execute; continuing authorized repair sequence.",
+      "rationale": "Diagnosed approximation and replacement failures require prospective controlled repairs.",
+      "consequence": "RL-LQR-08 reopens final reconciliation; separate structured controls and generic claims.",
+      "evidence_refs": [
+        "E-RL-LQR08-PLAN"
+      ]
+    },
+    {
+      "id": "D-RL-LQR09-20261028",
+      "title": "Scale structured SAC to5--10actions and10active states",
+      "status": "accepted",
+      "authorization": "User: this is good enough;5to10actions,then10states;find the right approach.",
+      "rationale": "Sequential dimensional ablation with objective analytic controls.",
+      "consequence": "Register RL-LQR-09 and reopen final audit; no renewed generic superiority claim.",
+      "evidence_refs": [
+        "E-RL-LQR09-PLAN"
       ]
     }
   ],
@@ -30841,11 +32077,1145 @@
       "path": "docs/program/evidence/2026-10-26/parallel-publication-refresh-05/publication-01/intent.json",
       "sha256": "a7d3bda881a511867c977ce43b810eb98a0f07ecb8f1e1f1f253e976b33127a3",
       "note": "Terminal qualification, independent audit and stopped-service evidence."
+    },
+    {
+      "id": "E-RL-LQR01-PLAN",
+      "path": "docs/program/RL_LQR_EXTENSION_2026_10_27.md",
+      "sha256": "68c31cc45a63ecd8672b90502a2f4397a9a75087ed28180e15fb0d839deaf42c",
+      "note": "Additive reviewed RLlib LQR extension; preserves accepted core lineage."
+    },
+    {
+      "id": "E-RL-LQR01-PREDECESSOR",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/predecessor/manifest.json",
+      "sha256": "e815e47b9a334a4366d8949bc9659985d4239033fc81aac1e789fe920832cbd0",
+      "note": "Additive reviewed RLlib LQR extension; preserves accepted core lineage."
+    },
+    {
+      "id": "E-RL-LQR01-RUNTIME",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T085327Z-runtime-6c25484a/receipt.json",
+      "sha256": "e30d09021c0e45d04558c1f2af4ea5d48503afb6189c06a94ca6b93917ff0f73",
+      "note": "Isolated pinned RLlib imports and runtime dependencies verified."
+    },
+    {
+      "id": "E-RL-LQR01-RUNTIME-LOCK",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T085327Z-runtime-6c25484a/runtime-lock.json",
+      "sha256": "51c5ebafc2e4cccf2634446b2fa7521b86ecedf5b1dee9bfb9966e3e8030539b",
+      "note": "Isolated pinned RLlib imports and runtime dependencies verified."
+    },
+    {
+      "id": "E-RL-LQR01-REVIEW-CHECK-FAIL",
+      "path": "docs/program/operations-runs/20261027T085344Z-checks-17dcffa4/receipt.json",
+      "sha256": "f2431ea4807ccad517e27978b09a0cace9a1ce43c95c6348c19190b747d21db7",
+      "note": "Retained initial governance failure: live runbook hash required reconciliation; no source or campaign defect."
+    },
+    {
+      "id": "E-RL-LQR01-ORACLE-FAIL",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T085844Z-oracle-4e7f47ba/receipt.json",
+      "sha256": "2919dc68bd3667ded12d873fc5d40c8508d0b8aa657054de0316e275d2086da5",
+      "note": "Retained roundoff-only zero-assertion failure; successor uses the declared numerical tolerance."
+    },
+    {
+      "id": "E-RL-LQR01-ORACLE",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T090105Z-oracle-17ff9b64/receipt.json",
+      "sha256": "5362615b059eda363646265b91c6c7b261f978e99c489deb41da0cf1133f3093",
+      "note": "All 15 reference/environment checks pass; no training."
+    },
+    {
+      "id": "E-RL-LQR01-ORACLE-RESULT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T090105Z-oracle-17ff9b64/oracle.json",
+      "sha256": "34a72f886f54bed007c05033f6a09c43e57da7744ec71610c9e25a895afdc2cc",
+      "note": "Independent rational and numerical Riccati reference; all 512 paths and feasible analytic controller."
+    },
+    {
+      "id": "E-RL-LQR01-GOVERNANCE-FAIL",
+      "path": "docs/program/operations-runs/20261027T085844Z-checks-6db25822/receipt.json",
+      "sha256": "5d96dcec394c3b8d37cc3f42961508dd3ce4dd96521030e7c7ed0f58832345e7",
+      "note": "Retained governance defect: new work item missing completion-stage mapping; repaired prospectively."
+    },
+    {
+      "id": "E-RL-LQR01-LEARNER-ATTEMPT-1",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T092724Z-learner-68c0046a/receipt.json",
+      "sha256": "99b0cb459e960982857058d860fcfa581b602761a7ae58492b0465c4267ac28e",
+      "note": "Retained failure; inspected at stage boundary; core source unchanged."
+    },
+    {
+      "id": "E-RL-LQR01-LEARNER-ATTEMPT-2",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T092822Z-learner-0ed772a6/receipt.json",
+      "sha256": "7cc0ed53afcab5be4a65c13a5d50867a29eaf177af93e7428eef67346315052e",
+      "note": "PASS; inspected at stage boundary; core source unchanged."
+    },
+    {
+      "id": "E-RL-LQR01-LEARNER-ATTEMPT-2-RESULT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T092822Z-learner-0ed772a6/learner-result.json",
+      "sha256": "e80a0df48384b98a9c588f3eafb139241d42792da40fe55885785f338d371e5a",
+      "note": "Actual bounded operation outcomes; no convergence or universal optimum claim."
+    },
+    {
+      "id": "E-RL-LQR01-JOINT-REPLAY-ATTEMPT-1",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T093554Z-joint-replay-2d4a6a9a/receipt.json",
+      "sha256": "940f7923e3c84d57ad3e49894f65a841df71aef95808cc7247f2f6cfeda5bf45",
+      "note": "Retained failure; inspected at stage boundary; core source unchanged."
+    },
+    {
+      "id": "E-RL-LQR01-JOINT-REPLAY-ATTEMPT-2",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T093729Z-joint-replay-668fd2a1/receipt.json",
+      "sha256": "9b47f80e24faab96a98d6203827152e9cf0c3bf05c3c068e3862a0e134276055",
+      "note": "PASS; inspected at stage boundary; core source unchanged."
+    },
+    {
+      "id": "E-RL-LQR01-JOINT-REPLAY-ATTEMPT-2-RESULT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T093729Z-joint-replay-668fd2a1/joint-replay-result.json",
+      "sha256": "8cbce49165a37b30902f2a25c09ca0dd112aab40068d4691908b8ed907982191",
+      "note": "Actual bounded operation outcomes; no convergence or universal optimum claim."
+    },
+    {
+      "id": "E-RL-LQR01-HARDWARE-ATTEMPT-1",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T093815Z-hardware-b9eb0850/receipt.json",
+      "sha256": "b075062a34b0e36da5dad21da492331ec25999ed431683411430d3968afdc66c",
+      "note": "Retained failure; inspected at stage boundary; core source unchanged."
+    },
+    {
+      "id": "E-RL-LQR01-HARDWARE-ATTEMPT-2",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T094115Z-hardware-5912870f/receipt.json",
+      "sha256": "3e4333235986a4d093c68bab08c15c50d9bbc943ad67214029b6309f636110f1",
+      "note": "PASS; inspected at stage boundary; core source unchanged."
+    },
+    {
+      "id": "E-RL-LQR01-HARDWARE-ATTEMPT-2-RESULT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T094115Z-hardware-5912870f/hardware-result.json",
+      "sha256": "70434b26d7153554cced072bf4c44e23328c7b1750e415a4cafc3de4c08daa10",
+      "note": "Actual bounded operation outcomes; no convergence or universal optimum claim."
+    },
+    {
+      "id": "E-RL-LQR01-JOINT-EXECUTION",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T093013Z-joint-fd36a47a/receipt.json",
+      "sha256": "54319ce259ad5cf8984911b10a05dae2ea18b35705d717e22190b94fd13f15f9",
+      "note": "Preserved allocated outcomes and bounded engineering-repair lineage; scientific failures explicit."
+    },
+    {
+      "id": "E-RL-LQR01-JOINT-RESULT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T093013Z-joint-fd36a47a/joint-result.json",
+      "sha256": "76730e179e193de7276305f34843244e2c392e6a192ccd7a9e41e0c150a07e83",
+      "note": "Preserved allocated outcomes and bounded engineering-repair lineage; scientific failures explicit."
+    },
+    {
+      "id": "E-RL-LQR01-HARDWARE-REPAIR",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/hardware-successor-review.md",
+      "sha256": "6000ef76f68cb547fe6b14380d69585caec141400f82f218231c6d6b186c9c43",
+      "note": "Preserved allocated outcomes and bounded engineering-repair lineage; scientific failures explicit."
+    },
+    {
+      "id": "E-RL-LQR01-BUILD-ATTEMPT-1",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T094607Z-build-9b278a44/receipt.json",
+      "sha256": "9dc2d1d5984e3238f45042c3ce44329af6fab92536c2579c263631f13c5c805e",
+      "note": "PASS; inspected at stage boundary; core source unchanged."
+    },
+    {
+      "id": "E-RL-LQR01-BUILD-ATTEMPT-1-RESULT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T094607Z-build-9b278a44/build-result.json",
+      "sha256": "4fc14368bb9a83c9acb3fea6ee3f0c44d761857d72044793365ce48ee61a2f4a",
+      "note": "Actual bounded operation outcomes; no convergence or universal optimum claim."
+    },
+    {
+      "id": "E-RL-LQR01-BUILD-ATTEMPT-2",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T094746Z-build-81001700/receipt.json",
+      "sha256": "0196482774f34c2abc98a26dc5a54623e84ba1d5c61e6f6b89710f5ed527d7e9",
+      "note": "PASS; inspected at stage boundary; core source unchanged."
+    },
+    {
+      "id": "E-RL-LQR01-BUILD-ATTEMPT-2-RESULT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T094746Z-build-81001700/build-result.json",
+      "sha256": "d025fa4ed3dfd3374bca6ecebf9f82207de3c35f39fb478d2f4675feb3f2d8d4",
+      "note": "Actual bounded operation outcomes; no convergence or universal optimum claim."
+    },
+    {
+      "id": "E-RL-LQR01-AUDIT-ATTEMPT-1",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T094909Z-audit-d9db967d/receipt.json",
+      "sha256": "f1105944df01d2f17ecd3a8f222bedcd4eb54907baca552e366ef442ff47ae02",
+      "note": "PASS; inspected at stage boundary; core source unchanged."
+    },
+    {
+      "id": "E-RL-LQR01-AUDIT-ATTEMPT-1-RESULT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T094909Z-audit-d9db967d/audit-result.json",
+      "sha256": "541fbba90df045bf35cbb98a46525e3664ae9c5f15ad0017a3ac858effc5b7e3",
+      "note": "Actual bounded operation outcomes; no convergence or universal optimum claim."
+    },
+    {
+      "id": "E-RL-LQR01-MASTER-AUDIT-1",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T095122Z-master-audit-918dc781/receipt.json",
+      "sha256": "228b924c28b189d3a2c353da179251940395052951123c73288c6db54a424bdf",
+      "note": "Final master reconstruction; retained negative-control fixture failure"
+    },
+    {
+      "id": "E-RL-LQR01-MASTER-AUDIT-2",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T095218Z-master-audit-8cfc00a7/receipt.json",
+      "sha256": "c582166b216f7ff9785e92acede8775856c6f0f3bea9dd74ac2878adf920e01f",
+      "note": "Final master reconstruction; PASS"
+    },
+    {
+      "id": "E-RL-LQR01-MASTER-AUDIT-2-RESULT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T095218Z-master-audit-8cfc00a7/master-audit-result.json",
+      "sha256": "d7a13dd1debc848123b80faaa5372c35bd4c2d87e1efd197d6d4d00c5a43b9f3",
+      "note": "Final candidate master verified with all original clauses and extension obligations."
+    },
+    {
+      "id": "E-RL-LQR01-GOV-20261027T005014Z",
+      "path": "docs/program/operations-runs/20261027T005014Z-checks-15bf1339/receipt.json",
+      "sha256": "cea487070bcc76b77e96ffb930e61a5c6826421c14f9fac6e80209ef97ab5b8e",
+      "note": "Retained governance synchronization check; predecessor failures reconciled without modifying evidence."
+    },
+    {
+      "id": "E-RL-LQR01-GOV-20261027T053223Z",
+      "path": "docs/program/operations-runs/20261027T053223Z-checks-12704075/receipt.json",
+      "sha256": "44b9f7c62de71dfca02be7b3778feb14bcce7401e0e09c7f57bea81bfdfc6324",
+      "note": "Retained governance synchronization check; predecessor failures reconciled without modifying evidence."
+    },
+    {
+      "id": "E-RL-LQR01-GOV-20261027T085344Z",
+      "path": "docs/program/operations-runs/20261027T085344Z-checks-17dcffa4/receipt.json",
+      "sha256": "f2431ea4807ccad517e27978b09a0cace9a1ce43c95c6348c19190b747d21db7",
+      "note": "Retained governance synchronization check; predecessor failures reconciled without modifying evidence."
+    },
+    {
+      "id": "E-RL-LQR01-GOV-20261027T085844Z",
+      "path": "docs/program/operations-runs/20261027T085844Z-checks-6db25822/receipt.json",
+      "sha256": "5d96dcec394c3b8d37cc3f42961508dd3ce4dd96521030e7c7ed0f58832345e7",
+      "note": "Retained governance synchronization check; predecessor failures reconciled without modifying evidence."
+    },
+    {
+      "id": "E-RL-LQR01-GOV-20261027T092711Z",
+      "path": "docs/program/operations-runs/20261027T092711Z-checks-f999816c/receipt.json",
+      "sha256": "77ebeb32ff1ba9f0d9680e0ab843b7c4c94f2ed623e8dfd382915d76d66ac50b",
+      "note": "Retained governance synchronization check; predecessor failures reconciled without modifying evidence."
+    },
+    {
+      "id": "E-RL-LQR01-GOV-20261027T094925Z",
+      "path": "docs/program/operations-runs/20261027T094925Z-checks-deb66b00/receipt.json",
+      "sha256": "464e54d315601e9c640464815d4e009ce1dbcc54b26ae704bff0cfc074c01b3c",
+      "note": "Retained governance synchronization check; predecessor failures reconciled without modifying evidence."
+    },
+    {
+      "id": "E-RL-LQR01-GOV-20261027T095055Z",
+      "path": "docs/program/operations-runs/20261027T095055Z-checks-f4c41028/receipt.json",
+      "sha256": "6388b6fa5c58b4c204ba82ebbb9dbe53e06703ef8b02e13bbf7e2d3e46e05f5c",
+      "note": "Retained governance synchronization check; predecessor failures reconciled without modifying evidence."
+    },
+    {
+      "id": "E-RL-LQR02-PLAN",
+      "path": "docs/program/LQR5_BG_PBT_FEASIBILITY_2026_10_27.md",
+      "sha256": "2f6567431223dcf5b726829c6b05b07f7538cfd78147f02b59c66f29e0310035",
+      "note": "Reviewed five-state formulation and source-based BG-PBT readiness scope; zero training."
+    },
+    {
+      "id": "E-RL-LQR02-PREDECESSOR",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-02/predecessor/manifest.json",
+      "sha256": "7cb2c76619643dcaacbff4e399f43224301f211637d0b93590ea1a3dd7c805e8",
+      "note": "Immutable revision 2.654 predecessor."
+    },
+    {
+      "id": "E-RL-LQR02-PREFLIGHT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-02/20261027T103732Z-preflight-1cc589c5/receipt.json",
+      "sha256": "ad490726d9d841ca2bc53017f33f92425e0545ba3af95d58738f7c313a74d1b2",
+      "note": "Sixteen passing no-training checks: coupled matrix oracle, full law, conditional space, continuous rates and actual RLlib shapes."
+    },
+    {
+      "id": "E-RL-LQR02-PREFLIGHT-RESULT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-02/20261027T103732Z-preflight-1cc589c5/preflight-result.json",
+      "sha256": "10c77cd09ef51bf4af1e26debf26bcd3710812d4c33204bd3ed52e122217f1ab",
+      "note": "Sixteen passing no-training checks: coupled matrix oracle, full law, conditional space, continuous rates and actual RLlib shapes."
+    },
+    {
+      "id": "E-RL-LQR02-AUDIT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-02/20261027T103849Z-audit-4bb3b19b/receipt.json",
+      "sha256": "9b243c1730bd24369048c55d244a49fd3ac99cdfd9ce696ce74441f690a0a25e",
+      "note": "Verified original preflight source closure, oracle reconstruction and three false-evidence refusals; BG-PBT/SAC support remains absent."
+    },
+    {
+      "id": "E-RL-LQR02-AUDIT-RESULT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-02/20261027T103849Z-audit-4bb3b19b/audit-result.json",
+      "sha256": "60dadbad178e57ba63422b80555432dc98dd2cef0d400148bc7a9bb5e6484167",
+      "note": "Verified original preflight source closure, oracle reconstruction and three false-evidence refusals; BG-PBT/SAC support remains absent."
+    },
+    {
+      "id": "E-RL-LQR02-MASTER-AUDIT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-02/20261027T103932Z-master-audit-9d64ed68/receipt.json",
+      "sha256": "aa2f7532fb4bc867e3840a6661704fc44160fa0601d2120dfce47475280f3d34",
+      "note": "Original gap/core qualification and no-training five-state definition/readiness reconciled. No BG-PBT/SAC implementation claim."
+    },
+    {
+      "id": "E-RL-LQR02-MASTER-AUDIT-RESULT",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-02/20261027T103932Z-master-audit-9d64ed68/master-audit-result.json",
+      "sha256": "c16e4f4269fc1ab80c2eaa2e633a0e0c2c55ca21e983b1df8d3b1f1582f42efd",
+      "note": "Original gap/core qualification and no-training five-state definition/readiness reconciled. No BG-PBT/SAC implementation claim."
+    },
+    {
+      "id": "E-RL-LQR02-GOVERNANCE-STALE-RUNBOOK",
+      "path": "docs/program/operations-runs/20261027T104010Z-checks-91a5e64b/receipt.json",
+      "sha256": "1679fdd16355794adc7feb0cbb3a82556c2a6486cb383d87cd08d8ad9b514648",
+      "note": "Governance caught the newly documented exact operations lacking refreshed source-input binding. Reconciled against the archived predecessor; no scientific source/result changed."
+    },
+    {
+      "id": "E-RL-LQR03-PLAN",
+      "kind": "reviewed_extension_plan",
+      "path": "docs/program/LQR5_SAC_BGPBT_IMPLEMENTATION_2026_10_27.md",
+      "sha256": "c32fd97f5a9c97051dfc3876372df1b89e4dcebb1c6abd914ea6a5644e69e118"
+    },
+    {
+      "id": "E-RL-LQR03-PREDECESSOR",
+      "kind": "predecessor_manifest",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/predecessor/manifest.json",
+      "sha256": "bf8ceda6186ba70cd7b02c373940b7e1b7568d1ad8f955f2e03e6874ad198304"
+    },
+    {
+      "id": "E-RL-LQR03-ENGINEERING-1",
+      "kind": "bounded_operation_receipt",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T112748Z-engineering-5685ed29/receipt.json",
+      "sha256": "3323120df5f8c6f2fcd8eca8b9e3c62f0ed36e5f4470c5a3cee3b64b5576fc90"
+    },
+    {
+      "id": "E-RL-LQR03-ENGINEERING-2",
+      "kind": "bounded_operation_receipt",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T112834Z-engineering-a4580518/receipt.json",
+      "sha256": "eb28f86c41a802d132cab791103ee187cd3f0ed2df7c65e8a8c12ba2b775eac6"
+    },
+    {
+      "id": "E-RL-LQR03-ENGINEERING-3",
+      "kind": "bounded_operation_receipt",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113205Z-engineering-ddca3d07/receipt.json",
+      "sha256": "59b741aea7297012c3c9554e344c0bb843a99454b979ffb20cc3976db1ca5aff"
+    },
+    {
+      "id": "E-RL-LQR03-ENGINEERING-4",
+      "kind": "bounded_operation_receipt",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113509Z-engineering-ec00e45f/receipt.json",
+      "sha256": "4d5f3b3e29355c8b9d204110f196305f6d5af9b7ec3bcbb099529ddfddb4b061"
+    },
+    {
+      "id": "E-RL-LQR03-ENGINEERING-RESULT",
+      "kind": "extension_test_result",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113509Z-engineering-ec00e45f/engineering-result.json",
+      "sha256": "3b047856bf2934caa4a1c6deb1e90f2ad4afa4a19c970f82ac93988726010cef"
+    },
+    {
+      "id": "E-RL-LQR03-CALIBRATION-RECEIPT",
+      "kind": "bounded_learning_evidence",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113806Z-calibration-35c1d548/receipt.json",
+      "sha256": "d6df5362de8fe7319ca148a7fdd104a4c24dfac4d5a0c7f67ad05a8b1a8733a4"
+    },
+    {
+      "id": "E-RL-LQR03-CALIBRATION-RESULT",
+      "kind": "bounded_learning_evidence",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113806Z-calibration-35c1d548/calibration-result.json",
+      "sha256": "84a0852f00b1360ee9503d403ece9cb53cbaa32696a0dd42987a476672f65f00"
+    },
+    {
+      "id": "E-RL-LQR03-SEARCH-RECEIPT",
+      "kind": "bounded_learning_evidence",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113933Z-search-68a2e9a1/receipt.json",
+      "sha256": "c8eaa975f24545a3df4be16060ea3b5fecff30e3f1ad9401c3cf570e4bafd2d4"
+    },
+    {
+      "id": "E-RL-LQR03-SEARCH-RESULT",
+      "kind": "bounded_learning_evidence",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113933Z-search-68a2e9a1/search-result.json",
+      "sha256": "7620c28bb1608a9cff4898c579c1c9a4302d5aae25a507b5b16b920fd0ca0d81"
+    },
+    {
+      "id": "E-RL-LQR03-CONFIRMATION-RECEIPT",
+      "kind": "bounded_learning_evidence",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T114330Z-confirmation-efda08b6/receipt.json",
+      "sha256": "6ab6cb4f50936ac9aae929ae35b9473bd94db0c75d93e4e18e1afce002c4b58e"
+    },
+    {
+      "id": "E-RL-LQR03-CONFIRMATION-RESULT",
+      "kind": "bounded_learning_evidence",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T114330Z-confirmation-efda08b6/confirmation-result.json",
+      "sha256": "fae696ea9c9bea277525a858482151397a884ca43902cc6754a7cd29a5aa02b1"
+    },
+    {
+      "id": "E-RL-LQR03-HARDWARE-1",
+      "kind": "bounded_hardware_attempt",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T114535Z-hardware-3586d640/receipt.json",
+      "sha256": "0bf0c33256eedd80d1da2a4ea2b72008960a8a42abac0846363343f81687db5a"
+    },
+    {
+      "id": "E-RL-LQR03-HARDWARE-2",
+      "kind": "bounded_hardware_attempt",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T120322Z-hardware-30529789/receipt.json",
+      "sha256": "6732ca6797dbea0971c203cf8da77b401868b27162433951199309ed64cf34fe"
+    },
+    {
+      "id": "E-RL-LQR03-HARDWARE-ADMISSION",
+      "kind": "hardware_occupancy",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T120322Z-hardware-30529789/hardware-admission.json",
+      "sha256": "32a9eb87cfdd3f25b16120eda1290235958b7212eaa44cfc70f851dc4e491902"
+    },
+    {
+      "id": "E-RL-LQR03-DOCUMENTATION-RECEIPT",
+      "kind": "companion_delivery_evidence",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T120447Z-documentation-38aa2443/receipt.json",
+      "sha256": "2c511b458e16a966c8ed982904d9ca3b5b6d7d0cd2a183ab6fdedc8fe09268e8"
+    },
+    {
+      "id": "E-RL-LQR03-DOCUMENTATION-RESULT",
+      "kind": "companion_delivery_evidence",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T120447Z-documentation-38aa2443/documentation-result.json",
+      "sha256": "1da1d7082254b9f12411c667b41bbf5b53c4ba970111e793f5462c1f00818204"
+    },
+    {
+      "id": "E-RL-LQR03-DOCUMENTATION-CPU-AUDIT",
+      "kind": "companion_delivery_evidence",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T120447Z-documentation-38aa2443/cpu-audit-result.json",
+      "sha256": "8de8f38c87ad45b95d07b9783df0f8c7787d4c656461af72b8aec21a4e80d2eb"
+    },
+    {
+      "id": "E-RL-LQR03-DOCUMENTATION-MANUAL",
+      "kind": "companion_delivery_evidence",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T120447Z-documentation-38aa2443/main-lqr5-bgpbt.pdf",
+      "sha256": "0b21fdc136dc736e2f91b1ae62609df28e173f636f475781c06bb9ccc488c38e"
+    },
+    {
+      "id": "E-RL-LQR03-CPU-COMPLETION",
+      "kind": "partial_completion_handoff",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/cpu-completion.json",
+      "sha256": "30139145dc169b01861a25af4261e2e8a415209ecdaa072ae6c267e5530fa5f9"
+    },
+    {
+      "id": "E-RL-LQR03-HANDOFF",
+      "kind": "phase_boundary_dependency_review",
+      "path": "docs/program/LQR5_SAC_BGPBT_HANDOFF_2026_10_27.md",
+      "sha256": "98ac96f10790699b594eedd036681184dd90a0ad64cb50c09e2a3e258ebc207c"
+    },
+    {
+      "id": "E-RL-LQR03-HANDOFF-V2",
+      "kind": "reviewed_hardware_transfer_gate_refinement",
+      "path": "docs/program/LQR5_SAC_BGPBT_HANDOFF_V2_2026_10_27.md",
+      "sha256": "2ea23b9bc79ca1f172c32072a7fefba480cfa69880a265a27381ea1195cb6aca"
+    },
+    {
+      "id": "E-RL-LQR03-REPAIR-PLAN",
+      "kind": "reviewed_selection_and_shared_gpu_repair",
+      "path": "docs/program/LQR5_SAC_BGPBT_REVIEW_REPAIR_2026_10_27.md",
+      "sha256": "1d7a6e1b579fd272197b05fef1a603dd04f5bf96fd24adcc9acfecdfdc9a1d5d"
+    },
+    {
+      "id": "E-RL-LQR03-REPAIR-ENGINEERING-RECEIPT",
+      "kind": "source_bound_repair-engineering",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T123950Z-repair-engineering-834b98b2/receipt.json",
+      "sha256": "fde63d662931f7d623e7cff238f61539d816890440c95fa37b1c0358f1e45662"
+    },
+    {
+      "id": "E-RL-LQR03-REPAIR-ENGINEERING-RESULT",
+      "kind": "source_bound_repair-engineering",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T123950Z-repair-engineering-834b98b2/engineering-result.json",
+      "sha256": "4d1b15c10bde501676ca3176b2723720256ea8162e14afa7ea81b2cc840fa06b"
+    },
+    {
+      "id": "E-RL-LQR03-PROCEDURE-CHECK-RECEIPT",
+      "kind": "source_bound_procedure-check",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T124229Z-procedure-check-8860a4e3/receipt.json",
+      "sha256": "058ab162d011a05c11e9fb197b76b012616eed4c3be4cab408f449e959e0cd50"
+    },
+    {
+      "id": "E-RL-LQR03-PROCEDURE-CHECK-RESULT",
+      "kind": "source_bound_procedure-check",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T124229Z-procedure-check-8860a4e3/procedure-check-result.json",
+      "sha256": "70cc72aafb32d4901e3765723a6a6dee69968790e12d98accf6ec09f114326fd"
+    },
+    {
+      "id": "E-RL-LQR03-ATTRIBUTION-PLAN",
+      "kind": "reviewed_zero_training_attribution_repair",
+      "path": "docs/program/LQR5_SELECTION_ATTRIBUTION_REPAIR_2026_10_27.md",
+      "sha256": "c7f74782e2b6789cebfcf13c4f1863f8aae745b872e798ec14faec7253763379"
+    },
+    {
+      "id": "E-RL-LQR03-SELECTION-RECONCILIATION-RECEIPT",
+      "kind": "source_bound_selection-reconciliation",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125120Z-selection-reconciliation-853a58ed/receipt.json",
+      "sha256": "1946bd5cbc9a5f52ef865f7f133f1e5eaf9fdc80fee812aeeba80e5ed6af3822"
+    },
+    {
+      "id": "E-RL-LQR03-SELECTION-RECONCILIATION-RESULT",
+      "kind": "source_bound_selection-reconciliation",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125120Z-selection-reconciliation-853a58ed/selection-reconciliation-result.json",
+      "sha256": "2feb26910376fa1fc2f3bd2d52acb1f5a903e3ea9deb569bf2b540af4bc4ac61"
+    },
+    {
+      "id": "E-RL-LQR03-DEVICE-PLAN",
+      "kind": "reviewed_device_startup_repair",
+      "path": "docs/program/LQR5_DEVICE_STARTUP_REPAIR_2026_10_27.md",
+      "sha256": "f5dc39b3feb82c14acce3f962c2786233648ad943a020fd4e0d6dbd36cb0958c"
+    },
+    {
+      "id": "E-RL-LQR03-STARTUP-FAILURE",
+      "kind": "retained_hardware_failure",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125231Z-hardware-892df855/receipt.json",
+      "sha256": "8723767474b665c880834f1f27fc580491b10bf5ee78d3af7b5dba00fc65b577"
+    },
+    {
+      "id": "E-RL-LQR03-STARTUP-CLEANUP",
+      "kind": "retained_hardware_failure",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/startup-failure-cleanup.json",
+      "sha256": "1c3f9953b669bb6ac1df8193909a992334ac1d605d518a01740abaf2f053ddc3"
+    },
+    {
+      "id": "E-RL-LQR03-DEVICE-REPAIR-RECEIPT",
+      "kind": "source_bound_device-repair",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125634Z-device-repair-60f8b8c1/receipt.json",
+      "sha256": "10c0af6fbbee5abdb40a1318bb818198ea4c0949825269666718bf7fcac1ae2a"
+    },
+    {
+      "id": "E-RL-LQR03-DEVICE-REPAIR-RESULT",
+      "kind": "source_bound_device-repair",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125634Z-device-repair-60f8b8c1/device-repair-result.json",
+      "sha256": "65dbbe165524a7e3e57930e92e7f67f9a524a743d24b227739686d25e4308303"
+    },
+    {
+      "id": "E-RL-LQR03-HARDWARE-RECEIPT",
+      "kind": "source_bound_hardware",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125719Z-hardware-3b59183d/receipt.json",
+      "sha256": "e17ebedae0fe39870ecf7203ed57fa5814c579e988ecfe11f0f190516ad902c1"
+    },
+    {
+      "id": "E-RL-LQR03-HARDWARE-RESULT",
+      "kind": "source_bound_hardware",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125719Z-hardware-3b59183d/hardware-result.json",
+      "sha256": "8250edd78be1d4917729002c221db7197e946c7a96b9c110504fdb53c084687d"
+    },
+    {
+      "id": "E-RL-LQR03-HARDWARE-DOCUMENTATION-RECEIPT",
+      "kind": "source_bound_hardware-documentation",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125923Z-hardware-documentation-a1e74359/receipt.json",
+      "sha256": "d3532012dfa7312dbf5f05bf6fe3313a024d9c7e8b393d02bf230197dc561e70"
+    },
+    {
+      "id": "E-RL-LQR03-HARDWARE-DOCUMENTATION-RESULT",
+      "kind": "source_bound_hardware-documentation",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125923Z-hardware-documentation-a1e74359/documentation-result.json",
+      "sha256": "c4733eef2548994ede4f6f3c6af1ef21971a42b18c450142e4149e26637f1042"
+    },
+    {
+      "id": "E-RL-LQR03-AUDIT-RECEIPT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T130059Z-audit-93b1fc5e/receipt.json",
+      "sha256": "5fcf3752eb4f5da42437bebdab4eb7c50e112a7f66f6adae1c8c4349ebc0b410"
+    },
+    {
+      "id": "E-RL-LQR03-AUDIT-RESULT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T130059Z-audit-93b1fc5e/audit-result.json",
+      "sha256": "f0a5239914f0c20dae46c4affe63e54c426c342d8bcb127f11f219924b676a46"
+    },
+    {
+      "id": "E-RL-LQR03-MASTER-AUDIT-RECEIPT",
+      "kind": "source_bound_master-audit",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T130218Z-master-audit-f1cc7c92/receipt.json",
+      "sha256": "2ff3ad0bf1d69e621d816689dc61d3938a3494a5c69968901dc3c91a47a7410e"
+    },
+    {
+      "id": "E-RL-LQR03-MASTER-AUDIT-RESULT",
+      "kind": "source_bound_master-audit",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T130218Z-master-audit-f1cc7c92/master-audit-result.json",
+      "sha256": "1db50ab4aa368f1ec337e9c18f7be6ae7ed9bffc26176c23dc7da2f20268e9aa"
+    },
+    {
+      "id": "E-RL-LQR04-PLAN",
+      "kind": "reviewed_plan",
+      "path": "docs/program/LQR10_H30_STUDY_2026_10_27.md",
+      "sha256": "f9594fca02ca4e5cbfd482e41393f616ed646f2ada77386f671c204ce8fc8eee"
+    },
+    {
+      "id": "E-RL-LQR04-ENGINEERING-RECEIPT",
+      "kind": "source_bound_engineering",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-04/20261027T142443Z-engineering-67c19fae/receipt.json",
+      "sha256": "0732b2c6b8a175060b87a5e8d6acfe7f3e7d348830dcd090f5deddc0f1616f96"
+    },
+    {
+      "id": "E-RL-LQR04-ENGINEERING-RESULT",
+      "kind": "source_bound_engineering",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-04/20261027T142443Z-engineering-67c19fae/engineering-result.json",
+      "sha256": "5ea16adbcef1ac00466e37507cfdce2a8576455708cf72354772cbd71d050a54"
+    },
+    {
+      "id": "E-RL-LQR04-STUDY-RECEIPT",
+      "kind": "source_bound_study",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-04/20261027T142542Z-study-22923d3e/receipt.json",
+      "sha256": "0265ec24e4dc8efc054b5f9cd00e3d13a8a6f4a69b641bf6ccf0dd8e1356fb90"
+    },
+    {
+      "id": "E-RL-LQR04-STUDY-RESULT",
+      "kind": "source_bound_study",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-04/20261027T142542Z-study-22923d3e/study-result.json",
+      "sha256": "91ddcedc4d7f5d1913100c751698115242c9457c5d156243db6b53c54366fc12"
+    },
+    {
+      "id": "E-RL-LQR04-DOCUMENTATION",
+      "kind": "result_documentation",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-04/documentation/documentation-result.json",
+      "sha256": "a639ee0c1e00b5345ecaab06cb364d94e10a84892328b1b25c321b64c204bbf6"
+    },
+    {
+      "id": "E-RL-LQR04-GUIDE",
+      "kind": "result_documentation",
+      "path": "extensions/rl-lqr10/README.md",
+      "sha256": "05bb1f55f948abe3bb4f0c40522460ecf229660ef64df0d798c1c5603c746cfc"
+    },
+    {
+      "id": "E-RL-LQR04-RESULTS",
+      "kind": "result_documentation",
+      "path": "extensions/rl-lqr10/RESULTS.md",
+      "sha256": "7ec29cf4d009d3ae7d3781fe83a88484464e724fbbac376eddb53cb193c50bb6"
+    },
+    {
+      "id": "E-RL-LQR04-AUDIT-RECEIPT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-04/20261027T143801Z-audit-c234155c/receipt.json",
+      "sha256": "79d5c87e7525541ece886a4a36ad19a82426cca870a364745a8d054cbbfb546b"
+    },
+    {
+      "id": "E-RL-LQR04-AUDIT-RESULT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-04/20261027T143801Z-audit-c234155c/audit-result.json",
+      "sha256": "470ba8de200cf23c465cc90bc82ee535e1855140f646454590c90fdb66c3c71e"
+    },
+    {
+      "id": "E-RL-LQR04-MASTER-AUDIT-RECEIPT",
+      "kind": "source_bound_master-audit",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-04/20261027T143915Z-master-audit-87cbf8b4/receipt.json",
+      "sha256": "7aa4354a3203e32d1ac2a6ffa54bc6330f3dd42ce24334fdaadb43cf9b055a2f"
+    },
+    {
+      "id": "E-RL-LQR04-MASTER-AUDIT-RESULT",
+      "kind": "source_bound_master-audit",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-04/20261027T143915Z-master-audit-87cbf8b4/master-audit-result.json",
+      "sha256": "459fb3291e8ea163aa10c61ee4155d302762301b650c0062bbe4ca9bd2fc7574"
+    },
+    {
+      "id": "E-RL-LQR05-PLAN",
+      "kind": "reviewed_plan",
+      "path": "docs/program/LQR_MULTI_ACTION_STUDY_2026_10_27.md",
+      "sha256": "4393b69692b2c2c4a32519705adebb718d8cc3afe8f6277d7abf0c640e0d6a1e"
+    },
+    {
+      "id": "E-RL-LQR05-ENGINEERING-RECEIPT",
+      "kind": "source_bound_engineering",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-05/20261027T152529Z-engineering-0da1e77c/receipt.json",
+      "sha256": "279dbaedf37c04c6e6701a239d637450e5341dc5ef708ca2872bcad809dcb063"
+    },
+    {
+      "id": "E-RL-LQR05-ENGINEERING-RESULT",
+      "kind": "source_bound_engineering",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-05/20261027T152529Z-engineering-0da1e77c/engineering-result.json",
+      "sha256": "a2fd1f37e3d75ee0f28f79446cd3ccb0d402f958fb36dd58a039bbfc27c24cfa"
+    },
+    {
+      "id": "E-RL-LQR05-STUDY-RECEIPT",
+      "kind": "source_bound_study",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-05/20261027T152612Z-study-b3ae2c5c/receipt.json",
+      "sha256": "c07c60b1a44fa7e6192b6772e2b7334db503a9a08900a97a414450219e3c457c"
+    },
+    {
+      "id": "E-RL-LQR05-STUDY-RESULT",
+      "kind": "source_bound_study",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-05/20261027T152612Z-study-b3ae2c5c/study-result.json",
+      "sha256": "82cdbb69842722e2ba1225a46bf80f80c2114cbb1271f36fa2292de8f9fc8f98"
+    },
+    {
+      "id": "E-RL-LQR05-AUDIT-RECEIPT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-05/20261027T155409Z-audit-b06d78f8/receipt.json",
+      "sha256": "783585876f68c10a112e536c7fe9ddb13b6ca1a36bfb556b253d628ab4bfa5e7"
+    },
+    {
+      "id": "E-RL-LQR05-AUDIT-RESULT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-05/20261027T155409Z-audit-b06d78f8/audit-result.json",
+      "sha256": "3c3f3377be73653563ac8cf1f968ad168939c21a41ed2bd7e05825a9916792cb"
+    },
+    {
+      "id": "E-RL-LQR05-DOCUMENTATION",
+      "kind": "source_bound_documentation",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-05/documentation/documentation-result.json",
+      "sha256": "17b42106c530cd3e5449983d109e9637969287e6238bdcd06cb82ceff5bf7498"
+    },
+    {
+      "id": "E-RL-LQR05-MASTER-AUDIT-RECEIPT",
+      "kind": "source_bound_master-audit",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-05/20261027T155708Z-master-audit-dd2467fe/receipt.json",
+      "sha256": "9ab4e7bfaa68c41f693b1f91d3d5c7dc8cd21a09977c2b2a667dcfcbe92170a2"
+    },
+    {
+      "id": "E-RL-LQR05-MASTER-AUDIT-RESULT",
+      "kind": "source_bound_master-audit",
+      "path": "docs/program/evidence/2026-10-27/rl-lqr-05/20261027T155708Z-master-audit-dd2467fe/master-audit-result.json",
+      "sha256": "f786fbf3f730a70288f5d47be2932abe5e540c0a074b5cbad33c5230ca8a8de5"
+    },
+    {
+      "id": "E-RL-LQR06-PLAN",
+      "kind": "reviewed_plan",
+      "path": "docs/program/LQR_SCALAR_STATE_DIAGNOSTIC_2026_10_28.md",
+      "sha256": "731967706945b2622ad58c98e28ea9f42440b95cc696d3916bfa0ad44514d5e0"
+    },
+    {
+      "id": "E-RL-LQR06-ENGINEERING-RECEIPT",
+      "kind": "source_bound_engineering",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-06/20261027T161208Z-engineering-765db7df/receipt.json",
+      "sha256": "0601297af59d64fa3322f7ebf4310455dde7e79100d7591e68dd36ba17893404"
+    },
+    {
+      "id": "E-RL-LQR06-ENGINEERING-RESULT",
+      "kind": "source_bound_engineering",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-06/20261027T161208Z-engineering-765db7df/engineering-result.json",
+      "sha256": "833a035b6104744470654bb86e43dd743d4562438c992a751bd282f690413043"
+    },
+    {
+      "id": "E-RL-LQR06-STUDY-RECEIPT",
+      "kind": "source_bound_study",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-06/20261027T161254Z-study-1bde3ed3/receipt.json",
+      "sha256": "17c59f45a39b118319ca464716f577750a8f0884b04601d73f900e1377a5bb2c"
+    },
+    {
+      "id": "E-RL-LQR06-STUDY-RESULT",
+      "kind": "source_bound_study",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-06/20261027T161254Z-study-1bde3ed3/study-result.json",
+      "sha256": "d87a177fe3db6a5ea0be6521ae019305186baad6287f503beeec4b2702b85bb4"
+    },
+    {
+      "id": "E-RL-LQR06-AUDIT-RECEIPT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-06/20261027T163503Z-audit-bd828575/receipt.json",
+      "sha256": "7893c73110488c6eb52d89c3b6d2e0fede81ac2d63b0bf1edb131510b9762148"
+    },
+    {
+      "id": "E-RL-LQR06-AUDIT-RESULT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-06/20261027T163503Z-audit-bd828575/audit-result.json",
+      "sha256": "86699441b301f81c11aa2519f2f691090e7a09dd1740c6ef394934d502388075"
+    },
+    {
+      "id": "E-RL-LQR06-DOCUMENTATION",
+      "kind": "source_bound_documentation",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-06/documentation/documentation-result.json",
+      "sha256": "c259e348b8c56d3a1302c11f1cf9e55cb8cb7e50cee89fafdb8f3ebf97bb61e3"
+    },
+    {
+      "id": "E-RL-LQR06-MASTER-AUDIT-RECEIPT",
+      "kind": "source_bound_master-audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-06/20261027T163728Z-master-audit-61fa1ff2/receipt.json",
+      "sha256": "f07a355425b20ada3f83d8f6804acca652a329905ea28d9cffa101b5092f8bd0"
+    },
+    {
+      "id": "E-RL-LQR06-MASTER-AUDIT-RESULT",
+      "kind": "source_bound_master-audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-06/20261027T163728Z-master-audit-61fa1ff2/master-audit-result.json",
+      "sha256": "eae1b82da9f18aab1dc6606d354679db6b2bfd3d6f9e0c07ce7ec81864026a63"
+    },
+    {
+      "id": "E-RL-LQR07-PLAN",
+      "kind": "reviewed_plan",
+      "path": "docs/program/LQR_SCALAR_FAILURE_TRACE_2026_10_28.md",
+      "sha256": "e21e7f5b67c4725b9d5e478c98762a81d328ee9f02214be448c396fe85ed26dc"
+    },
+    {
+      "id": "E-RL-LQR07-TRACE",
+      "kind": "source_trace",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-07/trace-result.json",
+      "sha256": "cd6029785f4992dce9add007ad9284aacd5dc2acecc24cd7f29b3ef6c8474869"
+    },
+    {
+      "id": "E-RL-LQR07-DIAGNOSE-RECEIPT",
+      "kind": "source_bound_diagnose",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-07/20261027T164854Z-diagnose-e084a525/receipt.json",
+      "sha256": "73ad3806277e772a9063c39e7f29af73c70de4a56a2a44e6825935bad7bd6971"
+    },
+    {
+      "id": "E-RL-LQR07-DIAGNOSE-RESULT",
+      "kind": "source_bound_diagnose",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-07/20261027T164854Z-diagnose-e084a525/diagnose-result.json",
+      "sha256": "acce0bbda4dc70a1b7a7ee5a485c0319e011bf9813c6e27d5aee98f570a547e4"
+    },
+    {
+      "id": "E-RL-LQR07-REPORT-FINDINGS",
+      "kind": "source_bound_report",
+      "path": "extensions/rl-lqr-debug/FINDINGS.md",
+      "sha256": "2cb4cad39cacce8c3e55a8383e3acd7c683ce544bf568a6eae6899ddeed4ed0e"
+    },
+    {
+      "id": "E-RL-LQR07-REPORT-RESULT",
+      "kind": "source_bound_report",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-07/report-result.json",
+      "sha256": "34703154b7967b7da249a57a2b8ca2392926bc28fdb1d63795bf5c60f6b4e1e4"
+    },
+    {
+      "id": "E-RL-LQR07-OPERATIONS-RECONCILIATION",
+      "kind": "source_reconciliation",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-07/operations-binding-reconciliation.json",
+      "sha256": "d8835322d7fa659a6c0ea62d90c970439de13d55a83735d22514271e8168d587"
+    },
+    {
+      "id": "E-RL-LQR07-AUDIT-OPS",
+      "kind": "source_reconciliation",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-07/audit-operations-reconciliation.json",
+      "sha256": "d0c8fd5105928a0e49a560a983302039e302eed4ea2e3c79279460e13fa93b99"
+    },
+    {
+      "id": "E-RL-LQR07-AUDIT-RECEIPT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-07/20261027T165939Z-audit-7d30d9cd/receipt.json",
+      "sha256": "105319e129c84b4d3257524c10de5854d0df177e1f5a5e39830e61b7339ac5d7"
+    },
+    {
+      "id": "E-RL-LQR07-AUDIT-RESULT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-07/20261027T165939Z-audit-7d30d9cd/audit-result.json",
+      "sha256": "651918cbee773b6ac86f2d9e34505941cda65f1300a99a5fbd4f22cc9ba8ca1c"
+    },
+    {
+      "id": "E-RL-LQR07-AUDIT-ROUNDING-REPAIR",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-07/audit-rounding-repair.json",
+      "sha256": "886a9f39b488c32a77357ed38ec1ec1e97c61f801e96eec47657a0654c492c4a"
+    },
+    {
+      "id": "E-RL-LQR07-AUDIT-SERIALIZATION-REPAIR",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-07/audit-serialization-repair.json",
+      "sha256": "979194f815bafa85b3639f0dd4f29d2a5d2bae22ced231cb9dbacc0f9d26e336"
+    },
+    {
+      "id": "E-RL-LQR07-MASTER-RECEIPT",
+      "kind": "source_bound_master_reconciliation",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-07/20261027T170118Z-master-audit-66ccb0b1/receipt.json",
+      "sha256": "e686b91362564c85f03dc950adee4d81f596e8acb1e4e2a175d55a0e6a9ec0ad"
+    },
+    {
+      "id": "E-RL-LQR07-MASTER-RESULT",
+      "kind": "source_bound_master_reconciliation",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-07/20261027T170118Z-master-audit-66ccb0b1/master-audit-result.json",
+      "sha256": "a7e0414b0b88352950e44550d5b2cdc838d409b65bfe2b4509f337a368c3eeda"
+    },
+    {
+      "id": "E-RL-LQR08-PLAN",
+      "kind": "reviewed_plan",
+      "path": "docs/program/LQR_SCALAR_REPAIR_2026_10_28.md",
+      "sha256": "fb551317ddff13567de74aa208720186958dcce95c51bb8a60e7b3c9a1f0f01d"
+    },
+    {
+      "id": "E-RL-LQR08-OPERATIONS",
+      "kind": "operations_reconciliation",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/operations-reconciliation.json",
+      "sha256": "06a21b409352091409718d1abca9ed76d69c646826434c6ddb2e6e3324a89f60"
+    },
+    {
+      "id": "E-RL-LQR08-ENGINEERING-RECEIPT",
+      "kind": "source_bound_engineering",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T172320Z-engineering-a46c9991/receipt.json",
+      "sha256": "07a91e64f79775d4a61eb32f31d9265720071438f6387fea54b0bd77b028d685"
+    },
+    {
+      "id": "E-RL-LQR08-ENGINEERING-RESULT",
+      "kind": "source_bound_engineering",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T172320Z-engineering-a46c9991/engineering-result.json",
+      "sha256": "31daa339153165ac8d346459698409622002a6ceea0a8a691eade571bbab596d"
+    },
+    {
+      "id": "E-RL-LQR08-LEARNER-RECEIPT",
+      "kind": "source_bound_learner",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T172414Z-learner-2ff6194c/receipt.json",
+      "sha256": "fb215eed5e0dbea19dc3e71e866a9a28054d2254e9f3edc355a8f1ca1c1d39fe"
+    },
+    {
+      "id": "E-RL-LQR08-LEARNER-RESULT",
+      "kind": "source_bound_learner",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T172414Z-learner-2ff6194c/learner-result.json",
+      "sha256": "63ea55a31711179a93d7634706e881ec095aa7662b5731a17371eddafff6eb21"
+    },
+    {
+      "id": "E-RL-LQR08-BOUNDARY-REVIEW",
+      "kind": "reviewed_next_phase",
+      "path": "docs/program/LQR_SCALAR_REPAIR_REVIEW_2026_10_28.md",
+      "sha256": "286e099ddb20077723bbde6597d13f405ab1f9c906d75c3c49c4c95b7a0fb230"
+    },
+    {
+      "id": "E-RL-LQR08-REVIEW-RECEIPT",
+      "kind": "source_bound_review",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T172746Z-review-6aecb01e/receipt.json",
+      "sha256": "2c9d097f611433a8ab3abd4f5fe4a6c1fea40be1fbcf117032a8ca7750b46b8c"
+    },
+    {
+      "id": "E-RL-LQR08-REVIEW-RESULT",
+      "kind": "source_bound_review",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T172746Z-review-6aecb01e/review-result.json",
+      "sha256": "ea8d6c227a2529fa02ba0f261d850e91b54e87b830f6c639bdb2109f02322544"
+    },
+    {
+      "id": "E-RL-LQR08-HANDOFF-ENGINEERING-RECEIPT",
+      "kind": "source_bound_handoff-engineering",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T172825Z-handoff-engineering-b2738585/receipt.json",
+      "sha256": "8c068623294aff34a83276bf88ec1c43117948782449096169587e22848c3652"
+    },
+    {
+      "id": "E-RL-LQR08-HANDOFF-ENGINEERING-RESULT",
+      "kind": "source_bound_handoff-engineering",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T172825Z-handoff-engineering-b2738585/handoff-engineering-result.json",
+      "sha256": "31daa339153165ac8d346459698409622002a6ceea0a8a691eade571bbab596d"
+    },
+    {
+      "id": "E-RL-LQR08-OPERATION-IDENTITY-REPAIR",
+      "kind": "admission_defect_repair",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/operation-identity-repair.json",
+      "sha256": "c17c147f0dc6cf716abd0577a139052cf75cc6777eee20ff6824ecbb6171e1c2"
+    },
+    {
+      "id": "E-RL-LQR08-HANDOFF-RECEIPT",
+      "kind": "source_bound_handoff",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T172920Z-handoff-92b19711/receipt.json",
+      "sha256": "af15dd4889401b56e98477d8ac587e9fadbfe750f30734fa07077732e932402d"
+    },
+    {
+      "id": "E-RL-LQR08-HANDOFF-RESULT",
+      "kind": "source_bound_handoff",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T172920Z-handoff-92b19711/handoff-result.json",
+      "sha256": "845750e68da1add2f4f81da9cc8a3baf044f03467b1a4823bb0850a5e64d47a0"
+    },
+    {
+      "id": "E-RL-LQR08-JOINT-ENGINEERING-ADMISSION",
+      "kind": "reviewed_engineering_gate",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/joint-engineering-admission.json",
+      "sha256": "74aa997056d26696b83a7b836b5b670ca4de9788085ac609a939ebf9a1f450b7"
+    },
+    {
+      "id": "E-RL-LQR08-CONFIRM-RECEIPT",
+      "kind": "source_bound_confirm",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T173054Z-confirm-f6ce42ba/receipt.json",
+      "sha256": "2fc4ae7aa79cde30a061a2f9133a42c151623ab40c5f7b3830ff108edc7c8f4e"
+    },
+    {
+      "id": "E-RL-LQR08-CONFIRM-RESULT",
+      "kind": "source_bound_confirm",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T173054Z-confirm-f6ce42ba/confirm-result.json",
+      "sha256": "52317977413ed170c779d7cd9fcd58ecf38aee7b699797fb77aac23658865c66"
+    },
+    {
+      "id": "E-RL-LQR08-JOINT-ENGINEERING-RECEIPT",
+      "kind": "source_bound_joint-engineering",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T173233Z-joint-engineering-a932bff8/receipt.json",
+      "sha256": "bc9fb829406d6ebf32c06557adde760e5196882a9e7d1f65bc330b6edc923fc8"
+    },
+    {
+      "id": "E-RL-LQR08-JOINT-ENGINEERING-RESULT",
+      "kind": "source_bound_joint-engineering",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T173233Z-joint-engineering-a932bff8/joint-engineering-result.json",
+      "sha256": "31daa339153165ac8d346459698409622002a6ceea0a8a691eade571bbab596d"
+    },
+    {
+      "id": "E-RL-LQR08-JOINT-RECEIPT",
+      "kind": "source_bound_joint",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T173312Z-joint-36fe2751/receipt.json",
+      "sha256": "c8e73f893ed5989edca45558da8d0e6d0ac04e734b00b386af0f46fb570b1075"
+    },
+    {
+      "id": "E-RL-LQR08-JOINT-RESULT",
+      "kind": "source_bound_joint",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T173312Z-joint-36fe2751/joint-result.json",
+      "sha256": "e72d56687ecc48d88da3d88136185c67e0084d1a3c767f1e3bb99574f6a4057c"
+    },
+    {
+      "id": "E-RL-LQR08-AUDIT-ROLLOUT-REPAIR",
+      "kind": "audit_harness_repair",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/audit-rollout-repair.json",
+      "sha256": "97913ce6f89cc0c9c988bc4a53c25cd8c371a3ef2fad54d65c2e5865f82424de"
+    },
+    {
+      "id": "E-RL-LQR08-REPORT",
+      "kind": "audited_result_report",
+      "path": "extensions/rl-lqr-repair/RESULTS.md",
+      "sha256": "d92b79b88975c6e61734204845bd7b37f6e0c608b19d3d1c734efaf9fbf34cac"
+    },
+    {
+      "id": "E-RL-LQR08-REPORT-RECEIPT",
+      "kind": "audited_result_report",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/report-result.json",
+      "sha256": "2d5cb4be8a36207396cb59228b72a1dc871c020c8af382b17bf505bd72a5763d"
+    },
+    {
+      "id": "E-RL-LQR08-AUDIT-RECEIPT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T173850Z-audit-881f6486/receipt.json",
+      "sha256": "962775577e9fef3db79e09a8e0a17a31cae6af587c46a9d9c233dd40814d319c"
+    },
+    {
+      "id": "E-RL-LQR08-AUDIT-RESULT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T173850Z-audit-881f6486/audit-result.json",
+      "sha256": "301a8e2c81aa24d849081c4ebe45640a3f56c91e171455ab33f3daa1c68afaa3"
+    },
+    {
+      "id": "E-RL-LQR08-MASTER-AUDIT-RECEIPT",
+      "kind": "source_bound_master-audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T174000Z-master-audit-dc530b0c/receipt.json",
+      "sha256": "7552a35780d930cc20be518b57abd35d5c9ef6500fdf88b8a98a54545c1635ae"
+    },
+    {
+      "id": "E-RL-LQR08-MASTER-AUDIT-RESULT",
+      "kind": "source_bound_master-audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-08/20261027T174000Z-master-audit-dc530b0c/master-audit-result.json",
+      "sha256": "572e228bbb1dcc0d8f82dbb88a87b63a8370f7a748fa342f2e05001b245e585a"
+    },
+    {
+      "id": "E-RL-LQR09-PLAN",
+      "kind": "reviewed_plan",
+      "path": "docs/program/LQR_DIMENSION_SCALING_2026_10_28.md",
+      "sha256": "fb70c63b2bff378d2e026a3911794983aa439f8598ecca1645dc57bafce3e416"
+    },
+    {
+      "id": "E-RL-LQR09-OPERATIONS",
+      "kind": "operations_reconciliation",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/operations-reconciliation.json",
+      "sha256": "553540cb07bfa715432c29829392bec7f88b82573b7055cd4ee9d999fbd68f35"
+    },
+    {
+      "id": "E-RL-LQR09-ENGINEERING-REPAIR",
+      "kind": "test_contract_repair",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/engineering-feasibility-repair.json",
+      "sha256": "6c199023c1372a890bc3a0c22040ec4ff4370c5994dfcd94bb80544a8c4f0ac4"
+    },
+    {
+      "id": "E-RL-LQR09-ENGINEERING-RECEIPT",
+      "kind": "source_bound_engineering",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T190222Z-engineering-69d0d478/receipt.json",
+      "sha256": "71aefe567dc92392384b74a9b8f98ec7bbea6f548799ae9763831525a31e2b51"
+    },
+    {
+      "id": "E-RL-LQR09-ENGINEERING-RESULT",
+      "kind": "source_bound_engineering",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T190222Z-engineering-69d0d478/engineering-result.json",
+      "sha256": "1c4c470ea93b801bd669901b7d8118b574226bbe6de99d27003e42d3946bbbd6"
+    },
+    {
+      "id": "E-RL-LQR09-ACTIONS-RECEIPT",
+      "kind": "source_bound_actions",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T190253Z-actions-3762a3dd/receipt.json",
+      "sha256": "3bdae33a870fd4cddc032d3cc1a0dfd34862cc56a63557bac9bc2fc7c850e113"
+    },
+    {
+      "id": "E-RL-LQR09-ACTIONS-RESULT",
+      "kind": "source_bound_actions",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T190253Z-actions-3762a3dd/actions-result.json",
+      "sha256": "2e91d01df14227a315f020599304592773d071046c4d61ca84cd1e33b3d9943a"
+    },
+    {
+      "id": "E-RL-LQR09-REVIEW-RECEIPT",
+      "kind": "source_bound_review",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T190617Z-review-53400e5c/receipt.json",
+      "sha256": "83de4d240862b86456dd837227268619467db74406306d18b87585b958112dec"
+    },
+    {
+      "id": "E-RL-LQR09-REVIEW-RESULT",
+      "kind": "source_bound_review",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T190617Z-review-53400e5c/review-result.json",
+      "sha256": "27e0f147edeaf2809edb6de594da7dfc305a6af3fb2a517fe9822ab44dbe1e41"
+    },
+    {
+      "id": "E-RL-LQR09-STATES-RECEIPT",
+      "kind": "source_bound_states",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T190639Z-states-7c19b6a7/receipt.json",
+      "sha256": "9a198c6955b7fdc0843e04de1c04e6f913b24d9f70cb65e28e7045816ed7a16c"
+    },
+    {
+      "id": "E-RL-LQR09-STATES-RESULT",
+      "kind": "source_bound_states",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T190639Z-states-7c19b6a7/states-result.json",
+      "sha256": "e5b45833a19f7270221443541b4728239148a2358d65b3836d0d523c8ecacc39"
+    },
+    {
+      "id": "E-RL-LQR09-FREEZE-RECEIPT",
+      "kind": "source_bound_freeze",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T191056Z-freeze-d995a73a/receipt.json",
+      "sha256": "70de6cc57c62b71933bd029e8f4193933a02c054b7154add3950f4cb73fa2cdf"
+    },
+    {
+      "id": "E-RL-LQR09-FREEZE-RESULT",
+      "kind": "source_bound_freeze",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T191056Z-freeze-d995a73a/freeze-result.json",
+      "sha256": "f449ff4bedf702193dbc5e9d2893a5f153ee64e268af7ca3e24a1404909af821"
+    },
+    {
+      "id": "E-RL-LQR09-CONFIRM-RECEIPT",
+      "kind": "source_bound_confirm",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T191118Z-confirm-fa573b6e/receipt.json",
+      "sha256": "9074a241052c65608603ab48e904a667edc08c612300edac0b666f4a96df8b59"
+    },
+    {
+      "id": "E-RL-LQR09-CONFIRM-RESULT",
+      "kind": "source_bound_confirm",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T191118Z-confirm-fa573b6e/confirm-result.json",
+      "sha256": "f68623f0388df5726bf56a285979bc22fbc773afe213e52c2562fb7bf9c3baa3"
+    },
+    {
+      "id": "E-RL-LQR09-AUDIT-RECEIPT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T192413Z-audit-2d05dbf9/receipt.json",
+      "sha256": "17d753761a330fdc2aaca2c25b0772f6391d8db33fc9a290b9d5f0a6d68f40eb"
+    },
+    {
+      "id": "E-RL-LQR09-AUDIT-RESULT",
+      "kind": "source_bound_audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T192413Z-audit-2d05dbf9/audit-result.json",
+      "sha256": "84869b0aebd03e9472b3565a8a44113e9d370fc18ac8cc7a7a76f8733e0fcb64"
+    },
+    {
+      "id": "E-RL-LQR09-REPORT",
+      "kind": "dimensional_study_publication_or_repair",
+      "path": "extensions/rl-lqr-scale/RESULTS.md",
+      "sha256": "a5a8fe1e8bd8ae92ef2e426a8fae112a0ae4920a90f9ad357855a35019883a46"
+    },
+    {
+      "id": "E-RL-LQR09-GUIDE",
+      "kind": "dimensional_study_publication_or_repair",
+      "path": "extensions/rl-lqr-scale/README.md",
+      "sha256": "7d22ce17a325b1aa3cd30210e751034cefa34b35b35998303d6e74c3c267ecf5"
+    },
+    {
+      "id": "E-RL-LQR09-AUDIT-BOUNDARY",
+      "kind": "dimensional_study_publication_or_repair",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/audit-boundary-review.md",
+      "sha256": "c579432545e40fb580e927293d3bf57acc4c37d898b551b3fc158445f22d335b"
+    },
+    {
+      "id": "E-RL-LQR09-AUDIT-FLOAT-REPAIR",
+      "kind": "dimensional_study_publication_or_repair",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/audit-float-repair.json",
+      "sha256": "54806a6b344523ba690b1780f953ce31b8589228f3dee3c96dbf96063e699f83"
+    },
+    {
+      "id": "E-RL-LQR09-AUDIT-FAILED-RECEIPT",
+      "kind": "dimensional_study_publication_or_repair",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T192250Z-audit-0a284b9d/receipt.json",
+      "sha256": "4777e3ffb0b85abb3e918180c080a81a2223bb0b8cb1f83abe807d540fe142ad"
+    },
+    {
+      "id": "E-RL-LQR09-MASTER-AUDIT-RECEIPT",
+      "kind": "source_bound_master-audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T192820Z-master-audit-24f6fd79/receipt.json",
+      "sha256": "02eebde77da5b507fa846395f5ffbe178021ebba8096113a8ab5d37172e23050"
+    },
+    {
+      "id": "E-RL-LQR09-MASTER-AUDIT-RESULT",
+      "kind": "source_bound_master-audit",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/20261027T192820Z-master-audit-24f6fd79/master-audit-result.json",
+      "sha256": "75bbcf95be1b1d8a5b5c3fa1d3db6b50a5f5f4f30761be15b8dda0ee95dc0fad"
+    },
+    {
+      "id": "E-RL-LQR09-TERMINAL-READBACK",
+      "kind": "terminal_readback",
+      "path": "docs/program/evidence/2026-10-28/rl-lqr-09/terminal-readback.json",
+      "sha256": "a3cf5bc6aea65c3fa592c359904f88573e855bb0b366bf9d0020a4bb2cbf97ae"
     }
   ],
   "continuation": {
     "policy": "repair_verify_refresh_advance_v1",
-    "scope": "Execute PAR-01 parallel CPU/GPU successor through terminal audit; preserve completed finite-local predecessor and unsupported claims.",
+    "scope": "Execute RL-LQR-09 action then state scaling and final reconciliation.",
     "steps": [
       {
         "id": "GOV-01/HANDOFF",
@@ -38323,6 +40693,935 @@
         ]
       },
       {
+        "id": "RL-LQR-01/REVIEW",
+        "work_item": "RL-LQR-01",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "PAR-QUAL-01/EXECUTE"
+        ],
+        "action": "Review mathematical objective, source lineage and bounded operations",
+        "done_when": "Plan resolves finite horizon, actions, entropy, network independence and evidence boundaries.",
+        "evidence_refs": [
+          "E-RL-LQR01-PLAN"
+        ]
+      },
+      {
+        "id": "RL-LQR-01/RUNTIME",
+        "work_item": "RL-LQR-01",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-01/REVIEW"
+        ],
+        "action": "Prepare isolated RLlib dependency overlay",
+        "done_when": "SAC/PPO imports pass with exact wheel/version lock.",
+        "evidence_refs": [
+          "E-RL-LQR01-RUNTIME",
+          "E-RL-LQR01-RUNTIME-LOCK"
+        ]
+      },
+      {
+        "id": "RL-LQR-01/ORACLE",
+        "work_item": "RL-LQR-01",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-01/RUNTIME"
+        ],
+        "action": "Implement and verify exact known-answer stochastic LQR",
+        "done_when": "Numerical reference, rational oracle, all-path enumeration and negative controls pass.",
+        "evidence_refs": [
+          "E-RL-LQR01-ORACLE-FAIL",
+          "E-RL-LQR01-ORACLE",
+          "E-RL-LQR01-ORACLE-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-01/LEARNER",
+        "work_item": "RL-LQR-01",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-01/ORACLE"
+        ],
+        "action": "Verify actual SAC learning and checkpoint restore",
+        "done_when": "Separate network shapes, updated weights, critics, finite tensors and resumed learning verified.",
+        "evidence_refs": [
+          "E-RL-LQR01-LEARNER-ATTEMPT-1",
+          "E-RL-LQR01-LEARNER-ATTEMPT-2",
+          "E-RL-LQR01-LEARNER-ATTEMPT-2-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-01/JOINT",
+        "work_item": "RL-LQR-01",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-01/LEARNER"
+        ],
+        "action": "Execute full eight-configuration joint search",
+        "done_when": "All allocated fits scored; final selection frozen before fresh training seeds; completed resume does no work.",
+        "evidence_refs": [
+          "E-RL-LQR01-JOINT-REPLAY-ATTEMPT-1",
+          "E-RL-LQR01-JOINT-REPLAY-ATTEMPT-2",
+          "E-RL-LQR01-JOINT-REPLAY-ATTEMPT-2-RESULT",
+          "E-RL-LQR01-JOINT-EXECUTION",
+          "E-RL-LQR01-JOINT-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-01/HARDWARE",
+        "work_item": "RL-LQR-01",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-01/JOINT"
+        ],
+        "action": "Verify concurrent SAC on two GPUs",
+        "done_when": "Actual separate devices, overlapping intervals, updates and analytic-gap scores retained.",
+        "evidence_refs": [
+          "E-RL-LQR01-HARDWARE-ATTEMPT-1",
+          "E-RL-LQR01-HARDWARE-ATTEMPT-2",
+          "E-RL-LQR01-HARDWARE-ATTEMPT-2-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-01/DOCUMENTATION",
+        "work_item": "RL-LQR-01",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-01/HARDWARE"
+        ],
+        "action": "Document executable example and measured outcomes",
+        "done_when": "Guide and versioned LaTeX manual build with exact limitations.",
+        "evidence_refs": [
+          "E-RL-LQR01-BUILD-ATTEMPT-1",
+          "E-RL-LQR01-BUILD-ATTEMPT-1-RESULT",
+          "E-RL-LQR01-BUILD-ATTEMPT-2",
+          "E-RL-LQR01-BUILD-ATTEMPT-2-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-01/AUDIT",
+        "work_item": "RL-LQR-01",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-01/DOCUMENTATION"
+        ],
+        "action": "Reconstruct all extension results independently",
+        "done_when": "All input/output bindings, selection, score identities, device evidence and stage requirements verified.",
+        "evidence_refs": [
+          "E-RL-LQR01-AUDIT-ATTEMPT-1",
+          "E-RL-LQR01-AUDIT-ATTEMPT-1-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-02/REVIEW",
+        "work_item": "RL-LQR-02",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-01/AUDIT"
+        ],
+        "action": "Review exact five-state domain, literal network counts, continuous rates and current BG-PBT limitations",
+        "done_when": "Retain exact reviewed implementation/test/capability evidence for this stage; no training or BG-PBT/SAC acceptance inferred.",
+        "evidence_refs": [
+          "E-RL-LQR02-PLAN"
+        ]
+      },
+      {
+        "id": "RL-LQR-02/PREFLIGHT",
+        "work_item": "RL-LQR-02",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-02/REVIEW"
+        ],
+        "action": "Implement and check five-state reference, conditional space and actual RLlib network structures without training",
+        "done_when": "Retain exact reviewed implementation/test/capability evidence for this stage; no training or BG-PBT/SAC acceptance inferred.",
+        "evidence_refs": [
+          "E-RL-LQR02-PREFLIGHT",
+          "E-RL-LQR02-PREFLIGHT-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-02/AUDIT",
+        "work_item": "RL-LQR-02",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-02/PREFLIGHT"
+        ],
+        "action": "Independently replay preflight source, mathematical results and explicit unsupported BG-PBT capabilities",
+        "done_when": "Retain exact reviewed implementation/test/capability evidence for this stage; no training or BG-PBT/SAC acceptance inferred.",
+        "evidence_refs": [
+          "E-RL-LQR02-AUDIT",
+          "E-RL-LQR02-AUDIT-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/REVIEW",
+        "work_item": "RL-LQR-03",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-02/AUDIT"
+        ],
+        "action": "Bind reviewed implementation and resource plan",
+        "done_when": "Bind reviewed implementation and resource plan; source-bound receipt and explicit limitations retained.",
+        "evidence_refs": [
+          "E-RL-LQR03-PLAN"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/ENGINEERING",
+        "work_item": "RL-LQR-03",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/REVIEW"
+        ],
+        "action": "Implement/test SAC state, Bayesian search, distillation, recovery and CPU overlap",
+        "done_when": "Implement/test SAC state, Bayesian search, distillation, recovery and CPU overlap; source-bound receipt and explicit limitations retained.",
+        "evidence_refs": [
+          "E-RL-LQR03-ENGINEERING-1",
+          "E-RL-LQR03-ENGINEERING-2",
+          "E-RL-LQR03-ENGINEERING-3",
+          "E-RL-LQR03-ENGINEERING-4",
+          "E-RL-LQR03-ENGINEERING-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/CALIBRATION",
+        "work_item": "RL-LQR-03",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/ENGINEERING"
+        ],
+        "action": "Measure two fixed learning curves and freeze a bounded per-member budget",
+        "done_when": "Measure two fixed learning curves and freeze a bounded per-member budget; source-bound receipt and explicit limitations retained.",
+        "evidence_refs": [
+          "E-RL-LQR03-CALIBRATION-RECEIPT",
+          "E-RL-LQR03-CALIBRATION-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/SEARCH",
+        "work_item": "RL-LQR-03",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/CALIBRATION"
+        ],
+        "action": "Execute four-member generational search and matched-work static baseline",
+        "done_when": "Execute four-member generational search and matched-work static baseline; source-bound receipt and explicit limitations retained.",
+        "evidence_refs": [
+          "E-RL-LQR03-SEARCH-RECEIPT",
+          "E-RL-LQR03-SEARCH-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/CONFIRMATION",
+        "work_item": "RL-LQR-03",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/SEARCH"
+        ],
+        "action": "Freeze selected static configurations and evaluate three reserved paired fresh seeds",
+        "done_when": "Freeze selected static configurations and evaluate three reserved paired fresh seeds; source-bound receipt and explicit limitations retained.",
+        "evidence_refs": [
+          "E-RL-LQR03-CONFIRMATION-RECEIPT",
+          "E-RL-LQR03-CONFIRMATION-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/REPAIR-REVIEW",
+        "work_item": "RL-LQR-03",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/CONFIRMATION"
+        ],
+        "action": "Trace identical selection and review bounded procedure and shared-GPU repair.",
+        "done_when": "Trace identical selection and review bounded procedure and shared-GPU repair. Source-bound evidence and explicit scientific limitations retained.",
+        "evidence_refs": [
+          "E-RL-LQR03-REPAIR-PLAN"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/REPAIR-ENGINEERING",
+        "work_item": "RL-LQR-03",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/REPAIR-REVIEW"
+        ],
+        "action": "Repair round-level trust-region updates, objective-based candidate trials and best checkpoint selection; qualify shared-GPU admission.",
+        "done_when": "Repair round-level trust-region updates, objective-based candidate trials and best checkpoint selection; qualify shared-GPU admission. Source-bound evidence and explicit scientific limitations retained.",
+        "evidence_refs": [
+          "E-RL-LQR03-REPAIR-PLAN",
+          "E-RL-LQR03-REPAIR-ENGINEERING-RECEIPT",
+          "E-RL-LQR03-REPAIR-ENGINEERING-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/PROCEDURE-CHECK",
+        "work_item": "RL-LQR-03",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/REPAIR-ENGINEERING"
+        ],
+        "action": "Run three complete repaired searches with paired baselines; retain all outcomes without forcing a novel winner.",
+        "done_when": "Run three complete repaired searches with paired baselines; retain all outcomes without forcing a novel winner. Source-bound evidence and explicit scientific limitations retained.",
+        "evidence_refs": [
+          "E-RL-LQR03-REPAIR-PLAN",
+          "E-RL-LQR03-PROCEDURE-CHECK-RECEIPT",
+          "E-RL-LQR03-PROCEDURE-CHECK-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/SELECTION-RECONCILIATION",
+        "work_item": "RL-LQR-03",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/PROCEDURE-CHECK"
+        ],
+        "action": "Correct zero-update copy provenance using saved trained checkpoints without changing costs or repeating training.",
+        "done_when": "Focused no-training regressions and independently reconstructed schema-3 procedure reports pass; original reports remain immutable.",
+        "evidence_refs": [
+          "E-RL-LQR03-ATTRIBUTION-PLAN",
+          "E-RL-LQR03-SELECTION-RECONCILIATION-RECEIPT",
+          "E-RL-LQR03-SELECTION-RECONCILIATION-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/DEVICE-REPAIR",
+        "work_item": "RL-LQR-03",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/REPAIR-ENGINEERING"
+        ],
+        "action": "Prevent Ray auto-init in assigned-device local SAC learner and verify bounded startup.",
+        "done_when": "Eight adapter and construction tests pass; hardware verifies real GPU path.",
+        "evidence_refs": [
+          "E-RL-LQR03-DEVICE-PLAN",
+          "E-RL-LQR03-DEVICE-REPAIR-RECEIPT",
+          "E-RL-LQR03-DEVICE-REPAIR-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/HARDWARE",
+        "work_item": "RL-LQR-03",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/REPAIR-ENGINEERING",
+          "RL-LQR-03/DEVICE-REPAIR"
+        ],
+        "action": "Use two shared GPUs with bounded owned memory; verify concurrent SAC and compatible/distilled descendants plus cross-device restoration.",
+        "done_when": "Actual two-device evidence and owned memory peaks verified; GPU idleness is not required.",
+        "evidence_refs": [
+          "E-RL-LQR03-HARDWARE-1",
+          "E-RL-LQR03-HARDWARE-2",
+          "E-RL-LQR03-HARDWARE-ADMISSION",
+          "E-RL-LQR03-HANDOFF-V2",
+          "E-RL-LQR03-REPAIR-PLAN",
+          "E-RL-LQR03-STARTUP-FAILURE",
+          "E-RL-LQR03-STARTUP-CLEANUP",
+          "E-RL-LQR03-HARDWARE-RECEIPT",
+          "E-RL-LQR03-HARDWARE-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/DOCUMENTATION",
+        "work_item": "RL-LQR-03",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/CONFIRMATION"
+        ],
+        "action": "Build successor guide and LaTeX chapter with objective results",
+        "done_when": "Build successor guide and LaTeX chapter with objective results; source-bound receipt and explicit limitations retained.",
+        "evidence_refs": [
+          "E-RL-LQR03-DOCUMENTATION-RECEIPT",
+          "E-RL-LQR03-DOCUMENTATION-RESULT",
+          "E-RL-LQR03-DOCUMENTATION-CPU-AUDIT",
+          "E-RL-LQR03-DOCUMENTATION-MANUAL"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/HARDWARE-DOCUMENTATION",
+        "work_item": "RL-LQR-03",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/HARDWARE",
+          "RL-LQR-03/DOCUMENTATION",
+          "RL-LQR-03/PROCEDURE-CHECK",
+          "RL-LQR-03/SELECTION-RECONCILIATION"
+        ],
+        "action": "Rebuild full successor manual with actual qualified GPU evidence, preserving prior CPU manual.",
+        "done_when": "Zero-training source-bound build includes verified GPU outcome and resolved references; earlier CPU manual retained.",
+        "evidence_refs": [
+          "E-RL-LQR03-HANDOFF",
+          "E-RL-LQR03-HARDWARE-DOCUMENTATION-RECEIPT",
+          "E-RL-LQR03-HARDWARE-DOCUMENTATION-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-03/AUDIT",
+        "work_item": "RL-LQR-03",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/DOCUMENTATION",
+          "RL-LQR-03/HARDWARE",
+          "RL-LQR-03/HARDWARE-DOCUMENTATION",
+          "RL-LQR-03/REPAIR-ENGINEERING",
+          "RL-LQR-03/PROCEDURE-CHECK",
+          "RL-LQR-03/SELECTION-RECONCILIATION"
+        ],
+        "action": "Reconstruct all evidence independently, including negative controls",
+        "done_when": "Reconstruct all evidence independently, including negative controls; source-bound receipt and explicit limitations retained.",
+        "evidence_refs": [
+          "E-RL-LQR03-AUDIT-RECEIPT",
+          "E-RL-LQR03-AUDIT-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-04/CONTRACT",
+        "work_item": "RL-LQR-04",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-03/AUDIT"
+        ],
+        "action": "Freeze model, estimator, seeds and work",
+        "done_when": "Freeze model, estimator, seeds and work; preserve evidence and scientific limits.",
+        "evidence_refs": [
+          "E-RL-LQR04-PLAN"
+        ]
+      },
+      {
+        "id": "RL-LQR-04/ENGINEERING",
+        "work_item": "RL-LQR-04",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-04/CONTRACT"
+        ],
+        "action": "Verify reference, sampler, learner dimensions, checkpoint isolation and selection",
+        "done_when": "Verify reference, sampler, learner dimensions, checkpoint isolation and selection; preserve evidence and scientific limits.",
+        "evidence_refs": [
+          "E-RL-LQR04-PLAN",
+          "E-RL-LQR04-ENGINEERING-RECEIPT",
+          "E-RL-LQR04-ENGINEERING-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-04/STUDY",
+        "work_item": "RL-LQR-04",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-04/ENGINEERING"
+        ],
+        "action": "Execute three paired joint searches and test frozen winners",
+        "done_when": "Execute three paired joint searches and test frozen winners; preserve evidence and scientific limits.",
+        "evidence_refs": [
+          "E-RL-LQR04-STUDY-RECEIPT",
+          "E-RL-LQR04-STUDY-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-04/AUDIT",
+        "work_item": "RL-LQR-04",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-04/STUDY"
+        ],
+        "action": "Independently reconstruct reference, scores, source, artifacts, work and limitations",
+        "done_when": "Independently reconstruct reference, scores, source, artifacts, work and limitations; preserve evidence and scientific limits.",
+        "evidence_refs": [
+          "E-RL-LQR04-DOCUMENTATION",
+          "E-RL-LQR04-GUIDE",
+          "E-RL-LQR04-RESULTS",
+          "E-RL-LQR04-AUDIT-RECEIPT",
+          "E-RL-LQR04-AUDIT-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-05/CONTRACT",
+        "work_item": "RL-LQR-05",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-04/AUDIT"
+        ],
+        "action": "Freeze model, estimator, seeds and work",
+        "done_when": "Freeze model, estimator, seeds and work; preserve evidence and scientific limits.",
+        "evidence_refs": [
+          "E-RL-LQR05-PLAN"
+        ]
+      },
+      {
+        "id": "RL-LQR-05/ENGINEERING",
+        "work_item": "RL-LQR-05",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-05/CONTRACT"
+        ],
+        "action": "Verify reference, sampler, learner dimensions, checkpoint isolation and selection",
+        "done_when": "Verify reference, sampler, learner dimensions, checkpoint isolation and selection; preserve evidence and scientific limits.",
+        "evidence_refs": [
+          "E-RL-LQR05-PLAN",
+          "E-RL-LQR05-ENGINEERING-RECEIPT",
+          "E-RL-LQR05-ENGINEERING-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-05/STUDY",
+        "work_item": "RL-LQR-05",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-05/ENGINEERING"
+        ],
+        "action": "Execute twelve paired joint searches and test frozen winners",
+        "done_when": "Execute twelve paired joint searches and test frozen winners; preserve evidence and scientific limits.",
+        "evidence_refs": [
+          "E-RL-LQR05-STUDY-RECEIPT",
+          "E-RL-LQR05-STUDY-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-05/AUDIT",
+        "work_item": "RL-LQR-05",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-05/STUDY"
+        ],
+        "action": "Independently reconstruct reference, scores, source, artifacts, work and limitations",
+        "done_when": "Independently reconstruct reference, scores, source, artifacts, work and limitations; preserve evidence and scientific limits.",
+        "evidence_refs": [
+          "E-RL-LQR05-AUDIT-RECEIPT",
+          "E-RL-LQR05-AUDIT-RESULT",
+          "E-RL-LQR05-DOCUMENTATION"
+        ]
+      },
+      {
+        "id": "RL-LQR-06/CONTRACT",
+        "work_item": "RL-LQR-06",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-05/AUDIT"
+        ],
+        "action": "Freeze model, estimator, seeds and work",
+        "done_when": "Freeze model, estimator, seeds and work; preserve evidence and scientific limits.",
+        "evidence_refs": [
+          "E-RL-LQR06-PLAN"
+        ]
+      },
+      {
+        "id": "RL-LQR-06/ENGINEERING",
+        "work_item": "RL-LQR-06",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-06/CONTRACT"
+        ],
+        "action": "Verify reference, sampler, learner dimensions, checkpoint isolation and selection",
+        "done_when": "Verify reference, sampler, learner dimensions, checkpoint isolation and selection; preserve evidence and scientific limits.",
+        "evidence_refs": [
+          "E-RL-LQR06-PLAN",
+          "E-RL-LQR06-ENGINEERING-RECEIPT",
+          "E-RL-LQR06-ENGINEERING-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-06/STUDY",
+        "work_item": "RL-LQR-06",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-06/ENGINEERING"
+        ],
+        "action": "Execute nine paired joint searches and test frozen winners",
+        "done_when": "Execute nine paired joint searches and test frozen winners; preserve evidence and scientific limits.",
+        "evidence_refs": [
+          "E-RL-LQR06-STUDY-RECEIPT",
+          "E-RL-LQR06-STUDY-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-06/AUDIT",
+        "work_item": "RL-LQR-06",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-06/STUDY"
+        ],
+        "action": "Independently reconstruct reference, scores, source, artifacts, work and limitations",
+        "done_when": "Independently reconstruct reference, scores, source, artifacts, work and limitations; preserve evidence and scientific limits.",
+        "evidence_refs": [
+          "E-RL-LQR06-AUDIT-RECEIPT",
+          "E-RL-LQR06-AUDIT-RESULT",
+          "E-RL-LQR06-DOCUMENTATION"
+        ]
+      },
+      {
+        "id": "RL-LQR-07/TRACE",
+        "work_item": "RL-LQR-07",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-06/AUDIT"
+        ],
+        "action": "Trace reward, learner, transfer and selection against mathematical contracts",
+        "done_when": "Trace reward, learner, transfer and selection against mathematical contracts; preserve predecessor outcomes.",
+        "evidence_refs": [
+          "E-RL-LQR07-PLAN",
+          "E-RL-LQR07-TRACE"
+        ]
+      },
+      {
+        "id": "RL-LQR-07/DIAGNOSE",
+        "work_item": "RL-LQR-07",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-07/TRACE"
+        ],
+        "action": "Probe twelve saved checkpoints and every population transfer without training",
+        "done_when": "Probe twelve saved checkpoints and every population transfer without training; preserve predecessor outcomes.",
+        "evidence_refs": [
+          "E-RL-LQR07-DIAGNOSE-RECEIPT",
+          "E-RL-LQR07-DIAGNOSE-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-07/REPORT",
+        "work_item": "RL-LQR-07",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-07/DIAGNOSE"
+        ],
+        "action": "Document demonstrated defects, causal limits and dependency-ordered repairs",
+        "done_when": "Document demonstrated defects, causal limits and dependency-ordered repairs; preserve predecessor outcomes.",
+        "evidence_refs": [
+          "E-RL-LQR07-REPORT-FINDINGS",
+          "E-RL-LQR07-REPORT-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-07/AUDIT",
+        "work_item": "RL-LQR-07",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-07/REPORT"
+        ],
+        "action": "Reconstruct diagnostic identities, evidence bindings and conclusions",
+        "done_when": "Reconstruct diagnostic identities, evidence bindings and conclusions; preserve predecessor outcomes.",
+        "evidence_refs": [
+          "E-RL-LQR07-AUDIT-RECEIPT",
+          "E-RL-LQR07-AUDIT-RESULT",
+          "E-RL-LQR07-AUDIT-ROUNDING-REPAIR",
+          "E-RL-LQR07-AUDIT-SERIALIZATION-REPAIR"
+        ]
+      },
+      {
+        "id": "RL-LQR-08/CONTRACT",
+        "work_item": "RL-LQR-08",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-07/AUDIT"
+        ],
+        "action": "Freeze reviewed repair sequence and resources",
+        "done_when": "Freeze reviewed repair sequence and resources; preserve unfavorable results and predecessor.",
+        "evidence_refs": [
+          "E-RL-LQR08-PLAN"
+        ]
+      },
+      {
+        "id": "RL-LQR-08/ENGINEERING",
+        "work_item": "RL-LQR-08",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-08/CONTRACT"
+        ],
+        "action": "Validate mathematical controls and replacement contracts",
+        "done_when": "Validate mathematical controls and replacement contracts; preserve unfavorable results and predecessor.",
+        "evidence_refs": [
+          "E-RL-LQR08-PLAN",
+          "E-RL-LQR08-ENGINEERING-RECEIPT",
+          "E-RL-LQR08-ENGINEERING-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-08/LEARNER",
+        "work_item": "RL-LQR-08",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-08/ENGINEERING"
+        ],
+        "action": "Run paired fixed-architecture critic comparison",
+        "done_when": "Run paired fixed-architecture critic comparison; preserve unfavorable results and predecessor.",
+        "evidence_refs": [
+          "E-RL-LQR08-LEARNER-RECEIPT",
+          "E-RL-LQR08-LEARNER-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-08/REVIEW",
+        "work_item": "RL-LQR-08",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-08/LEARNER"
+        ],
+        "action": "Freeze selected repair and conditional joint allocation",
+        "done_when": "Freeze selected repair and conditional joint allocation; preserve unfavorable results and predecessor.",
+        "evidence_refs": [
+          "E-RL-LQR08-REVIEW-RECEIPT",
+          "E-RL-LQR08-REVIEW-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-08/HANDOFF-ENGINEERING",
+        "work_item": "RL-LQR-08",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-08/REVIEW"
+        ],
+        "action": "Verify new transfer gradients and frozen actor before scientific handoff",
+        "done_when": "Bounded tests pass with donor and actor invariants.",
+        "evidence_refs": [
+          "E-RL-LQR08-BOUNDARY-REVIEW",
+          "E-RL-LQR08-HANDOFF-ENGINEERING-RECEIPT",
+          "E-RL-LQR08-HANDOFF-ENGINEERING-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-08/HANDOFF",
+        "work_item": "RL-LQR-08",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-08/HANDOFF-ENGINEERING"
+        ],
+        "action": "Test protected transfer and donor continuation",
+        "done_when": "Test protected transfer and donor continuation; preserve unfavorable results and predecessor.",
+        "evidence_refs": [
+          "E-RL-LQR08-HANDOFF-RECEIPT",
+          "E-RL-LQR08-HANDOFF-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-08/CONFIRM",
+        "work_item": "RL-LQR-08",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-08/HANDOFF"
+        ],
+        "action": "Run fresh paired fixed-repair confirmation",
+        "done_when": "Run fresh paired fixed-repair confirmation; preserve unfavorable results and predecessor.",
+        "evidence_refs": [
+          "E-RL-LQR08-CONFIRM-RECEIPT",
+          "E-RL-LQR08-CONFIRM-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-08/JOINT-ENGINEERING",
+        "work_item": "RL-LQR-08",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-08/CONFIRM"
+        ],
+        "action": "Verify complete protected joint procedure and matched work without training",
+        "done_when": "Five bounded scheduler and arithmetic checks pass.",
+        "evidence_refs": [
+          "E-RL-LQR08-JOINT-ENGINEERING-ADMISSION",
+          "E-RL-LQR08-JOINT-ENGINEERING-RECEIPT",
+          "E-RL-LQR08-JOINT-ENGINEERING-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-08/JOINT",
+        "work_item": "RL-LQR-08",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-08/JOINT-ENGINEERING"
+        ],
+        "action": "Execute gated joint comparison or explicit scientific deferral",
+        "done_when": "Execute gated joint comparison or explicit scientific deferral; preserve unfavorable results and predecessor.",
+        "evidence_refs": [
+          "E-RL-LQR08-JOINT-RECEIPT",
+          "E-RL-LQR08-JOINT-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-08/AUDIT",
+        "work_item": "RL-LQR-08",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-08/JOINT"
+        ],
+        "action": "Reconstruct all evidence, accounting and unresolved claims",
+        "done_when": "Reconstruct all evidence, accounting and unresolved claims; preserve unfavorable results and predecessor.",
+        "evidence_refs": [
+          "E-RL-LQR08-AUDIT-RECEIPT",
+          "E-RL-LQR08-AUDIT-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-09/CONTRACT",
+        "work_item": "RL-LQR-09",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-08/AUDIT"
+        ],
+        "action": "Freeze dimensional study and budgets",
+        "done_when": "Freeze dimensional study and budgets;retain unfavorable results and limitations.",
+        "evidence_refs": [
+          "E-RL-LQR09-PLAN"
+        ]
+      },
+      {
+        "id": "RL-LQR-09/ENGINEERING",
+        "work_item": "RL-LQR-09",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-09/CONTRACT"
+        ],
+        "action": "Verify model,gradients,symmetry and checkpoint contracts",
+        "done_when": "Verify model,gradients,symmetry and checkpoint contracts;retain unfavorable results and limitations.",
+        "evidence_refs": [
+          "E-RL-LQR09-PLAN",
+          "E-RL-LQR09-ENGINEERING-RECEIPT",
+          "E-RL-LQR09-ENGINEERING-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-09/ACTIONS",
+        "work_item": "RL-LQR-09",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-09/ENGINEERING"
+        ],
+        "action": "Run six scalar action-count comparisons",
+        "done_when": "Run six scalar action-count comparisons;retain unfavorable results and limitations.",
+        "evidence_refs": [
+          "E-RL-LQR09-ACTIONS-RECEIPT",
+          "E-RL-LQR09-ACTIONS-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-09/REVIEW",
+        "work_item": "RL-LQR-09",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-09/ACTIONS"
+        ],
+        "action": "Review action scaling and freeze state continuation",
+        "done_when": "Review action scaling and freeze state continuation;retain unfavorable results and limitations.",
+        "evidence_refs": [
+          "E-RL-LQR09-REVIEW-RECEIPT",
+          "E-RL-LQR09-REVIEW-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-09/STATES",
+        "work_item": "RL-LQR-09",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-09/REVIEW"
+        ],
+        "action": "Run six coupled ten-state comparisons",
+        "done_when": "Run six coupled ten-state comparisons;retain unfavorable results and limitations.",
+        "evidence_refs": [
+          "E-RL-LQR09-STATES-RECEIPT",
+          "E-RL-LQR09-STATES-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-09/FREEZE",
+        "work_item": "RL-LQR-09",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-09/STATES"
+        ],
+        "action": "Seal method choices before confirmation",
+        "done_when": "Seal method choices before confirmation;retain unfavorable results and limitations.",
+        "evidence_refs": [
+          "E-RL-LQR09-FREEZE-RECEIPT",
+          "E-RL-LQR09-FREEZE-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-09/CONFIRM",
+        "work_item": "RL-LQR-09",
+        "kind": "execution",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-09/FREEZE"
+        ],
+        "action": "Run fresh paired12case confirmation",
+        "done_when": "Run fresh paired12case confirmation;retain unfavorable results and limitations.",
+        "evidence_refs": [
+          "E-RL-LQR09-CONFIRM-RECEIPT",
+          "E-RL-LQR09-CONFIRM-RESULT"
+        ]
+      },
+      {
+        "id": "RL-LQR-09/AUDIT",
+        "work_item": "RL-LQR-09",
+        "kind": "preparation",
+        "state": "complete",
+        "dependencies": [
+          "RL-LQR-09/CONFIRM"
+        ],
+        "action": "Reconstruct all scientific results and evidence",
+        "done_when": "Reconstruct all scientific results and evidence;retain unfavorable results and limitations.",
+        "evidence_refs": [
+          "E-RL-LQR09-AUDIT-RECEIPT",
+          "E-RL-LQR09-AUDIT-RESULT",
+          "E-RL-LQR09-REPORT",
+          "E-RL-LQR09-GUIDE",
+          "E-RL-LQR09-AUDIT-BOUNDARY",
+          "E-RL-LQR09-AUDIT-FLOAT-REPAIR",
+          "E-RL-LQR09-AUDIT-FAILED-RECEIPT"
+        ]
+      },
+      {
         "id": "GAP-01/FINAL-AUDIT",
         "work_item": "GAP-01",
         "kind": "preparation",
@@ -38337,9 +41636,18 @@
           "SCI-02/AUDIT",
           "SCI-03/AUDIT",
           "PAR-01/AUDIT",
-          "PAR-QUAL-01/EXECUTE"
+          "PAR-QUAL-01/EXECUTE",
+          "RL-LQR-01/AUDIT",
+          "RL-LQR-02/AUDIT",
+          "RL-LQR-03/AUDIT",
+          "RL-LQR-04/AUDIT",
+          "RL-LQR-05/AUDIT",
+          "RL-LQR-06/AUDIT",
+          "RL-LQR-07/AUDIT",
+          "RL-LQR-08/AUDIT",
+          "RL-LQR-09/AUDIT"
         ],
-        "action": "Recheck all original 27 clauses after PAR-01 and current-source PAR-QUAL-01 acceptance.",
+        "action": "Reconcile the qualified core and all completed extensions, including scalar repair and the audited 5\u201310-action / ten-state study.",
         "done_when": "Final behavioral audit covers all G01-G10 and atomic clauses, source/installation/recovery evidence is current, negative controls reject false completion, and no required obligation remains open.",
         "evidence_refs": [
           "E-GAP-REPAIR01-20261018-AUDIT09",
@@ -38431,7 +41739,27 @@
           "E-PAR-PUBLICATION05-GUIDANCE-PREIMAGES",
           "E-PAR-PUBLICATION05-CHECKS",
           "E-PAR-PUBLICATION05-AUDIT-CLOSURE",
-          "E-PAR-PUBLICATION05-READY"
+          "E-PAR-PUBLICATION05-READY",
+          "E-RL-LQR01-MASTER-AUDIT-1",
+          "E-RL-LQR01-MASTER-AUDIT-2",
+          "E-RL-LQR01-MASTER-AUDIT-2-RESULT",
+          "E-RL-LQR02-MASTER-AUDIT",
+          "E-RL-LQR02-MASTER-AUDIT-RESULT",
+          "E-RL-LQR03-MASTER-AUDIT-RECEIPT",
+          "E-RL-LQR03-MASTER-AUDIT-RESULT",
+          "E-RL-LQR04-MASTER-AUDIT-RECEIPT",
+          "E-RL-LQR04-MASTER-AUDIT-RESULT",
+          "E-RL-LQR05-MASTER-AUDIT-RECEIPT",
+          "E-RL-LQR05-MASTER-AUDIT-RESULT",
+          "E-RL-LQR06-MASTER-AUDIT-RECEIPT",
+          "E-RL-LQR06-MASTER-AUDIT-RESULT",
+          "E-RL-LQR07-MASTER-RECEIPT",
+          "E-RL-LQR07-MASTER-RESULT",
+          "E-RL-LQR08-MASTER-AUDIT-RECEIPT",
+          "E-RL-LQR08-MASTER-AUDIT-RESULT",
+          "E-RL-LQR09-MASTER-AUDIT-RECEIPT",
+          "E-RL-LQR09-MASTER-AUDIT-RESULT",
+          "E-RL-LQR09-TERMINAL-READBACK"
         ]
       }
     ]
@@ -38506,7 +41834,9 @@
       "master_complete": true,
       "integrated_local_source": "fb5a83647bd5d73aaff21e360bab73432c670c6b08038e52507749a7de99e320",
       "current_source_qualified": true,
-      "gap_closure_complete": true
+      "gap_closure_complete": true,
+      "rl_lqr_integration_audited": true,
+      "rl_lqr_reliable_learning_established": false
     },
     "release_gate_unchanged": true,
     "workspace_diagnostic": "E-R189-SUMMARY",
@@ -38960,6 +42290,218 @@
         "path": "docs/program/evidence/2026-10-26/parallel-publication-refresh-05/build-01/main-parallel-qualified.pdf",
         "sha256": "2df9c17e871320dc48cd0ab0c574a6e667f1ba6a8776263164e11fb8c17197ef"
       }
+    },
+    "rl_lqr_extension": {
+      "status": "complete_audited_with_negative_learning_outcome",
+      "plan": "E-RL-LQR01-PLAN",
+      "core_source_unchanged": true,
+      "scientific_outcome": "Both fresh-seed selected SAC controllers are worse than zero action; no convergence claim.",
+      "runtime_lock": "E-RL-LQR01-RUNTIME-LOCK",
+      "original_transitions": 75776,
+      "hardware_successor_transitions": 1024,
+      "total_transitions": 76800,
+      "independent_audit": "E-RL-LQR01-AUDIT-ATTEMPT-1-RESULT",
+      "fits_reconstructed": 24,
+      "negative_controls": 7,
+      "cpu_min_training_overlap_seconds": 3.301274538040161,
+      "gpu_training_overlap_seconds": 2.1043426990509033,
+      "final_master_audit": "E-RL-LQR01-MASTER-AUDIT-2-RESULT",
+      "manual": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T094746Z-build-81001700/main-rl-lqr.pdf"
+    },
+    "rl_lqr5_readiness": {
+      "status": "definition_verified_bgpbt_adapter_unsupported",
+      "plan": "E-RL-LQR02-PLAN",
+      "training_transitions": 0,
+      "bgpbt_sac_supported": false,
+      "remaining_capabilities": [
+        "SAC population adapter",
+        "conditional architecture and two-rate Bayesian explorer",
+        "Gaussian-policy/twin-critic distillation",
+        "population recovery and parallel evidence",
+        "prospective learning calibration/search/confirmation"
+      ],
+      "tests": 16,
+      "oracle_optimal_cost": 3.2540811593967556,
+      "zero_action_cost": 3.889419041418345,
+      "paths": 8192,
+      "audit": "E-RL-LQR02-AUDIT-RESULT",
+      "final_master_audit": "E-RL-LQR02-MASTER-AUDIT-RESULT"
+    },
+    "rl_lqr5_bgpbt": {
+      "status": "complete_bounded_companion_verified",
+      "plan": "E-RL-LQR03-PLAN",
+      "scope": "Bounded five-state SAC adaptation of BG-PBT principles; public finite-MDP LocalBGPBT unchanged; no global architecture optimum, general superiority or arbitrary-environment guarantee.",
+      "hardware_constraint": "Shared devices qualified: 1792 transitions, 320 SAC updates, 64 distillation updates; 580 MiB observed GPU process memory per worker, no worker Ray initialization.",
+      "engineering_tests": 13,
+      "engineering_result": "E-RL-LQR03-ENGINEERING-RESULT",
+      "repairs": [
+        "RLlib constant import",
+        "ExecutionContext dataclass conversion",
+        "Canonical unique observations enforce nonanticipating finite-law float32 scoring"
+      ],
+      "budget_per_member": 8192,
+      "calibration_costs": [
+        3.3275935130768883,
+        3.353728172442128
+      ],
+      "selected": {
+        "bgpbt": {
+          "config": {
+            "actor_hiddens": [
+              33,
+              12
+            ],
+            "critic_hiddens": [
+              51,
+              19,
+              46
+            ],
+            "actor_lr": 9.408476690611556e-05,
+            "critic_lr": 0.009674325292107868
+          },
+          "task": "/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113933Z-search-68a2e9a1/study/population-r3-m1",
+          "cost": 3.26019051519261
+        },
+        "baseline": {
+          "config": {
+            "actor_hiddens": [
+              33,
+              12
+            ],
+            "critic_hiddens": [
+              51,
+              19,
+              46
+            ],
+            "actor_lr": 9.408476690611556e-05,
+            "critic_lr": 0.009674325292107868
+          },
+          "task": "/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113933Z-search-68a2e9a1/study/baseline-m1",
+          "cost": 3.26213642006448
+        }
+      },
+      "search_work": {
+        "bgpbt": {
+          "transitions": 32768,
+          "sac_updates": 7936,
+          "distillation_updates": 160,
+          "gradient_components": 32224
+        },
+        "baseline": {
+          "transitions": 32768,
+          "sac_updates": 8056,
+          "distillation_updates": 0,
+          "gradient_components": 32224
+        }
+      },
+      "bgpbt_superiority_established": false,
+      "confirmation": {
+        "passed": true,
+        "selection_binding": {
+          "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T113933Z-search-68a2e9a1/search-result.json",
+          "sha256": "7620c28bb1608a9cff4898c579c1c9a4302d5aae25a507b5b16b920fd0ca0d81"
+        },
+        "estimand": "fresh_training_of_final_static_config",
+        "seeds": [
+          801,
+          802,
+          803
+        ],
+        "budget": 8192,
+        "costs": {
+          "bgpbt": [
+            3.261398291296962,
+            3.2579831460879007,
+            3.264331394691683
+          ],
+          "baseline": [
+            3.261398291296962,
+            3.2579831460879007,
+            3.264331394691683
+          ]
+        },
+        "paired_cost_differences_bgpbt_minus_baseline": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "means": {
+          "bgpbt": 3.261237610692182,
+          "baseline": 3.261237610692182
+        },
+        "standard_deviations": {
+          "bgpbt": 0.0031771730793931983,
+          "baseline": 0.0031771730793931983
+        },
+        "work": {
+          "transitions": 49152,
+          "sac_updates": 11904,
+          "distillation_updates": 0,
+          "gradient_components": 47616
+        },
+        "tasks": [
+          "/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-27/rl-lqr-03/20261027T114330Z-confirmation-efda08b6/bgpbt-801",
+          "/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-27/rl-lqr-03/20261027T114330Z-confirmation-efda08b6/baseline-801",
+          "/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-27/rl-lqr-03/20261027T114330Z-confirmation-efda08b6/bgpbt-802",
+          "/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-27/rl-lqr-03/20261027T114330Z-confirmation-efda08b6/baseline-802",
+          "/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-27/rl-lqr-03/20261027T114330Z-confirmation-efda08b6/bgpbt-803",
+          "/home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-27/rl-lqr-03/20261027T114330Z-confirmation-efda08b6/baseline-803"
+        ],
+        "universal_reliability_established": false,
+        "global_optimum": false
+      },
+      "hardware_admission": "E-RL-LQR03-HARDWARE-RESULT",
+      "documentation": "E-RL-LQR03-HARDWARE-DOCUMENTATION-RESULT",
+      "cpu_audit": {
+        "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125923Z-hardware-documentation-a1e74359/cpu-audit-result.json",
+        "sha256": "54ea8317e80c6e301a575684564918dd97c014a9cc0da5bd994997f8308288c8"
+      },
+      "cpu_tasks_reconstructed": 42,
+      "manual": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125923Z-hardware-documentation-a1e74359/main-lqr5-bgpbt.pdf",
+      "all_attempts_charged_work": {
+        "transitions": 399696,
+        "sac_updates": 95612,
+        "distillation_updates": 1808
+      },
+      "remaining": [],
+      "master_complete": true,
+      "handoff": "E-RL-LQR03-HANDOFF-V2",
+      "pending_gpu_gate": null,
+      "repair_plan": "E-RL-LQR03-REPAIR-PLAN",
+      "repair_engineering_tests": 18,
+      "procedure_result": {
+        "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125120Z-selection-reconciliation-853a58ed/procedure-corrected.json",
+        "sha256": "5c84f6d3150a09fb75b9abddbfdb05555f3e7cb261502a76e7a18c4edc4e15aa"
+      },
+      "hardware_result": {
+        "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T125719Z-hardware-3b59183d/hardware-result.json",
+        "sha256": "8250edd78be1d4917729002c221db7197e946c7a96b9c110504fdb53c084687d"
+      },
+      "procedure_summary": {
+        "seeds": [
+          9211,
+          9212,
+          9213
+        ],
+        "paired_cost_differences_bgpbt_minus_baseline": [
+          -0.017865522962813074,
+          -0.01977802127092776,
+          0.005844585254095147
+        ],
+        "mean_difference": -0.010599652993215228,
+        "new_architecture_winners": [
+          true,
+          true,
+          true
+        ],
+        "superiority_established": false
+      },
+      "tasks_reconstructed": 179,
+      "audit": {
+        "path": "docs/program/evidence/2026-10-27/rl-lqr-03/20261027T130059Z-audit-93b1fc5e/audit-result.json",
+        "sha256": "f0a5239914f0c20dae46c4affe63e54c426c342d8bcb127f11f219924b676a46"
+      },
+      "master_audit": "E-RL-LQR03-MASTER-AUDIT-RESULT"
     }
   },
   "protocol_ownership_review": {
@@ -39082,6 +42624,33 @@
       ],
       "PAR-QUAL-01": [
         "PAR-QUAL-01/EXECUTE"
+      ],
+      "RL-LQR-01": [
+        "RL-LQR-01/AUDIT"
+      ],
+      "RL-LQR-02": [
+        "RL-LQR-02/AUDIT"
+      ],
+      "RL-LQR-03": [
+        "RL-LQR-03/AUDIT"
+      ],
+      "RL-LQR-04": [
+        "RL-LQR-04/AUDIT"
+      ],
+      "RL-LQR-05": [
+        "RL-LQR-05/AUDIT"
+      ],
+      "RL-LQR-06": [
+        "RL-LQR-06/AUDIT"
+      ],
+      "RL-LQR-07": [
+        "RL-LQR-07/AUDIT"
+      ],
+      "RL-LQR-08": [
+        "RL-LQR-08/AUDIT"
+      ],
+      "RL-LQR-09": [
+        "RL-LQR-09/AUDIT"
       ]
     },
     "decision_resolution_steps": {
@@ -39644,5 +43213,6 @@
     "contract_evidence": "E-GAP-20261018-PLAN",
     "source_audit_evidence": "E-GAP-20261017-AUDIT",
     "last_stage": "GAP-01/FINAL-AUDIT"
-  }
+  },
+  "reconciliation_date": "2026-10-28"
 }

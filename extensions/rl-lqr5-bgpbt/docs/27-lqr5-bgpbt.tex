@@ -1,0 +1,136 @@
+\chapter{Five-state joint architecture and SAC tuning}
+\label{sec:lqr5-bgpbt}
+
+This chapter extends the scalar example with the optional
+\texttt{hponas\_rl\_bgpbt} companion. The original finite-MDP
+\texttt{LocalBGPBT} API and its accepted source remain unchanged. The companion
+uses RLlib's upstream Torch SAC learner, explicit sampling and uniform replay,
+the repository's temporal BG-PBT Gaussian process, and isolated resource workers.
+The master stage is RL-LQR-03; its current completion state is governed by the
+structured program register, including the separate GPU requirement.
+
+\section{Known-answer model and joint search space}
+The dynamics are $x_{t+1}=Ax_t+Bu_t+w_t$, with five states, one action,
+$A=0.8I+0.12C$ for a cyclic permutation $C$, $B=e_1$, $|u_t|\leq1$,
+horizon eight and discount $\gamma=0.99$. State and terminal costs use $I$;
+the action cost is $0.1u_t^2$. Initial coordinates are independent signs times
+0.5; each innovation is one independent sign times
+$0.025(1,-1,1,-1,1)^\top$. Thus the initial covariance is full rank while
+instantaneous innovation covariance has rank one. All $2^{13}=8192$ paths
+are enumerated. The observation includes the five states and remaining time.
+
+Matrix Riccati recursion and independent block quadratic elimination agree.
+The optimal cost is 3.2540811593967556, zero-action cost is 3.889419041418345,
+and maximum oracle action magnitude is 0.562377, proving attainability under
+the action bound. For every scored deterministic policy the evaluator verifies
+the performance-difference identity
+\[
+ J(\pi)-J^*=\mathbb{E}\sum_{t=0}^{7}\gamma^t
+ (u_t+K_tx_t)^\top(R+\gamma B^\top P_{t+1}B)(u_t+K_tx_t).
+\]
+Identical float32 observations are evaluated once and their actions reused for
+all duplicate histories. This prevents matrix-kernel position rounding from
+introducing an artificial dependence on future path signs. No numerical
+identity tolerance was relaxed to repair this issue.
+
+Actor and critic independently use two, three or four actual hidden layers;
+each layer independently has an integer width from 8 through 64. Twin critics
+share an architecture specification but have independent weights and targets.
+The encoder/head split adds no extra hidden layer. There are
+115,443,055,380,249 actor/critic architecture pairs. Actor and critic learning
+rates are independently continuous in $[10^{-5},10^{-2}]$ on a logarithmic scale.
+Activation is tanh; temperature rate is fixed at $3\times10^{-4}$.
+
+\section{Population, transfer and resource semantics}
+The original pilot sequence below is retained for provenance. The subsequent
+selection review introduced \texttt{JointExplorer} and
+\texttt{population\_search\_v2}. The successor uses an objective-based
+architecture surrogate with Bayesian and random proposals, one trust-region
+update per population round, and a global-GP restart that clears local history.
+All four candidate architectures receive 64 imitation updates followed by SAC
+at their proposed rates before objective-based halving. It retains the best
+evaluated checkpoint for both methods. The pilot's static confirmation and the
+successor's complete procedure replications answer different questions.
+RLlib supplies the SAC loss, reparameterized Gaussian actor, two Huber-loss
+critics, temperature optimizer and Polyak targets. The companion supplies
+uniform one-step replay of capacity 32768, batch 128, 256 initial random
+transitions, and one SAC update per four subsequent transitions. One SAC step
+updates four optimizer components. The score is deterministic unregularized
+quadratic cost; entropy regularization is solely a training mechanism. Oracle
+gains and oracle actions never enter training or distillation.
+
+The temporal mixed Mat\'ern GP models cost improvement with time, initial cost,
+architectures and two log-rate coordinates. Depths are categorical and inactive
+width slots have a canonical value. Within generations, bounded continuous
+rate proposals use an adaptive trust region and UCB; collapse triggers a global
+restart. Between generations, 64 fresh conditional configurations are proposed
+and a finite UCB batch selects four. Optimizer convergence status is retained.
+This is neither exhaustive architecture enumeration nor a proof of globally
+maximal acquisition.
+
+The original pilot uses four members and four training segments.
+Compatible exploit events after segments one and three copy full training
+state before applying rate changes and forking future child random streams.
+An age-triggered generation after segment two distills four candidates for
+16 steps each, keeps two by training-replay distillation loss, and gives each
+48 further steps. Distillation matches the pre-squash Gaussian by analytical
+KL and matches both soft-Q functions on recorded training actions. The immutable
+teacher is checked by scientific-state digest. Targets are hard-copied from
+the resulting online critics, incompatible Adam states are reset, temperature
+value is retained, and replay is copied only for the identical training contract.
+All 160 distillation steps are charged, including discarded candidates.
+
+Checkpoints carry actor, critics, targets, four Adam states, temperature,
+target-update clock, replay, environment state/time, and Torch, NumPy, Python,
+environment and replay randomness. CPU uninterrupted/resumed continuation is
+tested exactly. Task intents precede dispatch; committed results replay without
+training, while an unresolved intent is charged and refuses automatic retry.
+The controller reconstructs proposals and lineage from committed results and
+its seed. Full controller replay is tested to leave the work ledger unchanged.
+GPU workers receive one visible physical device before importing Torch. Devices
+may be shared with other processes: admission requires 4 GiB free, a 1 GiB
+Torch allocator cap and a monitored 2 GiB owned process limit per worker.
+Utilization is a placement preference, not an idle-device prerequisite.
+
+\section{Prospective sequence and measured results}
+Two fixed calibration seeds precede search. Costs are measured at 0, 2048,
+4096 and 8192 transitions. The frozen rule chooses 8192 transitions per member
+if the final median improves from 4096, otherwise 4096. This allocates computation;
+it is not a human-selected learning-success threshold. A static random-search
+baseline starts with the same four configurations and seeds. Both methods use
+the same transition count and component-gradient minibatch count: 120 extra
+baseline SAC steps match $160\times3$ distillation component updates. Equal
+minibatch counts do not imply equal FLOPs or wall time.
+
+Fresh seeds 801, 802 and 803 are reserved before search. Confirmation trains
+each selected final static configuration from scratch, rather than replaying
+the evolved lineage. It estimates the quality of those static selections;
+the full selected lineage is retained as a separate artifact. All costs,
+variation and unfavorable comparisons are reported. Three seeds cannot prove
+universal reliability or global HPO/NAS optimality. The Riccati gap remains an
+objective suboptimality certificate for each saved policy on this finite law.
+
+\input{lqr5-measured-results}
+
+\section{User interface and limitations}
+The companion guide is
+\texttt{extensions/rl-lqr5-bgpbt/README.md}.
+\texttt{SACMember} provides construction, \texttt{train}, \texttt{score},
+\texttt{save}, \texttt{restore} and \texttt{compatible\_copy}.
+The separate \texttt{distill} function changes shapes;
+\texttt{Explorer} provides proposals and serialized search state.
+\texttt{population\_search} executes the reviewed four-member sequence.
+The retained pilot API is supplemented by \texttt{population\_search\_v2}
+for the repaired objective-based procedure.
+\texttt{run\_task} provides write-ahead task accounting and works with
+\texttt{ResourceExecutor}. Checkpoints are trusted local Torch files.
+
+The fixed operation runner is \texttt{program\_operations/sac\_bgpbt\_ops.py},
+with engineering, repair-engineering, procedure-check, calibration, search, confirmation, hardware, documentation,
+audit and master-audit operations. Exact standalone commands and limits appear
+in \texttt{docs/PROGRAM\_OPERATIONS.md}. Every operation needs its active master
+stage and source-bound manifest. Successful scientific allocations cannot be
+silently repeated. The implementation is a bounded local companion for the
+declared five-state contract, not an arbitrary-environment production service
+or a new qualification of the core finite-MDP implementation. Cross-device
+CPU/CUDA random-trajectory equality is not claimed.

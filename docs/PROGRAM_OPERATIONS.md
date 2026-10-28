@@ -771,3 +771,174 @@ After qualification and the independent audit pass and their service stops, thes
 |---|---|
 | /home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-26/parallel-publication-refresh-05/run_build.py | One CPU, no GPU/network; five-pass manual build and PDF text/info checks, 300 seconds and 8 GiB address space per process |
 | /home/ubuntu/workspace/hponas/docs/program/evidence/2026-10-26/parallel-publication-refresh-05/run_publication.py | One CPU, no GPU/network; journalled status/manual reconciliation, six governance checks and final closure guard; 300 seconds per check |
+
+
+## RL-LQR-01 exact operations (27 October 2026)
+
+The reviewed manifest is `docs/program/RL_LQR_EXTENSION_2026_10_27.md`.
+Each fixed operation binds its extension inputs, uses at most four CPU cores,
+16 GiB owned host RSS, a 2 GiB output cap and a 4 GiB free-disk floor.
+The runtime overlay is independent of the accepted core environment.
+
+| Exact command | Bound and purpose |
+|---|---|
+| `/home/ubuntu/workspace/hponas/program_operations/rl_lqr_ops.py runtime` | 600 seconds; download/install four missing RLlib wheel families into a local overlay; imports and lock |
+| `/home/ubuntu/workspace/hponas/program_operations/rl_lqr_ops.py oracle` | 300 seconds; fixed reference/environment tests; no learning |
+| `/home/ubuntu/workspace/hponas/program_operations/rl_lqr_ops.py learner` | 600 seconds; at most two 512-transition SAC fits and checkpoint controls |
+| `/home/ubuntu/workspace/hponas/program_operations/rl_lqr_ops.py joint` | 3600 seconds; eight configurations times two seeds plus two final fits; 4096 transitions each; two CPU workers |
+| `/home/ubuntu/workspace/hponas/program_operations/rl_lqr_ops.py joint-replay` | 600 seconds; read-only completed-Study replay of the retained 18 fits, objective dispatch forbidden, zero new transitions |
+| `/home/ubuntu/workspace/hponas/program_operations/rl_lqr_ops.py hardware` | 600 seconds; two 512-transition fits on two distinct GPUs |
+| `/home/ubuntu/workspace/hponas/program_operations/rl_lqr_ops.py build` | 600 seconds; guide/manual build; no learning |
+| `/home/ubuntu/workspace/hponas/program_operations/rl_lqr_ops.py audit` | 600 seconds; replay saved results and source bindings; no training |
+| `/home/ubuntu/workspace/hponas/program_operations/rl_lqr_ops.py master-audit` | 600 seconds; GAP-01/FINAL-AUDIT reconciles unchanged core qualification, original clauses and completed RL-LQR evidence, with false-completion control; zero new training |
+
+## Five-state LQR formulation and BG-PBT readiness (RL-LQR-02)
+
+Reviewed scope: `docs/program/LQR5_BG_PBT_FEASIBILITY_2026_10_27.md`.
+These operations use one CPU, no GPU/network or Ray cluster, 300 seconds,
+8 GiB owned RSS, 128 MiB outputs and a 4 GiB disk floor. Training allocation
+is zero. Each operation requires its active master stage and exact manifest;
+the runner binds and archives all input source and owns descendant cleanup.
+
+| Exact command | Purpose |
+|---|---|
+| `/home/ubuntu/workspace/hponas/program_operations/lqr5_ops.py preflight` | Fixed reference, conditional search and actual RLlib network tests; no optimizer training |
+| `/home/ubuntu/workspace/hponas/program_operations/lqr5_ops.py audit` | Replay preflight bindings/results and reject false cost/support/training evidence |
+| `/home/ubuntu/workspace/hponas/program_operations/lqr5_ops.py master-audit` | Reconcile unchanged qualified core, original gap closure and limited five-state readiness scope |
+
+## Five-state SAC BG-PBT implementation (RL-LQR-03)
+
+The reviewed plan is `docs/program/LQR5_SAC_BGPBT_IMPLEMENTATION_2026_10_27.md`.
+Each operation requires its active master stage and source-bound manifest under
+`docs/program/evidence/2026-10-27/rl-lqr-03`. Successful scientific allocations
+are once-only; engineering repair attempts retain every prior receipt. Three
+CPU cores (coordinator plus two one-thread workers), 16 GiB owned RSS, 4 GiB
+outputs and 8 GiB disk headroom are hard limits. The successor reviewed in
+`docs/program/LQR5_SAC_BGPBT_REVIEW_REPAIR_2026_10_27.md` permits shared GPUs:
+two devices with at least 4 GiB free each, a 1 GiB Torch allocator cap and a
+2 GiB observed process-memory cap per worker. No network is used.
+
+| Exact standalone command | Fixed operation |
+| --- | --- |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py engineering` | Adapter, conditional GP, distillation, transactional recovery and actual CPU concurrency tests; 600 seconds |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py repair-engineering` | Original roster plus order-independent region, objective-based candidate SAC, best checkpoint, shared memory admission and replay; 600 seconds |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py procedure-check` | Three complete paired tuning procedures, seeds 9211–9213; at most 233,472 transitions, 57,408 SAC and 768 distillation updates; 1,800 seconds |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py selection-reconciliation` | Correct zero-update copy attribution from saved checkpoints, preserving identical costs and actors; four focused regressions and report reconstruction, zero training, 600 seconds |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py device-repair` | Eight adapter/device tests; direct assigned-device learner setup without Ray auto-init; ≤1,024 transitions, 256 SAC and 64 distillation updates, 300 seconds |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py calibration` | Two fixed 8,192-transition learning curves and prospective budget freeze; 1,800 seconds |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py search` | Four-member/four-segment BG-PBT plus matched-work static random-search baseline; 1,800 seconds |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py confirmation` | Three reserved fresh paired seeds for frozen static selected configurations; 1,800 seconds |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py hardware` | Shared two-GPU SAC, Bayesian rate/architecture proposals, compatible/distilled descendants and cross-device restore; ≤2,048 transitions, 512 SAC and 64 distillation updates, 600 seconds |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py documentation` | Build successor LaTeX manual and verify rendered statements; zero training |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py hardware-documentation` | After GPU qualification, rebuild the manual with current hardware evidence before final audits; zero training |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py audit` | Independent scores, proposals, ledger, checkpoints, selection, confirmation and hardware; zero training |
+| `/home/ubuntu/workspace/hponas/program_operations/sac_bgpbt_ops.py master-audit` | Final master reconciliation after all required extension stages; zero training |
+
+The SAC implementation is an optional companion; public LocalBGPBT retains its
+qualified finite-model contract. The listed allocations are bounded experiments.
+
+Run these commands exactly. Missing managed network/socket/GPU permission is
+requested only for the concrete operation. No global allow rules are broadened.
+Failed attempts remain immutable and require a reviewed successor; successful
+training allocations cannot automatically repeat. This companion supports
+replay-based Gaussian/twin-critic distillation followed by SAC; it is not the
+paper's on-policy PPO transfer. Hardware uses a two-worker ready barrier.
+
+## Ten-state horizon-thirty extension (RL-LQR-04)
+
+Reviewed scope: docs/program/LQR10_H30_STUDY_2026_10_27.md. Two single-thread
+CPU workers plus a coordinator; 16 GiB owned RSS, 8 GiB outputs and 8 GiB disk
+headroom. No network or idle-GPU requirement. Source-bound manifests and every
+attempt are retained under docs/program/evidence/2026-10-27/rl-lqr-04.
+
+| Exact standalone command | Fixed operation |
+| --- | --- |
+| /home/ubuntu/workspace/hponas/program_operations/lqr10_ops.py engineering | Fourteen reference/evaluation/learner/recovery tests; at most 1024 transitions, 256 SAC and 64 distillation updates; 600 seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr10_ops.py study | Three paired searches, 466944 transitions, 115776 SAC and 768 distillation updates; 1024 validation and 16384 final test paths; 3600 seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr10_ops.py audit | Reconstruct oracle, scores, selected artifacts, work and paired controls; zero training; 900 seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr10_documentation.py | Build versioned successor LaTeX manual from frozen completed study; source-bound inputs, no training or network; each build command at most 120 seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr10_ops.py master-audit | Reconcile expanded master and reject false completion; zero training; 600 seconds |
+
+Successful allocations cannot repeat. Failed engineering attempts require a
+documented defect repair and refreshed source binding. Learning outcomes are
+reported numerically; successful execution does not establish optimal learning.
+
+## Multi-action ten-state extension (RL-LQR-05)
+
+Reviewed scope: docs/program/LQR_MULTI_ACTION_STUDY_2026_10_27.md.
+Four single-thread CPU workers and coordinator;16 GiB RSS,16 GiB outputs,
+8 GiB disk floor. No GPU/network required. Immutable predecessor evidence.
+
+| Exact standalone command | Fixed purpose and bound |
+| --- | --- |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_multi_ops.py engineering | Vector reference, actor/critic, replay/transfer isolation;4096 transitions,1024 SAC,128 distillation maximum;600 seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_multi_ops.py study | Twelve paired studies across2--5 actions;1,867,776 transitions,463,104 SAC,3,072 distillation updates;5400 seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_multi_ops.py audit | Full artifact/reference/work/selection reconstruction;zero training;1800 seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_multi_documentation.py | Frozen-result guide and successor LaTeX manual;zero training;120 seconds per build command |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_multi_ops.py master-audit | Final expanded-master reconciliation;zero training;600 seconds |
+
+Each operation is active-stage and source bound. Successful study work cannot
+repeat. Failed engineering attempts retain receipts and require defect repair.
+
+## Scalar-state diagnosis (RL-LQR-06, 28 October 2026)
+
+Reviewed scope: docs/program/LQR_SCALAR_STATE_DIAGNOSTIC_2026_10_28.md.
+Three matched cases, three paired seeds each. Four CPU workers and coordinator;
+16GiB owned RSS/output caps;8GiB disk floor. No GPU/network or campaign reuse.
+
+| Exact standalone command | Fixed operation and bound |
+| --- | --- |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scalar_ops.py engineering | Scalar/vector/padded references and learner contracts;4096 transitions,1024 SAC,128distillation max;600seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scalar_ops.py study | Nine paired procedures;1,400,832transitions,347,328SAC,2,304distillation;5400seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scalar_documentation.py | Source-bound result guide/LaTeX manual and decomposition checks;zero training;120seconds per build command |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scalar_ops.py audit | Reconstruct396tasks and all holdouts, work and source;zero training;1800seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scalar_ops.py master-audit | Expanded-master final reconciliation;zero training;600seconds |
+
+The study is once-only. Failed engineering attempts require documented repair
+and fresh source binding; every scientific outcome remains in evidence.
+
+## Scalar failure tracing (RL-LQR-07, 28 October 2026)
+
+Reviewed plan: docs/program/LQR_SCALAR_FAILURE_TRACE_2026_10_28.md.
+
+| Exact standalone command | Bound |
+| --- | --- |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_debug_ops.py diagnose | Twelve saved checkpoints, zero training, one CPU, 900seconds, 8GiB RSS, 1GiB output, 8GiB disk floor. Successful allocation cannot repeat. |
+
+| /home/ubuntu/workspace/hponas/program_operations/lqr_debug_audit.py audit | Independent exact identities, finite differences, 396 artifact rows; zero training, 900seconds, one CPU, 8GiB RSS. |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_debug_audit.py master-audit | Final program reconciliation; zero training, 600seconds, one CPU, 8GiB RSS. |
+
+## Scalar learner repair (RL-LQR-08, 28 October 2026)
+
+Reviewed plan: docs/program/LQR_SCALAR_REPAIR_2026_10_28.md.
+At most four one-thread CPU workers plus coordinator,16GiB RSS,8GiB outputs,8GiB disk floor. No GPU/network. Successful allocations cannot repeat.
+
+| Exact standalone command | Fixed bound |
+| --- | --- |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_repair_ops.py engineering | Mathematical, continuation and replacement tests;2048transitions/512SAC/128imitation/128critic-only;600seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_repair_ops.py learner | Nine fixed learners;73728transitions/17856SAC and2048separate exact-Q actor updates;2400seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_repair_ops.py review | Freeze selected repair and next allocation;zero training;60seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_repair_ops.py handoff | Six transfers and three donor continuations;9216transitions/2304SAC/1536imitation/1536critic-only;1200seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_repair_ops.py confirm | Six fresh fixed learners;49152transitions/11904SAC;1800seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_repair_ops.py joint | Conditional allocation frozen at REVIEW before execution;3600seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_repair_ops.py audit | Independent source/work/evidence audit;zero training;600seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_repair_ops.py master-audit | Final master and false-completion audit;zero training;600seconds |
+
+| /home/ubuntu/workspace/hponas/program_operations/lqr_repair_ops.py handoff-engineering | Donor/actor preservation and gradient-aware transfer tests;zero transitions,16imitation/16critic-only;300seconds |
+
+| /home/ubuntu/workspace/hponas/program_operations/lqr_repair_ops.py joint-engineering | Complete fake-learner scheduler, rejection, historical selection and exact work tests;zero training;300seconds |
+
+## Dimensional SAC scaling (RL-LQR-09, 28 October 2026)
+
+Reviewed plan: docs/program/LQR_DIMENSION_SCALING_2026_10_28.md. Four one-thread CPU workers plus coordinator;16GiB RSS,8GiB output,8GiB disk floor,no GPU/network. Source-bound successful allocations are once-only.
+
+| Exact standalone command | Fixed scope and cap |
+| --- | --- |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scale_ops.py engineering | References,terminal gradients,symmetry,checkpoint continuation;4096transitions/1024SAC;600seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scale_ops.py actions | One state,actions5--10,two methods/two seeds;196608transitions/47616SAC;2400seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scale_ops.py review | Review action results;zero training;60seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scale_ops.py states | Ten coupled states,actions5--10,two methods/two seeds;196608transitions/47616SAC;3600seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scale_ops.py freeze | Seal method choices and prospective confirmation;zero training;60seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scale_ops.py confirm | Twelve cases,two methods,three fresh seeds;589824transitions/142848SAC;7200seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scale_ops.py audit | Independent scores/references/ledgers/source and learned-controller audit;zero training;1800seconds |
+| /home/ubuntu/workspace/hponas/program_operations/lqr_scale_ops.py master-audit | Expanded master completeness and false-completion controls;zero training;600seconds |

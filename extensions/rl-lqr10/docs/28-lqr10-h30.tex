@@ -1,0 +1,78 @@
+\chapter{Ten-state, thirty-step joint SAC tuning}
+\label{sec:lqr10-h30}
+
+\section{Model and analytical reference}
+The successor RL-LQR-04 experiment changes the five-state benchmark to ten
+physical states and thirty time steps. There remains one continuous action
+$u_t\in[-1,1]$. The observation has eleven coordinates: the ten states and
+remaining-time fraction. The dynamics and objective are
+\[
+ x_{t+1}=Ax_t+Bu_t+w_t,\quad A=0.8I_{10}+0.12C,\quad B=e_1,
+\]
+\[
+ J(\pi)=\mathbb{E}\!\left[\sum_{t=0}^{29}0.99^t
+ (x_t^\top x_t+0.1u_t^2)+0.99^{30}x_{30}^\top x_{30}\right].
+\]
+Here $C$ is the cyclic shift. Initial coordinates are independent signs times
+$0.5$; each noise vector is an independent sign times
+$0.025(1,-1,1,-1,1,-1,1,-1,1,-1)^\top$. Process noise has rank one.
+The expected Riccati optimum is $7.8716918755290335$, while the zero-action
+policy costs $8.714226728937764$. Independent condensed quadratic elimination
+and forward covariance propagation check the backward Riccati result.
+
+Attainability under the action constraint is proved without enumerating paths.
+Write the oracle-controlled state as a matrix multiplying the independent
+initial and noise signs. Propagate that matrix through $A-BK_t$ and append
+the new noise coefficient. The largest possible magnitude of $K_tx_t$ is the
+sum of the absolute coefficients. Its maximum over time is
+$0.5993971764628899<1$, so the unconstrained oracle is feasible for every path.
+
+\section{Scalable evaluation and uncertainty}
+The full law contains $2^{40}=1{,}099{,}511{,}627{,}776$ paths. Nonlinear-policy
+expectations are sampled rather than claimed exact. With Riccati curvature
+$S_t=R+0.99B^\top P_{t+1}B$, define the trajectory quantity
+\[
+ G(\pi)=\sum_{t=0}^{29}0.99^t
+ (u_t+K_tx_t)^\top S_t(u_t+K_tx_t).
+\]
+The performance-difference identity gives $J(\pi)-J^*=\mathbb{E}G(\pi)$.
+Thus $J^*+\overline G$ estimates policy cost while removing much of the noise
+in direct cost rollouts. This identity holds for the sampled policy's own
+state trajectory. Direct rollout means and per-time-step regret are retained.
+Each path also verifies the quadratic telescoping equation including its
+realized noise martingale; a small nonlinear fixture checks the expectation
+identity by complete enumeration.
+
+Selection uses 1,024 fixed IID validation paths. All six selected policies are
+frozen before any evaluation on the separate 16,384 IID test paths. Common
+test paths permit paired comparisons. Reported normal 95\% intervals describe
+test-path uncertainty conditional on each frozen policy; they are approximate,
+not finite-sample guarantees or bounds over optimizer randomness. No arbitrary
+human acceptance threshold converts a small measured gap into exact optimality.
+
+\section{Joint search and resource contract}
+Actor and critic architectures independently have two to four hidden layers,
+each with eight to sixty-four tanh units. Actor and critic Adam rates are
+independently searched continuously on log scale between $10^{-5}$ and $10^{-2}$.
+The upstream RLlib SAC learner retains entropy tuning, batch size 128, replay
+capacity 32,768, 256 random warmup transitions and one update per four subsequent
+transitions. Training is a stochastic entropy-regularized objective; selection
+scores the deterministic policy on the unregularized quadratic objective.
+
+Three paired procedures use seeds 10301--10303. Each pair shares four initial
+configurations and training seeds. Main segments have 4,096 transitions. New
+architectures receive training-replay distillation and actual SAC updates
+before objective-based elimination; the best trained checkpoint is retained.
+The static baseline receives the same 77,824 transitions per pair and equal
+component-gradient minibatch counts. Equal counts do not imply equal FLOPs.
+Across both methods and all three pairs, the study allocates 466,944 transitions,
+115,776 SAC updates and 768 distillation updates. Two single-thread CPU workers
+execute under the bounded runner. This experiment does not measure GPU speedup.
+
+Selected learning rates describe an evolved training lineage, not a separately
+validated recipe trained from scratch. Three procedure seeds cannot establish
+general optimizer superiority. The experiment measures performance at its
+fixed budget; it does not impose or certify a convergence stopping criterion.
+
+\section{Measured results}
+\input{lqr10-measured-results}

@@ -1,0 +1,30 @@
+{
+  "oracle": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T090105Z-oracle-17ff9b64/receipt.json",
+    "sha256": "5362615b059eda363646265b91c6c7b261f978e99c489deb41da0cf1133f3093"
+  },
+  "learner": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T092822Z-learner-0ed772a6/receipt.json",
+    "sha256": "7cc0ed53afcab5be4a65c13a5d50867a29eaf177af93e7428eef67346315052e"
+  },
+  "joint": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T093013Z-joint-fd36a47a/receipt.json",
+    "sha256": "54319ce259ad5cf8984911b10a05dae2ea18b35705d717e22190b94fd13f15f9"
+  },
+  "joint_replay": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T093729Z-joint-replay-668fd2a1/receipt.json",
+    "sha256": "9b47f80e24faab96a98d6203827152e9cf0c3bf05c3c068e3862a0e134276055"
+  },
+  "hardware_predecessor": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T093815Z-hardware-b9eb0850/receipt.json",
+    "sha256": "b075062a34b0e36da5dad21da492331ec25999ed431683411430d3968afdc66c"
+  },
+  "hardware": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T094115Z-hardware-5912870f/receipt.json",
+    "sha256": "3e4333235986a4d093c68bab08c15c50d9bbc943ad67214029b6309f636110f1"
+  },
+  "build": {
+    "path": "docs/program/evidence/2026-10-27/rl-lqr-01/20261027T094746Z-build-81001700/receipt.json",
+    "sha256": "0196482774f34c2abc98a26dc5a54623e84ba1d5c61e6f6b89710f5ed527d7e9"
+  }
+}
